@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Compile the production non-visual boundary without loading WinUI in the test runner. -->
+    <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ChatClient.cs" Link="Core/ChatClient.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/Catalog.cs" Link="Core/Catalog.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/CatalogClient.cs" Link="Core/CatalogClient.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/CatalogFavorites.cs" Link="Core/CatalogFavorites.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ConversationSearch.cs" Link="Core/ConversationSearch.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/Conversations.cs" Link="Core/Conversations.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/PortableConversations.cs" Link="Core/PortableConversations.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptProjection.cs" Link="Core/TranscriptProjection.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/MessageDetails.cs" Link="Core/MessageDetails.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/AttachmentDownloads.cs" Link="Core/AttachmentDownloads.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/SettingsStore.cs" Link="Core/SettingsStore.cs" />
+    <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/ManagedLocalRuntime.cs" Link="Host/ManagedLocalRuntime.cs" />
+    <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/OwnedProcessJob.cs" Link="Host/OwnedProcessJob.cs" />
+    <ProjectReference Include="../../../aihappey-ai/Core/AIHappey.Vercel/AIHappey.Vercel.csproj" />
+    <ProjectReference Include="../../../aihappey-agents/core/AgentHappey.Common/AgentHappey.Common.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,8 @@
+{
+  "tenantId": "",
+  "clientId": "",
+  "aiUrl": "https://ai.aihappey.net/",
+  "agentsUrl": "https://agents.aihappey.net/",
+  "aiScopes": [],
+  "agentsScopes": []
+}

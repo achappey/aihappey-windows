@@ -1,0 +1,235 @@
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+
+namespace AIHappey.Desktop.Core;
+
+/// <summary>Shared layout for card-based overview pages. Data and actions remain outside the visual component.</summary>
+internal sealed class OverviewPage : UserControl
+{
+    internal readonly TextBox SearchBox = new() { Name = "CatalogSearch", PlaceholderText = "Search…", MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Height = 40, CornerRadius = new CornerRadius(8) };
+    internal readonly OverviewCardsPanel Cards = new() { Name = "CatalogCards" };
+    private readonly StackPanel body = new() { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(24, 24, 24, 24) };
+    private readonly StackPanel filters = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
+    private readonly TextBlock status = new() { Name = "CatalogStatus", TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+    private readonly Button retry = new() { Content = "Retry", HorizontalAlignment = HorizontalAlignment.Center };
+    private readonly Button cancel = new() { Content = "Cancel", HorizontalAlignment = HorizontalAlignment.Center };
+    private readonly Button more = new() { Content = "Show more", HorizontalAlignment = HorizontalAlignment.Center };
+    private readonly ScrollViewer viewer;
+    private IReadOnlyList<CatalogItem> items = [];
+    private IReadOnlySet<string> favorites = new HashSet<string>();
+    private string activeFilter = "all";
+    private string source = "Backend";
+    private int visible = 50;
+    private bool working;
+    public CatalogKind Kind { get; }
+    public Action? RetryRequested { get; set; }
+    public Action? CancelRequested { get; set; }
+    public Action<CatalogItem, Button>? DetailsRequested { get; set; }
+    public Action<CatalogItem>? FavoriteRequested { get; set; }
+    public Action<CatalogItem>? DownloadRequested { get; set; }
+    public Action<CatalogItem>? ChatRequested { get; set; }
+
+    public OverviewPage(CatalogKind kind)
+    {
+        Kind = kind;
+        var title = new TextBlock { Name = "OverviewTitle", Text = kind == CatalogKind.Agent ? "Agents" : "Skills", FontSize = 36,
+            FontWeight = Microsoft.UI.Text.FontWeights.Bold, TextAlignment = TextAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+        AutomationProperties.SetHeadingLevel(title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
+        var description = new TextBlock { Name = "OverviewDescription", FontSize = 16, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center,
+            Text = kind == CatalogKind.Agent
+                ? "Agents bring capabilities, context, and execution logic together in a single model. Explore the available agents and choose one to start a conversation."
+                : "An overview of available skills for tasks and workflows. See what each skill does and choose the right option. Skills combine instructions, logic, and execution in a consistent structure." };
+        body.Children.Add(title); body.Children.Add(description);
+        var searchRow = new Grid { ColumnSpacing = 8, MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 0, 0) };
+        SearchBox.HorizontalAlignment = HorizontalAlignment.Stretch;
+        searchRow.Children.Add(SearchBox); body.Children.Add(searchRow);
+        var filterBorder = new Border { Child = filters, CornerRadius = new CornerRadius(8), Padding = new Thickness(4), HorizontalAlignment = HorizontalAlignment.Left };
+        ControlAppearance.Apply(filterBorder, (_, _) => { }, palette => filterBorder.Background = new SolidColorBrush(palette.Selected));
+        body.Children.Add(new ScrollViewer { Content = filterBorder, HorizontalScrollMode = ScrollMode.Enabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollMode = ScrollMode.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalAlignment = HorizontalAlignment.Center, MaxHeight = 64 });
+        body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cancel); body.Children.Add(Cards); body.Children.Add(more);
+        viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+        Content = viewer;
+        ControlAppearance.Native(SearchBox);
+        ToolbarControls.Label(SearchBox, kind == CatalogKind.Agent ? "Search agents" : "Search skills");
+        foreach (var button in new[] { retry, cancel, more }) ControlAppearance.Native(button);
+        ControlAppearance.Apply(description, (_, _) => { }, palette => description.Foreground = new SolidColorBrush(palette.Text));
+        ControlAppearance.Apply(status, (_, _) => { }, palette => status.Foreground = new SolidColorBrush(palette.Text));
+        AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
+        SearchBox.TextChanged += (_, _) => { visible = 50; Render(); };
+        retry.Click += (_, _) => RetryRequested?.Invoke();
+        cancel.Click += (_, _) => CancelRequested?.Invoke();
+        more.Click += (_, _) => { visible += 50; Render(); };
+        viewer.SizeChanged += (_, _) => SizeBody();
+        Loaded += (_, _) => SizeBody();
+        Render();
+    }
+
+    private void SizeBody()
+    {
+        var width = viewer.ViewportWidth > 0 ? viewer.ViewportWidth : viewer.ActualWidth;
+        if (width > 0) body.Width = Math.Max(0, Math.Min(760, width - 48));
+    }
+
+    public void SetItems(IReadOnlyList<CatalogItem> value, IReadOnlySet<string> savedFavorites, string sourceLabel)
+    { items = value; favorites = savedFavorites; source = sourceLabel; working = false; Render(); }
+
+    public void SetFavorites(IReadOnlySet<string> value) { favorites = value; Render(); }
+
+    public void Loading(string message = "Loading…")
+    {
+        working = true; Cards.Children.Clear(); filters.Children.Clear(); status.Text = message;
+        status.Visibility = cancel.Visibility = Visibility.Visible; retry.Visibility = more.Visibility = Visibility.Collapsed;
+        SearchBox.IsEnabled = false;
+    }
+
+    public void Error(string message)
+    {
+        working = false; Cards.Children.Clear(); filters.Children.Clear(); status.Text = message;
+        status.Visibility = retry.Visibility = Visibility.Visible; cancel.Visibility = more.Visibility = Visibility.Collapsed; SearchBox.IsEnabled = true;
+    }
+
+    public void SetActionsEnabled(bool enabled)
+    {
+        foreach (var button in ControlAppearance.Descendants(Cards).OfType<Button>()) button.IsEnabled = enabled;
+        retry.IsEnabled = more.IsEnabled = enabled;
+    }
+
+    private void Render()
+    {
+        if (working) return;
+        var focused = XamlRoot is null ? null : FocusManager.GetFocusedElement(XamlRoot) as Button;
+        var focusId = focused is null ? null : AutomationProperties.GetAutomationId(focused);
+        SearchBox.IsEnabled = true; retry.Visibility = cancel.Visibility = Visibility.Collapsed;
+        var searched = CatalogProjection.Search(items, SearchBox.Text);
+        filters.Children.Clear();
+        AddFilter("all", $"All ({searched.Count})", "\uE8FD");
+        AddFilter("favorites", $"Favorites ({searched.Count(item => favorites.Contains(item.Key))})", "\uE735");
+        AddFilter("backend", $"{source} ({searched.Count(item => item.Origin == CatalogOrigin.Backend)})");
+        // Local filter and creation actions are capability-driven. No local provider is installed yet.
+        if (items.Any(item => item.Origin == CatalogOrigin.Local)) AddFilter("local", $"Local ({searched.Count(item => item.Origin == CatalogOrigin.Local)})");
+        var selected = searched.Where(item => activeFilter switch
+        {
+            "favorites" => favorites.Contains(item.Key), "backend" => item.Origin == CatalogOrigin.Backend,
+            "local" => item.Origin == CatalogOrigin.Local, _ => true
+        }).ToArray();
+        Cards.Children.Clear();
+        foreach (var item in selected.Take(visible)) Cards.Children.Add(BuildCard(item));
+        status.Text = items.Count == 0 ? $"No {(Kind == CatalogKind.Agent ? "agents" : "skills")} are available from this service. Check your connections and provider configuration."
+            : selected.Length == 0 ? "No results. Try another search or filter." : "";
+        status.Visibility = selected.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        more.Visibility = selected.Length > visible ? Visibility.Visible : Visibility.Collapsed;
+        if (!string.IsNullOrEmpty(focusId) && focused is not null && !focused.IsLoaded)
+            DispatcherQueue.TryEnqueue(() => (ControlAppearance.Descendants(Cards).OfType<Button>().FirstOrDefault(button => AutomationProperties.GetAutomationId(button) == focusId) as Control ?? SearchBox).Focus(FocusState.Programmatic));
+    }
+
+    private void AddFilter(string key, string label, string? glyph = null)
+    {
+        var button = new ToggleButton { Name = "CatalogFilter", Tag = key, Content = label, IsChecked = activeFilter == key, MinHeight = 36,
+            Padding = new Thickness(12, 6, 12, 6), BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(6) };
+        ControlAppearance.Native(button);
+        ControlAppearance.Apply(button, ControlAppearance.NativeResources, palette =>
+        { button.Background = new SolidColorBrush(activeFilter == key ? palette.Surface : palette.Background); button.Foreground = new SolidColorBrush(palette.Text); });
+        ToolbarControls.Label(button, label);
+        button.Click += (_, _) => { activeFilter = key; visible = 50; Render(); };
+        filters.Children.Add(button);
+    }
+
+    private Border BuildCard(CatalogItem item)
+    {
+        var grid = new Grid();
+        grid.RowDefinitions.Add(new() { Height = GridLength.Auto }); grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) }); grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        var header = new Grid { Margin = new Thickness(16, 16, 16, 0), ColumnSpacing = 12 };
+        header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        header.Children.Add(CardIcon(item));
+        var labels = new StackPanel { Spacing = 6 };
+        labels.Children.Add(new TextBlock { Text = item.Name, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, MaxLines = 2, TextTrimming = TextTrimming.CharacterEllipsis });
+        var badgeText = item.Kind == CatalogKind.Agent ? item.Model : item.Version;
+        if (!string.IsNullOrWhiteSpace(badgeText))
+        {
+            var badge = new Border { CornerRadius = new CornerRadius(16), Padding = new Thickness(10, 4, 10, 4), HorizontalAlignment = HorizontalAlignment.Left,
+                Child = new TextBlock { Text = badgeText, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis } };
+            ToolTipService.SetToolTip(badge, badgeText); ControlAppearance.TokenBadge(badge); labels.Children.Add(badge);
+        }
+        Grid.SetColumn(labels, 1); header.Children.Add(labels); grid.Children.Add(header);
+        var description = new TextBlock { Text = item.Description, TextWrapping = TextWrapping.Wrap, MaxLines = 3, TextTrimming = TextTrimming.CharacterEllipsis,
+            FontSize = 13, Margin = new Thickness(16, 18, 16, 16), MinHeight = 36 };
+        ControlAppearance.Apply(description, (_, _) => { }, palette => description.Foreground = new SolidColorBrush(palette.Disabled));
+        Grid.SetRow(description, 1); grid.Children.Add(description);
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        var view = ActionButton(item, "Details", "\uE890"); view.Click += (_, _) => DetailsRequested?.Invoke(item, view); actions.Children.Add(view);
+        if (item.CanDownload)
+        { var download = ActionButton(item, "Download", "\uE896"); download.Click += (_, _) => DownloadRequested?.Invoke(item); actions.Children.Add(download); }
+        var favorite = ActionButton(item, favorites.Contains(item.Key) ? "Remove favorite" : "Add favorite", favorites.Contains(item.Key) ? "\uE735" : "\uE734");
+        AutomationProperties.SetAutomationId(favorite, item.Key + ":Favorite"); favorite.Name = "CatalogFavorite";
+        favorite.Click += (_, _) => FavoriteRequested?.Invoke(item); actions.Children.Add(favorite);
+        if (item.Kind == CatalogKind.Agent)
+        { var chat = ActionButton(item, "Start chat", "\uE8F2"); chat.Name = "CatalogStartChat"; chat.Click += (_, _) => ChatRequested?.Invoke(item); actions.Children.Add(chat); }
+        var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
+        ControlAppearance.Separator(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
+        var card = new Border { Name = "CatalogCard", Tag = item, Child = grid, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
+        ControlAppearance.Apply(card, (_, _) => { }, palette => { card.Background = new SolidColorBrush(palette.Panel); card.BorderBrush = new SolidColorBrush(palette.Stroke); });
+        AutomationProperties.SetName(card, item.Name); return card;
+    }
+
+    private static Button ActionButton(CatalogItem item, string action, string glyph)
+    {
+        var button = new Button { Name = "Catalog" + action.Replace(" ", ""), Content = new FontIcon { Glyph = glyph, FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0) };
+        ToolbarControls.Subtle(button); ToolbarControls.Label(button, $"{action}: {item.Name}"); AutomationProperties.SetAutomationId(button, item.Key + ":" + action); return button;
+    }
+
+    private UIElement CardIcon(CatalogItem item)
+    {
+        var icon = new Grid { Width = 32, Height = 32, VerticalAlignment = VerticalAlignment.Top };
+        icon.Children.Add(item.Kind == CatalogKind.Agent ? ToolbarControls.BotIcon() : new FontIcon { Glyph = "\uE734", FontSize = 24 });
+        if (!AppContext.TryGetSwitch("AIHappey.Desktop.DisableRemoteImages", out var disabled) || !disabled)
+        {
+            var theme = ActualTheme == ElementTheme.Dark ? "dark" : "light";
+            var source = item.Icons.FirstOrDefault(value => value.Theme == theme)?.Source ?? item.Icons.FirstOrDefault()?.Source;
+            if (AttachmentDownloads.RemoteUri(source) is { } uri)
+            {
+                var image = new Image { Width = 32, Height = 32, Source = new BitmapImage(uri) };
+                image.ImageFailed += (_, _) => image.Visibility = Visibility.Collapsed; icon.Children.Add(image);
+            }
+        }
+        return icon;
+    }
+}
+
+/// <summary>Two equally sized columns when they fit, otherwise one. No horizontal scrolling or fixed card widths.</summary>
+internal sealed class OverviewCardsPanel : Panel
+{
+    private const double Gap = 16;
+    private int Columns(double width) => width >= 640 ? 2 : 1;
+    protected override Windows.Foundation.Size MeasureOverride(Windows.Foundation.Size available)
+    {
+        var width = double.IsInfinity(available.Width) ? 760 : available.Width;
+        var columns = Columns(width); var cardWidth = Math.Max(0, (width - Gap * (columns - 1)) / columns);
+        double height = 0;
+        for (var index = 0; index < Children.Count; index += columns)
+        {
+            double rowHeight = 0;
+            for (var column = 0; column < columns && index + column < Children.Count; column++)
+            { Children[index + column].Measure(new(cardWidth, double.PositiveInfinity)); rowHeight = Math.Max(rowHeight, Children[index + column].DesiredSize.Height); }
+            height += rowHeight + (index == 0 ? 0 : Gap);
+        }
+        return new(width, height);
+    }
+    protected override Windows.Foundation.Size ArrangeOverride(Windows.Foundation.Size final)
+    {
+        var columns = Columns(final.Width); var width = Math.Max(0, (final.Width - Gap * (columns - 1)) / columns); double y = 0;
+        for (var index = 0; index < Children.Count; index += columns)
+        {
+            var height = Children.Skip(index).Take(columns).Max(child => child.DesiredSize.Height);
+            for (var column = 0; column < columns && index + column < Children.Count; column++) Children[index + column].Arrange(new(column * (width + Gap), y, width, height));
+            y += height + Gap;
+        }
+        return final;
+    }
+}

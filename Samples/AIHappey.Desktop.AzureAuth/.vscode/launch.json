@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+   
+    {
+      "name": "Desktop AzureAuth",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "desktop-build-azure",
+      "program": "${workspaceFolder}/../../artifacts/Debug/AzureAuth/AIHappey.Desktop.AzureAuth.exe",
+      "cwd": "${workspaceFolder}/../../artifacts/Debug/AzureAuth",
+      "console": "internalConsole",
+      "justMyCode": true
+    }
+  ]
+}

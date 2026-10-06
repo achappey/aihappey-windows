@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="Core/AIHappey.Desktop.Core/AIHappey.Desktop.Core.csproj" />
+  </Folder>
+  <Folder Name="/Samples/">
+    <Project Path="Samples/AIHappey.Desktop.AzureAuth/AIHappey.Desktop.AzureAuth.csproj" />
+    <Project Path="Samples/AIHappey.Desktop.HeaderAuth/AIHappey.Desktop.HeaderAuth.csproj" />
+  </Folder>
+</Solution>

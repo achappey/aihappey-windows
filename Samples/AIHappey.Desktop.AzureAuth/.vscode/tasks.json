@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [  
+    {
+      "label": "desktop-build-azure",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/../../publish.ps1", "-HostName", "AzureAuth", "-Configuration", "Debug"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
