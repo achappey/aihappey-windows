@@ -66,6 +66,7 @@ public sealed partial class ChatShell : UserControl
         history = new(Path.Combine(session.DataDirectory, "conversations"));
         catalogClient = new(client, http);
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
+        PrepareContext();
         Content = BuildLayout();
         ControlAppearance.Apply(this, ControlAppearance.NativeResources, palette =>
         {
@@ -114,6 +115,7 @@ public sealed partial class ChatShell : UserControl
             await session.Host.ManageAccountAsync(XamlRoot, ct);
             UpdateAccountMenu();
             current = new() { Service = Service };
+            input.Text = ""; ResetContext();
             targets = []; target.Text = "";
             InvalidateCatalogs();
             RenderTranscript();
@@ -259,11 +261,12 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(account, 4); top.Children.Add(account);
         workspace.Children.Add(top);
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
-        composer.Children.Add(welcome); composer.Children.Add(input);
+        composer.Children.Add(welcome); composer.Children.Add(contextTagScroll); composer.Children.Add(input);
         var actions = new Grid();
         actions.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        actions.Children.Add(addContext);
         Grid.SetColumn(stop, 1); actions.Children.Add(stop); Grid.SetColumn(send, 2); actions.Children.Add(send);
         composer.Children.Add(actions);
         Grid.SetRow(disclaimer, 3); workspace.Children.Add(disclaimer);
@@ -327,23 +330,30 @@ public sealed partial class ChatShell : UserControl
 
     private async Task SendAsync()
     {
-        if (busy || string.IsNullOrWhiteSpace(input.Text)) return;
+        if (busy || closing || historyDialogOpen || catalogDialog is not null || string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0) return;
         var selected = target.Text.Trim();
         if (!targets.Any(x => x.Id == selected)) { Show("Select a target from the model or agent catalog.", InfoBarSeverity.Warning); return; }
         var prompt = input.Text.Trim();
+        var snapshot = contextAttachments.ToArray();
+        var extractDocuments = session.Settings.ConvertAttachmentsToText;
         var partition = session.HistoryPartition;
-        current.Service = Service; current.Target = selected;
-        if (current.Messages.Count == 0) current.Title = prompt.Length > 60 ? prompt[..60] + "…" : prompt;
-        current.Messages.Add(new() { Message = new UIMessage { Id = Guid.NewGuid().ToString("N"), Role = Role.user, Parts = [new TextUIPart { Text = prompt }] } });
-        var output = new ConversationMessage { Message = new UIMessage { Id = Guid.NewGuid().ToString("N"), Role = Role.assistant,
-            Metadata = new Dictionary<string, object> { ["model"] = selected, ["timestamp"] = DateTimeOffset.UtcNow.ToString("O") } }, Status = "streaming" };
-        // Only complete prior turns and user input go back to the service. Approval and partial replies are never replayed.
-        var requestMessages = current.Messages.Where(PortableConversations.CanReplay).Select(x => x.Message).ToList();
-        current.Messages.Add(output); input.Text = "";
-        followBottom = true;
-        RenderTranscript();
         await RunAsync(async ct =>
         {
+            // Finish preparation before committing a turn or clearing its draft. Cancellation retains input/context.
+            var prepared = await ComposerAttachments.PrepareAsync(prompt, snapshot, Service, extractDocuments, documentExtractor, ct);
+            current.Service = Service; current.Target = selected;
+            if (current.Messages.Count == 0)
+            {
+                var title = string.IsNullOrWhiteSpace(prompt) ? string.Join(", ", snapshot.Select(file => file.Name)) : prompt;
+                current.Title = title.Length > 60 ? title[..60] + "…" : title;
+            }
+            current.Messages.Add(new() { Message = prepared.Message });
+            var output = new ConversationMessage { Message = new UIMessage { Id = Guid.NewGuid().ToString("N"), Role = Role.assistant,
+                Metadata = new Dictionary<string, object> { ["model"] = selected, ["timestamp"] = DateTimeOffset.UtcNow.ToString("O") } }, Status = "streaming" };
+            // Only complete prior turns and user input go back to the service, including their original context parts.
+            var requestMessages = current.Messages.Where(PortableConversations.CanReplay).Select(x => x.Message).ToList();
+            current.Messages.Add(output); input.Text = ""; ResetContext(); followBottom = true; RenderTranscript();
+            if (prepared.Warnings.Count > 0) Show(string.Join("\n", prepared.Warnings), InfoBarSeverity.Warning);
             var assembler = new MessageAssembler(output);
             var watch = Stopwatch.StartNew();
             var saveAt = TimeSpan.Zero;
@@ -520,10 +530,10 @@ public sealed partial class ChatShell : UserControl
 
     private void NewConversation()
     {
-        if (busy && operation is not null) return;
+        if (busy && operation is not null || closing || historyDialogOpen) return;
         ShowPage(DesktopPage.Chat);
         current = new() { Service = Service };
-        input.Text = "";
+        input.Text = ""; ResetContext();
         suppress = true; chats.SelectedItem = null; suppress = false;
         RenderTranscript();
     }
@@ -612,7 +622,7 @@ public sealed partial class ChatShell : UserControl
                 if (current.Id == selected.Id)
                 {
                     current = new() { Service = Service };
-                    input.Text = "";
+                    input.Text = ""; ResetContext();
                     RenderTranscript();
                 }
                 await LoadHistoryAsync(ct);
@@ -635,6 +645,9 @@ public sealed partial class ChatShell : UserControl
             Toggle(); location.SelectionChanged += (_, _) => Toggle();
             panel.Children.Add(location); panel.Children.Add(url); controls.Add((location, url));
         }
+        var extraction = new ToggleSwitch { Name = "DocumentTextExtraction", Header = "Document-to-text extraction", IsOn = session.Settings.ConvertAttachmentsToText };
+        ControlAppearance.Native(extraction); panel.Children.Add(extraction);
+        panel.Children.Add(new TextBlock { Text = "Extract text from local PDFs for model chat. Original files are always included. Agent chat sends originals only.", TextWrapping = TextWrapping.Wrap, MaxWidth = 420 });
         panel.Children.Add(new TextBlock { Text = "Connections and history are isolated by this configuration. Use the user profile menu to manage API keys or your enterprise account. Changing a remote destination changes where your prompts and configured credentials are sent.", TextWrapping = TextWrapping.Wrap, MaxWidth = 420 });
         var validation = new TextBlock { TextWrapping = TextWrapping.Wrap, MaxWidth = 420 }; panel.Children.Add(validation);
         var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = "Connections", Content = panel, PrimaryButtonText = "Save", CloseButtonText = "Cancel" };
@@ -645,7 +658,8 @@ public sealed partial class ChatShell : UserControl
             next = new()
             {
                 Ai = new() { Location = session.Host.AllowLocal && controls[0].Location.SelectedIndex == 0 ? RuntimeLocation.Local : RuntimeLocation.Remote, RemoteUrl = controls[0].Url.Text.Trim() },
-                Agents = new() { Location = session.Host.AllowLocal && controls[1].Location.SelectedIndex == 0 ? RuntimeLocation.Local : RuntimeLocation.Remote, RemoteUrl = controls[1].Url.Text.Trim() }
+                Agents = new() { Location = session.Host.AllowLocal && controls[1].Location.SelectedIndex == 0 ? RuntimeLocation.Local : RuntimeLocation.Remote, RemoteUrl = controls[1].Url.Text.Trim() },
+                ConvertAttachmentsToText = extraction.IsOn
             };
             try { next.Validate(session.Host.AllowLocal); }
             catch (InvalidOperationException e) { args.Cancel = true; validation.Text = e.Message; }
@@ -653,10 +667,15 @@ public sealed partial class ChatShell : UserControl
         if (await dialog.ShowAsync() != ContentDialogResult.Primary || next is null) return;
         await RunAsync(async ct =>
         {
-            await session.Runtime.DisposeAsync();
+            var connectionsChanged = new[] { ServiceKind.Ai, ServiceKind.Agents }.Any(kind =>
+                session.Settings.For(kind).Location != next.For(kind).Location || session.Settings.For(kind).RemoteUrl != next.For(kind).RemoteUrl);
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
+            // A composer preference does not change the runtime, account, history partition, or current draft.
+            if (!connectionsChanged) return;
+            await session.Runtime.DisposeAsync();
             current = new() { Service = Service }; targets = []; target.Text = "";
+            input.Text = ""; ResetContext();
             InvalidateCatalogs();
             RenderTranscript(); await LoadHistoryAsync(ct); await DiscoverAsync(ct);
             if (activePage != DesktopPage.Chat) await LoadOverviewAsync(ActiveOverview, ct);
@@ -683,6 +702,8 @@ public sealed partial class ChatShell : UserControl
     {
         input.IsReadOnly = value && inference;
         models.IsEnabled = agents.IsEnabled = target.IsEnabled = refresh.IsEnabled = account.IsEnabled = settingsButton.IsEnabled = manageAccount.IsEnabled = newChat.IsEnabled = searchChats.IsEnabled = chats.IsEnabled = send.IsEnabled = !value;
+        addContext.IsEnabled = !value;
+        RenderContextTags();
         SetOverviewBusy(value);
         progress.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         stop.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
@@ -707,9 +728,9 @@ public sealed partial class ChatShell : UserControl
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
-        searchDialog?.Hide();
+        searchDialog?.Hide(); linkDialog?.Hide();
         while (busy) await Task.Delay(20);
         // A save picker may remain open until dismissed; no download continues after shutdown.
-        await session.DisposeAsync(); http.Dispose();
+        await session.DisposeAsync(); http.Dispose(); contextHttp.Dispose();
     }
 }

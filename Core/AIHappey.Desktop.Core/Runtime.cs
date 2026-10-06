@@ -13,6 +13,7 @@ public sealed class DesktopSettings
 {
     public ServiceSettings Ai { get; set; } = new();
     public ServiceSettings Agents { get; set; } = new();
+    public bool ConvertAttachmentsToText { get; set; } = true;
     public ServiceSettings For(ServiceKind kind) => kind == ServiceKind.Ai ? Ai : Agents;
 
     public void Validate(bool allowLocal)

@@ -40,7 +40,7 @@ public sealed partial class ChatShell
     {
         if (busy || closing) return;
         var same = current.Id == selected.Id;
-        if (!same) { current = selected; input.Text = ""; }
+        if (!same) { current = selected; input.Text = ""; ResetContext(); }
         ShowPage(DesktopPage.Chat); UpdateMode(current.Service); target.Text = current.Target;
         suppress = true;
         try { chats.SelectedItem = conversations.FirstOrDefault(conversation => conversation.Id == current.Id); }
