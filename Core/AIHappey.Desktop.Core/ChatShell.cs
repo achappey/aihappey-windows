@@ -68,6 +68,7 @@ public sealed partial class ChatShell : UserControl
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
         PrepareContext();
         Content = BuildLayout();
+        PrepareFileDrop();
         ControlAppearance.Apply(this, ControlAppearance.NativeResources, palette =>
         {
             Background = new SolidColorBrush(palette.Surface);
@@ -700,6 +701,7 @@ public sealed partial class ChatShell : UserControl
 
     private void SetBusy(bool value, bool inference)
     {
+        ResetFileDrop();
         input.IsReadOnly = value && inference;
         models.IsEnabled = agents.IsEnabled = target.IsEnabled = refresh.IsEnabled = account.IsEnabled = settingsButton.IsEnabled = manageAccount.IsEnabled = newChat.IsEnabled = searchChats.IsEnabled = chats.IsEnabled = send.IsEnabled = !value;
         addContext.IsEnabled = !value;
@@ -727,6 +729,7 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
         while (busy) await Task.Delay(20);

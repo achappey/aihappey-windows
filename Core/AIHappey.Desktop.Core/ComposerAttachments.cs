@@ -49,6 +49,30 @@ public static class ComposerAttachments
         if (size < 0 || size > MaximumFileBytes) throw new InvalidOperationException("The attachment exceeds the 25 MB per-file limit.");
     }
 
+    /// <summary>Shared picker/drop admission. Keep successful files, but never admit into a stale draft.</summary>
+    public static async Task<IReadOnlyList<string>> AdmitAsync<T>(IEnumerable<T> files, Func<T, string> name,
+        Func<T, CancellationToken, Task<ComposerAttachment>> read, Action<ComposerAttachment> admit,
+        Func<bool> isCurrent, CancellationToken ct)
+    {
+        var rejected = new List<string>();
+        foreach (var file in files)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (!isCurrent()) break;
+            try
+            {
+                var attachment = await read(file, ct);
+                ct.ThrowIfCancellationRequested();
+                if (!isCurrent()) break;
+                admit(attachment);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException
+                or System.Runtime.InteropServices.COMException)
+            { ct.ThrowIfCancellationRequested(); rejected.Add(name(file)); }
+        }
+        return rejected;
+    }
+
     public static async Task<ComposerAttachment> ReadAsync(string filename, string? mediaType, Stream source, CancellationToken ct)
     {
         using var buffer = new MemoryStream();

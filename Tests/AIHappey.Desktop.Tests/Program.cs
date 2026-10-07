@@ -235,6 +235,7 @@ try
     using var http = new HttpClient(handler);
     var session = new DesktopSession(fakeHost, fakeRuntime, new DesktopSettings());
     var client = new DesktopChatClient(session, http);
+    await ComposerAttachmentRegressionTests.RunAsync(Check, Reject, session);
     await CatalogRegressionTests.RunAsync(Check, Reject, root, session);
     Check((await client.ListAsync(ServiceKind.Agents, CancellationToken.None)).Single().Id == "agent", "typed agent catalog");
     var user = new UIMessage { Id = "user", Role = Role.user, Parts = [new TextUIPart { Text = "hello" }] };

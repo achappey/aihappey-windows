@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
+using Windows.Storage;
 using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
@@ -47,6 +48,7 @@ public sealed partial class ChatShell
 
     private void ResetContext()
     {
+        ResetFileDrop();
         contextVersion++; contextAttachments.Clear(); linkDialog?.Hide(); RenderContextTags();
     }
 
@@ -86,7 +88,7 @@ public sealed partial class ChatShell
 
     private async Task PickAttachmentsAsync()
     {
-        if (busy || closing || historyDialogOpen || catalogDialog is not null) return;
+        if (!CanAddContext) return;
         var version = contextVersion;
         var partition = session.HistoryPartition;
         await RunAsync(async ct =>
@@ -95,25 +97,28 @@ public sealed partial class ChatShell
             picker.FileTypeFilter.Add("*");
             WinRT.Interop.InitializeWithWindow.Initialize(picker, Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId));
             var selected = await picker.PickMultipleFilesAsync().AsTask(ct);
-            var rejected = new List<string>();
-            foreach (var file in selected)
-            {
-                ct.ThrowIfCancellationRequested();
-                if (closing || version != contextVersion || partition != session.HistoryPartition) return;
-                try
-                {
-                    var properties = await file.GetBasicPropertiesAsync().AsTask(ct);
-                    ComposerAttachments.ValidateSize((long)properties.Size);
-                    await using var stream = await file.OpenStreamForReadAsync();
-                    var attachment = await ComposerAttachments.ReadAsync(file.Name, file.ContentType, stream, ct);
-                    if (!closing && version == contextVersion && partition == session.HistoryPartition) AddContextAttachment(attachment);
-                }
-                catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException)
-                { rejected.Add(file.Name); }
-            }
-            if (rejected.Count > 0) Show("Could not add: " + string.Join(", ", rejected) + ". Check file access and the 25 MB per-file limit. Other selected files were kept.", InfoBarSeverity.Warning);
+            await AdmitStorageItemsAsync(selected, version, partition, ct);
         });
         if (!closing) input.Focus(FocusState.Programmatic);
+    }
+
+    private bool IsCurrentContext(int version, string partition) => !closing && version == contextVersion
+        && partition == session.HistoryPartition && activePage == DesktopPage.Chat;
+
+    private async Task AdmitStorageItemsAsync(IEnumerable<IStorageItem> items, int version, string partition, CancellationToken ct)
+    {
+        var snapshot = items.ToArray();
+        var rejected = snapshot.Where(item => item is not StorageFile).Select(item => item.Name).ToList();
+        rejected.AddRange(await ComposerAttachments.AdmitAsync(snapshot.OfType<StorageFile>(), file => file.Name,
+            async (file, token) =>
+            {
+                var properties = await file.GetBasicPropertiesAsync().AsTask(token);
+                ComposerAttachments.ValidateSize((long)properties.Size);
+                await using var stream = await file.OpenStreamForReadAsync();
+                return await ComposerAttachments.ReadAsync(file.Name, file.ContentType, stream, token);
+            }, AddContextAttachment, () => IsCurrentContext(version, partition), ct));
+        if (IsCurrentContext(version, partition) && rejected.Count > 0)
+            Show("Could not add: " + string.Join(", ", rejected) + ". Drop individual files, check file access and the 25 MB per-file limit. Other files were kept.", InfoBarSeverity.Warning);
     }
 
     private async Task AddLinkAsync()

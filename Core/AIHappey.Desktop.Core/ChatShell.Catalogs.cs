@@ -75,6 +75,7 @@ public sealed partial class ChatShell
 
     private void ShowPage(DesktopPage page)
     {
+        ResetFileDrop();
         details.IsPaneOpen = false;
         activePage = page;
         var chat = page == DesktopPage.Chat;
