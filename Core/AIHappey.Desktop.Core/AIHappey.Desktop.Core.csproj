@@ -13,6 +13,7 @@
   <ItemGroup>
     <!-- x:Uid in this library resolves through the library's native resource scope. -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
+    <PackageReference Include="CommunityToolkit.Labs.WinUI.Controls.MarkdownTextBlock" Version="0.1.260915-build.2673" />
     <PackageReference Include="PdfPig" Version="0.1.17-alpha-202610070034-bdbc5" />
     <ProjectReference Include="..\..\..\aihappey-ai\Core\AIHappey.Vercel\AIHappey.Vercel.csproj" />
     <ProjectReference Include="..\..\..\aihappey-agents\core\AgentHappey.Common\AgentHappey.Common.csproj" />

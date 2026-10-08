@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Automation.Provider;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 
@@ -17,7 +18,7 @@ public partial class App : Application
 {
     private readonly List<string> results = [];
     private Window? window;
-    private readonly string report = Environment.GetCommandLineArgs().Skip(1).Single();
+    private readonly string report = Environment.GetCommandLineArgs().Skip(1).First();
 
     public App()
     {
@@ -32,15 +33,16 @@ public partial class App : Application
         try
         {
             File.WriteAllText(report, "Starting native UI checks.\n");
-            // Optional styles/brushes must not be required or assumed to have a specific type.
+            // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
-            Resources["CardStrokeColorDefaultBrush"] = "deliberately not a Brush";
-            Resources["CardBackgroundFillColorDefaultBrush"] = "deliberately not a Brush";
             window = new Window { Title = "AIHappey native UI regression checks" };
             Check(DesktopBranding.ResolveName(null) == "aihappey" && DesktopBranding.ResolveName(" ") == "aihappey" && DesktopBranding.ResolveName(" chathappey ") == "chathappey", "build branding fallback and custom name");
             foreach (var local in new[] { true, false })
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
-                    await CheckShellAsync(local, theme);
+                {
+                    await CheckTranscriptAsync(local, theme);
+                    if (!Environment.GetCommandLineArgs().Contains("--transcript-only")) await CheckShellAsync(local, theme);
+                }
             results.Add("All native UI checks passed.");
             File.WriteAllLines(report, results);
             window.Close();
@@ -51,6 +53,82 @@ public partial class App : Application
             File.WriteAllLines(report, results.Append("FAILED: " + error));
             Environment.Exit(1);
         }
+    }
+
+    private async Task CheckTranscriptAsync(bool local, ElementTheme theme)
+    {
+        var session = new DesktopSession(new UiHost(local), new UiRuntime(), local ? new DesktopSettings() : new DesktopSettings
+        {
+            Ai = new() { Location = RuntimeLocation.Remote, RemoteUrl = "https://ui-test.invalid/ai/" },
+            Agents = new() { Location = RuntimeLocation.Remote, RemoteUrl = "https://ui-test.invalid/agents/" }
+        });
+        var shell = new ChatShell(session) { RequestedTheme = theme };
+        var context = $"Transcript / {(local ? "HeaderAuth" : "AzureAuth")} / {theme}";
+        try
+        {
+            window!.Content = shell; window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); window.Activate();
+            await Task.Delay(200);
+            var timestamp = DateTimeOffset.UtcNow.AddMinutes(-2);
+            var answer = new TextUIPart { Text = "# Answer\n\n**Important** and *emphasis* with `inline code`.\n\n- First item\n- Second item\n\n> Quote\n\n[Web link](https://example.com/)\n\n| Name | Value |\n| --- | --- |\n| Example | 42 |\n\n```csharp\nConsole.WriteLine(42);\n```\n\n![Untrusted image](https://ui-test.invalid/image.png)" };
+            var conversation = new Conversation
+            {
+                Target = "test-agent", Service = ServiceKind.Agents, Messages =
+                [
+                    new() { Timestamp = timestamp, Message = new UIMessage { Id = "user", Role = Role.user, Parts = [new TextUIPart { Text = "Please check." }] } },
+                    new() { Timestamp = timestamp, Status = "complete", Message = new UIMessage { Id = "mixed", Role = Role.assistant, Parts =
+                    [
+                        new ReasoningUIPart { Text = "## Thinking\n\n**Checking** the tools." },
+                        PortableConversations.Part(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("""{"type":"tool-search","toolCallId":"call","state":"output-available","input":{"query":"models"},"output":{}}""")),
+                        answer
+                    ] } }
+                ]
+            };
+            var open = typeof(ChatShell).GetMethod("OpenConversationAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            for (var repeat = 0; repeat < 3; repeat++)
+            {
+                await (Task)open.Invoke(shell, new object[] { new Conversation { Target = "test-agent", Service = ServiceKind.Agents } })!;
+                await (Task)open.Invoke(shell, new object[] { conversation })!;
+                await Task.Delay(150); shell.UpdateLayout();
+                var transcript = Field<StackPanel>(shell, "transcript");
+                var activity = Descendants(transcript).OfType<Border>().Single(border => border.Name == "ActivityCard");
+                Check(activity.Child is Grid layout && layout.Children.OfType<StackPanel>().Count() == 1, context + $": open/reopen {repeat + 1}, activity has one visual parent");
+            }
+            var body = Field<StackPanel>(shell, "transcript");
+            Check(Descendants(body).OfType<ChatMarkdown>().Any(markdown => markdown.Name == "MessageMarkdown" && markdown.Text == answer.Text)
+                && RenderedRuns(body).Any(run => run.Text == "Important"), context + ": text renders Markdown with original copy content retained");
+            Check(Descendants(body).OfType<CommunityToolkit.WinUI.Controls.MarkdownTextBlock>().All(markdown => markdown.UsePipeTables && markdown.DisableHtml && markdown.IsTextSelectionEnabled), context + ": toolkit tables, disabled HTML and selectable text");
+            Check(Descendants(body).OfType<Image>().All(image => image.Source is null), context + ": Markdown images do not fetch untrusted content");
+            Check(Descendants(body).OfType<TextBlock>().Where(text => text.Name == "MessageTime").All(text => text.Text == "2 minutes ago"), context + ": localized relative timestamps");
+            Check(Descendants(body).OfType<Border>().Count(border => border.Name == "AiGeneratedBadge") == 2, context + ": assistant activity and answer disclose AI generation");
+            Check(Descendants(body).OfType<IconElement>().Any(icon => icon.Name == "ToolActivityIcon"), context + ": tool header icon");
+            InvokeButton(Descendants(body).OfType<Button>().Single(button => AutomationProperties.GetName(button) == "Previous activity"));
+            await Task.Delay(150);
+            Check(Descendants(body).OfType<IconElement>().Any(icon => icon.Name == "ReasoningActivityIcon") && RenderedRuns(body).Any(run => run.Text == "Checking"), context + ": brain icon and reasoning Markdown after navigation");
+            conversation.Messages[1].Message.Parts[2] = new TextUIPart { Text = answer.Text + "\n\n**Partial streaming" };
+            Call(shell, "RenderTranscript"); await Task.Delay(100);
+            Check(RenderedRuns(body).Any(run => run.Text.Contains("Partial streaming")), context + ": incomplete streamed Markdown renders without crashing");
+            foreach (var width in new[] { 720, 1280 })
+            {
+                window.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(100); shell.UpdateLayout();
+                Check(Field<ScrollViewer>(shell, "scroll").ScrollableWidth < 1, context + $": no transcript horizontal overflow at {width}px");
+            }
+            shell.RequestedTheme = theme == ElementTheme.Light ? ElementTheme.Dark : ElementTheme.Light; await Task.Delay(150);
+            Check(RenderedRuns(body).Any(run => run.Text == "Important"), context + ": Markdown survives native runtime theme switch");
+            File.WriteAllLines(report, results);
+        }
+        finally { await shell.ShutdownAsync(); window!.Content = null; }
+    }
+
+    private static IEnumerable<Run> RenderedRuns(DependencyObject root)
+        => Descendants(root).OfType<RichTextBlock>().SelectMany(text => text.Blocks.OfType<Paragraph>())
+            .SelectMany(paragraph => paragraph.Inlines).SelectMany(InlineRuns);
+
+    private static IEnumerable<Run> InlineRuns(Inline inline)
+    {
+        if (inline is Run run) yield return run;
+        if (inline is Span span)
+            foreach (var child in span.Inlines)
+                foreach (var nested in InlineRuns(child)) yield return nested;
     }
 
     private async Task CheckShellAsync(bool local, ElementTheme theme)
@@ -238,6 +316,10 @@ public partial class App : Application
                 context + ": token badge vertically centered alongside copy icon");
             Check(!Descendants(assistant).OfType<TextBlock>().Any(text => text.Text.Contains("Tokens:")) && Descendants(assistant).OfType<TextBlock>().Count(text => text.Text.Contains("test-agent")) == 1, context + ": no token label or duplicate model name");
             Check(Descendants(assistant).OfType<Border>().Single(part => part.Name == "MessageHeader").BorderThickness.Bottom == 1 && footer.BorderThickness.Top == 1, context + ": header/body/footer separators");
+            Check(Descendants(assistant).OfType<Border>().Any(part => part.Name == "AiGeneratedBadge")
+                && !Descendants((Border)((Grid)transcript.Children[0]).Children[0]).OfType<Border>().Any(part => part.Name == "AiGeneratedBadge"), context + ": AI disclosure appears only on assistant messages");
+            Check(Descendants(assistant).OfType<TextBlock>().Count(text => text.Name == "MessageTime") == 1
+                && !Descendants(assistant).OfType<TextBlock>().Any(text => text.Text.Contains("complete", StringComparison.OrdinalIgnoreCase)), context + ": relative time without message status");
 
             foreach (var width in new[] { 720, 1280, 1920, 900 })
             {
@@ -275,8 +357,11 @@ public partial class App : Application
             Call(shell, "RenderTranscript");
             await Task.Delay(150);
             shell.UpdateLayout();
-            Check(Descendants(transcript).OfType<TextBlock>().Any(text => text.Text == "The tool finished."), context + ": mixed reasoning/tool transcript renders without native failure");
+            Check(RenderedRuns(transcript).Any(run => run.Text == "The tool finished."), context + ": mixed reasoning/tool transcript renders without native failure");
             var activityCard = Descendants(transcript).OfType<Border>().Single(border => border.Name == "ActivityCard");
+            Check(activityCard.Child is Grid activityLayout && activityLayout.Children.OfType<StackPanel>().Count() == 1
+                && activityLayout.Children.OfType<Border>().Single().Name == "ActivityAccent", context + ": activity sections attach to exactly one parent alongside native accent");
+            Check(Descendants(activityCard).OfType<IconElement>().Any(icon => icon.Name == "ToolActivityIcon"), context + ": latest tool activity has tool header icon");
             var counter = Descendants(activityCard).OfType<TextBlock>().Single(text => text.Name == "ActivityCount");
             var previousActivity = Descendants(activityCard).OfType<Button>().Single(button => AutomationProperties.GetName(button) == "Previous activity");
             Check(Math.Abs(counter.TransformToVisual(activityCard).TransformPoint(new Windows.Foundation.Point()).Y + counter.ActualHeight / 2
@@ -285,7 +370,9 @@ public partial class App : Application
             Check(counter.Text == "2/2" && !Descendants(activityCard).OfType<TextBlock>().Any(text => text.Text == "Output" || text.Text.Contains("test-model")), context + ": latest activity shows input only, not tool output");
             InvokeButton(previousActivity);
             await Task.Delay(50);
-            Check(Descendants(transcript).OfType<TextBlock>().Any(text => text.Text == "Checking the available tools."), context + ": previous activity shows reasoning");
+            Check(RenderedRuns(transcript).Any(run => run.Text == "Checking the available tools."), context + ": previous activity shows reasoning");
+            Check(Descendants(transcript).OfType<IconElement>().Any(icon => icon.Name == "ReasoningActivityIcon")
+                && !Descendants(transcript).OfType<IconElement>().Any(icon => icon.Name == "ToolActivityIcon"), context + ": activity navigation switches header icon to brain");
             var activityList = Descendants(transcript).OfType<Button>().Single(button => AutomationProperties.GetName(button) == "Show activity list");
             InvokeButton(activityList);
             await Task.Delay(100);
@@ -298,6 +385,14 @@ public partial class App : Application
             Check(Descendants(transcript).OfType<TextBlock>().Single(text => text.Name == "ActivityCount").Text == "2/2", context + ": native activity panel selects transcript page");
             details.IsPaneOpen = false;
             await Task.Delay(150);
+
+            // Exercise the exact conversation-opening path from the double-parent crash.
+            var openConversation = typeof(ChatShell).GetMethod("OpenConversationAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            await (Task)openConversation.Invoke(shell, new object[] { new Conversation { Target = "test-agent", Service = ServiceKind.Agents } })!;
+            await (Task)openConversation.Invoke(shell, new object[] { conversation })!;
+            await Task.Delay(150);
+            Check(Descendants(transcript).OfType<Border>().Count(border => border.Name == "ActivityCard") == 1
+                && RenderedRuns(transcript).Any(run => run.Text == "The tool finished."), context + ": reopening reasoning/tool conversation avoids double-parent native crash");
 
             for (var source = 0; source < 6; source++) mixed.Message.Parts.Add(new SourceUIPart { SourceId = "source" + source, Title = "Source " + source, Url = $"https://domain{source}.example/article" });
             mixed.Message.Parts.Add(new FileUIPart { Filename = "report.txt", MediaType = "text/plain", Url = "data:text/plain;base64,aGVsbG8=" });

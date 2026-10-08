@@ -68,6 +68,7 @@ public sealed partial class ChatShell : UserControl
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
         PrepareContext();
         PrepareChatSettings();
+        PrepareTranscript();
         Content = BuildLayout();
         PrepareFileDrop();
         ControlAppearance.Apply(this, (_, _) => { }, palette =>
@@ -401,6 +402,7 @@ public sealed partial class ChatShell : UserControl
         composer.VerticalAlignment = empty ? VerticalAlignment.Center : VerticalAlignment.Bottom;
         SizeTranscript();
         transcript.Children.Clear();
+        messageTimes.Clear();
         var liveActivity = new HashSet<string>();
         foreach (var projected in MessageDetails.Project(current.Messages))
         {
@@ -408,17 +410,11 @@ public sealed partial class ChatShell : UserControl
             var block = projected.Block;
             var user = message.Message.Role == Role.user;
             var content = new StackPanel { Spacing = 8 };
-            var heading = user ? DesktopResources.Get("You") : PortableConversations.MetadataString(message.Message.Metadata, "model") ?? current.Target;
-            var header = new Border
-            {
-                Name = "MessageHeader", Padding = new Thickness(16, 12, 16, 12), BorderThickness = new Thickness(0, 0, 0, 1),
-                Child = new TextBlock { Text = $"{heading} · {message.Timestamp.ToLocalTime():g} · {DisplayStatus(message.Status)}", TextWrapping = TextWrapping.Wrap }
-            };
-            ControlAppearance.Separator(header);
             var key = current.Id + ":" + block.Key;
             if (block.Activity) liveActivity.Add(key);
             var page = block.Activity && activityPages.TryGetValue(key, out var chosen) ? Math.Clamp(chosen, 0, block.Parts.Count - 1) : block.Parts.Count - 1;
             var displayed = page >= 0 ? block.Parts[page] : null;
+            var header = MessageHeader(message, user, block.Activity ? displayed : null);
             if (displayed is not null) RenderPart(content, displayed);
             else content.Children.Add(SelectableText(block.Key.EndsWith(":details", StringComparison.Ordinal) ? DesktopResources.Get("AttachmentsSources") : DesktopResources.Get("Working")));
             string? tokenCount = null;
@@ -460,22 +456,32 @@ public sealed partial class ChatShell : UserControl
                 usage.Children.Add(new TextBlock { Text = tokenCount, VerticalAlignment = VerticalAlignment.Center });
                 var badge = new Border { Name = "TokenUsage", Child = usage, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), VerticalAlignment = VerticalAlignment.Center };
                 ToolbarControls.Label(badge, DesktopResources.Format("TokenUsage", tokenCount));
-                ControlAppearance.TokenBadge(badge);
+                badge.Style = TranscriptStyle("TranscriptSurfaceStyle");
                 footerActions.Children.Add(badge);
             }
             AddDetailsActions(footerActions, projected);
             var footer = new Border { Name = "MessageFooter", Child = footerActions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
-            ControlAppearance.Separator(footer);
+            footer.Style = TranscriptStyle("TranscriptSeparatorStyle");
             var sections = new StackPanel();
             sections.Children.Add(header);
             sections.Children.Add(new Border { Name = "MessageBody", Child = content, Padding = new Thickness(16) });
             sections.Children.Add(footer);
             var card = new Border
             {
-                Name = block.Activity ? "ActivityCard" : "MessageCard", Child = sections, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1),
+                Name = block.Activity ? "ActivityCard" : "MessageCard", CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1),
                 HorizontalAlignment = user ? HorizontalAlignment.Right : HorizontalAlignment.Left
             };
-            ControlAppearance.MessageCard(card, user);
+            card.Style = TranscriptStyle(user ? "TranscriptUserCardStyle" : "TranscriptCardStyle");
+            if (block.Activity)
+            {
+                var activity = new Grid();
+                activity.ColumnDefinitions.Add(new() { Width = new GridLength(4) });
+                activity.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+                activity.Children.Add(new Border { Name = "ActivityAccent", Style = TranscriptStyle("TranscriptActivityAccentStyle"), CornerRadius = new CornerRadius(7, 0, 0, 7) });
+                Grid.SetColumn(sections, 1); activity.Children.Add(sections); card.Child = activity;
+            }
+            else card.Child = sections;
+            // Assemble before attachment: WinUI elements cannot have two visual parents.
             // Every row spans the transcript. Relative columns keep cards <= 80% of its width,
             // align users right / assistants left, and shrink correctly for wrapped long text.
             var row = new Grid();
@@ -496,17 +502,6 @@ public sealed partial class ChatShell : UserControl
 
     private static TextBlock SelectableText(string text) => new() { Text = text, IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap };
 
-    private static string DisplayStatus(string status) => status switch
-    {
-        "complete" => DesktopResources.Get("StatusComplete"),
-        "streaming" => DesktopResources.Get("StatusStreaming"),
-        "interrupted" => DesktopResources.Get("StatusInterrupted"),
-        "stopped" => DesktopResources.Get("StatusStopped"),
-        "failed" => DesktopResources.Get("StatusFailed"),
-        "approval required" => DesktopResources.Get("StatusApprovalRequired"),
-        _ => status
-    };
-
     private static Button ActivityButton(string label, string glyph)
     {
         var button = new Button { Content = new FontIcon { Glyph = glyph, FontSize = 14 }, Width = 32, Height = 32, Padding = new Thickness(0) };
@@ -515,11 +510,11 @@ public sealed partial class ChatShell : UserControl
 
     private static void RenderPart(StackPanel content, UIMessagePart part)
     {
-        if (part.Type == "text") { content.Children.Add(SelectableText(PortableConversations.Text(part))); return; }
+        if (part.Type == "text") { content.Children.Add(new ChatMarkdown { Name = "MessageMarkdown", Text = PortableConversations.Text(part) }); return; }
         if (part.Type == "reasoning")
         {
             content.Children.Add(new TextBlock { Text = DesktopResources.Get("Reasoning"), FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-            content.Children.Add(SelectableText(PortableConversations.Text(part))); return;
+            content.Children.Add(new ChatMarkdown { Name = "ReasoningMarkdown", Text = PortableConversations.Text(part) }); return;
         }
         var raw = PortableConversations.Element(part);
         if (PortableConversations.IsTool(part))

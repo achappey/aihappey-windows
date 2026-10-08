@@ -22,6 +22,21 @@
   <data name="ShowMore" xml:space="preserve"><value>Meer tonen</value></data>
   <data name="Welcome" xml:space="preserve"><value>Je behulpzame vervanger is er</value></data>
   <data name="Disclaimer" xml:space="preserve"><value>AI kan fouten maken. Controleer belangrijke informatie.</value></data>
+  <data name="GeneratedByAi" xml:space="preserve"><value>Door AI gegenereerd</value></data>
+  <data name="GeneratedByAiWarning" xml:space="preserve"><value>Door AI gegenereerde inhoud is mogelijk onjuist</value></data>
+  <data name="TimeJustNow" xml:space="preserve"><value>Zojuist</value></data>
+  <data name="TimeMinuteAgo" xml:space="preserve"><value>Eén minuut geleden</value></data>
+  <data name="TimeMinutesAgo" xml:space="preserve"><value>{0} minuten geleden</value></data>
+  <data name="TimeHourAgo" xml:space="preserve"><value>Eén uur geleden</value></data>
+  <data name="TimeHoursAgo" xml:space="preserve"><value>{0} uur geleden</value></data>
+  <data name="TimeDayAgo" xml:space="preserve"><value>Eén dag geleden</value></data>
+  <data name="TimeDaysAgo" xml:space="preserve"><value>{0} dagen geleden</value></data>
+  <data name="TimeWeekAgo" xml:space="preserve"><value>Eén week geleden</value></data>
+  <data name="TimeWeeksAgo" xml:space="preserve"><value>{0} weken geleden</value></data>
+  <data name="TimeMonthAgo" xml:space="preserve"><value>Eén maand geleden</value></data>
+  <data name="TimeMonthsAgo" xml:space="preserve"><value>{0} maanden geleden</value></data>
+  <data name="TimeYearAgo" xml:space="preserve"><value>Eén jaar geleden</value></data>
+  <data name="TimeYearsAgo" xml:space="preserve"><value>{0} jaar geleden</value></data>
   <data name="AskAnything" xml:space="preserve"><value>Vraag maar raak</value></data>
   <data name="Models" xml:space="preserve"><value>Modellen</value></data>
   <data name="Agents" xml:space="preserve"><value>Agents</value></data>

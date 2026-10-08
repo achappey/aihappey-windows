@@ -1,0 +1,18 @@
+<UserControl x:Class="AIHappey.Desktop.Core.ChatMarkdown"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+    <Grid>
+        <!-- The probes resolve live native brushes in this control's actual theme.
+             Labs' MarkdownThemes holds plain CLR properties, not ThemeResource DPs. -->
+        <Grid Width="0" Height="0" Opacity="0" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw">
+            <TextBlock x:Name="Primary" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+            <TextBlock x:Name="Link" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+            <Border x:Name="Card" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Border x:Name="Code" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" />
+        </Grid>
+        <toolkit:MarkdownTextBlock x:Name="Markdown" DisableHtml="True" UsePipeTables="True"
+                                  UseEmphasisExtras="True" UseTaskLists="True" UseAutoLinks="True"
+                                  IsTextSelectionEnabled="True" HorizontalAlignment="Stretch" />
+    </Grid>
+</UserControl>

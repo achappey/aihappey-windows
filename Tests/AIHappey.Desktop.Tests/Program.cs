@@ -19,6 +19,7 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    TranscriptRegressionTests.Run(Check);
     var defaults = new DesktopSettings();
     Check(defaults.Ai.Location == RuntimeLocation.Local && defaults.Agents.Location == RuntimeLocation.Local, "public defaults are local");
     Reject(() => defaults.Validate(false), "enterprise rejects local");

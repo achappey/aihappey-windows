@@ -8,6 +8,8 @@
   <ItemGroup>
     <!-- Compile the production non-visual boundary without loading WinUI in the test runner. -->
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/en/Resources.resw" LogicalName="Desktop.Resources.en" />
+    <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/nl/Resources.resw" LogicalName="Desktop.Resources.nl" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RelativeTime.cs" Link="Core/RelativeTime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatClient.cs" Link="Core/ChatClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatPreferences.cs" Link="Core/ChatPreferences.cs" />

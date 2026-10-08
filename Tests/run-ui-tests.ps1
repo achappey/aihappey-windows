@@ -1,4 +1,4 @@
-param([switch]$SkipBuild)
+param([switch]$SkipBuild, [switch]$TranscriptOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -15,7 +15,9 @@ if (-not $SkipBuild) {
 }
 $report = Join-Path ([IO.Path]::GetTempPath()) ('AIHappey-ui-tests-' + [guid]::NewGuid().ToString('N') + '.txt')
 try {
-    $process = Start-Process (Join-Path $output 'AIHappey.Desktop.UiTests.exe') -ArgumentList ('"' + $report + '"') -PassThru
+    $arguments = @('"' + $report + '"')
+    if ($TranscriptOnly) { $arguments += '--transcript-only' }
+    $process = Start-Process (Join-Path $output 'AIHappey.Desktop.UiTests.exe') -ArgumentList $arguments -PassThru
     if (-not $process.WaitForExit(60000)) {
         $process.Kill()
         throw 'Native UI test process timed out after 60 seconds.'
