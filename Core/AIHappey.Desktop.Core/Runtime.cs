@@ -47,6 +47,7 @@ public interface IDesktopHost
     bool AllowLocal { get; }
     string AccountLabel { get; }
     string HistoryIdentity { get; }
+    DesktopUserContext? UserContext => null;
     Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     Task AuthenticateAsync(HttpRequestMessage request, ServiceKind service, CancellationToken cancellationToken);
     Task ManageAccountAsync(object xamlRoot, CancellationToken cancellationToken);
@@ -74,6 +75,16 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     public IRuntimeResolver Runtime { get; } = runtime;
     public DesktopSettings Settings { get; set; } = settings;
     public string ActiveLanguage { get; set; } = "en";
+    public DesktopContextOptions ContextOptions { get; set; } = new();
+    public ISystemContextComposer ContextComposer { get; set; } = new DesktopSystemContextComposer();
+    public Func<DateTimeOffset, System.Text.Json.Nodes.JsonObject> SystemInformationProvider { get; set; } = DesktopSystemContext.SystemInformation;
+    public AIHappey.Vercel.Models.UIMessage CaptureSystemContext(bool darkMode = false,
+        System.Text.Json.Nodes.JsonObject? systemInformation = null, ChatPreferences? preferences = null)
+    {
+        var now = DateTimeOffset.UtcNow;
+        return ContextComposer.Compose(new(ContextOptions, systemInformation ?? SystemInformationProvider(now),
+            Host.UserContext, ActiveLanguage, darkMode, (preferences ?? Settings.Chat).SystemInstructions, now));
+    }
     public string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIHappey", "Desktop", Host.ProfileId);
     public string HistoryPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity,
         Settings.Ai.Location.ToString(), Settings.Ai.Location == RuntimeLocation.Remote ? Settings.Ai.RemoteUrl.TrimEnd('/') : "managed-ai",

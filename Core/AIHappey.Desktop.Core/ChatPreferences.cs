@@ -12,6 +12,8 @@ public sealed class ChatPreferences
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? MaxOutputTokens { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? SystemInstructions { get; set; }
     public Dictionary<string, JsonObject> ProviderMetadata { get; set; } = new()
     {
         ["openai"] = OpenAIChatConfig.Defaults()
@@ -21,6 +23,7 @@ public sealed class ChatPreferences
     public ChatPreferences Clone() => new()
     {
         MaxOutputTokens = MaxOutputTokens,
+        SystemInstructions = SystemInstructions,
         ProviderMetadata = ProviderMetadata.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone()),
         ProviderHeaders = ProviderHeaders.ToDictionary(p => p.Key, p => new Dictionary<string, string>(p.Value, StringComparer.OrdinalIgnoreCase))
     };

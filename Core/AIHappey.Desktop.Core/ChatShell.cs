@@ -68,6 +68,7 @@ public sealed partial class ChatShell : UserControl
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
         PrepareContext();
         PrepareChatSettings();
+        PrepareSystemContext();
         PrepareTranscript();
         Content = BuildLayout();
         PrepareFileDrop();
@@ -268,10 +269,12 @@ public sealed partial class ChatShell : UserControl
         actions.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         var composerSettings = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         composerSettings.Children.Add(addContext); composerSettings.Children.Add(chatSettings);
         actions.Children.Add(composerSettings);
-        Grid.SetColumn(stop, 1); actions.Children.Add(stop); Grid.SetColumn(send, 2); actions.Children.Add(send);
+        Grid.SetColumn(viewSystemContext, 1); actions.Children.Add(viewSystemContext);
+        Grid.SetColumn(stop, 2); actions.Children.Add(stop); Grid.SetColumn(send, 3); actions.Children.Add(send);
         composer.Children.Add(actions);
         Grid.SetRow(disclaimer, 3); workspace.Children.Add(disclaimer);
         workspace.Children.Add(composer); split.Content = BuildDetailsLayout(workspace);
@@ -348,6 +351,7 @@ public sealed partial class ChatShell : UserControl
         {
             // Finish preparation before committing a turn or clearing its draft. Cancellation retains input/context.
             var prepared = await ComposerAttachments.PrepareAsync(prompt, snapshot, Service, extractDocuments, documentExtractor, ct);
+            var systemContext = Service == ServiceKind.Ai ? CaptureSystemContext(inferencePreferences) : null;
             current.Service = Service; current.Target = selected;
             if (current.Messages.Count == 0)
             {
@@ -368,7 +372,7 @@ public sealed partial class ChatShell : UserControl
             await history.SaveAsync(partition, current, ct);
             try
             {
-                await foreach (var item in client.StreamAsync(current.Service, selected, current.Id, requestMessages, ct, inferencePreferences, selectedProvider))
+                await foreach (var item in client.StreamAsync(current.Service, selected, current.Id, requestMessages, ct, inferencePreferences, selectedProvider, systemContext))
                 {
                     assembler.Apply(item);
                     if (watch.Elapsed - renderAt > TimeSpan.FromMilliseconds(100) || assembler.Finished)
@@ -721,6 +725,7 @@ public sealed partial class ChatShell : UserControl
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
+        systemContextDialog?.Hide();
         if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.Hide(); }
         while (busy) await Task.Delay(20);
         // A save picker may remain open until dismissed; no download continues after shutdown.

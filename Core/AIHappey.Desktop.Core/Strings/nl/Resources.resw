@@ -12,6 +12,13 @@
   <data name="Save" xml:space="preserve"><value>Opslaan</value></data>
   <data name="Cancel" xml:space="preserve"><value>Annuleren</value></data>
   <data name="Close" xml:space="preserve"><value>Sluiten</value></data>
+  <data name="Context" xml:space="preserve"><value>Context</value></data>
+  <data name="SystemContext" xml:space="preserve"><value>Systeem</value></data>
+  <data name="User" xml:space="preserve"><value>Gebruiker</value></data>
+  <data name="ContextPart" xml:space="preserve"><value>Contextonderdeel</value></data>
+  <data name="SystemInstructions" xml:space="preserve"><value>Aangepaste instructies</value></data>
+  <data name="SystemInstructionsHint" xml:space="preserve"><value>Toegevoegd als afzonderlijk systeemcontextonderdeel voor modelchat. App-instructies blijven beheerd door de app-distributeur.</value></data>
+  <data name="AgentContextOmitted" xml:space="preserve"><value>Deze app-context wordt niet verzonden in agentmodus, net als in de browserchat. Agent-instructies worden beheerd door de service.</value></data>
   <data name="Add" xml:space="preserve"><value>Toevoegen</value></data>
   <data name="Remove" xml:space="preserve"><value>Verwijderen</value></data>
   <data name="Delete" xml:space="preserve"><value>Verwijderen</value></data>
@@ -517,3 +524,4 @@
   <data name="ChatForm_openai_realtimeIncludeLogprobs" xml:space="preserve"><value>Logprobs van input-transcriptie opnemen</value></data>
   <data name="ChatForm_openai_realtimeTokenTtlSeconds" xml:space="preserve"><value>Levensduur token (seconden)</value></data>
 </root>
+

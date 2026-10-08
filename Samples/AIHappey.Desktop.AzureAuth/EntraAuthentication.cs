@@ -16,6 +16,7 @@ public sealed class EnterpriseConfiguration
     public string AgentsUrl { get; set; } = "";
     public string[] AiScopes { get; set; } = [];
     public string[] AgentsScopes { get; set; } = [];
+    public string? ChatbotInstructions { get; set; }
 
     public static EnterpriseConfiguration Load()
     {
@@ -37,10 +38,20 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
     private static readonly byte[] Entropy = "AIHappey.Desktop.AzureAuth.v1"u8.ToArray();
     private IPublicClientApplication? app;
     private IAccount? account;
+    private DesktopUserContext? userContext;
     public string ProfileId => "AzureAuth";
     public bool AllowLocal => false;
     public string AccountLabel => account?.Username ?? DesktopResources.Get("SignIn");
     public string HistoryIdentity => account?.HomeAccountId.Identifier ?? "signed-out";
+    public DesktopUserContext? UserContext => account is null ? null : userContext
+        ?? new(account.Username, Id: account.HomeAccountId.ObjectId, TenantId: account.HomeAccountId.TenantId);
+
+    private void CaptureIdentity(AuthenticationResult result)
+    {
+        userContext = new(result.Account.Username, result.ClaimsPrincipal?.FindFirst("name")?.Value,
+            result.ClaimsPrincipal?.FindFirst("oid")?.Value ?? result.Account.HomeAccountId.ObjectId,
+            result.TenantId);
+    }
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -78,6 +89,11 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
             finally { CryptographicOperations.ZeroMemory(plain); }
         });
         account = (await app.GetAccountsAsync()).FirstOrDefault();
+        if (account is not null)
+        {
+            try { CaptureIdentity(await app.AcquireTokenSilent(config.AiScopes, account).ExecuteAsync(cancellationToken)); }
+            catch (MsalException) { /* Cached account fields remain available; sign-in is handled explicitly. */ }
+        }
         cancellationToken.ThrowIfCancellationRequested();
     }
 
@@ -92,6 +108,7 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
         try
         {
             var result = await app!.AcquireTokenSilent(service == ServiceKind.Ai ? config.AiScopes : config.AgentsScopes, account).ExecuteAsync(cancellationToken);
+            CaptureIdentity(result);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
         }
         catch (MsalUiRequiredException) { throw new InvalidOperationException(DesktopResources.Get("InteractiveSignInRequired")); }
@@ -114,6 +131,7 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
         {
             foreach (var cached in await app!.GetAccountsAsync()) await app.RemoveAsync(cached);
             account = null;
+            userContext = null;
             return;
         }
         if (choice != ContentDialogResult.Primary) return;
@@ -122,6 +140,7 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
             var result = await app!.AcquireTokenInteractive(config.AiScopes)
                 .WithPrompt(Prompt.SelectAccount).WithUseEmbeddedWebView(false).ExecuteAsync(cancellationToken);
             account = result.Account;
+            CaptureIdentity(result);
             // The second resource can require its own consent. Obtain it explicitly before starting inference.
             try { await app.AcquireTokenSilent(config.AgentsScopes, account).ExecuteAsync(cancellationToken); }
             catch (MsalUiRequiredException)

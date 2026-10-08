@@ -12,6 +12,13 @@
   <data name="Save" xml:space="preserve"><value>Save</value></data>
   <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Context" xml:space="preserve"><value>Context</value></data>
+  <data name="SystemContext" xml:space="preserve"><value>System</value></data>
+  <data name="User" xml:space="preserve"><value>User</value></data>
+  <data name="ContextPart" xml:space="preserve"><value>Context part</value></data>
+  <data name="SystemInstructions" xml:space="preserve"><value>Custom instructions</value></data>
+  <data name="SystemInstructionsHint" xml:space="preserve"><value>Added as a separate system-context part for model chat. App instructions remain controlled by the app distributor.</value></data>
+  <data name="AgentContextOmitted" xml:space="preserve"><value>This app context is not sent in agent mode, matching the browser chat experience. Agent instructions are managed by the service.</value></data>
   <data name="Add" xml:space="preserve"><value>Add</value></data>
   <data name="Remove" xml:space="preserve"><value>Remove</value></data>
   <data name="Delete" xml:space="preserve"><value>Delete</value></data>

@@ -35,15 +35,18 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
     }
 
     public async IAsyncEnumerable<StreamEvent> StreamAsync(ServiceKind service, string target, string conversationId,
-        List<UIMessage> messages, [EnumeratorCancellation] CancellationToken ct, ChatPreferences? preferences = null, string? providerKey = null)
+        List<UIMessage> messages, [EnumeratorCancellation] CancellationToken ct, ChatPreferences? preferences = null, string? providerKey = null,
+        UIMessage? systemContext = null)
     {
         var snapshot = (preferences ?? session.Settings.Chat).Clone();
         providerKey = ChatPreferences.ResolveProvider(service, target, providerKey);
         using var request = await RequestAsync(service, HttpMethod.Post, "api/chat", ct);
+        var requestMessages = DesktopSystemContext.RequestMessages(service, messages,
+            service == ServiceKind.Ai ? systemContext ?? session.CaptureSystemContext(preferences: snapshot) : null);
         request.Headers.Accept.ParseAdd("text/event-stream");
         request.Content = service == ServiceKind.Ai
-            ? JsonContent.Create(snapshot.RequestBody(target, conversationId, messages, providerKey), options: PortableConversations.Json)
-            : JsonContent.Create(new AgentRequest { Id = conversationId, Model = target, Messages = messages }, options: PortableConversations.Json);
+            ? JsonContent.Create(snapshot.RequestBody(target, conversationId, requestMessages, providerKey), options: PortableConversations.Json)
+            : JsonContent.Create(new AgentRequest { Id = conversationId, Model = target, Messages = requestMessages }, options: PortableConversations.Json);
         if (service == ServiceKind.Ai) snapshot.ApplyHeaders(request, providerKey);
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         CheckResponse(response);
