@@ -18,6 +18,7 @@ namespace AIHappey.Desktop.Core;
 internal static class ControlAppearance
 {
     private static readonly ConditionalWeakTable<Control, object> nativeControls = new();
+    private static readonly ConditionalWeakTable<Control, object> stockControls = new();
     private static readonly ConditionalWeakTable<SolidColorBrush, object> ownedBrushes = new();
     public static ControlPalette Palette(FrameworkElement control) => new AccessibilitySettings().HighContrast
         ? ControlPalette.HighContrast(new UISettings()) : control.ActualTheme == ElementTheme.Dark ? ControlPalette.Dark : ControlPalette.Light;
@@ -100,17 +101,12 @@ internal static class ControlAppearance
 
     public static void Native(Control control)
     {
-        // Item containers and popup/template parts can be recycled or loaded repeatedly.
-        if (nativeControls.TryGetValue(control, out _)) return;
-        nativeControls.Add(control, new object());
-        Apply(control, NativeResources, palette =>
-        {
-            control.Background = new SolidColorBrush(control is TextBox or PasswordBox ? palette.Surface : control is ListView ? palette.Panel : control is MenuFlyoutItem or ListViewItem ? palette.Background : palette.Selected);
-            control.Foreground = new SolidColorBrush(palette.Text);
-            control.BorderBrush = new SolidColorBrush(control is MenuFlyoutItem or ListView or ListViewItem ? palette.Background : palette.Stroke);
-            if (control is MenuFlyoutItem or ListView or ListViewItem) control.BorderThickness = new Thickness(0);
-        });
+        // A native control is already styled by XamlControlsResources. Never overwrite
+        // its template parts, brushes or visual states merely to make it "native".
+        Stock(control);
     }
+
+    public static void Stock(Control control) => stockControls.GetValue(control, _ => new object());
 
     public static IEnumerable<DependencyObject> Descendants(DependencyObject element)
     {
@@ -123,6 +119,7 @@ internal static class ControlAppearance
     // scope. Give their actual rendered state animations concrete colors too, not just the DPs.
     private static void TemplateColors(Control control, ControlPalette palette)
     {
+        if (stockControls.TryGetValue(control, out _)) return;
         foreach (var element in TemplateElements(control))
         {
             if (element is IconElement icon) icon.Foreground = new SolidColorBrush(palette.Text);

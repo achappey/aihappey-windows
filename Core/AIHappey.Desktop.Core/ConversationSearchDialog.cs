@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Media;
 
 namespace AIHappey.Desktop.Core;
 
-internal sealed class ConversationSearchDialog : ContentDialog
+internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialog
 {
     private readonly IReadOnlyList<Conversation> conversations;
     private readonly Grid layout = new() { RowSpacing = 12 };
@@ -40,11 +40,11 @@ internal sealed class ConversationSearchDialog : ContentDialog
     }
 
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => SizeToRoot();
+    void IResponsiveDialog.SizeToRoot() => SizeToRoot();
     private void SizeToRoot()
     {
         layout.Width = Math.Max(0, Math.Min(680, XamlRoot.Size.Width - 96));
         layout.Height = Math.Max(0, Math.Min(540, XamlRoot.Size.Height - 220));
-        MaxWidth = Math.Max(0, Math.Min(760, XamlRoot.Size.Width - 32));
     }
 
     private async Task SearchAsync()

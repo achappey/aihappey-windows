@@ -5,6 +5,8 @@ using Windows.UI.ViewManagement;
 
 namespace AIHappey.Desktop.Core;
 
+internal interface IResponsiveDialog { void SizeToRoot(); }
+
 /// <summary>One Windows app-theme policy for both hosts. There is no saved/in-app theme preference.</summary>
 public sealed class SystemAppearance : IDisposable
 {
@@ -34,6 +36,13 @@ public sealed class SystemAppearance : IDisposable
 
     public static void PrepareDialog(ContentDialog dialog)
     {
+        // ContentDialog's outer control is the full-window modal host. Constraining its
+        // MaxWidth after Opened shrinks that host against the popup's left edge, not the
+        // centered BackgroundElement inside it. Size content + ContentDialogMaxWidth instead.
+        dialog.HorizontalAlignment = HorizontalAlignment.Stretch;
+        dialog.VerticalAlignment = VerticalAlignment.Stretch;
+        dialog.MaxWidth = dialog.MaxHeight = double.PositiveInfinity;
+        if (dialog is IResponsiveDialog responsive) responsive.SizeToRoot();
         if (dialog.XamlRoot?.Content is FrameworkElement owner)
         {
             dialog.RequestedTheme = owner.ActualTheme;
@@ -41,17 +50,8 @@ public sealed class SystemAppearance : IDisposable
             owner.ActualThemeChanged += ThemeChanged;
             dialog.Closed += (_, _) => owner.ActualThemeChanged -= ThemeChanged;
         }
-        ControlAppearance.Apply(dialog, ControlAppearance.NativeResources, palette =>
-        {
-            dialog.Background = new SolidColorBrush(palette.Surface);
-            dialog.Foreground = new SolidColorBrush(palette.Text);
-        });
-        dialog.Opened += (_, _) => PrepareChildren(dialog);
-    }
-
-    private static void PrepareChildren(DependencyObject element)
-    {
-        if (element is Button or TextBox or PasswordBox or ComboBox) ControlAppearance.Native((Control)element);
-        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(element); index++) PrepareChildren(VisualTreeHelper.GetChild(element, index));
+        // All dialogs use the same stock WinUI chrome and control templates. Do not walk
+        // template parts after opening or copy application colors into native state setters.
+        ControlAppearance.Stock(dialog);
     }
 }

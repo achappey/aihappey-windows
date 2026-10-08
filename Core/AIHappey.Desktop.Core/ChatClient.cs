@@ -10,6 +10,7 @@ namespace AIHappey.Desktop.Core;
 
 public sealed record ChatTarget(string Id, string Label)
 {
+    public string? ProviderKey { get; init; }
     public override string ToString() => Label;
 }
 
@@ -27,18 +28,23 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
             throw new GatewayException(DesktopResources.Get("InvalidModelCatalog"));
         return data.EnumerateArray().Where(x => x.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String)
             .Select(x => new ChatTarget(x.GetProperty("id").GetString()!,
-                x.TryGetProperty("name", out var name) && name.ValueKind == JsonValueKind.String ? name.GetString()! : x.GetProperty("id").GetString()!))
+                x.TryGetProperty("name", out var name) && name.ValueKind == JsonValueKind.String ? name.GetString()! : x.GetProperty("id").GetString()!)
+                { ProviderKey = ChatPreferences.ResolveProvider(service, x.GetProperty("id").GetString()!,
+                    CatalogProjection.Text(x, "sourceProviderKey") ?? CatalogProjection.Text(x, "providerKey")) })
             .OrderBy(x => x.Label, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
     public async IAsyncEnumerable<StreamEvent> StreamAsync(ServiceKind service, string target, string conversationId,
-        List<UIMessage> messages, [EnumeratorCancellation] CancellationToken ct)
+        List<UIMessage> messages, [EnumeratorCancellation] CancellationToken ct, ChatPreferences? preferences = null, string? providerKey = null)
     {
+        var snapshot = (preferences ?? session.Settings.Chat).Clone();
+        providerKey = ChatPreferences.ResolveProvider(service, target, providerKey);
         using var request = await RequestAsync(service, HttpMethod.Post, "api/chat", ct);
         request.Headers.Accept.ParseAdd("text/event-stream");
         request.Content = service == ServiceKind.Ai
-            ? JsonContent.Create(new ChatRequest { Id = conversationId, Model = target, Messages = messages }, options: PortableConversations.Json)
+            ? JsonContent.Create(snapshot.RequestBody(target, conversationId, messages, providerKey), options: PortableConversations.Json)
             : JsonContent.Create(new AgentRequest { Id = conversationId, Model = target, Messages = messages }, options: PortableConversations.Json);
+        if (service == ServiceKind.Ai) snapshot.ApplyHeaders(request, providerKey);
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         CheckResponse(response);
         if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")

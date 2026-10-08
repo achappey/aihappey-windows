@@ -8,7 +8,7 @@ using Microsoft.UI.Xaml.Media;
 namespace AIHappey.Desktop.Core;
 
 /// <summary>Centered, read-only catalog inspection. No relationship to the conversation's details pane.</summary>
-internal sealed class CatalogDetailsDialog : ContentDialog
+internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
 {
     private readonly CatalogItem item;
     private readonly Grid layout = new() { RowSpacing = 16 };
@@ -38,9 +38,7 @@ internal sealed class CatalogDetailsDialog : ContentDialog
         Resources["ContentDialogMinWidth"] = 0d;
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
-        var tabSurface = new Border { Child = tabs, CornerRadius = new CornerRadius(8), Padding = new Thickness(4), HorizontalAlignment = HorizontalAlignment.Left };
-        ControlAppearance.Apply(tabSurface, (_, _) => { }, palette => tabSurface.Background = new SolidColorBrush(palette.Selected));
-        layout.Children.Add(new ScrollViewer { Content = tabSurface, HorizontalScrollMode = ScrollMode.Enabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+        layout.Children.Add(new ScrollViewer { Content = tabs, HorizontalScrollMode = ScrollMode.Enabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollMode = ScrollMode.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled });
         AddTab("general", DesktopResources.Get("General"));
         if (item.Kind == CatalogKind.Agent) { AddTab("instructions", DesktopResources.Get("Instructions")); AddTab("definition", DesktopResources.Get("Definition")); }
@@ -55,20 +53,18 @@ internal sealed class CatalogDetailsDialog : ContentDialog
     }
 
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => SizeToRoot();
+    void IResponsiveDialog.SizeToRoot() => SizeToRoot();
     private void SizeToRoot()
     {
         layout.Width = Math.Max(0, Math.Min(680, XamlRoot.Size.Width - 96));
         layout.Height = Math.Max(0, Math.Min(500, XamlRoot.Size.Height - 240));
-        MaxWidth = Math.Max(0, Math.Min(760, XamlRoot.Size.Width - 32));
     }
 
     private void AddTab(string key, string label)
     {
-        var button = new ToggleButton { Name = "CatalogTab" + char.ToUpperInvariant(key[0]) + key[1..], Content = label, Padding = new Thickness(12, 8, 12, 8), MinHeight = 36,
-            CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(0) };
+        var button = new ToggleButton { Name = "CatalogTab" + char.ToUpperInvariant(key[0]) + key[1..], Content = label, Padding = new Thickness(12, 8, 12, 8), MinHeight = 36 };
         ToolbarControls.Label(button, label);
-        ControlAppearance.Apply(button, ControlAppearance.NativeResources, palette =>
-        { button.Background = new SolidColorBrush(selectedTab == key ? palette.Surface : palette.Background); button.Foreground = new SolidColorBrush(palette.Text); });
+        ControlAppearance.Stock(button);
         button.Click += (_, _) => { selectedTab = key; Render(); viewer.ChangeView(null, 0, null, true); };
         tabButtons.Add(key, button); tabs.Children.Add(button);
     }
@@ -78,9 +74,6 @@ internal sealed class CatalogDetailsDialog : ContentDialog
         foreach (var (key, button) in tabButtons)
         {
             button.IsChecked = key == selectedTab;
-            var palette = ControlAppearance.Palette(button);
-            button.Background = new SolidColorBrush(key == selectedTab ? palette.Surface : palette.Background);
-            ControlAppearance.Refresh(button);
         }
     }
 

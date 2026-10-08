@@ -4,38 +4,29 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     x:Uid="SettingsDialog"
     DefaultButton="Primary">
-    <Grid x:Name="Layout" ColumnSpacing="16">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition x:Name="NavigationColumn" Width="180" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <Border x:Name="NavigationSurface" CornerRadius="12" Padding="4">
-            <ListView x:Name="Tabs" SelectionMode="Single" IsItemClickEnabled="False"
-                      SelectionChanged="TabChanged" SelectedIndex="0" x:Uid="SettingsTabs">
-                <ListViewItem x:Name="GeneralTab" Tag="general" x:Uid="SettingsGeneralTab">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <SymbolIcon Symbol="Setting" />
-                        <TextBlock x:Uid="SettingsGeneral" VerticalAlignment="Center" />
-                    </StackPanel>
-                </ListViewItem>
-                <ListViewItem x:Name="EndpointsTab" Tag="endpoints" x:Uid="SettingsEndpointsTab">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE95A;" />
-                        <TextBlock x:Uid="SettingsEndpoints" VerticalAlignment="Center" />
-                    </StackPanel>
-                </ListViewItem>
-                <ListViewItem x:Name="AttachmentsTab" Tag="attachments" x:Uid="SettingsAttachmentsTab">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <FontIcon Glyph="&#xE723;" />
-                        <TextBlock x:Uid="SettingsAttachments" VerticalAlignment="Center" />
-                    </StackPanel>
-                </ListViewItem>
-            </ListView>
-        </Border>
-        <ScrollViewer x:Name="PageScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto"
+    <Grid x:Name="Layout">
+        <NavigationView x:Name="Tabs" x:Uid="SettingsTabs" PaneDisplayMode="Left"
+                        IsSettingsVisible="False" IsBackButtonVisible="Collapsed"
+                        AlwaysShowHeader="False" IsPaneToggleButtonVisible="False"
+                        OpenPaneLength="200" CompactPaneLength="48"
+                        SelectionChanged="TabChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="GeneralTab" Tag="general" x:Uid="SettingsGeneralTab" Icon="Setting">
+                    <TextBlock x:Uid="SettingsGeneral" />
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="EndpointsTab" Tag="endpoints" x:Uid="SettingsEndpointsTab">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE95A;" /></NavigationViewItem.Icon>
+                    <TextBlock x:Uid="SettingsEndpoints" />
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="AttachmentsTab" Tag="attachments" x:Uid="SettingsAttachmentsTab">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE723;" /></NavigationViewItem.Icon>
+                    <TextBlock x:Uid="SettingsAttachments" />
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+        <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled"
                       HorizontalContentAlignment="Stretch">
-            <Grid Padding="0,4,8,8">
+            <Grid Padding="16,8,8,8">
                 <StackPanel x:Name="GeneralPage" Spacing="16">
                     <ComboBox x:Name="LanguageChoice" x:Uid="SettingsLanguage" HorizontalAlignment="Left" MinWidth="160">
                         <ComboBoxItem Content="English" Tag="en" />
@@ -57,5 +48,6 @@
                 </StackPanel>
             </Grid>
         </ScrollViewer>
+        </NavigationView>
     </Grid>
 </ContentDialog>

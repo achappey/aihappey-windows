@@ -7,8 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Compile the production non-visual boundary without loading WinUI in the test runner. -->
+    <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/en/Resources.resw" LogicalName="Desktop.Resources.en" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatClient.cs" Link="Core/ChatClient.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ChatPreferences.cs" Link="Core/ChatPreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Catalog.cs" Link="Core/Catalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/CatalogClient.cs" Link="Core/CatalogClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/CatalogFavorites.cs" Link="Core/CatalogFavorites.cs" />

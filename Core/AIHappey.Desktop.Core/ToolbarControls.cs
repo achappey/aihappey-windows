@@ -27,82 +27,14 @@ internal static class ToolbarControls
             Content = icon, Width = 40, Height = 40, Padding = new Thickness(0),
             CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1)
         };
-        ControlAppearance.Apply(button, (resources, palette) =>
-        {
-            ButtonStates(resources, "ToggleButton", palette);
-            State(resources, "ToggleButton", "Checked", palette.Selected, palette.Stroke, palette.Text);
-            State(resources, "ToggleButton", "CheckedPointerOver", palette.Hover, palette.Stroke, palette.Text);
-            State(resources, "ToggleButton", "CheckedPressed", palette.Pressed, palette.Stroke, palette.Text);
-            State(resources, "ToggleButton", "CheckedDisabled", palette.Background, palette.Disabled, palette.Disabled);
-        }, palette => BaseValues(button, palette));
+        ControlAppearance.Stock(button);
         Label(button, label);
         return button;
     }
 
     public static void Outline(AutoSuggestBox control)
     {
-        ControlAppearance.Apply(control, (resources, palette) =>
-        {
-            ControlAppearance.NativeResources(resources, palette);
-            ControlAppearance.Brush(resources, "TextControlBorderBrush", palette.Stroke);
-            ControlAppearance.Brush(resources, "TextControlBorderBrushPointerOver", palette.Disabled);
-            ControlAppearance.Brush(resources, "TextControlBackground", palette.Background);
-            ControlAppearance.Brush(resources, "TextControlBackgroundPointerOver", palette.Background);
-        }, palette =>
-        {
-            control.Background = new SolidColorBrush(palette.Surface);
-            control.BorderBrush = new SolidColorBrush(palette.Stroke);
-            control.Foreground = new SolidColorBrush(palette.Text);
-        });
-        void RefreshSelector()
-        {
-            if (!control.IsLoaded) return;
-            var palette = ControlAppearance.Palette(control);
-            var text = ControlAppearance.Descendants(control).OfType<TextBox>().FirstOrDefault();
-            if (text is not null)
-            {
-                text.RequestedTheme = control.ActualTheme;
-                ControlAppearance.Native(text); ControlAppearance.Refresh(text);
-            }
-            // These controls load inside nested templates, after the outer selector's Loaded.
-            // Give them their own resource/state overrides, not only outer foreground values.
-            foreach (var button in ControlAppearance.Descendants(control).OfType<Button>().Where(button => button.Name is "QueryButton" or "DeleteButton"))
-            {
-                button.RequestedTheme = control.ActualTheme;
-                SelectorButton(button);
-                ControlAppearance.Refresh(button);
-            }
-            if (!control.IsSuggestionListOpen || control.XamlRoot is null) return;
-            foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(control.XamlRoot))
-            {
-                var list = ControlAppearance.Descendants(popup.Child).OfType<ListView>().FirstOrDefault(part => part.Name == "SuggestionsList");
-                if (list is null) continue; // Never recolor unrelated dialogs or menus.
-                if (popup.Child is FrameworkElement root) root.RequestedTheme = control.ActualTheme;
-                list.RequestedTheme = control.ActualTheme;
-                ControlAppearance.Native(list);
-                SelectorItems(list);
-                ControlAppearance.Refresh(list); ControlAppearance.RefreshItems(list);
-                // Popup surfaces do not inherit the selector's resource scope consistently.
-                foreach (var border in ControlAppearance.Descendants(popup.Child).OfType<Border>().Where(border => !ControlAppearance.Descendants(list).Contains(border)))
-                {
-                    border.Background = new SolidColorBrush(palette.Panel);
-                    border.BorderBrush = new SolidColorBrush(palette.Stroke);
-                }
-            }
-        }
-        void QueueRefresh()
-        {
-            RefreshSelector();
-            control.DispatcherQueue.TryEnqueue(() =>
-            {
-                if (control.IsLoaded) RefreshSelector();
-            });
-        }
-        control.Loaded += (_, _) => QueueRefresh();
-        control.ActualThemeChanged += (_, _) => QueueRefresh();
-        control.TextChanged += (_, _) => QueueRefresh();
-        control.RegisterPropertyChangedCallback(AutoSuggestBox.IsSuggestionListOpenProperty, (_, _) => QueueRefresh());
-        control.RegisterPropertyChangedCallback(Control.IsEnabledProperty, (_, _) => QueueRefresh());
+        ControlAppearance.Stock(control);
     }
 
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Button, object> selectorButtons = new();

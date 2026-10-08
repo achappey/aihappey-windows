@@ -260,4 +260,249 @@
   <data name="SettingsExtraction.OnContent" xml:space="preserve"><value>On</value></data>
   <data name="SettingsExtraction.OffContent" xml:space="preserve"><value>Off</value></data>
   <data name="SettingsExtractionHint.Text" xml:space="preserve"><value>Extract text from local PDFs for model chat. Original files are always included. Agent chat sends originals only.</value></data>
+  <data name="ChatSettings" xml:space="preserve"><value>Chat settings</value></data>
+  <data name="ChatMaxOutputTokens" xml:space="preserve"><value>Maximum output tokens</value></data>
+  <data name="ChatOptional" xml:space="preserve"><value>Optional</value></data>
+  <data name="ChatRestoreDefaults" xml:space="preserve"><value>Restore defaults</value></data>
+  <data name="ChatTokensInvalid" xml:space="preserve"><value>Enter a positive whole number, or leave this field empty.</value></data>
+  <data name="ChatFieldInvalid" xml:space="preserve"><value>Enter a valid value. Check the required range or JSON syntax.</value></data>
+  <data name="ChatSettingsInvalid" xml:space="preserve"><value>Correct the invalid fields before closing. Your changes have not been saved.</value></data>
+  <data name="ChatSettingsSaveFailed" xml:space="preserve"><value>Chat settings could not be saved. Your draft is still open.</value></data>
+  <data name="ChatShellSkillsDeferred" xml:space="preserve"><value>Skills catalog selection is not available in this version. Existing native shell skills are preserved.</value></data>
+  <data name="ChatForm_artificialIntelligence" xml:space="preserve"><value>Artificial Intelligence</value></data>
+  <data name="ChatForm_inherit" xml:space="preserve"><value>Not specified</value></data>
+  <data name="ChatForm_on" xml:space="preserve"><value>On</value></data>
+  <data name="ChatForm_off" xml:space="preserve"><value>Off</value></data>
+  <data name="ChatForm_up" xml:space="preserve"><value>Up</value></data>
+  <data name="ChatForm_down" xml:space="preserve"><value>Down</value></data>
+  <data name="ChatForm_edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="ChatForm_reasoning" xml:space="preserve"><value>Reasoning</value></data>
+  <data name="ChatForm_reasoningEffort" xml:space="preserve"><value>Effort</value></data>
+  <data name="ChatForm_reasoningSummary" xml:space="preserve"><value>Reasoning detail</value></data>
+  <data name="ChatForm_reasoningContext" xml:space="preserve"><value>Context</value></data>
+  <data name="ChatForm_reasoningMode" xml:space="preserve"><value>Mode</value></data>
+  <data name="ChatForm_webSearch" xml:space="preserve"><value>Web search</value></data>
+  <data name="ChatForm_searchContextSize" xml:space="preserve"><value>Context size</value></data>
+  <data name="ChatForm_country" xml:space="preserve"><value>Country</value></data>
+  <data name="ChatForm_region" xml:space="preserve"><value>Region</value></data>
+  <data name="ChatForm_city" xml:space="preserve"><value>City</value></data>
+  <data name="ChatForm_timezone" xml:space="preserve"><value>Timezone</value></data>
+  <data name="ChatForm_image_generation" xml:space="preserve"><value>Image generation</value></data>
+  <data name="ChatForm_model" xml:space="preserve"><value>Model</value></data>
+  <data name="ChatForm_partial_images" xml:space="preserve"><value>Partial images</value></data>
+  <data name="ChatForm_quality" xml:space="preserve"><value>Quality</value></data>
+  <data name="ChatForm_input_fidelity" xml:space="preserve"><value>Input fidelity</value></data>
+  <data name="ChatForm_moderation" xml:space="preserve"><value>Moderation</value></data>
+  <data name="ChatForm_background" xml:space="preserve"><value>Background</value></data>
+  <data name="ChatForm_size" xml:space="preserve"><value>Size</value></data>
+  <data name="ChatForm_code_execution" xml:space="preserve"><value>Code execution</value></data>
+  <data name="ChatForm_other" xml:space="preserve"><value>Other</value></data>
+  <data name="ChatForm_parallelToolCalls" xml:space="preserve"><value>Parallel tool calls</value></data>
+  <data name="ChatForm_add" xml:space="preserve"><value>Add</value></data>
+  <data name="ChatForm_delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="ChatForm_save" xml:space="preserve"><value>Save</value></data>
+  <data name="ChatForm_cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ChatForm_enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="ChatForm_openai_shell" xml:space="preserve"><value>Shell</value></data>
+  <data name="ChatForm_openai_promptCacheRetention" xml:space="preserve"><value>Prompt cache retention</value></data>
+  <data name="ChatForm_openai_promptCacheKey" xml:space="preserve"><value>Prompt cache id</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_24h" xml:space="preserve"><value>24 hours</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_in-memory" xml:space="preserve"><value>In-memory</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_title" xml:space="preserve"><value>Prompt cache</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_mode" xml:space="preserve"><value>Mode</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_ttl" xml:space="preserve"><value>Minimum cache lifetime</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_modes_implicit" xml:space="preserve"><value>Implicit</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_modes_explicit" xml:space="preserve"><value>Explicit</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_ttls_30m" xml:space="preserve"><value>30 minutes</value></data>
+  <data name="ChatForm_openai_moderation_title" xml:space="preserve"><value>Moderation</value></data>
+  <data name="ChatForm_openai_moderation_model" xml:space="preserve"><value>Moderation model</value></data>
+  <data name="ChatForm_openai_moderation_inputMode" xml:space="preserve"><value>Input policy</value></data>
+  <data name="ChatForm_openai_moderation_outputMode" xml:space="preserve"><value>Output policy</value></data>
+  <data name="ChatForm_openai_moderation_modes_score" xml:space="preserve"><value>Score</value></data>
+  <data name="ChatForm_openai_moderation_modes_block" xml:space="preserve"><value>Block</value></data>
+  <data name="ChatForm_openai_betaHeader" xml:space="preserve"><value>Beta</value></data>
+  <data name="ChatForm_openai_multiAgent_title" xml:space="preserve"><value>Multi-agent</value></data>
+  <data name="ChatForm_openai_multiAgent_description" xml:space="preserve"><value>Allow the root model to coordinate subagents in parallel for complex Responses API tasks. Enabling this also adds the required OpenAI beta header.</value></data>
+  <data name="ChatForm_openai_multiAgent_maxConcurrentSubagents" xml:space="preserve"><value>Max concurrent subagents</value></data>
+  <data name="ChatForm_openai_multiAgent_maxConcurrentSubagentsHelp" xml:space="preserve"><value>Limits the number of active subagents across the entire agent tree. The OpenAI recommended default is 3.</value></data>
+  <data name="ChatForm_openai_sessionAgent_title" xml:space="preserve"><value>Agent</value></data>
+  <data name="ChatForm_openai_sessionAgent_inherit" xml:space="preserve"><value>Not specified</value></data>
+  <data name="ChatForm_openai_sessionAgent_model" xml:space="preserve"><value>Model</value></data>
+  <data name="ChatForm_openai_sessionAgent_instructions" xml:space="preserve"><value>Instructions</value></data>
+  <data name="ChatForm_openai_sessionAgent_effort" xml:space="preserve"><value>Reasoning effort</value></data>
+  <data name="ChatForm_openai_sessionAgent_summary" xml:space="preserve"><value>Reasoning summary</value></data>
+  <data name="ChatForm_openai_sessionAgent_serviceTier" xml:space="preserve"><value>Service tier</value></data>
+  <data name="ChatForm_openai_sessionAgent_verbosity" xml:space="preserve"><value>Text verbosity</value></data>
+  <data name="ChatForm_openai_sessionAgent_format" xml:space="preserve"><value>Text format</value></data>
+  <data name="ChatForm_openai_sessionAgent_schema" xml:space="preserve"><value>JSON Schema</value></data>
+  <data name="ChatForm_openai_sessionAgent_invalidSchema" xml:space="preserve"><value>Enter a valid JSON Schema object.</value></data>
+  <data name="ChatForm_openai_sessionAgent_multiAgent" xml:space="preserve"><value>Enable subagents</value></data>
+  <data name="ChatForm_openai_sessionAgent_maxSubagents" xml:space="preserve"><value>Max concurrent subagents</value></data>
+  <data name="ChatForm_openai_sessionAgent_tools" xml:space="preserve"><value>Agent tools</value></data>
+  <data name="ChatForm_openai_sessionAgent_computer_use" xml:space="preserve"><value>Computer use</value></data>
+  <data name="ChatForm_openai_sessionAgent_web_search" xml:space="preserve"><value>Web search</value></data>
+  <data name="ChatForm_openai_sessionAgent_programmatic_tool_calling" xml:space="preserve"><value>Programmatic tool calling</value></data>
+  <data name="ChatForm_openai_sessionAgent_tool_search" xml:space="preserve"><value>Tool search</value></data>
+  <data name="ChatForm_openai_sessionAgent_screenshots" xml:space="preserve"><value>Include screenshots</value></data>
+  <data name="ChatForm_openai_sessionAgent_programmaticEnabled" xml:space="preserve"><value>Enable calls from generated code</value></data>
+  <data name="ChatForm_openai_sessionAgent_searchMode" xml:space="preserve"><value>Web search mode</value></data>
+  <data name="ChatForm_openai_sessionAgent_searchContext" xml:space="preserve"><value>Search context size</value></data>
+  <data name="ChatForm_openai_sessionAgent_allowedDomains" xml:space="preserve"><value>Search allowed domains (one per line)</value></data>
+  <data name="ChatForm_openai_sessionAgent_city" xml:space="preserve"><value>City</value></data>
+  <data name="ChatForm_openai_sessionAgent_country" xml:space="preserve"><value>Country</value></data>
+  <data name="ChatForm_openai_sessionAgent_region" xml:space="preserve"><value>Region</value></data>
+  <data name="ChatForm_openai_sessionAgent_timezone" xml:space="preserve"><value>Timezone</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_title" xml:space="preserve"><value>Environment (Agent)</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_type" xml:space="preserve"><value>Environment type</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_none" xml:space="preserve"><value>None</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_openai_hosted" xml:space="preserve"><value>OpenAI hosted</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_self_hosted" xml:space="preserve"><value>Self hosted</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_templateId" xml:space="preserve"><value>Environment template ID</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_containerSize" xml:space="preserve"><value>Container size</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_inherit" xml:space="preserve"><value>Not specified</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_small" xml:space="preserve"><value>Small</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_medium" xml:space="preserve"><value>Medium</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_large" xml:space="preserve"><value>Large</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_desktop" xml:space="preserve"><value>Provision desktop and browser proxy</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_network" xml:space="preserve"><value>Network access</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_restricted" xml:space="preserve"><value>Restricted</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_domainHelp" xml:space="preserve"><value>Use either allowed or blocked domains, not both. Wildcards are not supported.</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_allowedDomains" xml:space="preserve"><value>Allowed domains (one per line)</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_blockedDomains" xml:space="preserve"><value>Blocked domains (one per line)</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_workspaceDirectory" xml:space="preserve"><value>Absolute workspace directory</value></data>
+  <data name="ChatForm_openai_promptCache" xml:space="preserve"><value>Prompt cache</value></data>
+  <data name="ChatForm_openai_truncation_title" xml:space="preserve"><value>Truncation</value></data>
+  <data name="ChatForm_openai_truncation_auto" xml:space="preserve"><value>Automatic</value></data>
+  <data name="ChatForm_openai_truncation_disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="ChatForm_openai_serviceTier_title" xml:space="preserve"><value>Service tier</value></data>
+  <data name="ChatForm_openai_serviceTier_auto" xml:space="preserve"><value>Automatic</value></data>
+  <data name="ChatForm_openai_serviceTier_default" xml:space="preserve"><value>Default</value></data>
+  <data name="ChatForm_openai_serviceTier_flex" xml:space="preserve"><value>Flexible</value></data>
+  <data name="ChatForm_openai_serviceTier_scale" xml:space="preserve"><value>Scalable</value></data>
+  <data name="ChatForm_openai_serviceTier_priority" xml:space="preserve"><value>Priority</value></data>
+  <data name="ChatForm_openai_serviceTier_fast" xml:space="preserve"><value>Fast</value></data>
+  <data name="ChatForm_openai_serviceTier_ultrafast" xml:space="preserve"><value>Ultrafast</value></data>
+  <data name="ChatForm_openai_container" xml:space="preserve"><value>Container</value></data>
+  <data name="ChatForm_openai_customVoice" xml:space="preserve"><value>Custom voice</value></data>
+  <data name="ChatForm_openai_output_compression" xml:space="preserve"><value>Output compression</value></data>
+  <data name="ChatForm_openai_action" xml:space="preserve"><value>Action</value></data>
+  <data name="ChatForm_openai_generate" xml:space="preserve"><value>Generate</value></data>
+  <data name="ChatForm_openai_edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="ChatForm_openai_prompt" xml:space="preserve"><value>Prompt</value></data>
+  <data name="ChatForm_openai_allowedDomains" xml:space="preserve"><value>Allowed domains</value></data>
+  <data name="ChatForm_openai_searchContentTypes_text" xml:space="preserve"><value>Text search results</value></data>
+  <data name="ChatForm_openai_searchContentTypes_image" xml:space="preserve"><value>Image search results</value></data>
+  <data name="ChatForm_openai_imageSettings_maxResults" xml:space="preserve"><value>Max. image results</value></data>
+  <data name="ChatForm_openai_imageSettings_caption" xml:space="preserve"><value>Include captions</value></data>
+  <data name="ChatForm_openai_topP" xml:space="preserve"><value>Top-p</value></data>
+  <data name="ChatForm_openai_transcriptionLanguagePlaceholder" xml:space="preserve"><value>The language of the input audio in ISO-639-1 (e.g. en)</value></data>
+  <data name="ChatForm_openai_speechPromptPlaceholder" xml:space="preserve"><value>An optional text to guide the model's style or continue a previous audio segment</value></data>
+  <data name="ChatForm_openai_transcriptionTemperature" xml:space="preserve"><value>Temperature</value></data>
+  <data name="ChatForm_openai_timestampGranularities" xml:space="preserve"><value>Timestamp granularities</value></data>
+  <data name="ChatForm_openai_timestampGranularitiesSegment" xml:space="preserve"><value>Segment</value></data>
+  <data name="ChatForm_openai_timestampGranularitiesWord" xml:space="preserve"><value>Word</value></data>
+  <data name="ChatForm_openai_includeOutputs" xml:space="preserve"><value>Include outputs</value></data>
+  <data name="ChatForm_openai_includeSources" xml:space="preserve"><value>Include sources</value></data>
+  <data name="ChatForm_openai_returnTokenBudget" xml:space="preserve"><value>Return token budget</value></data>
+  <data name="ChatForm_openai_returnTokenBudgetOptions_default" xml:space="preserve"><value>Default</value></data>
+  <data name="ChatForm_openai_returnTokenBudgetOptions_unlimited" xml:space="preserve"><value>Unlimited</value></data>
+  <data name="ChatForm_openai_externalWebAccess" xml:space="preserve"><value>Live internet access</value></data>
+  <data name="ChatForm_openai_includeSearchResults" xml:space="preserve"><value>Include search results</value></data>
+  <data name="ChatForm_openai_encryptedContent" xml:space="preserve"><value>Include encryption</value></data>
+  <data name="ChatForm_openai_responsesIncludeTitle" xml:space="preserve"><value>Include</value></data>
+  <data name="ChatForm_openai_responsesIncludeImageUrls" xml:space="preserve"><value>Include image URLs from computer output</value></data>
+  <data name="ChatForm_openai_responsesIncludeInputImageUrls" xml:space="preserve"><value>Include image URLs from input messages</value></data>
+  <data name="ChatForm_openai_responsesIncludeOutputLogprobs" xml:space="preserve"><value>Include output logprobs</value></data>
+  <data name="ChatForm_openai_responsesIncludeDescriptions_webSearchSources" xml:space="preserve"><value>Include the sources returned by the web search tool call.</value></data>
+  <data name="ChatForm_openai_responsesIncludeDescriptions_codeInterpreterOutputs" xml:space="preserve"><value>Include the outputs of Python code execution in code interpreter tool calls.</value></data>
+  <data name="ChatForm_openai_responsesIncludeDescriptions_computerCallImageUrls" xml:space="preserve"><value>Include image URLs returned from computer call outputs.</value></data>
+  <data name="ChatForm_openai_responsesIncludeDescriptions_fileSearchResults" xml:space="preserve"><value>Include the search results returned by the file search tool call.</value></data>
+  <data name="ChatForm_openai_responsesIncludeDescriptions_inputImageUrls" xml:space="preserve"><value>Include image URLs from input messages.</value></data>
+  <data name="ChatForm_openai_responsesIncludeDescriptions_outputTextLogprobs" xml:space="preserve"><value>Include log probabilities with assistant text responses.</value></data>
+  <data name="ChatForm_openai_responsesIncludeDescriptions_reasoningEncryptedContent" xml:space="preserve"><value>Include encrypted reasoning tokens so reasoning items can be reused in stateless multi-turn Responses API conversations.</value></data>
+  <data name="ChatForm_openai_instructions" xml:space="preserve"><value>Instructions</value></data>
+  <data name="ChatForm_openai_instructionsPlaceholder" xml:space="preserve"><value>A system (or developer) message inserted into the model's context.</value></data>
+  <data name="ChatForm_openai_imageInputDetail_title" xml:space="preserve"><value>Input image detail</value></data>
+  <data name="ChatForm_openai_imageInputDetail_auto" xml:space="preserve"><value>Auto</value></data>
+  <data name="ChatForm_openai_imageInputDetail_low" xml:space="preserve"><value>Low</value></data>
+  <data name="ChatForm_openai_imageInputDetail_high" xml:space="preserve"><value>High</value></data>
+  <data name="ChatForm_openai_imageInputDetail_original" xml:space="preserve"><value>Original</value></data>
+  <data name="ChatForm_openai_contextManagement_title" xml:space="preserve"><value>Context management</value></data>
+  <data name="ChatForm_openai_contextManagement_description" xml:space="preserve"><value>Configure how the Responses API should compact earlier context during a request.</value></data>
+  <data name="ChatForm_openai_contextManagement_empty" xml:space="preserve"><value>No context management entries configured yet.</value></data>
+  <data name="ChatForm_openai_contextManagement_add" xml:space="preserve"><value>Add context rule</value></data>
+  <data name="ChatForm_openai_contextManagement_type" xml:space="preserve"><value>Type</value></data>
+  <data name="ChatForm_openai_contextManagement_compactThreshold" xml:space="preserve"><value>Compact threshold</value></data>
+  <data name="ChatForm_openai_contextManagement_compactThresholdHelp" xml:space="preserve"><value>Triggers compaction when the request context reaches this token threshold.</value></data>
+  <data name="ChatForm_openai_contextManagement_compactThresholdInvalid" xml:space="preserve"><value>Compact threshold must be {{min}} or higher.</value></data>
+  <data name="ChatForm_openai_contextManagement_entrySummary" xml:space="preserve"><value>Compacts context at {{threshold}} tokens.</value></data>
+  <data name="ChatForm_openai_contextManagement_types_compaction" xml:space="preserve"><value>Compaction</value></data>
+  <data name="ChatForm_openai_programmaticToolCalling_title" xml:space="preserve"><value>Tools with code</value></data>
+  <data name="ChatForm_openai_programmaticToolCalling_allowedCallers" xml:space="preserve"><value>Allowed callers</value></data>
+  <data name="ChatForm_openai_programmaticToolCalling_allowedCallersOptions_direct" xml:space="preserve"><value>Direct</value></data>
+  <data name="ChatForm_openai_programmaticToolCalling_allowedCallersOptions_programmatic" xml:space="preserve"><value>Code</value></data>
+  <data name="ChatForm_openai_toolSearch_title" xml:space="preserve"><value>Tool search</value></data>
+  <data name="ChatForm_openai_toolSearch_executionMode" xml:space="preserve"><value>Execution mode</value></data>
+  <data name="ChatForm_openai_toolSearch_hosted" xml:space="preserve"><value>Hosted</value></data>
+  <data name="ChatForm_openai_toolSearch_client" xml:space="preserve"><value>Client</value></data>
+  <data name="ChatForm_openai_max_num_results" xml:space="preserve"><value>Maximum number of results</value></data>
+  <data name="ChatForm_openai_vector_store_ids" xml:space="preserve"><value>Ids of the vector stores</value></data>
+  <data name="ChatForm_openai_file_search" xml:space="preserve"><value>File search</value></data>
+  <data name="ChatForm_openai_shellEnvironment" xml:space="preserve"><value>Environment</value></data>
+  <data name="ChatForm_openai_shellEnvironmentContainerAuto" xml:space="preserve"><value>Hosted container (auto)</value></data>
+  <data name="ChatForm_openai_shellEnvironmentContainerReference" xml:space="preserve"><value>Hosted container (reference)</value></data>
+  <data name="ChatForm_openai_shellEnvironmentLocal" xml:space="preserve"><value>Local runtime</value></data>
+  <data name="ChatForm_openai_shellFileIds" xml:space="preserve"><value>Ids of the files</value></data>
+  <data name="ChatForm_openai_shellMemoryLimit" xml:space="preserve"><value>Memory limit</value></data>
+  <data name="ChatForm_openai_shellNoMemoryLimit" xml:space="preserve"><value>Default memory</value></data>
+  <data name="ChatForm_openai_shellNetworkPolicy" xml:space="preserve"><value>Network policy</value></data>
+  <data name="ChatForm_openai_shellNetworkPolicyDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="ChatForm_openai_shellNetworkPolicyAllowlist" xml:space="preserve"><value>Allowlist</value></data>
+  <data name="ChatForm_openai_shellAllowedDomains" xml:space="preserve"><value>Allowed domains</value></data>
+  <data name="ChatForm_openai_shellSecretDomain" xml:space="preserve"><value>Secret domain</value></data>
+  <data name="ChatForm_openai_shellSecretName" xml:space="preserve"><value>Secret name</value></data>
+  <data name="ChatForm_openai_shellSecretValue" xml:space="preserve"><value>Secret value</value></data>
+  <data name="ChatForm_openai_shellAddDomainSecret" xml:space="preserve"><value>Add domain secret</value></data>
+  <data name="ChatForm_openai_shellSkillType" xml:space="preserve"><value>Skill type</value></data>
+  <data name="ChatForm_openai_shellSkillReference" xml:space="preserve"><value>Skill reference</value></data>
+  <data name="ChatForm_openai_shellInlineSkill" xml:space="preserve"><value>Inline skill</value></data>
+  <data name="ChatForm_openai_shellSkillId" xml:space="preserve"><value>Skill</value></data>
+  <data name="ChatForm_openai_shellSelectSkill" xml:space="preserve"><value>Select a skill</value></data>
+  <data name="ChatForm_openai_shellNoSkillsAvailable" xml:space="preserve"><value>No OpenAI shell skills are available from the shared skills catalog.</value></data>
+  <data name="ChatForm_openai_shellAddSkillReference" xml:space="preserve"><value>Add skill reference</value></data>
+  <data name="ChatForm_openai_shellAddInlineSkill" xml:space="preserve"><value>Add inline skill</value></data>
+  <data name="ChatForm_openai_shellInlineUploadHelp" xml:space="preserve"><value>Drop a ZIP archive here or choose one to attach as the inline skill source.</value></data>
+  <data name="ChatForm_openai_shellUploadArchive" xml:space="preserve"><value>Upload ZIP archive</value></data>
+  <data name="ChatForm_openai_shellReplaceArchive" xml:space="preserve"><value>Replace ZIP archive</value></data>
+  <data name="ChatForm_openai_shellRemoveArchive" xml:space="preserve"><value>Remove archive</value></data>
+  <data name="ChatForm_openai_shellArchiveSelected" xml:space="preserve"><value>Selected archive: {{fileName}}</value></data>
+  <data name="ChatForm_openai_shellNoArchiveSelected" xml:space="preserve"><value>No ZIP archive selected</value></data>
+  <data name="ChatForm_openai_knownSpeakersTitle" xml:space="preserve"><value>Known speakers</value></data>
+  <data name="ChatForm_openai_knownSpeakersDescription" xml:space="preserve"><value>Add up to 4 speaker names and upload a short voice sample per speaker to improve diarization.</value></data>
+  <data name="ChatForm_openai_knownSpeakersAdd" xml:space="preserve"><value>Add speaker</value></data>
+  <data name="ChatForm_openai_knownSpeakersNamePlaceholder" xml:space="preserve"><value>e.g. Alice</value></data>
+  <data name="ChatForm_openai_knownSpeakersSampleMissing" xml:space="preserve"><value>No sample uploaded</value></data>
+  <data name="ChatForm_openai_knownSpeakersNameExists" xml:space="preserve"><value>This name already exists.</value></data>
+  <data name="ChatForm_openai_knownSpeakersMax" xml:space="preserve"><value>You can add up to 4 speakers.</value></data>
+  <data name="ChatForm_openai_knownSpeakersDeleteConfirm" xml:space="preserve"><value>This speaker has a saved sample. Delete the speaker and its sample?</value></data>
+  <data name="ChatForm_openai_knownSpeakersSampleDuration" xml:space="preserve"><value>Recording must be between 2 and 10 seconds.</value></data>
+  <data name="ChatForm_openai_realtimeTranscriptionTitle" xml:space="preserve"><value>Realtime transcription</value></data>
+  <data name="ChatForm_openai_realtimeSessionType" xml:space="preserve"><value>Session type</value></data>
+  <data name="ChatForm_openai_realtimeAudioInputFormat" xml:space="preserve"><value>Input audio format</value></data>
+  <data name="ChatForm_openai_realtimeNoiseReduction" xml:space="preserve"><value>Noise reduction</value></data>
+  <data name="ChatForm_openai_realtimeInputTranscription" xml:space="preserve"><value>Input audio transcription</value></data>
+  <data name="ChatForm_openai_realtimeTranscriptionPrompt" xml:space="preserve"><value>Transcription prompt</value></data>
+  <data name="ChatForm_openai_realtimeTurnDetection" xml:space="preserve"><value>Turn detection</value></data>
+  <data name="ChatForm_openai_realtimeTurnDetectionType" xml:space="preserve"><value>Turn detection type</value></data>
+  <data name="ChatForm_openai_realtimeTurnCreateResponse" xml:space="preserve"><value>Auto-create response on speech stop</value></data>
+  <data name="ChatForm_openai_realtimeTurnInterruptResponse" xml:space="preserve"><value>Interrupt ongoing response on speech start</value></data>
+  <data name="ChatForm_openai_realtimeVadThreshold" xml:space="preserve"><value>VAD threshold (0.0–1.0)</value></data>
+  <data name="ChatForm_openai_realtimeVadPrefixPaddingMs" xml:space="preserve"><value>Prefix padding (ms)</value></data>
+  <data name="ChatForm_openai_realtimeVadSilenceDurationMs" xml:space="preserve"><value>Silence duration (ms)</value></data>
+  <data name="ChatForm_openai_realtimeVadIdleTimeoutMs" xml:space="preserve"><value>Idle timeout (ms)</value></data>
+  <data name="ChatForm_openai_realtimeSemanticEagerness" xml:space="preserve"><value>Eagerness</value></data>
+  <data name="ChatForm_openai_realtimeIncludeLogprobs" xml:space="preserve"><value>Include input transcription logprobs</value></data>
+  <data name="ChatForm_openai_realtimeTokenTtlSeconds" xml:space="preserve"><value>Token lifetime (seconds)</value></data>
 </root>

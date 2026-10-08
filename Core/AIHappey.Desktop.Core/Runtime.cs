@@ -15,6 +15,7 @@ public sealed class DesktopSettings
     public ServiceSettings Agents { get; set; } = new();
     public bool ConvertAttachmentsToText { get; set; } = true;
     public string? Language { get; set; }
+    public ChatPreferences Chat { get; set; } = new();
     public ServiceSettings For(ServiceKind kind) => kind == ServiceKind.Ai ? Ai : Agents;
 
     public void Validate(bool allowLocal)

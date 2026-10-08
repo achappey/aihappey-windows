@@ -67,9 +67,10 @@ public sealed partial class ChatShell : UserControl
         catalogClient = new(client, http);
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
         PrepareContext();
+        PrepareChatSettings();
         Content = BuildLayout();
         PrepareFileDrop();
-        ControlAppearance.Apply(this, ControlAppearance.NativeResources, palette =>
+        ControlAppearance.Apply(this, (_, _) => { }, palette =>
         {
             Background = new SolidColorBrush(palette.Surface);
             Foreground = new SolidColorBrush(palette.Text);
@@ -266,7 +267,9 @@ public sealed partial class ChatShell : UserControl
         actions.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        actions.Children.Add(addContext);
+        var composerSettings = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        composerSettings.Children.Add(addContext); composerSettings.Children.Add(chatSettings);
+        actions.Children.Add(composerSettings);
         Grid.SetColumn(stop, 1); actions.Children.Add(stop); Grid.SetColumn(send, 2); actions.Children.Add(send);
         composer.Children.Add(actions);
         Grid.SetRow(disclaimer, 3); workspace.Children.Add(disclaimer);
@@ -303,6 +306,7 @@ public sealed partial class ChatShell : UserControl
         var label = selected == ServiceKind.Ai ? DesktopResources.Get("SelectModel") : DesktopResources.Get("SelectAgent");
         target.PlaceholderText = label;
         ToolbarControls.Label(target, label);
+        chatSettings.Visibility = selected == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async Task SelectServiceAsync(ServiceKind selected)
@@ -335,6 +339,8 @@ public sealed partial class ChatShell : UserControl
         if (!targets.Any(x => x.Id == selected)) { Show(DesktopResources.Get("SelectTarget"), InfoBarSeverity.Warning); return; }
         var prompt = input.Text.Trim();
         var snapshot = contextAttachments.ToArray();
+        var inferencePreferences = session.Settings.Chat.Clone();
+        var selectedProvider = targets.First(x => x.Id == selected).ProviderKey;
         var extractDocuments = session.Settings.ConvertAttachmentsToText;
         var partition = session.HistoryPartition;
         await RunAsync(async ct =>
@@ -361,7 +367,7 @@ public sealed partial class ChatShell : UserControl
             await history.SaveAsync(partition, current, ct);
             try
             {
-                await foreach (var item in client.StreamAsync(current.Service, selected, current.Id, requestMessages, ct))
+                await foreach (var item in client.StreamAsync(current.Service, selected, current.Id, requestMessages, ct, inferencePreferences, selectedProvider))
                 {
                     assembler.Apply(item);
                     if (watch.Elapsed - renderAt > TimeSpan.FromMilliseconds(100) || assembler.Finished)
@@ -692,6 +698,7 @@ public sealed partial class ChatShell : UserControl
         input.IsReadOnly = value && inference;
         models.IsEnabled = agents.IsEnabled = target.IsEnabled = refresh.IsEnabled = account.IsEnabled = settingsButton.IsEnabled = manageAccount.IsEnabled = newChat.IsEnabled = searchChats.IsEnabled = chats.IsEnabled = send.IsEnabled = !value;
         addContext.IsEnabled = !value;
+        chatSettings.IsEnabled = !value;
         RenderContextTags();
         SetOverviewBusy(value);
         progress.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
@@ -719,6 +726,7 @@ public sealed partial class ChatShell : UserControl
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
+        if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.Hide(); }
         while (busy) await Task.Delay(20);
         // A save picker may remain open until dismissed; no download continues after shutdown.
         await session.DisposeAsync(); http.Dispose(); contextHttp.Dispose();
