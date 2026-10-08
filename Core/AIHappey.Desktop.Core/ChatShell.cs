@@ -341,11 +341,13 @@ public sealed partial class ChatShell : UserControl
 
     private async Task SendAsync()
     {
-        if (busy || closing || historyDialogOpen || catalogDialog is not null || string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0) return;
+        if (busy || closing || historyDialogOpen || catalogDialog is not null
+            || string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
         var selected = target.Text.Trim();
         if (!targets.Any(x => x.Id == selected)) { Show(DesktopResources.Get("SelectTarget"), InfoBarSeverity.Warning); return; }
         var prompt = input.Text.Trim();
         var snapshot = contextAttachments.ToArray();
+        var resourceSnapshot = selectedResources.ToArray();
         var inferencePreferences = session.Settings.Chat.Clone();
         var selectedProvider = targets.First(x => x.Id == selected).ProviderKey;
         var extractDocuments = session.Settings.ConvertAttachmentsToText;
@@ -353,14 +355,14 @@ public sealed partial class ChatShell : UserControl
         await RunAsync(async ct =>
         {
             // Finish preparation before committing a turn or clearing its draft. Cancellation retains input/context.
-            var prepared = await ComposerAttachments.PrepareAsync(prompt, snapshot, Service, extractDocuments, documentExtractor, ct);
+            var prepared = await ComposerAttachments.PrepareAsync(prompt, snapshot, Service, extractDocuments, documentExtractor, ct, resourceSnapshot);
             var mcpTurn = Service == ServiceKind.Ai ? Mcp.Capture() : McpTurnSnapshot.Empty;
             activeMcpTurn = mcpTurn;
             var systemContext = Service == ServiceKind.Ai ? CaptureSystemContext(inferencePreferences, mcpTurn) : null;
             current.Service = Service; current.Target = selected;
             if (current.Messages.Count == 0)
             {
-                var title = string.IsNullOrWhiteSpace(prompt) ? string.Join(", ", snapshot.Select(file => file.Name)) : prompt;
+                var title = string.IsNullOrWhiteSpace(prompt) ? string.Join(", ", snapshot.Select(file => file.Name).Concat(resourceSnapshot.Select(r => r.Name))) : prompt;
                 current.Title = title.Length > 60 ? title[..60] + "…" : title;
             }
             current.Messages.Add(new() { Message = prepared.Message });
@@ -742,6 +744,7 @@ public sealed partial class ChatShell : UserControl
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
+        resourcesDialog?.Hide();
         systemContextDialog?.Hide();
         mcpDialog?.Shutdown(); Mcp.Changed -= McpChanged;
         if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.Hide(); }

@@ -23,13 +23,20 @@ public sealed class DesktopMcpHeaderAuthentication : IDesktopMcpAuthentication
     }
 }
 
-public sealed record McpDiscovery(JsonElement ServerInfo, JsonElement Capabilities, string? Instructions, IReadOnlyList<JsonElement> Tools);
+public sealed record McpDiscovery(JsonElement ServerInfo, JsonElement Capabilities, string? Instructions, IReadOnlyList<JsonElement> Tools)
+{
+    public IReadOnlyList<JsonElement> Resources { get; init; } = [];
+    public IReadOnlyList<JsonElement> ResourceTemplates { get; init; } = [];
+}
 
 public interface IDesktopMcpConnection : IAsyncDisposable
 {
     event Action? ToolsChanged;
+    event Action? ResourcesChanged;
     Task<McpDiscovery> DiscoverAsync(CancellationToken ct);
     Task<JsonElement> CallAsync(string name, JsonElement input, string callId, string locale, CancellationToken ct);
+    Task<JsonElement> ReadAsync(string uri, string? cursor, int limit, CancellationToken ct);
+    Task<IReadOnlyList<string>> CompleteAsync(string template, string name, string value, IReadOnlyDictionary<string, string> arguments, CancellationToken ct);
 }
 
 public interface IDesktopMcpClientFactory
@@ -63,29 +70,61 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
     {
         private readonly McpClient client;
         private readonly IAsyncDisposable subscription;
+        private readonly IAsyncDisposable resourceSubscription;
         public event Action? ToolsChanged;
+        public event Action? ResourcesChanged;
         public SdkConnection(McpClient client)
         {
             this.client = client;
             subscription = client.RegisterNotificationHandler(NotificationMethods.ToolListChangedNotification, (_, _) =>
             { ToolsChanged?.Invoke(); return ValueTask.CompletedTask; });
+            resourceSubscription = client.RegisterNotificationHandler(NotificationMethods.ResourceListChangedNotification, (_, _) =>
+            { ResourcesChanged?.Invoke(); return ValueTask.CompletedTask; });
         }
         public async Task<McpDiscovery> DiscoverAsync(CancellationToken ct)
         {
-            // Explicit pagination protects against repeated cursors and unbounded server catalogs.
-            var tools = new List<JsonElement>(); var seen = new HashSet<string>(); string? cursor = null;
+            IReadOnlyList<JsonElement> tools = [], resources = [], templates = [];
             if (client.ServerCapabilities.Tools is not null)
-                for (var page = 0; ; page++)
+                tools = await McpCatalogPagination.ReadAsync(async (cursor, token) =>
                 {
-                    if (page >= 1000 || tools.Count >= 10000) throw new InvalidOperationException("MCP tool limit.");
-                    var result = await client.ListToolsAsync(new ListToolsRequestParams { Cursor = cursor }, ct);
-                    tools.AddRange(result.Tools.Select(t => JsonSerializer.SerializeToElement(t)));
-                    cursor = result.NextCursor;
-                    if (string.IsNullOrEmpty(cursor)) break;
-                    if (!seen.Add(cursor)) throw new InvalidOperationException("Repeated tools cursor.");
-                }
+                    var page = await client.ListToolsAsync(new ListToolsRequestParams { Cursor = cursor }, token);
+                    return (page.Tools.Select(t => JsonSerializer.SerializeToElement(t)).ToArray(), page.NextCursor);
+                }, ct);
+            if (client.ServerCapabilities.Resources is not null)
+            {
+                resources = await McpCatalogPagination.ReadAsync(async (cursor, token) =>
+                {
+                    var page = await client.ListResourcesAsync(new ListResourcesRequestParams { Cursor = cursor }, token);
+                    return (page.Resources.Select(r => JsonSerializer.SerializeToElement(r)).ToArray(), page.NextCursor);
+                }, ct);
+                templates = await McpCatalogPagination.ReadAsync(async (cursor, token) =>
+                {
+                    var page = await client.ListResourceTemplatesAsync(new ListResourceTemplatesRequestParams { Cursor = cursor }, token);
+                    return (page.ResourceTemplates.Select(r => JsonSerializer.SerializeToElement(r)).ToArray(), page.NextCursor);
+                }, ct);
+            }
             return new(JsonSerializer.SerializeToElement(client.ServerInfo), JsonSerializer.SerializeToElement(client.ServerCapabilities),
-                client.ServerInstructions, tools);
+                client.ServerInstructions, tools) { Resources = resources, ResourceTemplates = templates };
+        }
+        public async Task<JsonElement> ReadAsync(string uri, string? cursor, int limit, CancellationToken ct)
+        {
+            DesktopMcpResources.ValidateUri(uri);
+            var meta = new JsonObject { ["limit"] = limit };
+            if (cursor is not null) meta["cursor"] = cursor;
+            var result = await client.ReadResourceAsync(new ReadResourceRequestParams { Uri = uri, Meta = meta }, ct);
+            var json = JsonSerializer.SerializeToNode(result)!.AsObject(); json.Remove("_meta");
+            return DesktopMcpResources.ValidateResult(JsonSerializer.SerializeToElement(json));
+        }
+        public async Task<IReadOnlyList<string>> CompleteAsync(string template, string name, string value,
+            IReadOnlyDictionary<string, string> arguments, CancellationToken ct)
+        {
+            if (client.ServerCapabilities.Completions is null) return [];
+            var result = await client.CompleteAsync(new CompleteRequestParams
+            {
+                Ref = new ResourceTemplateReference { Uri = template }, Argument = new() { Name = name, Value = value },
+                Context = new() { Arguments = arguments.ToDictionary(p => p.Key, p => p.Value) }
+            }, ct);
+            return result.Completion.Values.Take(100).ToArray();
         }
         public async Task<JsonElement> CallAsync(string name, JsonElement input, string callId, string locale, CancellationToken ct)
         {
@@ -99,7 +138,7 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
             var json = JsonSerializer.SerializeToNode(result)!.AsObject(); json.Remove("_meta");
             return JsonSerializer.SerializeToElement(json);
         }
-        public async ValueTask DisposeAsync() { await subscription.DisposeAsync(); await client.DisposeAsync(); }
+        public async ValueTask DisposeAsync() { await subscription.DisposeAsync(); await resourceSubscription.DisposeAsync(); await client.DisposeAsync(); }
     }
 }
 
@@ -217,6 +256,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
             lock (sync) { entry.Connection = connection; entry.Discovery = discovery; entry.State = McpConnectionState.Connected; }
             entry.Changed = () => _ = RefreshAsync(entry);
             connection.ToolsChanged += entry.Changed;
+            connection.ResourcesChanged += entry.Changed;
             connection = null;
         }
         catch (Exception e)
@@ -238,6 +278,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
                 using var timeout = CancellationTokenSource.CreateLinkedTokenSource(entry.Lifetime.Token);
                 timeout.CancelAfter(TimeSpan.FromSeconds(30));
                 var discovery = await entry.Connection.DiscoverAsync(timeout.Token);
+                timeout.Token.ThrowIfCancellationRequested();
                 lock (sync) entry.Discovery = discovery;
                 Changed?.Invoke();
             }
@@ -250,10 +291,16 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
     public McpTurnSnapshot Capture()
     {
         lock (sync) return McpTurnSnapshot.Create(entries.Values.Where(e => e.State == McpConnectionState.Connected && e.Server.Enabled && e.Discovery is not null)
-            .Select(e => (e.Server.CatalogItem, e.Discovery!, (Func<string, JsonElement, string, string, CancellationToken, Task<JsonElement>>)
-                ((name, input, id, locale, ct) => CallAsync(e, name, input, id, locale, ct)))));
+            .Select(e => new McpConnectedServer(e.Server.CatalogItem, e.Discovery!,
+                (name, input, id, locale, ct) => CallAsync(e, name, input, id, locale, ct),
+                (uri, cursor, limit, ct) => RequestAsync(e, (connection, token) => connection.ReadAsync(uri, cursor, limit, token), ct),
+                (template, name, value, arguments, ct) => RequestAsync(e,
+                    (connection, token) => connection.CompleteAsync(template, name, value, arguments, token), ct))));
     }
-    private async Task<JsonElement> CallAsync(Entry entry, string name, JsonElement input, string callId, string locale, CancellationToken ct)
+    private Task<JsonElement> CallAsync(Entry entry, string name, JsonElement input, string callId, string locale, CancellationToken ct) =>
+        RequestAsync(entry, (connection, token) => connection.CallAsync(name, input, callId, locale, token), ct);
+
+    private async Task<T> RequestAsync<T>(Entry entry, Func<IDesktopMcpConnection, CancellationToken, Task<T>> request, CancellationToken ct)
     {
         IDesktopMcpConnection connection;
         lock (sync)
@@ -265,7 +312,15 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         }
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct, entry.Lifetime.Token);
         timeout.CancelAfter(TimeSpan.FromMinutes(5));
-        try { return await connection.CallAsync(name, input, callId, locale, timeout.Token); }
+        try
+        {
+            var result = await request(connection, timeout.Token);
+            timeout.Token.ThrowIfCancellationRequested();
+            lock (sync)
+                if (disposed || !entries.TryGetValue(entry.Server.Id, out var current) || current != entry || entry.Connection != connection)
+                    throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
+            return result;
+        }
         catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
         catch (Exception e)
         {
@@ -287,6 +342,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         if (connection is not null)
         {
             if (entry.Changed is not null) connection.ToolsChanged -= entry.Changed;
+            if (entry.Changed is not null) connection.ResourcesChanged -= entry.Changed;
             try { await connection.DisposeAsync(); } catch { /* Shutdown/disable must still remove the connection. */ }
         }
         // Retain the canceled source: in-flight snapshots may still use its token.

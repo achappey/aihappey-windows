@@ -86,12 +86,18 @@ public static class ComposerAttachments
     }
 
     public static async Task<PreparedComposerMessage> PrepareAsync(string prompt, IReadOnlyList<ComposerAttachment> attachments,
-        ServiceKind service, bool extractDocuments, IDocumentTextExtractor extractor, CancellationToken ct)
+        ServiceKind service, bool extractDocuments, IDocumentTextExtractor extractor, CancellationToken ct,
+        IReadOnlyList<McpSelectedResource>? resources = null)
     {
         // Snapshot both settings and attachments before any asynchronous extraction.
         var snapshot = attachments.ToArray();
         var parts = new List<UIMessagePart>();
         var warnings = new List<string>();
+        foreach (var resource in resources?.ToArray() ?? [])
+        {
+            ct.ThrowIfCancellationRequested();
+            parts.AddRange(resource.Parts());
+        }
         if (extractDocuments && service == ServiceKind.Ai)
             foreach (var file in snapshot.Where(file => !file.IsLink && extractor.Supports(file.Name, file.MediaType)))
             {

@@ -33,6 +33,7 @@ public sealed partial class ChatShell
     {
         if (closing) return;
         RenderMcpTags(); mcpOverview.SetInstalled(Mcp.Servers);
+        resourcesDialog?.SetCatalog(Mcp.Capture().Resources);
     });
     private void RenderMcpTags()
     {
@@ -54,6 +55,7 @@ public sealed partial class ChatShell
         }
         mcpTagScroll.Visibility = servers.Length > 0 && Service == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
         manageMcp.Visibility = Service == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
+        UpdateResourceMenu();
     }
     private async Task LoadMcpOverviewAsync(CancellationToken ct, bool useCache = false)
     {

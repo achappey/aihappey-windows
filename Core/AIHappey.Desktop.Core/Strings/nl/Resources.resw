@@ -576,6 +576,13 @@
   <data name="McpMetadata" xml:space="preserve"><value>Metagegevens</value></data>
   <data name="McpResources" xml:space="preserve"><value>Bronnen</value></data>
   <data name="McpResourceTemplates" xml:space="preserve"><value>Bronsjablonen</value></data>
+  <data name="McpResource" xml:space="preserve"><value>Bron</value></data>
+  <data name="McpResourceTemplate" xml:space="preserve"><value>Bronsjabloon</value></data>
+  <data name="McpExecute" xml:space="preserve"><value>Uitvoeren</value></data>
+  <data name="McpNoResources" xml:space="preserve"><value>Er zijn geen bronnen of bronsjablonen beschikbaar van verbonden MCP-servers.</value></data>
+  <data name="McpInvalidResourceUri" xml:space="preserve"><value>Voer een absolute bron-URI met een schema in, zoals https://, file:///, of mcp://.</value></data>
+  <data name="McpEmptyResource" xml:space="preserve"><value>De MCP-bron heeft geen inhoud teruggegeven.</value></data>
+  <data name="McpResourceReadFailed" xml:space="preserve"><value>De MCP-bron kon niet worden gelezen. Controleer de argumenten en de serververbinding en probeer het opnieuw.</value></data>
   <data name="McpVersion" xml:space="preserve"><value>Versie</value></data>
   <data name="McpWebsite" xml:space="preserve"><value>Website</value></data>
   <data name="McpRepository" xml:space="preserve"><value>Repository</value></data>

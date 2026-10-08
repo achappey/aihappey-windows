@@ -111,7 +111,7 @@ internal sealed class McpSystemContextView : UserControl
 
     private void AddCatalogSection(string property, string key)
     {
-        // Capability-driven extension point: future discovery can populate these context catalogs.
+        // Render the captured assistant-visible catalogs, never the raw user picker catalog.
         // Do not show empty placeholder tabs or fetch/read a resource merely to inspect context.
         if (!block.TryGetProperty(property, out var items) || items.ValueKind != JsonValueKind.Array || items.GetArrayLength() == 0) return;
         AddSection(key, () =>

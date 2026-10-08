@@ -26,11 +26,13 @@ public sealed partial class ChatShell
         var menu = new MenuFlyout { Placement = FlyoutPlacementMode.TopEdgeAlignedLeft };
         var files = new MenuFlyoutItem { Text = DesktopResources.Get("Attachments"), Icon = new FontIcon { Glyph = "\uE723" } };
         var link = new MenuFlyoutItem { Text = DesktopResources.Get("Link"), Icon = new FontIcon { Glyph = "\uE71B" } };
-        foreach (var item in new[] { files, link, manageMcp }) { ControlAppearance.Native(item); menu.Items.Add(item); }
+        foreach (var item in new[] { files, link, selectResources, manageMcp }) { ControlAppearance.Native(item); menu.Items.Add(item); }
         files.Click += async (_, _) => await PickAttachmentsAsync();
         link.Click += async (_, _) => await AddLinkAsync();
+        selectResources.Click += async (_, _) => await SelectResourcesAsync();
         menu.Opening += (_, _) =>
         {
+            UpdateResourceMenu();
             var palette = ControlAppearance.Palette(this);
             var style = new Style(typeof(MenuFlyoutPresenter));
             style.Setters.Add(new Setter(FrameworkElement.RequestedThemeProperty, ActualTheme));
@@ -49,7 +51,8 @@ public sealed partial class ChatShell
     private void ResetContext()
     {
         ResetFileDrop();
-        contextVersion++; contextAttachments.Clear(); linkDialog?.Hide(); RenderContextTags();
+        contextVersion++; contextAttachments.Clear(); selectedResources.Clear();
+        linkDialog?.Hide(); resourcesDialog?.Hide(); RenderContextTags();
     }
 
     private void AddContextAttachment(ComposerAttachment attachment)
@@ -83,7 +86,8 @@ public sealed partial class ChatShell
             ControlAppearance.TokenBadge(tag); ToolbarControls.Label(tag, file.Name + " · " + file.MediaType + (file.IsLink ? "\n" + file.RemoteUrl : ""));
             contextTags.Children.Add(tag);
         }
-        contextTagScroll.Visibility = contextAttachments.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        RenderResourceTags();
+        contextTagScroll.Visibility = contextAttachments.Count + selectedResources.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private async Task PickAttachmentsAsync()

@@ -11,12 +11,18 @@ public sealed class McpTurnSnapshot
     private readonly Dictionary<string, Route> routes = new(StringComparer.Ordinal);
     private readonly List<JsonElement> tools = [];
     private readonly List<JsonElement> context = [];
+    private readonly List<McpResourceEntry> resources = [];
+    private readonly Dictionary<string, Func<string, string?, int, CancellationToken, Task<JsonElement>>> resourceRoutes = new(StringComparer.Ordinal);
     public static McpTurnSnapshot Empty => new();
     public IReadOnlyList<JsonElement> Tools => tools.AsReadOnly();
     public IReadOnlyList<JsonElement> Context => context.AsReadOnly();
+    public IReadOnlyList<McpResourceEntry> Resources => resources.AsReadOnly();
 
     public static McpTurnSnapshot Create(IEnumerable<(McpCatalogItem Server, McpDiscovery Discovery,
         Func<string, JsonElement, string, string, CancellationToken, Task<JsonElement>> Call)> connected)
+        => Create(connected.Select(s => new McpConnectedServer(s.Server, s.Discovery, s.Call)));
+
+    public static McpTurnSnapshot Create(IEnumerable<McpConnectedServer> connected)
     {
         var result = new McpTurnSnapshot();
         var servers = connected.OrderBy(s => s.Server.Id, StringComparer.Ordinal).ToArray();
@@ -25,13 +31,15 @@ public sealed class McpTurnSnapshot
         var counts = candidates.GroupBy(c => c.Name, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.Count());
         // Reserve real names before allocating aliases, including adversarial alias-like real names.
         var used = candidates.Select(c => c.Name).ToHashSet(StringComparer.Ordinal);
+        var hasResources = servers.Any(s => s.Discovery.Resources.Count > 0 || s.Discovery.ResourceTemplates.Count > 0);
+        used.Add(DesktopMcpResources.ToolName);
         foreach (var server in servers)
         {
             var serverTools = new JsonArray();
             foreach (var candidate in candidates.Where(c => c.Server.Id == server.Server.Id))
             {
                 var name = candidate.Name;
-                if (counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
+                if (name == DesktopMcpResources.ToolName || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
                 {
                     var stem = Regex.Replace(name, "[^a-zA-Z0-9_-]", "_");
                     stem = stem[..Math.Min(stem.Length, 40)];
@@ -52,10 +60,37 @@ public sealed class McpTurnSnapshot
                 ["title"] = CatalogProjection.Text(server.Discovery.ServerInfo, "title") ?? server.Server.Name,
                 ["version"] = CatalogProjection.Text(server.Discovery.ServerInfo, "version"), ["mcpServerUrl"] = server.Server.Url };
             var block = new JsonObject { ["modelContextProtocolServer"] = info, ["tools"] = serverTools };
+            var catalog = DesktopMcpResources.AssistantCatalog(server.Discovery.Resources, false);
+            var templates = DesktopMcpResources.AssistantCatalog(server.Discovery.ResourceTemplates, true);
+            if (catalog.Count > 0) block["resources"] = catalog;
+            if (templates.Count > 0) block["resourceTemplates"] = templates;
+            if (server.Read is { } read)
+            {
+                result.resourceRoutes.TryAdd(server.Server.Url, read);
+                foreach (var item in server.Discovery.Resources.Where(DesktopMcpResources.ForUser))
+                    result.resources.Add(new(server.Server.Id, server.Server.Name, server.Server.Url, item.Clone(), false, read, null));
+                foreach (var item in server.Discovery.ResourceTemplates.Where(DesktopMcpResources.ForUser))
+                    result.resources.Add(new(server.Server.Id, server.Server.Name, server.Server.Url, item.Clone(), true, read,
+                        server.Discovery.Capabilities.TryGetProperty("completions", out var capability) && capability.ValueKind == JsonValueKind.Object ? server.Complete : null));
+            }
             if (!string.IsNullOrWhiteSpace(server.Discovery.Instructions)) block["instructions"] = server.Discovery.Instructions;
             result.context.Add(JsonSerializer.SerializeToElement(block));
         }
+        if (hasResources)
+        {
+            result.tools.Add(DesktopMcpResources.Tool);
+            result.routes.Add(DesktopMcpResources.ToolName, new(DesktopMcpResources.ToolName,
+                (_, input, _, _, ct) => result.ReadResourceToolAsync(input, ct)));
+        }
         return result;
+    }
+
+    private async Task<JsonElement> ReadResourceToolAsync(JsonElement input, CancellationToken ct)
+    {
+        var arguments = DesktopMcpResources.Arguments(input);
+        if (!resourceRoutes.TryGetValue(arguments.ServerUrl, out var read))
+            throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
+        return DesktopMcpResources.ToolResult(await read(arguments.Uri, arguments.Cursor, arguments.Limit, ct));
     }
 
     public bool Contains(string name) => routes.ContainsKey(name);

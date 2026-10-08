@@ -580,6 +580,13 @@
   <data name="McpMetadata" xml:space="preserve"><value>Metadata</value></data>
   <data name="McpResources" xml:space="preserve"><value>Resources</value></data>
   <data name="McpResourceTemplates" xml:space="preserve"><value>Resource templates</value></data>
+  <data name="McpResource" xml:space="preserve"><value>Resource</value></data>
+  <data name="McpResourceTemplate" xml:space="preserve"><value>Resource template</value></data>
+  <data name="McpExecute" xml:space="preserve"><value>Execute</value></data>
+  <data name="McpNoResources" xml:space="preserve"><value>No resources or resource templates are available from connected MCP servers.</value></data>
+  <data name="McpInvalidResourceUri" xml:space="preserve"><value>Enter an absolute resource URI with a scheme, such as https://, file:///, or mcp://.</value></data>
+  <data name="McpEmptyResource" xml:space="preserve"><value>The MCP resource returned no contents.</value></data>
+  <data name="McpResourceReadFailed" xml:space="preserve"><value>The MCP resource could not be read. Check the arguments and server connection, then try again.</value></data>
   <data name="McpVersion" xml:space="preserve"><value>Version</value></data>
   <data name="McpWebsite" xml:space="preserve"><value>Website</value></data>
   <data name="McpRepository" xml:space="preserve"><value>Repository</value></data>
