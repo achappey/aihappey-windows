@@ -68,6 +68,7 @@ public sealed partial class ChatShell : UserControl
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
         PrepareContext();
         PrepareMcp();
+        PrepareToolApprovals();
         PrepareChatSettings();
         PrepareSystemContext();
         PrepareTranscript();
@@ -266,7 +267,8 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(account, 4); top.Children.Add(account);
         workspace.Children.Add(top);
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
-        composer.Children.Add(welcome); composer.Children.Add(contextTagScroll); composer.Children.Add(mcpTagScroll); composer.Children.Add(input);
+        composer.Children.Add(welcome); composer.Children.Add(contextTagScroll); composer.Children.Add(composerBadgeRow);
+        composer.Children.Add(input);
         var actions = new Grid();
         actions.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
@@ -368,41 +370,27 @@ public sealed partial class ChatShell : UserControl
             current.Messages.Add(new() { Message = prepared.Message });
             var output = new ConversationMessage { Message = new UIMessage { Id = Guid.NewGuid().ToString("N"), Role = Role.assistant,
                 Metadata = new Dictionary<string, object> { ["model"] = selected, ["timestamp"] = DateTimeOffset.UtcNow.ToString("O") } }, Status = "streaming" };
-            // Only complete prior turns and user input go back to the service, including their original context parts.
-            var requestMessages = current.Messages.Where(PortableConversations.CanReplay).Select(x => x.Message).ToList();
             current.Messages.Add(output); input.Text = ""; ResetContext(); followBottom = true; RenderTranscript();
             if (prepared.Warnings.Count > 0) Show(string.Join("\n", prepared.Warnings), InfoBarSeverity.Warning);
-            var assembler = new MessageAssembler(output);
             var watch = Stopwatch.StartNew();
             var saveAt = TimeSpan.Zero;
             var renderAt = TimeSpan.Zero;
             await history.SaveAsync(partition, current, ct);
             try
             {
-                var executed = new HashSet<string>(StringComparer.Ordinal);
-                for (var round = 0; ; round++)
+                await DesktopChatTurn.RunAsync(current, output,
+                    (messages, token) => client.StreamAsync(current.Service, selected, current.Id, messages, token,
+                        inferencePreferences, selectedProvider, systemContext, mcpTurn), ApproveToolAsync,
+                    async (force, token) =>
                 {
-                    await foreach (var item in client.StreamAsync(current.Service, selected, current.Id, requestMessages, ct, inferencePreferences, selectedProvider, systemContext, mcpTurn))
-                    {
-                        assembler.Apply(item);
-                        if (watch.Elapsed - renderAt > TimeSpan.FromMilliseconds(100) || assembler.Finished)
-                        { RenderTranscript(); renderAt = watch.Elapsed; }
-                        if (watch.Elapsed - saveAt > TimeSpan.FromSeconds(1))
-                        { await history.SaveAsync(partition, current, ct); saveAt = watch.Elapsed; }
-                        if (assembler.Finished) break;
-                    }
-                    if (!assembler.Finished || output.Status != "complete" || current.Service != ServiceKind.Ai) break;
-                    var calls = await DesktopMcpToolExecution.ExecutePendingAsync(output, mcpTurn, executed, session.ActiveLanguage, ct);
-                    if (calls == 0) break;
-                    await history.SaveAsync(partition, current, ct); RenderTranscript();
-                    if (round + 1 >= DesktopMcpToolExecution.MaxRounds) throw new GatewayException(DesktopResources.Get("McpToolLimit"));
-                    requestMessages = current.Messages.Where(x => x != output && PortableConversations.CanReplay(x)).Select(x => x.Message).Append(output.Message).ToList();
-                    assembler.Continue();
-                }
-                if (!assembler.Finished) { output.Status = "interrupted"; Show(DesktopResources.Get("StreamInterrupted"), InfoBarSeverity.Warning); }
+                    if (force || watch.Elapsed - renderAt > TimeSpan.FromMilliseconds(100))
+                    { RenderTranscript(); renderAt = watch.Elapsed; }
+                    if (force || watch.Elapsed - saveAt > TimeSpan.FromSeconds(1))
+                    { await history.SaveAsync(partition, current, token); saveAt = watch.Elapsed; }
+                }, mcpTurn, session.ActiveLanguage, ct);
+                if (output.Status is "interrupted" or "approval required") Show(DesktopResources.Get("StreamInterrupted"), InfoBarSeverity.Warning);
             }
-            catch (OperationCanceledException) { output.Status = "stopped"; }
-            catch { if (!assembler.ApprovalRequired) output.Status = "failed"; throw; }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { /* The turn runner retains pending approvals on stop. */ }
             finally
             {
                 activeMcpTurn = null;
@@ -541,8 +529,9 @@ public sealed partial class ChatShell : UserControl
         if (PortableConversations.IsTool(part))
         {
             content.Children.Add(new TextBlock { Text = PortableConversations.ToolName(part), TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-            content.Children.Add(SelectableText(PortableConversations.String(raw, "state") ?? DesktopResources.Get("ToolActivity")));
-            foreach (var (field, title) in new[] { ("input", DesktopResources.Get("Input")), ("output", DesktopResources.Get("Output")), ("inputText", DesktopResources.Get("StreamingInput")), ("errorText", DesktopResources.Get("Error")), ("approval", DesktopResources.Get("Approval")) })
+            // Activity cards are input-only. Results/decisions remain in history and the approval dialog,
+            // not as raw payloads between assistant text blocks.
+            foreach (var (field, title) in new[] { ("input", DesktopResources.Get("Input")), ("inputText", DesktopResources.Get("StreamingInput")) })
                 if (raw.TryGetProperty(field, out var value) && value.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined) AddStructured(content, title, value);
             return;
         }
@@ -718,6 +707,7 @@ public sealed partial class ChatShell : UserControl
         chatSettings.IsEnabled = !value;
         manageMcp.IsEnabled = !value; RenderMcpTags();
         RenderContextTags();
+        RenderApprovalBadges();
         SetOverviewBusy(value);
         progress.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         stop.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
@@ -745,10 +735,12 @@ public sealed partial class ChatShell : UserControl
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
         resourcesDialog?.Hide();
+        approvalDialog?.Hide();
         systemContextDialog?.Hide();
         mcpDialog?.Shutdown(); Mcp.Changed -= McpChanged;
         if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.Hide(); }
         while (busy) await Task.Delay(20);
+        await approvalSettingsWrite.WaitAsync(); approvalSettingsWrite.Release();
         // A save picker may remain open until dismissed; no download continues after shutdown.
         await session.DisposeAsync(); http.Dispose(); contextHttp.Dispose(); mcpCatalogHttp.Dispose();
     }

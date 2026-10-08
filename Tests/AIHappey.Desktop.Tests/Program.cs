@@ -20,6 +20,7 @@ var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGu
 try
 {
     TranscriptRegressionTests.Run(Check);
+    await ToolApprovalRegressionTests.RunAsync(Check, root);
     var defaults = new DesktopSettings();
     Check(defaults.Ai.Location == RuntimeLocation.Local && defaults.Agents.Location == RuntimeLocation.Local, "public defaults are local");
     Reject(() => defaults.Validate(false), "enterprise rejects local");
@@ -56,8 +57,9 @@ try
     Check(!JsonSerializer.Serialize(output, JsonSerializerOptions.Web).Contains("excluded"), "provider debug events excluded from history");
     var approvalOutput = new ConversationMessage { Message = new UIMessage { Id = "approval", Role = Role.assistant } };
     var approval = new MessageAssembler(approvalOutput);
-    try { approval.Apply(StreamEvent.Parse("{\"type\":\"tool-approval-request\",\"approvalId\":\"p\",\"toolCallId\":\"t\"}")); throw new Exception("Expected approval interruption"); }
-    catch (GatewayException) { Check(approval.ApprovalRequired && approvalOutput.Status == "approval required", "approval never auto-executed"); }
+    approval.Apply(StreamEvent.Parse("{\"type\":\"tool-approval-request\",\"approvalId\":\"p\",\"toolCallId\":\"t\"}"));
+    approval.Apply(StreamEvent.Parse("{\"type\":\"finish\"}"));
+    Check(approval.ApprovalRequired && approval.Finished && approvalOutput.Status == "approval required", "approval retained without aborting stream or auto-executing");
 
     var partition = HistoryStore.Partition("host", "account", "endpoint");
     Check(partition != HistoryStore.Partition("host", "other-account", "endpoint"), "history account isolation");

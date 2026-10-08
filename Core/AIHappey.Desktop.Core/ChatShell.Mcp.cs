@@ -43,17 +43,22 @@ public sealed partial class ChatShell
         {
             var title = view.Discovery is { } discovery ? CatalogProjection.Text(discovery.ServerInfo, "title") : null;
             var displayName = string.IsNullOrWhiteSpace(title) ? view.Server.Name : title;
-            var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-            content.Children.Add(new FontIcon { Glyph = "\uE774", FontSize = 14 });
-            content.Children.Add(new TextBlock { Text = displayName, MaxWidth = 260, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
+            var content = new Grid { ColumnSpacing = 6, MaxWidth = 320 };
+            content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+            content.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+            content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+            content.Children.Add(new FontIcon { Glyph = "\uE774", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+            var label = new TextBlock { Text = displayName, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(label, 1); content.Children.Add(label);
             var remove = new Button { Name = "DisconnectMcpServer", Content = new FontIcon { Glyph = "\uE711", FontSize = 10 }, Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
             ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("McpDisconnect", displayName));
             remove.Click += async (_, _) => { await RunAsync(ct => Mcp.SetEnabledAsync(view.Server.Id, false, ct)); if (!closing) input.Focus(FocusState.Programmatic); };
-            content.Children.Add(remove);
+            Grid.SetColumn(remove, 2); content.Children.Add(remove);
             var tag = new Border { Name = "McpConnectedBadge", Child = content, Padding = new Thickness(10, 2, 4, 2), CornerRadius = new CornerRadius(16) };
             ControlAppearance.TokenBadge(tag); ToolbarControls.Label(tag, displayName + " · " + DesktopResources.Format("McpToolsCount", view.Discovery?.Tools.Count ?? 0)); mcpTags.Children.Add(tag);
         }
         mcpTagScroll.Visibility = servers.Length > 0 && Service == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
+        UpdateComposerBadgeRow();
         manageMcp.Visibility = Service == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
         UpdateResourceMenu();
     }

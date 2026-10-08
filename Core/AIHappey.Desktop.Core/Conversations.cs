@@ -36,11 +36,11 @@ public sealed class MessageAssembler(ConversationMessage output)
 {
     private readonly Dictionary<string, int> text = [], reasoning = [], tools = [], data = [];
     public bool Finished { get; private set; }
-    public bool ApprovalRequired { get; private set; }
+    public bool ApprovalRequired => DesktopToolApprovals.Pending(output.Message).Count > 0;
 
     public void Continue()
     {
-        if (!Finished || output.Status != "complete") throw new InvalidOperationException("Only completed steps can continue.");
+        if (!Finished || output.Status != "complete" || ApprovalRequired) throw new InvalidOperationException("Only resolved completed steps can continue.");
         Finished = false; output.Status = "streaming";
         // Text IDs are stream-local; tool IDs remain turn-wide to prevent repeated execution.
         text.Clear(); reasoning.Clear(); data.Clear();
@@ -68,7 +68,8 @@ public sealed class MessageAssembler(ConversationMessage output)
                 if (raw["messageMetadata"] is JsonObject finishMetadata) SetMetadata(finishMetadata);
                 foreach (var index in text.Values.Concat(reasoning.Values))
                 { var part = PortableConversations.Node(output.Message.Parts[index]); part["state"] = "done"; Store(index, part); }
-                Finished = true; output.Status = raw["finishReason"]?.ToString() == "error" ? "failed" : "complete"; break;
+                Finished = true; output.Status = raw["finishReason"]?.ToString() == "error" ? "failed"
+                    : ApprovalRequired ? "approval required" : "complete"; break;
             case "error":
                 output.Status = "failed";
                 throw new GatewayException(DesktopResources.Get("GenerationError"));
@@ -81,8 +82,10 @@ public sealed class MessageAssembler(ConversationMessage output)
                 if (item.Type == "dynamic-tool" || item.Type.StartsWith("tool-", StringComparison.Ordinal))
                 {
                     var id = Required(raw, "toolCallId");
-                    var index = Ensure(tools, id, raw); Store(index, raw);
-                    if (raw["state"]?.ToString() == "approval-requested") RefuseApproval();
+                    var index = Ensure(tools, id, raw);
+                    var merged = PortableConversations.Node(output.Message.Parts[index]);
+                    foreach (var (key, value) in raw) merged[key] = value?.DeepClone();
+                    Store(index, merged);
                 }
                 else if (item.Type.StartsWith("data-", StringComparison.Ordinal) && raw["id"] is not null)
                     Store(Ensure(data, item.Type + ":" + raw["id"], raw), raw);
@@ -108,6 +111,7 @@ public sealed class MessageAssembler(ConversationMessage output)
         var index = Ensure(tools, id, new JsonObject { ["type"] = name is null ? "dynamic-tool" : "tool-" + name,
             ["toolCallId"] = id, ["toolName"] = name ?? "Unknown tool", ["state"] = "input-streaming" });
         var part = PortableConversations.Node(output.Message.Parts[index]);
+        var pendingApproval = part["state"]?.ToString() == "approval-requested";
         if (name is not null)
         {
             part["type"] = raw["dynamic"]?.ToString() == "true" ? "dynamic-tool" : "tool-" + name;
@@ -130,17 +134,17 @@ public sealed class MessageAssembler(ConversationMessage output)
             case "tool-output-available": part["output"] = raw["output"]?.DeepClone(); part["state"] = "output-available"; break;
             case "tool-output-denied": part["state"] = "output-denied"; break;
             case "tool-approval-request":
-                part["approval"] = new JsonObject { ["id"] = raw["approvalId"]?.DeepClone() };
-                part["state"] = "approval-requested"; Store(index, part); RefuseApproval(); break;
+                var approvalId = Required(raw, "approvalId");
+                // Duplicate chunks must not reset an already answered approval.
+                if (part["approval"] is JsonObject previous && previous["id"]?.ToString() == approvalId
+                    && previous["approved"] is not null) break;
+                part["approval"] = new JsonObject { ["id"] = approvalId };
+                part["state"] = "approval-requested"; break;
         }
+        if (pendingApproval && eventType != "tool-approval-request") part["state"] = "approval-requested";
         Store(index, part);
     }
 
-    private void RefuseApproval()
-    {
-        ApprovalRequired = true; output.Status = "approval required";
-        throw new GatewayException(DesktopResources.Get("ApprovalUnsupported"));
-    }
     private static string Required(JsonObject raw, string key) => raw[key]?.ToString() is { Length: > 0 } value ? value : throw new JsonException("Missing stream part ID.");
     private int Ensure(Dictionary<string, int> map, string id, JsonObject initial)
     {

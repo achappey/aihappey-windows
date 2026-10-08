@@ -114,7 +114,14 @@ public static class DesktopMcpToolExecution
             var part = output.Message.Parts[index];
             if (!PortableConversations.IsTool(part)) continue;
             var raw = PortableConversations.Element(part);
-            if (PortableConversations.String(raw, "state") != "input-available"
+            var state = PortableConversations.String(raw, "state");
+            // The UI reviews results, not permission to execute. Tool-side elicitation is a separate protocol.
+            var reviewAfterExecution = state == "approval-requested"
+                && snapshot.Contains(DesktopToolApprovals.CanonicalName(part));
+            var approvedClientCall = state == "approval-responded" && DesktopToolApprovals.Approved(raw) == true
+                && snapshot.Contains(DesktopToolApprovals.CanonicalName(part));
+            if (state != "input-available" && !approvedClientCall && !reviewAfterExecution
+                || DesktopToolApprovals.HasOutput(raw) || DesktopToolApprovals.Approved(raw) == false
                 || raw.TryGetProperty("providerExecuted", out var provider) && provider.ValueKind == JsonValueKind.True) continue;
             ct.ThrowIfCancellationRequested();
             var id = PortableConversations.String(raw, "toolCallId") ?? throw new JsonException("Missing tool call ID.");
@@ -124,24 +131,29 @@ public static class DesktopMcpToolExecution
             {
                 if (!raw.TryGetProperty("input", out var input) || input.ValueKind != JsonValueKind.Object)
                     throw new InvalidOperationException(DesktopResources.Get("McpInvalidArguments"));
-                var result = await snapshot.CallAsync(PortableConversations.ToolName(part), input, id, locale, ct);
+                var result = await snapshot.CallAsync(DesktopToolApprovals.CanonicalName(part), input, id, locale, ct);
                 if (result.GetRawText().Length > 2_000_000) throw new InvalidOperationException(DesktopResources.Get("McpResultTooLarge"));
                 var modelResult = JsonNode.Parse(result.GetRawText()) as JsonObject ?? throw new JsonException("Invalid MCP result.");
                 modelResult.Remove("_meta");
                 // MCP isError is an application result, not a transport failure: preserve the complete safe result.
-                node["output"] = modelResult; node["state"] = "output-available";
+                node["output"] = modelResult;
+                node["state"] = reviewAfterExecution ? "approval-requested" : "output-available";
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
-                node["state"] = "output-error"; node["errorText"] = DesktopResources.Get("OperationCanceled");
+                node["state"] = reviewAfterExecution ? "approval-requested" : "output-error";
+                node["errorText"] = DesktopResources.Get("OperationCanceled");
                 output.Message.Parts[index] = PortableConversations.Part(node); throw;
             }
             catch (Exception e)
             {
-                node["state"] = "output-error";
+                node["state"] = reviewAfterExecution ? "approval-requested" : "output-error";
                 // Do not persist arbitrary server/SDK exception messages (headers/URLs may be embedded).
-                node["errorText"] = snapshot.Contains(PortableConversations.ToolName(part))
+                var error = snapshot.Contains(DesktopToolApprovals.CanonicalName(part))
                     ? DesktopMcpManager.SafeError(e) : DesktopResources.Get("McpUnknownTool");
+                node["errorText"] = error;
+                if (reviewAfterExecution) node["output"] = new JsonObject { ["isError"] = true,
+                    ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = error }) };
             }
             output.Message.Parts[index] = PortableConversations.Part(node); count++;
         }

@@ -7,12 +7,14 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
 {
     private readonly bool allowLocal;
     private readonly ChatPreferences chatPreferences;
+    private readonly List<string> allowedTools;
     public DesktopSettings? Result { get; private set; }
 
     public SettingsDialog(DesktopSettings settings, bool allowLocal, string activeLanguage)
     {
         this.allowLocal = allowLocal;
         chatPreferences = settings.Chat.Clone();
+        allowedTools = settings.AllowedToolList.ToList();
         InitializeComponent();
         Name = "SettingsDialog";
         Resources["ContentDialogMaxWidth"] = 840d;
@@ -54,7 +56,8 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             Ai = new() { Location = allowLocal && AiLocation.SelectedIndex == 0 ? RuntimeLocation.Local : RuntimeLocation.Remote, RemoteUrl = AiUrl.Text.Trim() },
             Agents = new() { Location = allowLocal && AgentsLocation.SelectedIndex == 0 ? RuntimeLocation.Local : RuntimeLocation.Remote, RemoteUrl = AgentsUrl.Text.Trim() },
             ConvertAttachmentsToText = DocumentTextExtraction.IsOn,
-            Chat = chatPreferences.Clone()
+            Chat = chatPreferences.Clone(),
+            AllowedToolList = allowedTools.ToList()
         };
         try { next.Validate(allowLocal); Result = next; }
         catch (InvalidOperationException error)

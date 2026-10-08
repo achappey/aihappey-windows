@@ -6,6 +6,7 @@ namespace AIHappey.Desktop.Core;
 /// <summary>Small native Panel layout: footer actions retain natural widths and wrap at narrow viewports.</summary>
 internal sealed class MessageFooterPanel : Panel
 {
+    public bool AlignRight { get; init; }
     protected override Size MeasureOverride(Size availableSize)
     {
         double x = 0, y = 0, lineHeight = 0, width = 0;
@@ -36,7 +37,7 @@ internal sealed class MessageFooterPanel : Panel
                 lineHeight = Math.Max(lineHeight, size.Height);
                 end++;
             }
-            double x = 0;
+            double x = AlignRight ? Math.Max(0, finalSize.Width - Math.Max(0, lineWidth - 6)) : 0;
             for (var index = start; index < end; index++)
             {
                 var child = Children[index];

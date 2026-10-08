@@ -52,7 +52,10 @@ public static class PortableConversations
         return message.Message.Parts.All(part =>
         {
             var state = String(Element(part), "state");
-            return !IsTool(part) || state is "output-available" or "output-error" or "output-denied";
+            var raw = Element(part);
+            return !IsTool(part) || state is "output-available" or "output-error" or "output-denied"
+                || state == "approval-responded" && (DesktopToolApprovals.Approved(raw) == false
+                    || DesktopToolApprovals.Approved(raw) == true && DesktopToolApprovals.HasOutput(raw));
         });
     }
 }
@@ -155,7 +158,7 @@ public sealed class ConversationConverter : JsonConverter<Conversation>
             {
                 Message = message,
                 Timestamp = DateTimeOffset.TryParse(PortableConversations.MetadataString(message.Metadata, "timestamp"), out var timestamp) ? timestamp : DateTimeOffset.UnixEpoch,
-                Status = state ?? (partStates.Any(s => s is "approval-requested" or "approval-responded") ? "approval required"
+                Status = state ?? (partStates.Any(s => s == "approval-requested") ? "approval required"
                     : partStates.Any(s => s is "streaming" or "input-streaming" or "input-available") ? "interrupted" : "complete")
             });
         }

@@ -16,6 +16,12 @@ public sealed class DesktopSettings
     public bool ConvertAttachmentsToText { get; set; } = true;
     public string? Language { get; set; }
     public ChatPreferences Chat { get; set; } = new();
+    private List<string> allowedToolList = [];
+    public List<string> AllowedToolList
+    {
+        get => allowedToolList;
+        set => allowedToolList = value?.Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).ToList() ?? [];
+    }
     public ServiceSettings For(ServiceKind kind) => kind == ServiceKind.Ai ? Ai : Agents;
 
     public void Validate(bool allowLocal)
@@ -78,6 +84,7 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     public DesktopContextOptions ContextOptions { get; set; } = new();
     public ISystemContextComposer ContextComposer { get; set; } = new DesktopSystemContextComposer();
     public IDesktopMcpClientFactory McpClientFactory { get; set; } = new DesktopMcpClientFactory();
+    public DesktopToolApprovalPolicy ToolApprovals { get; } = new();
     public DesktopMcpManager? Mcp { get; private set; }
     public string McpPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
     public DesktopMcpManager InitializeMcp() => Mcp ??= new(McpClientFactory, new DesktopMcpStore(Path.Combine(DataDirectory, "mcp")));

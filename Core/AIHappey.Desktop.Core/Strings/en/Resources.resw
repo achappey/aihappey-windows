@@ -1,5 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="ToolApproval" xml:space="preserve"><value>Tool approval</value></data>
+  <data name="ToolDeny" xml:space="preserve"><value>Deny tool result</value></data>
+  <data name="Allow" xml:space="preserve"><value>Allow</value></data>
+  <data name="Deny" xml:space="preserve"><value>Deny</value></data>
+  <data name="DenyReason" xml:space="preserve"><value>Reason (optional)</value></data>
+  <data name="Automatic" xml:space="preserve"><value>Automatic</value></data>
+  <data name="AutomaticApprovalHint" xml:space="preserve"><value>Automatically allow this tool, or choose all tools from the menu</value></data>
+  <data name="AutoApproveTool" xml:space="preserve"><value>Auto-approve {0}</value></data>
+  <data name="AutoApproveAll" xml:space="preserve"><value>All tools (BRRR) — this session</value></data>
+  <data name="AutoApproveAllBadge" xml:space="preserve"><value>Auto-approve: All tools (BRRR)</value></data>
+  <data name="AutoApproveToolBadge" xml:space="preserve"><value>Auto-approve: {0}</value></data>
+  <data name="ManageAutoApproval" xml:space="preserve"><value>{0}. Click to disable automatic approval.</value></data>
+  <data name="DisableAutoApproval" xml:space="preserve"><value>Disable this auto-approval rule</value></data>
+  <data name="DisableAllAutoApprovals" xml:space="preserve"><value>Disable all automatic approvals</value></data>
+  <data name="ApprovalSettingsSaveFailed" xml:space="preserve"><value>Automatic approval settings could not be saved. New rules were not enabled; disabled rules remain disabled for this session but may return after restarting.</value></data>
+  <data name="ApprovalLoopLimit" xml:space="preserve"><value>The tool approval continuation limit was reached. No request was retried.</value></data>
+  <data name="NoToolInput" xml:space="preserve"><value>No tool input is available.</value></data>
+  <data name="NoToolOutput" xml:space="preserve"><value>No output is available yet. This tool is requesting approval before producing a result.</value></data>
+  <data name="StructuredContent" xml:space="preserve"><value>Structured content</value></data>
+  <data name="RawOutput" xml:space="preserve"><value>Raw output</value></data>
+  <data name="ToolContentText" xml:space="preserve"><value>Text</value></data>
+  <data name="ToolContentImage" xml:space="preserve"><value>Image</value></data>
+  <data name="ToolContentAudio" xml:space="preserve"><value>Audio</value></data>
+  <data name="ToolContentResource" xml:space="preserve"><value>Resource</value></data>
+  <data name="ToolContentLink" xml:space="preserve"><value>Resource link</value></data>
+  <data name="ToolContentOther" xml:space="preserve"><value>Content</value></data>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>

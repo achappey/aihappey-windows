@@ -1,5 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="ToolApproval" xml:space="preserve"><value>Toolgoedkeuring</value></data>
+  <data name="ToolDeny" xml:space="preserve"><value>Toolresultaat weigeren</value></data>
+  <data name="Allow" xml:space="preserve"><value>Toestaan</value></data>
+  <data name="Deny" xml:space="preserve"><value>Weigeren</value></data>
+  <data name="DenyReason" xml:space="preserve"><value>Reden (optioneel)</value></data>
+  <data name="Automatic" xml:space="preserve"><value>Automatisch</value></data>
+  <data name="AutomaticApprovalHint" xml:space="preserve"><value>Deze tool automatisch toestaan, of alle tools kiezen via het menu</value></data>
+  <data name="AutoApproveTool" xml:space="preserve"><value>{0} automatisch goedkeuren</value></data>
+  <data name="AutoApproveAll" xml:space="preserve"><value>Alle tools (BRRR) — deze sessie</value></data>
+  <data name="AutoApproveAllBadge" xml:space="preserve"><value>Automatisch: Alle tools (BRRR)</value></data>
+  <data name="AutoApproveToolBadge" xml:space="preserve"><value>Automatisch: {0}</value></data>
+  <data name="ManageAutoApproval" xml:space="preserve"><value>{0}. Klik om automatische goedkeuring uit te schakelen.</value></data>
+  <data name="DisableAutoApproval" xml:space="preserve"><value>Deze automatische goedkeuring uitschakelen</value></data>
+  <data name="DisableAllAutoApprovals" xml:space="preserve"><value>Alle automatische goedkeuringen uitschakelen</value></data>
+  <data name="ApprovalSettingsSaveFailed" xml:space="preserve"><value>De instellingen voor automatische goedkeuring konden niet worden opgeslagen. Nieuwe regels zijn niet ingeschakeld; uitgeschakelde regels blijven deze sessie uitgeschakeld, maar kunnen na herstart terugkeren.</value></data>
+  <data name="ApprovalLoopLimit" xml:space="preserve"><value>De limiet voor het voortzetten van toolgoedkeuringen is bereikt. Geen verzoek is opnieuw geprobeerd.</value></data>
+  <data name="NoToolInput" xml:space="preserve"><value>Er is geen toolinvoer beschikbaar.</value></data>
+  <data name="NoToolOutput" xml:space="preserve"><value>Er is nog geen uitvoer beschikbaar. Deze tool vraagt goedkeuring voordat een resultaat wordt geproduceerd.</value></data>
+  <data name="StructuredContent" xml:space="preserve"><value>Gestructureerde inhoud</value></data>
+  <data name="RawOutput" xml:space="preserve"><value>Ruwe uitvoer</value></data>
+  <data name="ToolContentText" xml:space="preserve"><value>Tekst</value></data>
+  <data name="ToolContentImage" xml:space="preserve"><value>Afbeelding</value></data>
+  <data name="ToolContentAudio" xml:space="preserve"><value>Audio</value></data>
+  <data name="ToolContentResource" xml:space="preserve"><value>Bron</value></data>
+  <data name="ToolContentLink" xml:space="preserve"><value>Bronlink</value></data>
+  <data name="ToolContentOther" xml:space="preserve"><value>Inhoud</value></data>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
