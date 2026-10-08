@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Settings" xml:space="preserve"><value>Instellingen</value></data>
+  <data name="General" xml:space="preserve"><value>Algemeen</value></data>
+  <data name="Endpoints" xml:space="preserve"><value>Endpoints</value></data>
+  <data name="Attachments" xml:space="preserve"><value>Bijlagen</value></data>
+  <data name="Language" xml:space="preserve"><value>Taal</value></data>
+  <data name="Save" xml:space="preserve"><value>Opslaan</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Annuleren</value></data>
+  <data name="Close" xml:space="preserve"><value>Sluiten</value></data>
+  <data name="Add" xml:space="preserve"><value>Toevoegen</value></data>
+  <data name="Remove" xml:space="preserve"><value>Verwijderen</value></data>
+  <data name="Delete" xml:space="preserve"><value>Verwijderen</value></data>
+  <data name="Rename" xml:space="preserve"><value>Naam wijzigen</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Vernieuwen</value></data>
+  <data name="Stop" xml:space="preserve"><value>Stoppen</value></data>
+  <data name="Retry" xml:space="preserve"><value>Opnieuw proberen</value></data>
+  <data name="ShowMore" xml:space="preserve"><value>Meer tonen</value></data>
+  <data name="Welcome" xml:space="preserve"><value>Je behulpzame vervanger is er</value></data>
+  <data name="Disclaimer" xml:space="preserve"><value>AI kan fouten maken. Controleer belangrijke informatie.</value></data>
+  <data name="AskAnything" xml:space="preserve"><value>Vraag maar raak</value></data>
+  <data name="Models" xml:space="preserve"><value>Modellen</value></data>
+  <data name="Agents" xml:space="preserve"><value>Agents</value></data>
+  <data name="Skills" xml:space="preserve"><value>Skills</value></data>
+  <data name="Chats" xml:space="preserve"><value>Chats</value></data>
+  <data name="SelectModel" xml:space="preserve"><value>Selecteer een model</value></data>
+  <data name="SelectAgent" xml:space="preserve"><value>Selecteer een bestaande agent</value></data>
+  <data name="NewChat" xml:space="preserve"><value>Nieuwe chat</value></data>
+  <data name="UserProfile" xml:space="preserve"><value>Gebruikersprofiel</value></data>
+  <data name="SendMessage" xml:space="preserve"><value>Bericht verzenden</value></data>
+  <data name="Message" xml:space="preserve"><value>Bericht</value></data>
+  <data name="InputHelp" xml:space="preserve"><value>Enter om te verzenden. Shift+Enter voor een nieuwe regel.</value></data>
+  <data name="ConnectionSettings" xml:space="preserve"><value>Endpointinstellingen</value></data>
+  <data name="RefreshTargets" xml:space="preserve"><value>Modellen of agents vernieuwen</value></data>
+  <data name="RefreshAgents" xml:space="preserve"><value>Agentoverzicht vernieuwen</value></data>
+  <data name="RefreshSkills" xml:space="preserve"><value>Skilloverzicht vernieuwen</value></data>
+  <data name="Working" xml:space="preserve"><value>Bezig…</value></data>
+  <data name="Dismiss" xml:space="preserve"><value>Sluiten</value></data>
+  <data name="ToggleHistory" xml:space="preserve"><value>Chatgeschiedenis tonen of verbergen</value></data>
+  <data name="ManageAccount" xml:space="preserve"><value>Account beheren</value></data>
+  <data name="SignIn" xml:space="preserve"><value>Inloggen</value></data>
+  <data name="SignInAgain" xml:space="preserve"><value>Opnieuw inloggen</value></data>
+  <data name="SignOut" xml:space="preserve"><value>Uitloggen</value></data>
+  <data name="ApiKeys" xml:space="preserve"><value>API-sleutels</value></data>
+  <data name="ApiKey" xml:space="preserve"><value>API-sleutel</value></data>
+  <data name="You" xml:space="preserve"><value>Jij</value></data>
+  <data name="Reasoning" xml:space="preserve"><value>Redenering</value></data>
+  <data name="ToolActivity" xml:space="preserve"><value>Toolactiviteit</value></data>
+  <data name="Input" xml:space="preserve"><value>Invoer</value></data>
+  <data name="StreamingInput" xml:space="preserve"><value>Streaminginvoer</value></data>
+  <data name="Approval" xml:space="preserve"><value>Goedkeuring (niet verzonden door desktop)</value></data>
+  <data name="Error" xml:space="preserve"><value>Fout</value></data>
+  <data name="Warning" xml:space="preserve"><value>Waarschuwing</value></data>
+  <data name="Success" xml:space="preserve"><value>Geslaagd</value></data>
+  <data name="Information" xml:space="preserve"><value>Informatie</value></data>
+  <data name="PreviousActivity" xml:space="preserve"><value>Vorige activiteit</value></data>
+  <data name="NextActivity" xml:space="preserve"><value>Volgende activiteit</value></data>
+  <data name="ActivityList" xml:space="preserve"><value>Activiteitenlijst tonen</value></data>
+  <data name="AttachmentsSources" xml:space="preserve"><value>Bijlagen en bronnen</value></data>
+  <data name="CopyMessage" xml:space="preserve"><value>Bericht kopiëren</value></data>
+  <data name="RenameChat" xml:space="preserve"><value>Chatnaam wijzigen</value></data>
+  <data name="DeleteChat" xml:space="preserve"><value>Chat verwijderen?</value></data>
+  <data name="DeleteChatHint" xml:space="preserve"><value>Hiermee wordt de lokale chat definitief verwijderd.</value></data>
+  <data name="NoTargets" xml:space="preserve"><value>De service is gereed, maar er zijn geen modellen of agents beschikbaar. Stel API-sleutels in of installeer agentdefinities.</value></data>
+  <data name="SelectTarget" xml:space="preserve"><value>Selecteer een model of agent uit de catalogus.</value></data>
+  <data name="StreamInterrupted" xml:space="preserve"><value>De stream is voortijdig beëindigd. Gedeeltelijke uitvoer is bewaard.</value></data>
+  <data name="HistorySaveFailed" xml:space="preserve"><value>De chatgeschiedenis kon niet worden opgeslagen. De chat blijft beschikbaar totdat de app wordt gesloten.</value></data>
+  <data name="ClipboardUnavailable" xml:space="preserve"><value>Het klembord is momenteel niet beschikbaar.</value></data>
+  <data name="OperationCanceled" xml:space="preserve"><value>De bewerking is geannuleerd of de tijdslimiet is verstreken.</value></data>
+  <data name="OperationFailed" xml:space="preserve"><value>De bewerking is mislukt. Controleer de beschikbaarheid van de service, de instellingen en de toegangsrechten voor lokale opslag.</value></data>
+  <data name="SearchChats" xml:space="preserve"><value>Chats zoeken</value></data>
+  <data name="SearchConversations" xml:space="preserve"><value>Chats doorzoeken</value></data>
+  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Chats doorzoeken…</value></data>
+  <data name="ChatActions" xml:space="preserve"><value>Chatacties</value></data>
+  <data name="RecentChats" xml:space="preserve"><value>Recente chats</value></data>
+  <data name="Searching" xml:space="preserve"><value>Zoeken…</value></data>
+  <data name="NoRecentChats" xml:space="preserve"><value>Geen recente chats.</value></data>
+  <data name="NoResults" xml:space="preserve"><value>Geen resultaten.</value></data>
+  <data name="Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Activity" xml:space="preserve"><value>Activiteit</value></data>
+  <data name="Sources" xml:space="preserve"><value>Bronnen</value></data>
+  <data name="AllSources" xml:space="preserve"><value>Alle bronnen</value></data>
+  <data name="CloseDetails" xml:space="preserve"><value>Details sluiten</value></data>
+  <data name="CopySource" xml:space="preserve"><value>Bron kopiëren</value></data>
+  <data name="OpenSource" xml:space="preserve"><value>Bron openen in browser</value></data>
+  <data name="SourceOpenFailed" xml:space="preserve"><value>De bron kon niet worden geopend.</value></data>
+  <data name="Download" xml:space="preserve"><value>Downloaden</value></data>
+  <data name="BrowserResourceHint" xml:space="preserve"><value>Deze bron vereist browser- of MCP-toegang. De verwijzing blijft bewaard in de chat.</value></data>
+  <data name="AttachmentDownloaded" xml:space="preserve"><value>Bijlage gedownload.</value></data>
+  <data name="DownloadCanceled" xml:space="preserve"><value>De download is geannuleerd of de tijdslimiet is verstreken.</value></data>
+  <data name="DownloadFailed" xml:space="preserve"><value>De bijlage kon niet worden gedownload. Controleer de bestemming en de netwerkverbinding.</value></data>
+  <data name="AddContext" xml:space="preserve"><value>Context toevoegen</value></data>
+  <data name="Link" xml:space="preserve"><value>Link</value></data>
+  <data name="PublicUrl" xml:space="preserve"><value>URL (openbaar toegankelijk)</value></data>
+  <data name="MimeType" xml:space="preserve"><value>MIME-type</value></data>
+  <data name="CustomMimeType" xml:space="preserve"><value>Aangepast MIME-type</value></data>
+  <data name="DetectingMime" xml:space="preserve"><value>MIME-type bepalen…</value></data>
+  <data name="MimeNotDetected" xml:space="preserve"><value>Het MIME-type kon niet worden bepaald. Selecteer het type inhoud op deze URL.</value></data>
+  <data name="InvalidPublicUrl" xml:space="preserve"><value>Voer een geldige HTTP- of HTTPS-URL zonder inloggegevens in.</value></data>
+  <data name="InvalidMime" xml:space="preserve"><value>Voer een geldig MIME-type in, bijvoorbeeld application/pdf.</value></data>
+  <data name="Custom" xml:space="preserve"><value>Aangepast</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Zoeken…</value></data>
+  <data name="SearchAgents" xml:space="preserve"><value>Agents zoeken</value></data>
+  <data name="SearchSkills" xml:space="preserve"><value>Skills zoeken</value></data>
+  <data name="AgentsDescription" xml:space="preserve"><value>Agents combineren mogelijkheden, context en uitvoeringslogica in één model. Ontdek de beschikbare agents en kies er een om een chat te starten.</value></data>
+  <data name="SkillsDescription" xml:space="preserve"><value>Een overzicht van beschikbare skills voor taken en workflows. Bekijk wat elke skill doet en kies de juiste optie. Skills combineren instructies, logica en uitvoering in een consistente structuur.</value></data>
+  <data name="Loading" xml:space="preserve"><value>Laden…</value></data>
+  <data name="CatalogNoResults" xml:space="preserve"><value>Geen resultaten. Probeer een andere zoekopdracht of filter.</value></data>
+  <data name="CatalogCanceled" xml:space="preserve"><value>Het laden van de catalogus is geannuleerd of de tijdslimiet is verstreken.</value></data>
+  <data name="CatalogFailed" xml:space="preserve"><value>De catalogus kon niet worden geladen. Controleer je verbinding, account en toegangsrechten voor lokale opslag.</value></data>
+  <data name="AgentUnavailable" xml:space="preserve"><value>Deze agent is niet meer beschikbaar. Vernieuw het agentoverzicht.</value></data>
+  <data name="VersionsCanceled" xml:space="preserve"><value>Het laden van versies is geannuleerd of de tijdslimiet is verstreken.</value></data>
+  <data name="VersionsFailed" xml:space="preserve"><value>De skillversies konden niet worden geladen. Je kunt nog steeds de standaardversie downloaden.</value></data>
+  <data name="AgentDefinition" xml:space="preserve"><value>Agentdefinitie</value></data>
+  <data name="SkillArchive" xml:space="preserve"><value>ZIP-archief van skill</value></data>
+  <data name="AgentDownloaded" xml:space="preserve"><value>Agentdefinitie gedownload.</value></data>
+  <data name="SkillDownloaded" xml:space="preserve"><value>Skillarchief gedownload. Het is niet geïnstalleerd of ingeschakeld.</value></data>
+  <data name="AddFavorite" xml:space="preserve"><value>Favoriet toevoegen</value></data>
+  <data name="RemoveFavorite" xml:space="preserve"><value>Favoriet verwijderen</value></data>
+  <data name="StartChat" xml:space="preserve"><value>Chat starten</value></data>
+  <data name="Instructions" xml:space="preserve"><value>Instructies</value></data>
+  <data name="Definition" xml:space="preserve"><value>Definitie</value></data>
+  <data name="Versions" xml:space="preserve"><value>Versies</value></data>
+  <data name="InstructionsReadOnly" xml:space="preserve"><value>Instructies (alleen-lezen)</value></data>
+  <data name="InstructionsUnavailable" xml:space="preserve"><value>De backend biedt geen instructies voor deze agent aan.</value></data>
+  <data name="DefinitionReadOnly" xml:space="preserve"><value>Definitie (alleen-lezen)</value></data>
+  <data name="DefinitionNotExposed" xml:space="preserve"><value>De backend biedt de definitie van deze agent niet aan. De definitie kan niet worden gedownload.</value></data>
+  <data name="DownloadDefinition" xml:space="preserve"><value>Definitie downloaden</value></data>
+  <data name="DownloadDefault" xml:space="preserve"><value>Standaardversie downloaden</value></data>
+  <data name="Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="SkillDownloadHint" xml:space="preserve"><value>Bij het downloaden wordt alleen een ZIP-bestand opgeslagen. De skill wordt niet geïnstalleerd of ingeschakeld.</value></data>
+  <data name="DefinitionUnavailable" xml:space="preserve"><value>Definitie niet beschikbaar</value></data>
+  <data name="DefinitionUnavailableHint" xml:space="preserve"><value>Je kunt met deze agent chatten, maar de backend biedt geen downloadbare definitie aan.</value></data>
+  <data name="LoadingVersions" xml:space="preserve"><value>Versies laden…</value></data>
+  <data name="VersionsUnavailable" xml:space="preserve"><value>Versies niet beschikbaar</value></data>
+  <data name="NoVersions" xml:space="preserve"><value>Er zijn geen versies beschikbaar.</value></data>
+  <data name="Default" xml:space="preserve"><value>Standaard</value></data>
+  <data name="Latest" xml:space="preserve"><value>Nieuwste</value></data>
+  <data name="InvalidDataUrl" xml:space="preserve"><value>De bijlage bevat een ongeldige data-URL.</value></data>
+  <data name="DownloadLimit" xml:space="preserve"><value>Deze bijlage overschrijdt de downloadlimiet van 64 MB.</value></data>
+  <data name="InvalidBinary" xml:space="preserve"><value>De bijlage bevat ongeldige binaire gegevens.</value></data>
+  <data name="ResourceDownloadUnsupported" xml:space="preserve"><value>Deze bron vereist browser- of MCP-toegang en kan nog niet worden gedownload door de desktopapp.</value></data>
+  <data name="AttachmentFilenameRequired" xml:space="preserve"><value>Een bijlage moet een bestandsnaam hebben.</value></data>
+  <data name="InvalidUrlOrType" xml:space="preserve"><value>Ongeldige URL of ongeldig mediatype.</value></data>
+  <data name="AttachmentLimit" xml:space="preserve"><value>De bijlage overschrijdt de limiet van 25 MB per bestand.</value></data>
+  <data name="MessageRequired" xml:space="preserve"><value>Voeg een bericht, bijlage of link toe voordat je verzendt.</value></data>
+  <data name="PdfAttachmentLimit" xml:space="preserve"><value>De PDF overschrijdt de bijlagelimiet.</value></data>
+  <data name="PdfPageLimit" xml:space="preserve"><value>De PDF overschrijdt de paginalimiet voor tekstextractie.</value></data>
+  <data name="PdfTextLimit" xml:space="preserve"><value>De PDF overschrijdt de limiet voor tekstextractie.</value></data>
+  <data name="RemoteOnly" xml:space="preserve"><value>Deze app ondersteunt alleen externe gateways.</value></data>
+  <data name="InvalidRemoteUrl" xml:space="preserve"><value>Externe gateways moeten een absolute HTTPS-URL zonder inloggegevens, query of fragment gebruiken; loopback is gereserveerd voor de beheerde lokale modus.</value></data>
+  <data name="SettingsReadFailed" xml:space="preserve"><value>De desktopinstellingen konden niet worden gelezen. Herstel of verwijder het instellingenbestand in de desktopgegevensmap.</value></data>
+  <data name="InvalidSkillIdentifier" xml:space="preserve"><value>Deze skill-ID ondersteunt geen aanvragen voor gatewayinhoud of versies.</value></data>
+  <data name="InvalidSkillVersion" xml:space="preserve"><value>De service heeft een niet-ondersteunde skillversie teruggegeven.</value></data>
+  <data name="InvalidCatalogContinuation" xml:space="preserve"><value>De service heeft een ongeldige catalogusvervolgpagina teruggegeven.</value></data>
+  <data name="CatalogPageLimit" xml:space="preserve"><value>De catalogus overschrijdt de ondersteunde paginalimiet.</value></data>
+  <data name="SkillZipRequired" xml:space="preserve"><value>De service heeft geen ZIP-archief van een skill teruggegeven.</value></data>
+  <data name="InvalidSkillArchive" xml:space="preserve"><value>De service heeft ongeldige inhoud voor een skillarchief teruggegeven.</value></data>
+  <data name="InvalidCatalogDocument" xml:space="preserve"><value>De service heeft een ongeldig catalogusdocument teruggegeven.</value></data>
+  <data name="InvalidCatalogList" xml:space="preserve"><value>De service heeft een ongeldige cataloguslijst teruggegeven.</value></data>
+  <data name="ResponseSizeLimit" xml:space="preserve"><value>Het antwoord van de service overschrijdt de ondersteunde grootte.</value></data>
+  <data name="UnsupportedFavorites" xml:space="preserve"><value>De indeling van de opgeslagen catalogusfavorieten wordt niet ondersteund.</value></data>
+  <data name="InvalidFavoritesPartition" xml:space="preserve"><value>Ongeldige partitie voor catalogusfavorieten.</value></data>
+  <data name="InvalidModelCatalog" xml:space="preserve"><value>De service heeft een ongeldige modelcatalogus teruggegeven.</value></data>
+  <data name="ChatStreamRequired" xml:space="preserve"><value>De service heeft geen chatgebeurtenisstream teruggegeven.</value></data>
+  <data name="StreamSizeLimit" xml:space="preserve"><value>Een streamgebeurtenis overschrijdt de ondersteunde grootte.</value></data>
+  <data name="GenerationError" xml:space="preserve"><value>De service heeft een generatiefout gemeld. Controleer je inloggegevens en de beschikbaarheid van het model. Gedeeltelijke uitvoer is bewaard.</value></data>
+  <data name="ApprovalUnsupported" xml:space="preserve"><value>Deze agent vereist toolgoedkeuring, die nog niet wordt ondersteund. Er is geen goedkeuring verzonden.</value></data>
+  <data name="InvalidHistoryPartition" xml:space="preserve"><value>Ongeldige geschiedenisp artitie.</value></data>
+  <data name="InvalidConversationId" xml:space="preserve"><value>Ongeldige chat-ID.</value></data>
+  <data name="ApiKeysReadFailed" xml:space="preserve"><value>De beveiligde API-sleutelopslag kon niet worden gelezen. Herstel of verwijder credentials.bin in de gegevensmap HeaderAuth.</value></data>
+  <data name="InvalidProviderHeaders" xml:space="preserve"><value>Gebruik geldige X- providerheadernamen en niet-lege API-sleutels op één regel.</value></data>
+  <data name="ApiKeysHint" xml:space="preserve"><value>Sleutels worden beveiligd voor je Windows-account. Ze worden als HTTP-headers naar de geselecteerde lokale of externe gateways verzonden. Voeg de exacte headernaam van de provider toe, bijvoorbeeld X-OpenAI-Key of X-Anthropic-Key. Sleutels worden niet opgenomen in de chatgeschiedenis.</value></data>
+  <data name="AddProviderKey" xml:space="preserve"><value>Providersleutel toevoegen</value></data>
+  <data name="ProviderApiKeys" xml:space="preserve"><value>API-sleutels van providers</value></data>
+  <data name="UniqueProviderHeaders" xml:space="preserve"><value>Providerheadernamen moeten uniek zijn.</value></data>
+  <data name="EnterpriseConfigurationRequired" xml:space="preserve"><value>Stel desktop.json in met je Entra-tenant-ID, desktop-public-client-ID en gatewayscopes en start de app opnieuw.</value></data>
+  <data name="TokenCacheReadFailed" xml:space="preserve"><value>De beveiligde Entra-cache kan niet worden gelezen. Herstel of verwijder tokens.bin in de gegevensmap AzureAuth.</value></data>
+  <data name="EnterpriseDestinationRejected" xml:space="preserve"><value>Deze bestemming is niet goedgekeurd in de bedrijfsconfiguratie. Werk desktop.json bij en start opnieuw om gateways te wijzigen.</value></data>
+  <data name="EnterpriseSignInRequired" xml:space="preserve"><value>Log via de accountknop in met je bedrijfsaccount.</value></data>
+  <data name="InteractiveSignInRequired" xml:space="preserve"><value>Je account vereist interactieve verificatie of toestemming. Gebruik de accountknop om opnieuw in te loggen.</value></data>
+  <data name="TokenAcquisitionFailed" xml:space="preserve"><value>Het ophalen van een Entra-token is mislukt. Controleer de desktopregistratie, gatewayscopes en het tenantbeleid.</value></data>
+  <data name="EnterpriseAccount" xml:space="preserve"><value>Bedrijfsaccount</value></data>
+  <data name="EnterpriseSignInHint" xml:space="preserve"><value>Log in via je systeembrowser. Deze app slaat geen clientgeheim of API-sleutel van een provider op.</value></data>
+  <data name="SameEnterpriseAccount" xml:space="preserve"><value>Gebruik hetzelfde bedrijfsaccount voor beide services.</value></data>
+  <data name="EnterpriseSignInFailed" xml:space="preserve"><value>Het inloggen bij Entra is mislukt of geannuleerd. Controleer je desktopregistratie, toestemming en tenantbeleid.</value></data>
+  <data name="TokenUsage" xml:space="preserve"><value>Tokengebruik: {0}</value></data>
+  <data name="ChatActionsFor" xml:space="preserve"><value>Chatacties voor {0}</value></data>
+  <data name="RemoveContext" xml:space="preserve"><value>{0} verwijderen</value></data>
+  <data name="OpenConversation" xml:space="preserve"><value>Chat openen: {0}</value></data>
+  <data name="ConversationCount" xml:space="preserve"><value>{0}{1} chats</value></data>
+  <data name="ConversationCountOne" xml:space="preserve"><value>{0} chat</value></data>
+  <data name="MessageSummary" xml:space="preserve"><value>{0} berichten · {1:g}</value></data>
+  <data name="MessageSummaryOne" xml:space="preserve"><value>{0} bericht · {1:g}</value></data>
+  <data name="AllCount" xml:space="preserve"><value>Alle ({0})</value></data>
+  <data name="FavoritesCount" xml:space="preserve"><value>Favorieten ({0})</value></data>
+  <data name="LocalCount" xml:space="preserve"><value>Lokaal ({0})</value></data>
+  <data name="NoAgents" xml:space="preserve"><value>Er zijn geen agents beschikbaar bij deze service. Controleer je endpoints en providerconfiguratie.</value></data>
+  <data name="NoSkills" xml:space="preserve"><value>Er zijn geen skills beschikbaar bij deze service. Controleer je endpoints en providerconfiguratie.</value></data>
+  <data name="ActionForItem" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="DefaultVersion" xml:space="preserve"><value>Standaard {0}</value></data>
+  <data name="LatestVersion" xml:space="preserve"><value>Nieuwste {0}</value></data>
+  <data name="Owner" xml:space="preserve"><value>Eigenaar: {0}</value></data>
+  <data name="Created" xml:space="preserve"><value>Aangemaakt: {0:g}</value></data>
+  <data name="DownloadVersion" xml:space="preserve"><value>Versie {0} downloaden</value></data>
+  <data name="ExtractionFailed" xml:space="preserve"><value>Tekst kon niet worden geëxtraheerd uit {0}. Het originele bestand wordt wel meegestuurd.</value></data>
+  <data name="RejectedFiles" xml:space="preserve"><value>Kon niet toevoegen: {0}. Sleep afzonderlijke bestanden en controleer de bestandstoegang en de limiet van 25 MB per bestand. Andere bestanden zijn behouden.</value></data>
+  <data name="AttachmentHttpError" xml:space="preserve"><value>De bijlageserver gaf HTTP {0} terug. Er zijn geen inloggegevens verzonden en omleidingen zijn niet automatisch gevolgd.</value></data>
+  <data name="ShowActivity" xml:space="preserve"><value>Activiteit {0} tonen: {1}</value></data>
+  <data name="ShowSources" xml:space="preserve"><value>Bronnen tonen ({0})</value></data>
+  <data name="ShowAttachments" xml:space="preserve"><value>Bijlagen tonen ({0})</value></data>
+  <data name="SourceHost" xml:space="preserve"><value>Bronnen van {0}</value></data>
+  <data name="DownloadFile" xml:space="preserve"><value>{0} downloaden</value></data>
+  <data name="ManagedExited" xml:space="preserve"><value>De beheerde {0}-service is gestopt (code {1}). Vernieuw de catalogus om deze opnieuw te starten.</value></data>
+  <data name="ManagedStartFailed" xml:space="preserve"><value>De beheerde {0}-service kon niet worden gestart.</value></data>
+  <data name="ManagedStartupFailed" xml:space="preserve"><value>De beheerde {0}-service is mislukt tijdens het starten (code {1}). Controleer de meegeleverde runtimeconfiguratie.</value></data>
+  <data name="ManagedMissing" xml:space="preserve"><value>De beheerde {0}-runtime ontbreekt. Publiceer met de meegeleverde runtimes of stel een externe gateway in.</value></data>
+  <data name="RestartRequired" xml:space="preserve"><value>Taal opgeslagen. Start de app opnieuw om de nieuwe taal toe te passen.</value></data>
+  <data name="RestartHint" xml:space="preserve"><value>Taalwijzigingen worden toegepast nadat je de app opnieuw hebt gestart.</value></data>
+  <data name="StartupFailed" xml:space="preserve"><value>De app kon niet starten. Controleer de instellingen en de toegangsrechten voor lokale opslag.</value></data>
+  <data name="ManagedLocal" xml:space="preserve"><value>Beheerd lokaal</value></data>
+  <data name="Remote" xml:space="preserve"><value>Extern</value></data>
+  <data name="AiLocation" xml:space="preserve"><value>Locatie van AI-gateway</value></data>
+  <data name="AgentsLocation" xml:space="preserve"><value>Locatie van agentsgateway</value></data>
+  <data name="AiUrl" xml:space="preserve"><value>Externe HTTPS-URL van AI-gateway</value></data>
+  <data name="AgentsUrl" xml:space="preserve"><value>Externe HTTPS-URL van agentsgateway</value></data>
+  <data name="Extraction" xml:space="preserve"><value>Documenten naar tekst omzetten</value></data>
+  <data name="ExtractionHint" xml:space="preserve"><value>Extraheer tekst uit lokale PDF-bestanden voor modelchats. De originele bestanden worden altijd meegestuurd. Agentchats versturen alleen de originelen.</value></data>
+  <data name="ConnectionsHint" xml:space="preserve"><value>Verbindingen en geschiedenis zijn gescheiden op basis van deze configuratie. Gebruik het gebruikersprofielmenu om API-sleutels of je bedrijfsaccount te beheren. Als je een externe bestemming wijzigt, verandert waar je prompts en ingestelde inloggegevens naartoe worden verzonden.</value></data>
+  <data name="On" xml:space="preserve"><value>Aan</value></data>
+  <data name="Off" xml:space="preserve"><value>Uit</value></data>
+  <data name="StatusComplete" xml:space="preserve"><value>voltooid</value></data>
+  <data name="StatusStreaming" xml:space="preserve"><value>bezig met genereren</value></data>
+  <data name="StatusInterrupted" xml:space="preserve"><value>onderbroken</value></data>
+  <data name="StatusStopped" xml:space="preserve"><value>gestopt</value></data>
+  <data name="StatusFailed" xml:space="preserve"><value>mislukt</value></data>
+  <data name="StatusApprovalRequired" xml:space="preserve"><value>goedkeuring vereist</value></data>
+  <data name="SettingsDialog.Title" xml:space="preserve"><value>Instellingen</value></data>
+  <data name="SettingsDialog.PrimaryButtonText" xml:space="preserve"><value>Opslaan</value></data>
+  <data name="SettingsDialog.CloseButtonText" xml:space="preserve"><value>Annuleren</value></data>
+  <data name="SettingsTabs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Instellingen</value></data>
+  <data name="SettingsGeneral.Text" xml:space="preserve"><value>Algemeen</value></data>
+  <data name="SettingsEndpoints.Text" xml:space="preserve"><value>Endpoints</value></data>
+  <data name="SettingsAttachments.Text" xml:space="preserve"><value>Bijlagen</value></data>
+  <data name="SettingsGeneralTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Algemeen</value></data>
+  <data name="SettingsEndpointsTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Endpoints</value></data>
+  <data name="SettingsAttachmentsTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Bijlagen</value></data>
+  <data name="SettingsLanguage.Header" xml:space="preserve"><value>Taal</value></data>
+  <data name="SettingsRestartHint.Text" xml:space="preserve"><value>Taalwijzigingen worden toegepast nadat je de app opnieuw hebt gestart.</value></data>
+  <data name="SettingsAiLocation.Header" xml:space="preserve"><value>Locatie van AI-gateway</value></data>
+  <data name="SettingsAiUrl.Header" xml:space="preserve"><value>Externe HTTPS-URL van AI-gateway</value></data>
+  <data name="SettingsAgentsLocation.Header" xml:space="preserve"><value>Locatie van agentsgateway</value></data>
+  <data name="SettingsAgentsUrl.Header" xml:space="preserve"><value>Externe HTTPS-URL van agentsgateway</value></data>
+  <data name="SettingsConnectionsHint.Text" xml:space="preserve"><value>Verbindingen en geschiedenis zijn gescheiden op basis van deze configuratie. Gebruik het gebruikersprofielmenu om API-sleutels of je bedrijfsaccount te beheren. Als je een externe bestemming wijzigt, verandert waar je prompts en ingestelde inloggegevens naartoe worden verzonden.</value></data>
+  <data name="SettingsExtraction.Header" xml:space="preserve"><value>Documenten naar tekst omzetten</value></data>
+  <data name="SettingsExtraction.OnContent" xml:space="preserve"><value>Aan</value></data>
+  <data name="SettingsExtraction.OffContent" xml:space="preserve"><value>Uit</value></data>
+  <data name="SettingsExtractionHint.Text" xml:space="preserve"><value>Extraheer tekst uit lokale PDF-bestanden voor modelchats. De originele bestanden worden altijd meegestuurd. Agentchats versturen alleen de originelen.</value></data>
+</root>

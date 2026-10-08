@@ -29,7 +29,7 @@ internal sealed class CatalogDetailsDialog : ContentDialog
         this.item = item;
         Name = "CatalogDetailsDialog";
         Title = item.Name;
-        CloseButtonText = "Close";
+        CloseButtonText = DesktopResources.Get("Close");
         DefaultButton = ContentDialogButton.Close;
         HorizontalAlignment = HorizontalAlignment.Center;
         VerticalAlignment = VerticalAlignment.Center;
@@ -42,9 +42,9 @@ internal sealed class CatalogDetailsDialog : ContentDialog
         ControlAppearance.Apply(tabSurface, (_, _) => { }, palette => tabSurface.Background = new SolidColorBrush(palette.Selected));
         layout.Children.Add(new ScrollViewer { Content = tabSurface, HorizontalScrollMode = ScrollMode.Enabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollMode = ScrollMode.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled });
-        AddTab("general", "General");
-        if (item.Kind == CatalogKind.Agent) { AddTab("instructions", "Instructions"); AddTab("definition", "Definition"); }
-        else AddTab("versions", "Versions");
+        AddTab("general", DesktopResources.Get("General"));
+        if (item.Kind == CatalogKind.Agent) { AddTab("instructions", DesktopResources.Get("Instructions")); AddTab("definition", DesktopResources.Get("Definition")); }
+        else AddTab("versions", DesktopResources.Get("Versions"));
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };
         Grid.SetRow(viewer, 1); layout.Children.Add(viewer); Content = layout;
@@ -64,7 +64,7 @@ internal sealed class CatalogDetailsDialog : ContentDialog
 
     private void AddTab(string key, string label)
     {
-        var button = new ToggleButton { Name = "CatalogTab" + label, Content = label, Padding = new Thickness(12, 8, 12, 8), MinHeight = 36,
+        var button = new ToggleButton { Name = "CatalogTab" + char.ToUpperInvariant(key[0]) + key[1..], Content = label, Padding = new Thickness(12, 8, 12, 8), MinHeight = 36,
             CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(0) };
         ToolbarControls.Label(button, label);
         ControlAppearance.Apply(button, ControlAppearance.NativeResources, palette =>
@@ -102,12 +102,12 @@ internal sealed class CatalogDetailsDialog : ContentDialog
             case "general": RenderGeneral(); break;
             case "instructions":
                 var instructions = item.Definition is { } definition ? CatalogProjection.Text(definition, "instructions") : null;
-                Card("Instructions (read-only)").Children.Add(Text(instructions ?? "The backend does not expose instructions for this agent."));
+                Card(DesktopResources.Get("InstructionsReadOnly")).Children.Add(Text(instructions ?? DesktopResources.Get("InstructionsUnavailable")));
                 break;
             case "definition":
-                Card("Definition (read-only)").Children.Add(Text(item.Definition is { } value
+                Card(DesktopResources.Get("DefinitionReadOnly")).Children.Add(Text(item.Definition is { } value
                     ? JsonSerializer.Serialize(value, new JsonSerializerOptions { WriteIndented = true })
-                    : "The backend does not expose this agent's definition. Definition download is unavailable."));
+                    : DesktopResources.Get("DefinitionNotExposed")));
                 break;
             case "versions": RenderVersions(); break;
         }
@@ -119,45 +119,45 @@ internal sealed class CatalogDetailsDialog : ContentDialog
         var card = Card(item.Id);
         var badges = new MessageFooterPanel();
         if (item.Model is not null) badges.Children.Add(Badge(item.Model));
-        if (item.Version is not null) badges.Children.Add(Badge("Default " + item.Version));
-        if (item.LatestVersion is not null) badges.Children.Add(Badge("Latest " + item.LatestVersion));
+        if (item.Version is not null) badges.Children.Add(Badge(DesktopResources.Format("DefaultVersion", item.Version)));
+        if (item.LatestVersion is not null) badges.Children.Add(Badge(DesktopResources.Format("LatestVersion", item.LatestVersion)));
         if (badges.Children.Count > 0) card.Children.Add(badges);
         card.Children.Add(Text(item.Description));
-        if (item.Owner is not null) card.Children.Add(Text("Owner: " + item.Owner));
+        if (item.Owner is not null) card.Children.Add(Text(DesktopResources.Format("Owner", item.Owner)));
         if (item.Created is { } created)
-        { try { card.Children.Add(Text("Created: " + DateTimeOffset.FromUnixTimeSeconds(created).ToLocalTime().ToString("g"))); } catch (ArgumentOutOfRangeException) { } }
+        { try { card.Children.Add(Text(DesktopResources.Format("Created", DateTimeOffset.FromUnixTimeSeconds(created).ToLocalTime()))); } catch (ArgumentOutOfRangeException) { } }
         var actions = new MessageFooterPanel();
         if (item.CanDownload)
         {
-            var download = Button(item.Kind == CatalogKind.Agent ? "Download definition" : "Download default version", "\uE896");
+            var download = Button(item.Kind == CatalogKind.Agent ? DesktopResources.Get("DownloadDefinition") : DesktopResources.Get("DownloadDefault"), "\uE896");
             download.Click += (_, _) => DownloadRequested?.Invoke(null); actions.Children.Add(download);
         }
         if (item.Kind == CatalogKind.Agent)
         {
-            var chat = Button("Start chat", "\uE8F2"); chat.Click += (_, _) => StartChatRequested?.Invoke(); actions.Children.Add(chat);
+            var chat = Button(DesktopResources.Get("StartChat"), "\uE8F2"); chat.Click += (_, _) => StartChatRequested?.Invoke(); actions.Children.Add(chat);
         }
         if (actions.Children.Count > 0) AddActions(card, actions);
-        if (item.Kind == CatalogKind.Skill) Card("Downloads").Children.Add(Text("Downloading saves a ZIP file only. It does not install or enable this skill."));
-        else if (!item.Definition.HasValue) Card("Definition unavailable").Children.Add(Text("You can chat with this agent, but its backend does not expose a downloadable definition."));
+        if (item.Kind == CatalogKind.Skill) Card(DesktopResources.Get("Downloads")).Children.Add(Text(DesktopResources.Get("SkillDownloadHint")));
+        else if (!item.Definition.HasValue) Card(DesktopResources.Get("DefinitionUnavailable")).Children.Add(Text(DesktopResources.Get("DefinitionUnavailableHint")));
     }
 
     private void RenderVersions()
     {
-        if (loadingVersions) Card("Versions").Children.Add(Text("Loading versions…"));
-        else if (versionsError is not null) Card("Versions unavailable").Children.Add(Text(versionsError));
-        else if (versions.Count == 0) Card("Versions").Children.Add(Text("No versions are available."));
+        if (loadingVersions) Card(DesktopResources.Get("Versions")).Children.Add(Text(DesktopResources.Get("LoadingVersions")));
+        else if (versionsError is not null) Card(DesktopResources.Get("VersionsUnavailable")).Children.Add(Text(versionsError));
+        else if (versions.Count == 0) Card(DesktopResources.Get("Versions")).Children.Add(Text(DesktopResources.Get("NoVersions")));
         foreach (var version in versions)
         {
             var card = Card(version.Version);
             var badges = new MessageFooterPanel();
-            if (item.Version == version.Version) badges.Children.Add(Badge("Default"));
-            if (item.LatestVersion == version.Version) badges.Children.Add(Badge("Latest"));
+            if (item.Version == version.Version) badges.Children.Add(Badge(DesktopResources.Get("Default")));
+            if (item.LatestVersion == version.Version) badges.Children.Add(Badge(DesktopResources.Get("Latest")));
             if (badges.Children.Count > 0) card.Children.Add(badges);
             if (version.Description is not null) card.Children.Add(Text(version.Description));
             if (item.CanDownload)
             {
                 var actions = new MessageFooterPanel();
-                var download = Button("Download version " + version.Version, "\uE896");
+                var download = Button(DesktopResources.Format("DownloadVersion", version.Version), "\uE896");
                 download.Click += (_, _) => DownloadRequested?.Invoke(version.Version); actions.Children.Add(download); AddActions(card, actions);
             }
         }

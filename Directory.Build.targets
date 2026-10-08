@@ -1,0 +1,32 @@
+<Project>
+  <!-- The WinUI SDK generates an assembly-named PRI, but .NET publish does not
+       include that generated output for unpackaged executables. Native MRT Core's
+       default ResourceLoader and x:Uid need resources.pri beside the executable. -->
+  <Target Name="CopyDesktopResourceIndex"
+          AfterTargets="_GenerateProjectPriFile"
+          Condition="'$(UseWinUI)' == 'true' and '$(OutputType)' == 'WinExe' and '$(WindowsPackageType)' == 'None'">
+    <Error Condition="!Exists('$(ProjectPriFullPath)')" Text="The native desktop resource index was not generated: $(ProjectPriFullPath)" />
+    <Copy SourceFiles="$(ProjectPriFullPath)" DestinationFiles="$(OutDir)resources.pri" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <FileWrites Include="$(OutDir)resources.pri" />
+    </ItemGroup>
+  </Target>
+  <Target Name="PublishDesktopResourceIndex"
+          AfterTargets="ComputeFilesToPublish"
+          Condition="'$(UseWinUI)' == 'true' and '$(OutputType)' == 'WinExe' and '$(WindowsPackageType)' == 'None'">
+    <Error Condition="!Exists('$(ProjectPriFullPath)')" Text="Cannot publish without the native desktop resource index: $(ProjectPriFullPath)" />
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(ProjectPriFullPath)">
+        <RelativePath>resources.pri</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <!-- WinUI copies XBF payloads into the build output, but the .NET publish
+           list does not automatically include them for unpackaged applications. -->
+      <_DesktopXbf Include="$(TargetDir)**\*.xbf" />
+      <ResolvedFileToPublish Include="@(_DesktopXbf)">
+        <RelativePath>%(_DesktopXbf.RecursiveDir)%(_DesktopXbf.Filename)%(_DesktopXbf.Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+</Project>

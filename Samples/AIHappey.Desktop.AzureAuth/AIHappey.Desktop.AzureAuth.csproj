@@ -19,8 +19,10 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <DefaultLanguage>en</DefaultLanguage>
   </PropertyGroup>
   <ItemGroup>
+    <PRIResource Include="..\..\Core\AIHappey.Desktop.Core\Strings\**\*.resw" Link="Strings\%(RecursiveDir)%(Filename)%(Extension)" />
     <AssemblyMetadata Include="DesktopAppName" Value="$(DesktopAppName)" />
     <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="desktop.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

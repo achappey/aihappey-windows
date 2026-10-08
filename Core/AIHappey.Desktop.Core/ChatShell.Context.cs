@@ -21,11 +21,11 @@ public sealed partial class ChatShell
 
     private void PrepareContext()
     {
-        ToolbarControls.Subtle(addContext); ToolbarControls.Label(addContext, "Add context");
+        ToolbarControls.Subtle(addContext); ToolbarControls.Label(addContext, DesktopResources.Get("AddContext"));
         contextTagScroll.Content = contextTags;
         var menu = new MenuFlyout { Placement = FlyoutPlacementMode.TopEdgeAlignedLeft };
-        var files = new MenuFlyoutItem { Text = "Attachments", Icon = new FontIcon { Glyph = "\uE723" } };
-        var link = new MenuFlyoutItem { Text = "Link", Icon = new FontIcon { Glyph = "\uE71B" } };
+        var files = new MenuFlyoutItem { Text = DesktopResources.Get("Attachments"), Icon = new FontIcon { Glyph = "\uE723" } };
+        var link = new MenuFlyoutItem { Text = DesktopResources.Get("Link"), Icon = new FontIcon { Glyph = "\uE71B" } };
         foreach (var item in new[] { files, link }) { ControlAppearance.Native(item); menu.Items.Add(item); }
         files.Click += async (_, _) => await PickAttachmentsAsync();
         link.Click += async (_, _) => await AddLinkAsync();
@@ -72,7 +72,7 @@ public sealed partial class ChatShell
             var label = new TextBlock { Text = file.Name, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(label, 1); content.Children.Add(label);
             var remove = new Button { Name = "RemoveContext", Content = new FontIcon { Glyph = "\uE711", FontSize = 10 }, Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
-            ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, "Remove " + file.Name);
+            ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("RemoveContext", file.Name));
             remove.Click += (_, _) =>
             {
                 if (busy || closing) return;
@@ -118,7 +118,7 @@ public sealed partial class ChatShell
                 return await ComposerAttachments.ReadAsync(file.Name, file.ContentType, stream, token);
             }, AddContextAttachment, () => IsCurrentContext(version, partition), ct));
         if (IsCurrentContext(version, partition) && rejected.Count > 0)
-            Show("Could not add: " + string.Join(", ", rejected) + ". Drop individual files, check file access and the 25 MB per-file limit. Other files were kept.", InfoBarSeverity.Warning);
+            Show(DesktopResources.Format("RejectedFiles", string.Join(", ", rejected)), InfoBarSeverity.Warning);
     }
 
     private async Task AddLinkAsync()

@@ -9,7 +9,7 @@ internal sealed class ConversationSearchDialog : ContentDialog
 {
     private readonly IReadOnlyList<Conversation> conversations;
     private readonly Grid layout = new() { RowSpacing = 12 };
-    private readonly TextBox query = new() { Name = "ConversationSearchQuery", PlaceholderText = "Search conversations…", CornerRadius = new CornerRadius(8) };
+    private readonly TextBox query = new() { Name = "ConversationSearchQuery", PlaceholderText = DesktopResources.Get("SearchConversationsPlaceholder"), CornerRadius = new CornerRadius(8) };
     private readonly StackPanel results = new() { Name = "ConversationSearchResults", Spacing = 8 };
     private readonly TextBlock status = new() { Name = "ConversationSearchStatus", TextWrapping = TextWrapping.Wrap };
     private readonly ScrollViewer viewer;
@@ -20,7 +20,7 @@ internal sealed class ConversationSearchDialog : ContentDialog
     public ConversationSearchDialog(IReadOnlyList<Conversation> conversations)
     {
         this.conversations = conversations;
-        Name = "ConversationSearchDialog"; Title = "Search chats"; CloseButtonText = "Close";
+        Name = "ConversationSearchDialog"; Title = DesktopResources.Get("SearchChats"); CloseButtonText = DesktopResources.Get("Close");
         DefaultButton = ContentDialogButton.None;
         HorizontalAlignment = HorizontalAlignment.Center; VerticalAlignment = VerticalAlignment.Center;
         Resources["ContentDialogMaxWidth"] = 760d; Resources["ContentDialogMinWidth"] = 0d;
@@ -30,7 +30,7 @@ internal sealed class ConversationSearchDialog : ContentDialog
         viewer = new ScrollViewer { Content = results, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
         Grid.SetRow(viewer, 2); layout.Children.Add(viewer); Content = layout;
-        ControlAppearance.Native(query); ToolbarControls.Label(query, "Search conversations");
+        ControlAppearance.Native(query); ToolbarControls.Label(query, DesktopResources.Get("SearchConversations"));
         AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         query.TextChanged += async (_, _) => await SearchAsync();
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; query.Focus(FocusState.Programmatic); };
@@ -52,7 +52,7 @@ internal sealed class ConversationSearchDialog : ContentDialog
         pending?.Cancel();
         using var cancellation = new CancellationTokenSource(); pending = cancellation;
         var text = query.Text.Trim();
-        results.Children.Clear(); status.Text = text.Length == 0 ? "Recent chats" : "Searching…";
+        results.Children.Clear(); status.Text = text.Length == 0 ? DesktopResources.Get("RecentChats") : DesktopResources.Get("Searching");
         try
         {
             if (text.Length != 0) await Task.Delay(200, cancellation.Token);
@@ -66,17 +66,17 @@ internal sealed class ConversationSearchDialog : ContentDialog
     private void Render(IReadOnlyList<ConversationSearchHit> hits, string text)
     {
         results.Children.Clear();
-        status.Text = hits.Count == 0 ? text.Length == 0 ? "No recent chats." : "No results."
-            : text.Length == 0 ? "Recent chats" : $"{hits.Count}{(hits.Count == 50 ? "+" : "")} {(hits.Count == 1 ? "conversation" : "conversations")}";
+        status.Text = hits.Count == 0 ? text.Length == 0 ? DesktopResources.Get("NoRecentChats") : DesktopResources.Get("NoResults")
+            : text.Length == 0 ? DesktopResources.Get("RecentChats") : hits.Count == 1 ? DesktopResources.Format("ConversationCountOne", hits.Count) : DesktopResources.Format("ConversationCount", hits.Count, hits.Count == 50 ? "+" : "");
         foreach (var hit in hits)
         {
             var conversation = hit.Conversation;
             var content = new StackPanel { Spacing = 8 };
             content.Children.Add(new TextBlock { Text = conversation.Title, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
-            content.Children.Add(new TextBlock { Text = $"{conversation.Messages.Count} {(conversation.Messages.Count == 1 ? "message" : "messages")} · {conversation.Updated.ToLocalTime():g}", FontSize = 12, TextWrapping = TextWrapping.Wrap });
+            content.Children.Add(new TextBlock { Text = DesktopResources.Format(conversation.Messages.Count == 1 ? "MessageSummaryOne" : "MessageSummary", conversation.Messages.Count, conversation.Updated.ToLocalTime()), FontSize = 12, TextWrapping = TextWrapping.Wrap });
             if (hit.Snippet is not null) content.Children.Add(new TextBlock { Text = hit.Snippet, TextWrapping = TextWrapping.Wrap, MaxLines = 3, TextTrimming = TextTrimming.CharacterEllipsis });
             var open = new Button { Name = "OpenSearchConversation", Tag = conversation.Id, Content = new FontIcon { Glyph = "\uE8F2", FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };
-            ToolbarControls.Subtle(open); ToolbarControls.Label(open, "Open conversation: " + conversation.Title);
+            ToolbarControls.Subtle(open); ToolbarControls.Label(open, DesktopResources.Format("OpenConversation", conversation.Title));
             open.Click += (_, _) => { SelectedConversation = conversation; Hide(); };
             var footer = new Border { Child = open, Padding = new Thickness(0, 8, 0, 0), BorderThickness = new Thickness(0, 1, 0, 0) };
             ControlAppearance.Separator(footer); content.Children.Add(footer);

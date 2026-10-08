@@ -46,7 +46,7 @@ public sealed class ManagedLocalRuntime : IRuntimeResolver
             var exitCode = existing.Process.ExitCode;
             existing.Process.Dispose(); children.Remove(service);
             // A fresh request can explicitly restart; do not silently repeat inference after a crash.
-            throw new InvalidOperationException($"The managed {service} service exited (code {exitCode}). Refresh the catalog to restart it.");
+            throw new InvalidOperationException(DesktopResources.Format("ManagedExited", service, exitCode));
         }
         var executable = Path.Combine(root, service == ServiceKind.Ai ? "ai" : "agents", service == ServiceKind.Ai ? "AIHappey.Windows.exe" : "AgentHappey.Windows.exe");
         if (!File.Exists(executable)) throw new InvalidOperationException(
@@ -82,7 +82,7 @@ public sealed class ManagedLocalRuntime : IRuntimeResolver
         var process = new Process { StartInfo = start, EnableRaisingEvents = true };
         try
         {
-            if (!process.Start()) throw new InvalidOperationException($"The managed {service} service could not be started.");
+            if (!process.Start()) throw new InvalidOperationException(DesktopResources.Format("ManagedStartFailed", service));
             job ??= new OwnedProcessJob();
             job.Assign(process);
             process.OutputDataReceived += (_, _) => { }; process.ErrorDataReceived += (_, _) => { };
@@ -93,7 +93,7 @@ public sealed class ManagedLocalRuntime : IRuntimeResolver
             while (true)
             {
                 readiness.Token.ThrowIfCancellationRequested();
-                if (process.HasExited) throw new InvalidOperationException($"The managed {service} service failed during startup (code {process.ExitCode}). Check the bundled runtime configuration.");
+                if (process.HasExited) throw new InvalidOperationException(DesktopResources.Format("ManagedStartupFailed", service, process.ExitCode));
                 try
                 {
                     // A deliberately unmapped route answers 404 immediately once routing is ready.

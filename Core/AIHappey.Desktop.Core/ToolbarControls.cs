@@ -137,7 +137,7 @@ internal static class ToolbarControls
             Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left
         };
         ControlAppearance.Apply(button, (resources, palette) => ButtonStates(resources, "Button", palette), palette => BaseValues(button, palette));
-        Label(button, "Copy message");
+        Label(button, DesktopResources.Get("CopyMessage"));
         return button;
     }
 

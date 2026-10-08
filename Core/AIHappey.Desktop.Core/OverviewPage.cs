@@ -11,14 +11,14 @@ namespace AIHappey.Desktop.Core;
 /// <summary>Shared layout for card-based overview pages. Data and actions remain outside the visual component.</summary>
 internal sealed class OverviewPage : UserControl
 {
-    internal readonly TextBox SearchBox = new() { Name = "CatalogSearch", PlaceholderText = "Search…", MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Height = 40, CornerRadius = new CornerRadius(8) };
+    internal readonly TextBox SearchBox = new() { Name = "CatalogSearch", PlaceholderText = DesktopResources.Get("SearchPlaceholder"), MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Height = 40, CornerRadius = new CornerRadius(8) };
     internal readonly OverviewCardsPanel Cards = new() { Name = "CatalogCards" };
     private readonly StackPanel body = new() { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(24, 24, 24, 24) };
     private readonly StackPanel filters = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
     private readonly TextBlock status = new() { Name = "CatalogStatus", TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
-    private readonly Button retry = new() { Content = "Retry", HorizontalAlignment = HorizontalAlignment.Center };
-    private readonly Button cancel = new() { Content = "Cancel", HorizontalAlignment = HorizontalAlignment.Center };
-    private readonly Button more = new() { Content = "Show more", HorizontalAlignment = HorizontalAlignment.Center };
+    private readonly Button retry = new() { Content = DesktopResources.Get("Retry"), HorizontalAlignment = HorizontalAlignment.Center };
+    private readonly Button cancel = new() { Content = DesktopResources.Get("Cancel"), HorizontalAlignment = HorizontalAlignment.Center };
+    private readonly Button more = new() { Content = DesktopResources.Get("ShowMore"), HorizontalAlignment = HorizontalAlignment.Center };
     private readonly ScrollViewer viewer;
     private IReadOnlyList<CatalogItem> items = [];
     private IReadOnlySet<string> favorites = new HashSet<string>();
@@ -37,13 +37,13 @@ internal sealed class OverviewPage : UserControl
     public OverviewPage(CatalogKind kind)
     {
         Kind = kind;
-        var title = new TextBlock { Name = "OverviewTitle", Text = kind == CatalogKind.Agent ? "Agents" : "Skills", FontSize = 36,
+        var title = new TextBlock { Name = "OverviewTitle", Text = kind == CatalogKind.Agent ? DesktopResources.Get("Agents") : DesktopResources.Get("Skills"), FontSize = 36,
             FontWeight = Microsoft.UI.Text.FontWeights.Bold, TextAlignment = TextAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
         AutomationProperties.SetHeadingLevel(title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
         var description = new TextBlock { Name = "OverviewDescription", FontSize = 16, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center,
             Text = kind == CatalogKind.Agent
-                ? "Agents bring capabilities, context, and execution logic together in a single model. Explore the available agents and choose one to start a conversation."
-                : "An overview of available skills for tasks and workflows. See what each skill does and choose the right option. Skills combine instructions, logic, and execution in a consistent structure." };
+                ? DesktopResources.Get("AgentsDescription")
+                : DesktopResources.Get("SkillsDescription") };
         body.Children.Add(title); body.Children.Add(description);
         var searchRow = new Grid { ColumnSpacing = 8, MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 0, 0) };
         SearchBox.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -57,7 +57,7 @@ internal sealed class OverviewPage : UserControl
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };
         Content = viewer;
         ControlAppearance.Native(SearchBox);
-        ToolbarControls.Label(SearchBox, kind == CatalogKind.Agent ? "Search agents" : "Search skills");
+        ToolbarControls.Label(SearchBox, kind == CatalogKind.Agent ? DesktopResources.Get("SearchAgents") : DesktopResources.Get("SearchSkills"));
         foreach (var button in new[] { retry, cancel, more }) ControlAppearance.Native(button);
         ControlAppearance.Apply(description, (_, _) => { }, palette => description.Foreground = new SolidColorBrush(palette.Text));
         ControlAppearance.Apply(status, (_, _) => { }, palette => status.Foreground = new SolidColorBrush(palette.Text));
@@ -82,9 +82,9 @@ internal sealed class OverviewPage : UserControl
 
     public void SetFavorites(IReadOnlySet<string> value) { favorites = value; Render(); }
 
-    public void Loading(string message = "Loading…")
+    public void Loading(string? message = null)
     {
-        working = true; Cards.Children.Clear(); filters.Children.Clear(); status.Text = message;
+        working = true; Cards.Children.Clear(); filters.Children.Clear(); status.Text = message ?? DesktopResources.Get("Loading");
         status.Visibility = cancel.Visibility = Visibility.Visible; retry.Visibility = more.Visibility = Visibility.Collapsed;
         SearchBox.IsEnabled = false;
     }
@@ -109,11 +109,11 @@ internal sealed class OverviewPage : UserControl
         SearchBox.IsEnabled = true; retry.Visibility = cancel.Visibility = Visibility.Collapsed;
         var searched = CatalogProjection.Search(items, SearchBox.Text);
         filters.Children.Clear();
-        AddFilter("all", $"All ({searched.Count})", "\uE8FD");
-        AddFilter("favorites", $"Favorites ({searched.Count(item => favorites.Contains(item.Key))})", "\uE735");
+        AddFilter("all", DesktopResources.Format("AllCount", searched.Count), "\uE8FD");
+        AddFilter("favorites", DesktopResources.Format("FavoritesCount", searched.Count(item => favorites.Contains(item.Key))), "\uE735");
         AddFilter("backend", $"{source} ({searched.Count(item => item.Origin == CatalogOrigin.Backend)})");
         // Local filter and creation actions are capability-driven. No local provider is installed yet.
-        if (items.Any(item => item.Origin == CatalogOrigin.Local)) AddFilter("local", $"Local ({searched.Count(item => item.Origin == CatalogOrigin.Local)})");
+        if (items.Any(item => item.Origin == CatalogOrigin.Local)) AddFilter("local", DesktopResources.Format("LocalCount", searched.Count(item => item.Origin == CatalogOrigin.Local)));
         var selected = searched.Where(item => activeFilter switch
         {
             "favorites" => favorites.Contains(item.Key), "backend" => item.Origin == CatalogOrigin.Backend,
@@ -121,8 +121,8 @@ internal sealed class OverviewPage : UserControl
         }).ToArray();
         Cards.Children.Clear();
         foreach (var item in selected.Take(visible)) Cards.Children.Add(BuildCard(item));
-        status.Text = items.Count == 0 ? $"No {(Kind == CatalogKind.Agent ? "agents" : "skills")} are available from this service. Check your connections and provider configuration."
-            : selected.Length == 0 ? "No results. Try another search or filter." : "";
+        status.Text = items.Count == 0 ? DesktopResources.Get(Kind == CatalogKind.Agent ? "NoAgents" : "NoSkills")
+            : selected.Length == 0 ? DesktopResources.Get("CatalogNoResults") : "";
         status.Visibility = selected.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         more.Visibility = selected.Length > visible ? Visibility.Visible : Visibility.Collapsed;
         if (!string.IsNullOrEmpty(focusId) && focused is not null && !focused.IsLoaded)
@@ -166,11 +166,11 @@ internal sealed class OverviewPage : UserControl
         var view = ActionButton(item, "Details", "\uE890"); view.Click += (_, _) => DetailsRequested?.Invoke(item, view); actions.Children.Add(view);
         if (item.CanDownload)
         { var download = ActionButton(item, "Download", "\uE896"); download.Click += (_, _) => DownloadRequested?.Invoke(item); actions.Children.Add(download); }
-        var favorite = ActionButton(item, favorites.Contains(item.Key) ? "Remove favorite" : "Add favorite", favorites.Contains(item.Key) ? "\uE735" : "\uE734");
+        var favorite = ActionButton(item, favorites.Contains(item.Key) ? "RemoveFavorite" : "AddFavorite", favorites.Contains(item.Key) ? "\uE735" : "\uE734");
         AutomationProperties.SetAutomationId(favorite, item.Key + ":Favorite"); favorite.Name = "CatalogFavorite";
         favorite.Click += (_, _) => FavoriteRequested?.Invoke(item); actions.Children.Add(favorite);
         if (item.Kind == CatalogKind.Agent)
-        { var chat = ActionButton(item, "Start chat", "\uE8F2"); chat.Name = "CatalogStartChat"; chat.Click += (_, _) => ChatRequested?.Invoke(item); actions.Children.Add(chat); }
+        { var chat = ActionButton(item, "StartChat", "\uE8F2"); chat.Name = "CatalogStartChat"; chat.Click += (_, _) => ChatRequested?.Invoke(item); actions.Children.Add(chat); }
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
         ControlAppearance.Separator(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
         var card = new Border { Name = "CatalogCard", Tag = item, Child = grid, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
@@ -181,7 +181,7 @@ internal sealed class OverviewPage : UserControl
     private static Button ActionButton(CatalogItem item, string action, string glyph)
     {
         var button = new Button { Name = "Catalog" + action.Replace(" ", ""), Content = new FontIcon { Glyph = glyph, FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0) };
-        ToolbarControls.Subtle(button); ToolbarControls.Label(button, $"{action}: {item.Name}"); AutomationProperties.SetAutomationId(button, item.Key + ":" + action); return button;
+        ToolbarControls.Subtle(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", DesktopResources.Get(action), item.Name)); AutomationProperties.SetAutomationId(button, item.Key + ":" + action); return button;
     }
 
     private UIElement CardIcon(CatalogItem item)

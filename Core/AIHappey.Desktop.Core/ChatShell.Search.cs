@@ -12,8 +12,8 @@ public sealed partial class ChatShell
     private void PrepareSearchChats()
     {
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-        content.Children.Add(new SymbolIcon(Symbol.Find)); content.Children.Add(new TextBlock { Text = "Search chats", VerticalAlignment = VerticalAlignment.Center });
-        searchChats.Content = content; ToolbarControls.Subtle(searchChats); ToolbarControls.Label(searchChats, "Search chats");
+        content.Children.Add(new SymbolIcon(Symbol.Find)); content.Children.Add(new TextBlock { Text = DesktopResources.Get("SearchChats"), VerticalAlignment = VerticalAlignment.Center });
+        searchChats.Content = content; ToolbarControls.Subtle(searchChats); ToolbarControls.Label(searchChats, DesktopResources.Get("SearchChats"));
         searchChats.Click += async (_, _) => await SearchConversationsAsync();
     }
 

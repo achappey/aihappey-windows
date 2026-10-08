@@ -26,24 +26,24 @@ public sealed partial class ChatShell : UserControl
     private readonly StackPanel transcript = new() { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 24, 0, 24) };
     private readonly ScrollViewer scroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly StackPanel composer = new() { Spacing = 8, MaxWidth = 1040, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(24, 12, 24, 16) };
-    private readonly TextBlock welcome = new() { Text = "Your helpful replacement has arrived", TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 16), FontSize = 28 };
-    private readonly TextBlock disclaimer = new() { Name = "Disclaimer", Text = "AI can make mistakes. Check important information.", FontSize = 12, TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(16, 0, 16, 8) };
-    private readonly TextBox input = new() { PlaceholderText = "Ask anything", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 96, MaxHeight = 240 };
-    private readonly ToggleButton models = ToolbarControls.CreateModeButton(ToolbarControls.BrainIcon(), "Models");
-    private readonly ToggleButton agents = ToolbarControls.CreateModeButton(ToolbarControls.BotIcon(), "Agents");
-    private readonly AutoSuggestBox target = new() { PlaceholderText = "Select a model", MinWidth = 120, MaxWidth = 420, Height = 40, CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1), VerticalContentAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly MenuFlyoutItem refresh = new() { Text = "Refresh", Icon = new SymbolIcon(Symbol.Refresh) };
+    private readonly TextBlock welcome = new() { Text = DesktopResources.Get("Welcome"), TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 16), FontSize = 28 };
+    private readonly TextBlock disclaimer = new() { Name = "Disclaimer", Text = DesktopResources.Get("Disclaimer"), FontSize = 12, TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(16, 0, 16, 8) };
+    private readonly TextBox input = new() { PlaceholderText = DesktopResources.Get("AskAnything"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 96, MaxHeight = 240 };
+    private readonly ToggleButton models = ToolbarControls.CreateModeButton(ToolbarControls.BrainIcon(), DesktopResources.Get("Models"));
+    private readonly ToggleButton agents = ToolbarControls.CreateModeButton(ToolbarControls.BotIcon(), DesktopResources.Get("Agents"));
+    private readonly AutoSuggestBox target = new() { PlaceholderText = DesktopResources.Get("SelectModel"), MinWidth = 120, MaxWidth = 420, Height = 40, CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1), VerticalContentAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly MenuFlyoutItem refresh = new() { Text = DesktopResources.Get("Refresh"), Icon = new SymbolIcon(Symbol.Refresh) };
     private readonly Button account = new() { Content = new SymbolIcon(Symbol.Contact), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(20) };
-    private readonly MenuFlyoutItem settingsButton = new() { Text = "Settings", Icon = new SymbolIcon(Symbol.Setting) };
+    private readonly MenuFlyoutItem settingsButton = new() { Text = DesktopResources.Get("Settings"), Icon = new SymbolIcon(Symbol.Setting) };
     private readonly MenuFlyoutItem manageAccount = new() { Icon = new FontIcon { Glyph = "\uE8D7" } };
     private readonly Button send = new() { Content = new SymbolIcon(Symbol.Send), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Right };
-    private readonly Button stop = new() { Content = "Stop", Visibility = Visibility.Collapsed };
+    private readonly Button stop = new() { Content = DesktopResources.Get("Stop"), Visibility = Visibility.Collapsed };
     private readonly Button newChat = new() { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(6) };
     private readonly ListView chats = new() { SelectionMode = ListViewSelectionMode.Single };
     private readonly ConditionalWeakTable<ListViewItem, ConversationRow> conversationRows = new();
     private readonly Grid notice = new() { ColumnSpacing = 8, Padding = new Thickness(16, 8, 16, 8), Visibility = Visibility.Collapsed };
     private readonly TextBlock noticeMessage = new() { TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, VerticalAlignment = VerticalAlignment.Center };
-    private readonly TextBlock progress = new() { Text = "Working…", VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
+    private readonly TextBlock progress = new() { Text = DesktopResources.Get("Working"), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private IReadOnlyList<ChatTarget> targets = [];
     private IReadOnlyList<Conversation> conversations = [];
     private Conversation current = new();
@@ -77,26 +77,25 @@ public sealed partial class ChatShell : UserControl
         foreach (var control in new Control[] { input, chats, account, send, stop, settingsButton, manageAccount, refresh }) ControlAppearance.Native(control);
         ToolbarControls.Subtle(newChat);
         PrepareSearchChats();
-        ToolbarControls.Label(newChat, "New chat");
+        ToolbarControls.Label(newChat, DesktopResources.Get("NewChat"));
         ControlAppearance.BorderlessItems(chats);
         chats.ItemTemplate = ConversationRow.Template();
         chats.ContainerContentChanging += PrepareConversationRow;
         UpdateAccountMenu();
         UpdateMode(ServiceKind.Ai);
-        ToolbarControls.Label(account, "User profile");
-        ToolbarControls.Label(send, "Send message");
-        ToolbarControls.Label(target, "Select a model");
-        AutomationProperties.SetName(input, "Message");
-        AutomationProperties.SetHelpText(input, "Enter to send. Shift+Enter for a new line.");
-        AutomationProperties.SetHelpText(settingsButton, "Connection settings");
-        AutomationProperties.SetHelpText(refresh, "Refresh models or agents");
+        ToolbarControls.Label(account, DesktopResources.Get("UserProfile"));
+        ToolbarControls.Label(send, DesktopResources.Get("SendMessage"));
+        ToolbarControls.Label(target, DesktopResources.Get("SelectModel"));
+        AutomationProperties.SetName(input, DesktopResources.Get("Message"));
+        AutomationProperties.SetHelpText(input, DesktopResources.Get("InputHelp"));
+        AutomationProperties.SetHelpText(settingsButton, DesktopResources.Get("ConnectionSettings"));
+        AutomationProperties.SetHelpText(refresh, DesktopResources.Get("RefreshTargets"));
         Loaded += async (_, _) =>
         {
             if (initialized) return;
             initialized = true;
             await RunAsync(async ct =>
             {
-                session.Settings = await SettingsStore.LoadAsync(session.DataDirectory, session.Settings);
                 session.Settings.Validate(session.Host.AllowLocal);
                 await session.Host.InitializeAsync(ct);
                 UpdateAccountMenu();
@@ -175,7 +174,7 @@ public sealed partial class ChatShell : UserControl
         notice.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         notice.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         notice.Children.Add(noticeMessage);
-        var dismiss = new Button { Content = "Dismiss" };
+        var dismiss = new Button { Content = DesktopResources.Get("Dismiss") };
         ControlAppearance.Native(dismiss);
         dismiss.Click += (_, _) => notice.Visibility = Visibility.Collapsed;
         Grid.SetColumn(dismiss, 1); notice.Children.Add(dismiss);
@@ -190,7 +189,7 @@ public sealed partial class ChatShell : UserControl
         var nav = new StackPanel { Spacing = 8 };
         var toggle = new Button { Name = "SidebarToggle", Content = new FontIcon { Glyph = "\uE700" }, Width = 32, Height = 32, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Right };
         ControlAppearance.Native(toggle);
-        ToolbarControls.Label(toggle, "Toggle chat history");
+        ToolbarControls.Label(toggle, DesktopResources.Get("ToggleHistory"));
         toggle.Click += (_, _) => split.IsPaneOpen = !split.IsPaneOpen;
         var sidebarHeader = new Grid { ColumnSpacing = 8, Margin = new Thickness(0, 0, 0, 12) };
         sidebarHeader.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
@@ -202,7 +201,7 @@ public sealed partial class ChatShell : UserControl
         var sidebarBody = new StackPanel { Spacing = 8 };
         var newChatContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
         newChatContent.Children.Add(new SymbolIcon(Symbol.Add));
-        newChatContent.Children.Add(new TextBlock { Text = "New chat", VerticalAlignment = VerticalAlignment.Center });
+        newChatContent.Children.Add(new TextBlock { Text = DesktopResources.Get("NewChat"), VerticalAlignment = VerticalAlignment.Center });
         newChat.Content = newChatContent;
         sidebarBody.Children.Add(newChat); sidebarBody.Children.Add(searchChats);
         nav.Children.Add(sidebarBody); sidebar.Children.Add(nav);
@@ -288,7 +287,7 @@ public sealed partial class ChatShell : UserControl
     {
         // Keep identity/account labels in the menu, never on the generic profile icon.
         manageAccount.Text = session.Host.AllowLocal ? session.Host.AccountLabel
-            : session.Host.AccountLabel == "Sign in" ? "Sign in" : "Manage account";
+            : session.Host.AccountLabel == DesktopResources.Get("SignIn") ? DesktopResources.Get("SignIn") : DesktopResources.Get("ManageAccount");
     }
 
     private void UpdateMode(ServiceKind selected)
@@ -301,7 +300,7 @@ public sealed partial class ChatShell : UserControl
             agents.IsChecked = selected == ServiceKind.Agents;
         }
         finally { updatingMode = false; }
-        var label = selected == ServiceKind.Ai ? "Select a model" : "Select an existing agent";
+        var label = selected == ServiceKind.Ai ? DesktopResources.Get("SelectModel") : DesktopResources.Get("SelectAgent");
         target.PlaceholderText = label;
         ToolbarControls.Label(target, label);
     }
@@ -326,14 +325,14 @@ public sealed partial class ChatShell : UserControl
         UpdateAccountMenu();
         target.ItemsSource = targets.Take(100).ToArray();
         if (string.IsNullOrWhiteSpace(selected)) target.Text = targets.FirstOrDefault()?.Id ?? "";
-        if (targets.Count == 0) Show("The service is ready but no targets are available. Configure API keys or install agent definitions.", InfoBarSeverity.Warning);
+        if (targets.Count == 0) Show(DesktopResources.Get("NoTargets"), InfoBarSeverity.Warning);
     }
 
     private async Task SendAsync()
     {
         if (busy || closing || historyDialogOpen || catalogDialog is not null || string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0) return;
         var selected = target.Text.Trim();
-        if (!targets.Any(x => x.Id == selected)) { Show("Select a target from the model or agent catalog.", InfoBarSeverity.Warning); return; }
+        if (!targets.Any(x => x.Id == selected)) { Show(DesktopResources.Get("SelectTarget"), InfoBarSeverity.Warning); return; }
         var prompt = input.Text.Trim();
         var snapshot = contextAttachments.ToArray();
         var extractDocuments = session.Settings.ConvertAttachmentsToText;
@@ -373,7 +372,7 @@ public sealed partial class ChatShell : UserControl
                     }
                     if (assembler.Finished) break;
                 }
-                if (!assembler.Finished) { output.Status = "interrupted"; Show("The stream ended before completion. Partial output was kept.", InfoBarSeverity.Warning); }
+                if (!assembler.Finished) { output.Status = "interrupted"; Show(DesktopResources.Get("StreamInterrupted"), InfoBarSeverity.Warning); }
             }
             catch (OperationCanceledException) { output.Status = "stopped"; }
             catch { if (!assembler.ApprovalRequired) output.Status = "failed"; throw; }
@@ -381,7 +380,7 @@ public sealed partial class ChatShell : UserControl
             {
                 if (output.Status == "streaming") output.Status = "interrupted";
                 try { await history.SaveAsync(partition, current); await LoadHistoryAsync(CancellationToken.None); }
-                catch { Show("Chat history could not be saved. The conversation remains available until the app closes.", InfoBarSeverity.Error); }
+                catch { Show(DesktopResources.Get("HistorySaveFailed"), InfoBarSeverity.Error); }
                 RenderTranscript();
             }
         }, inference: true);
@@ -403,11 +402,11 @@ public sealed partial class ChatShell : UserControl
             var block = projected.Block;
             var user = message.Message.Role == Role.user;
             var content = new StackPanel { Spacing = 8 };
-            var heading = user ? "You" : PortableConversations.MetadataString(message.Message.Metadata, "model") ?? current.Target;
+            var heading = user ? DesktopResources.Get("You") : PortableConversations.MetadataString(message.Message.Metadata, "model") ?? current.Target;
             var header = new Border
             {
                 Name = "MessageHeader", Padding = new Thickness(16, 12, 16, 12), BorderThickness = new Thickness(0, 0, 0, 1),
-                Child = new TextBlock { Text = $"{heading} · {message.Timestamp.ToLocalTime():g} · {message.Status}", TextWrapping = TextWrapping.Wrap }
+                Child = new TextBlock { Text = $"{heading} · {message.Timestamp.ToLocalTime():g} · {DisplayStatus(message.Status)}", TextWrapping = TextWrapping.Wrap }
             };
             ControlAppearance.Separator(header);
             var key = current.Id + ":" + block.Key;
@@ -415,7 +414,7 @@ public sealed partial class ChatShell : UserControl
             var page = block.Activity && activityPages.TryGetValue(key, out var chosen) ? Math.Clamp(chosen, 0, block.Parts.Count - 1) : block.Parts.Count - 1;
             var displayed = page >= 0 ? block.Parts[page] : null;
             if (displayed is not null) RenderPart(content, displayed);
-            else content.Children.Add(SelectableText(block.Key.EndsWith(":details", StringComparison.Ordinal) ? "Attachments and sources" : "Working…"));
+            else content.Children.Add(SelectableText(block.Key.EndsWith(":details", StringComparison.Ordinal) ? DesktopResources.Get("AttachmentsSources") : DesktopResources.Get("Working")));
             string? tokenCount = null;
             if (!user && !block.Activity && message.Message.Metadata is not null)
             {
@@ -430,21 +429,21 @@ public sealed partial class ChatShell : UserControl
             copy.Click += (_, _) =>
             {
                 try { var package = new DataPackage(); package.SetText(displayed is null ? "" : displayed.Type is "text" or "reasoning" ? PortableConversations.Text(displayed) : PortableConversations.Element(displayed).GetRawText()); Clipboard.SetContent(package); }
-                catch { Show("The clipboard is currently unavailable.", InfoBarSeverity.Warning); }
+                catch { Show(DesktopResources.Get("ClipboardUnavailable"), InfoBarSeverity.Warning); }
             };
             var footerActions = new MessageFooterPanel();
             footerActions.Children.Add(copy);
             if (block.Activity)
             {
-                var previous = ActivityButton("Previous activity", "\uE76B");
-                var next = ActivityButton("Next activity", "\uE76C");
+                var previous = ActivityButton(DesktopResources.Get("PreviousActivity"), "\uE76B");
+                var next = ActivityButton(DesktopResources.Get("NextActivity"), "\uE76C");
                 previous.IsEnabled = page > 0; next.IsEnabled = page < block.Parts.Count - 1;
                 previous.Click += (_, _) => { activityPages[key] = page - 1; RenderTranscript(); };
                 next.Click += (_, _) => { activityPages[key] = page + 1; RenderTranscript(); };
                 footerActions.Children.Add(previous);
                 footerActions.Children.Add(new TextBlock { Name = "ActivityCount", Text = $"{page + 1}/{block.Parts.Count}", VerticalAlignment = VerticalAlignment.Center });
                 footerActions.Children.Add(next);
-                var list = ActivityButton("Show activity list", "\uE8FD");
+                var list = ActivityButton(DesktopResources.Get("ActivityList"), "\uE8FD");
                 list.Click += (_, _) => ShowActivity(block.Key, key, page, list);
                 footerActions.Children.Add(list);
             }
@@ -454,7 +453,7 @@ public sealed partial class ChatShell : UserControl
                 usage.Children.Add(new FontIcon { Glyph = "\uE943", FontSize = 14 });
                 usage.Children.Add(new TextBlock { Text = tokenCount, VerticalAlignment = VerticalAlignment.Center });
                 var badge = new Border { Name = "TokenUsage", Child = usage, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), VerticalAlignment = VerticalAlignment.Center };
-                ToolbarControls.Label(badge, $"Token usage: {tokenCount}");
+                ToolbarControls.Label(badge, DesktopResources.Format("TokenUsage", tokenCount));
                 ControlAppearance.TokenBadge(badge);
                 footerActions.Children.Add(badge);
             }
@@ -491,6 +490,17 @@ public sealed partial class ChatShell : UserControl
 
     private static TextBlock SelectableText(string text) => new() { Text = text, IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap };
 
+    private static string DisplayStatus(string status) => status switch
+    {
+        "complete" => DesktopResources.Get("StatusComplete"),
+        "streaming" => DesktopResources.Get("StatusStreaming"),
+        "interrupted" => DesktopResources.Get("StatusInterrupted"),
+        "stopped" => DesktopResources.Get("StatusStopped"),
+        "failed" => DesktopResources.Get("StatusFailed"),
+        "approval required" => DesktopResources.Get("StatusApprovalRequired"),
+        _ => status
+    };
+
     private static Button ActivityButton(string label, string glyph)
     {
         var button = new Button { Content = new FontIcon { Glyph = glyph, FontSize = 14 }, Width = 32, Height = 32, Padding = new Thickness(0) };
@@ -502,15 +512,15 @@ public sealed partial class ChatShell : UserControl
         if (part.Type == "text") { content.Children.Add(SelectableText(PortableConversations.Text(part))); return; }
         if (part.Type == "reasoning")
         {
-            content.Children.Add(new TextBlock { Text = "Reasoning", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+            content.Children.Add(new TextBlock { Text = DesktopResources.Get("Reasoning"), FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
             content.Children.Add(SelectableText(PortableConversations.Text(part))); return;
         }
         var raw = PortableConversations.Element(part);
         if (PortableConversations.IsTool(part))
         {
             content.Children.Add(new TextBlock { Text = PortableConversations.ToolName(part), TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-            content.Children.Add(SelectableText(PortableConversations.String(raw, "state") ?? "Tool activity"));
-            foreach (var (field, title) in new[] { ("input", "Input"), ("inputText", "Streaming input"), ("errorText", "Error"), ("approval", "Approval (not sent by desktop)") })
+            content.Children.Add(SelectableText(PortableConversations.String(raw, "state") ?? DesktopResources.Get("ToolActivity")));
+            foreach (var (field, title) in new[] { ("input", DesktopResources.Get("Input")), ("inputText", DesktopResources.Get("StreamingInput")), ("errorText", DesktopResources.Get("Error")), ("approval", DesktopResources.Get("Approval")) })
                 if (raw.TryGetProperty(field, out var value) && value.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined) AddStructured(content, title, value);
             return;
         }
@@ -600,7 +610,7 @@ public sealed partial class ChatShell : UserControl
             // The open chat may have newer messages than its deserialized history-list entry.
             var chat = selected.Id == current.Id ? current : selected;
             var title = new TextBox { Text = chat.Title, MaxLength = 120 };
-            var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = "Rename chat", Content = title, PrimaryButtonText = "Save", CloseButtonText = "Cancel" };
+            var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = DesktopResources.Get("RenameChat"), Content = title, PrimaryButtonText = DesktopResources.Get("Save"), CloseButtonText = DesktopResources.Get("Cancel") };
             SystemAppearance.PrepareDialog(dialog);
             if (await dialog.ShowAsync() != ContentDialogResult.Primary || string.IsNullOrWhiteSpace(title.Text)) return;
             await RunAsync(async ct => { chat.Title = title.Text.Trim(); await history.SaveAsync(session.HistoryPartition, chat, ct); await LoadHistoryAsync(ct); });
@@ -614,7 +624,7 @@ public sealed partial class ChatShell : UserControl
         historyDialogOpen = true;
         try
         {
-            var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = "Delete chat?", Content = "This removes the local conversation permanently.", PrimaryButtonText = "Delete", CloseButtonText = "Cancel" };
+            var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = DesktopResources.Get("DeleteChat"), Content = DesktopResources.Get("DeleteChatHint"), PrimaryButtonText = DesktopResources.Get("Delete"), CloseButtonText = DesktopResources.Get("Cancel") };
             SystemAppearance.PrepareDialog(dialog);
             if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
             await RunAsync(async ct =>
@@ -634,45 +644,22 @@ public sealed partial class ChatShell : UserControl
 
     private async Task EditSettingsAsync()
     {
-        if (busy || catalogDialog is not null || historyDialogOpen) return;
-        var panel = new StackPanel { Spacing = 12 };
-        var controls = new List<(ComboBox Location, TextBox Url)>();
-        foreach (var (kind, label) in new[] { (ServiceKind.Ai, "AI gateway"), (ServiceKind.Agents, "Agents gateway") })
-        {
-            var config = session.Settings.For(kind);
-            var location = new ComboBox { Header = label + " location", ItemsSource = session.Host.AllowLocal ? new[] { "Managed local", "Remote" } : new[] { "Remote" }, SelectedIndex = session.Host.AllowLocal && config.Location == RuntimeLocation.Remote ? 1 : 0 };
-            var url = new TextBox { Header = label + " remote HTTPS URL", Text = config.RemoteUrl, PlaceholderText = "https://gateway.example.com/" };
-            void Toggle() => url.IsEnabled = !session.Host.AllowLocal || location.SelectedIndex == 1;
-            Toggle(); location.SelectionChanged += (_, _) => Toggle();
-            panel.Children.Add(location); panel.Children.Add(url); controls.Add((location, url));
-        }
-        var extraction = new ToggleSwitch { Name = "DocumentTextExtraction", Header = "Document-to-text extraction", IsOn = session.Settings.ConvertAttachmentsToText };
-        ControlAppearance.Native(extraction); panel.Children.Add(extraction);
-        panel.Children.Add(new TextBlock { Text = "Extract text from local PDFs for model chat. Original files are always included. Agent chat sends originals only.", TextWrapping = TextWrapping.Wrap, MaxWidth = 420 });
-        panel.Children.Add(new TextBlock { Text = "Connections and history are isolated by this configuration. Use the user profile menu to manage API keys or your enterprise account. Changing a remote destination changes where your prompts and configured credentials are sent.", TextWrapping = TextWrapping.Wrap, MaxWidth = 420 });
-        var validation = new TextBlock { TextWrapping = TextWrapping.Wrap, MaxWidth = 420 }; panel.Children.Add(validation);
-        var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = "Connections", Content = panel, PrimaryButtonText = "Save", CloseButtonText = "Cancel" };
+        if (busy || closing || catalogDialog is not null || historyDialogOpen) return;
+        historyDialogOpen = true;
+        var dialog = new SettingsDialog(session.Settings, session.Host.AllowLocal, session.ActiveLanguage) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog);
-        DesktopSettings? next = null;
-        dialog.PrimaryButtonClick += (_, args) =>
-        {
-            next = new()
-            {
-                Ai = new() { Location = session.Host.AllowLocal && controls[0].Location.SelectedIndex == 0 ? RuntimeLocation.Local : RuntimeLocation.Remote, RemoteUrl = controls[0].Url.Text.Trim() },
-                Agents = new() { Location = session.Host.AllowLocal && controls[1].Location.SelectedIndex == 0 ? RuntimeLocation.Local : RuntimeLocation.Remote, RemoteUrl = controls[1].Url.Text.Trim() },
-                ConvertAttachmentsToText = extraction.IsOn
-            };
-            try { next.Validate(session.Host.AllowLocal); }
-            catch (InvalidOperationException e) { args.Cancel = true; validation.Text = e.Message; }
-        };
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary || next is null) return;
+        ContentDialogResult result;
+        try { result = await dialog.ShowAsync(); }
+        finally { historyDialogOpen = false; }
+        if (result != ContentDialogResult.Primary || dialog.Result is not { } next) return;
         await RunAsync(async ct =>
         {
             var connectionsChanged = new[] { ServiceKind.Ai, ServiceKind.Agents }.Any(kind =>
                 session.Settings.For(kind).Location != next.For(kind).Location || session.Settings.For(kind).RemoteUrl != next.For(kind).RemoteUrl);
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
-            // A composer preference does not change the runtime, account, history partition, or current draft.
+            if (next.Language != session.ActiveLanguage) Show(DesktopResources.Get("RestartRequired"), InfoBarSeverity.Informational);
+            // Language and composer preferences do not change the runtime, account, history partition, or current draft.
             if (!connectionsChanged) return;
             await session.Runtime.DisposeAsync();
             current = new() { Service = Service }; targets = []; target.Text = "";
@@ -691,10 +678,10 @@ public sealed partial class ChatShell : UserControl
         notice.Visibility = Visibility.Collapsed;
         SetBusy(true, inference);
         try { await action(operation.Token); }
-        catch (OperationCanceledException) { Show("Operation canceled or timed out.", InfoBarSeverity.Warning); }
+        catch (OperationCanceledException) { Show(DesktopResources.Get("OperationCanceled"), InfoBarSeverity.Warning); }
         catch (Exception e)
         {
-            Show(e is GatewayException or InvalidOperationException ? e.Message : "The operation failed. Check service availability, settings, and local storage permissions.", InfoBarSeverity.Error);
+            Show(e is GatewayException or InvalidOperationException ? e.Message : DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error);
         }
         finally { operation.Dispose(); operation = null; busy = false; SetBusy(false, false); }
     }
@@ -717,10 +704,10 @@ public sealed partial class ChatShell : UserControl
     {
         var label = severity switch
         {
-            InfoBarSeverity.Error => "Error",
-            InfoBarSeverity.Warning => "Warning",
-            InfoBarSeverity.Success => "Success",
-            _ => "Information"
+            InfoBarSeverity.Error => DesktopResources.Get("Error"),
+            InfoBarSeverity.Warning => DesktopResources.Get("Warning"),
+            InfoBarSeverity.Success => DesktopResources.Get("Success"),
+            _ => DesktopResources.Get("Information")
         };
         noticeMessage.Text = $"{label}: {message}";
         notice.Visibility = Visibility.Visible;

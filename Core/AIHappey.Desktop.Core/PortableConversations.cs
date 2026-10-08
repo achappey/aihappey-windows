@@ -138,7 +138,7 @@ public sealed class ConversationConverter : JsonConverter<Conversation>
         var result = new Conversation
         {
             Id = id, Metadata = metadata,
-            Title = PortableConversations.MetadataString(metadata, "name") ?? "New chat",
+            Title = PortableConversations.MetadataString(metadata, "name") ?? DesktopResources.Get("NewChat"),
             Service = desktop["service"]?.ToString() == "agents" ? ServiceKind.Agents : ServiceKind.Ai,
             Target = desktop["target"]?.ToString() ?? "",
             Extra = root.EnumerateObject().Where(p => p.Name is not "id" and not "messages" and not "metadata")

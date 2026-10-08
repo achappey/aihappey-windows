@@ -22,6 +22,7 @@ public partial class App : Application
     public App()
     {
         AppContext.SetSwitch("AIHappey.Desktop.DisableRemoteImages", true);
+        Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = "en";
         InitializeComponent();
         UnhandledException += (_, error) => File.WriteAllLines(report, results.Append("UNHANDLED: " + error.Exception));
     }
@@ -191,7 +192,9 @@ public partial class App : Application
             await Task.Delay(100);
             var dialog = VisualTreeHelper.GetOpenPopupsForXamlRoot(shell.XamlRoot)
                 .SelectMany(popup => Descendants(popup.Child)).OfType<ContentDialog>().FirstOrDefault();
-            Check(dialog?.Title?.ToString() == "Connections", context + ": connection dialog layout");
+            if (settingsTask.IsFaulted) await settingsTask;
+            results.Add("Settings resource diagnostic: title=" + dialog?.Title + "; task=" + settingsTask.Status);
+            Check(dialog?.Title?.ToString() == "Settings", context + ": settings dialog native resource resolution");
             dialog!.Hide();
             await settingsTask;
 

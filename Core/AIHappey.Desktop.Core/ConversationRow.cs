@@ -13,8 +13,8 @@ internal sealed class ConversationRow
     private readonly ListViewItem container;
     private readonly Button more;
     private readonly MenuFlyout menu = new() { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
-    private readonly MenuFlyoutItem rename = new() { Text = "Rename", Icon = new SymbolIcon(Symbol.Edit) };
-    private readonly MenuFlyoutItem delete = new() { Text = "Delete", Icon = new SymbolIcon(Symbol.Delete) };
+    private readonly MenuFlyoutItem rename = new() { Text = DesktopResources.Get("Rename"), Icon = new SymbolIcon(Symbol.Edit) };
+    private readonly MenuFlyoutItem delete = new() { Text = DesktopResources.Get("Delete"), Icon = new SymbolIcon(Symbol.Delete) };
     private Conversation? conversation;
     private bool hovered;
 
@@ -44,7 +44,7 @@ internal sealed class ConversationRow
         Root = root;
         more = (Button)root.FindName("ConversationActions");
         ToolbarControls.Subtle(more);
-        ToolbarControls.Label(more, "Chat actions");
+        ToolbarControls.Label(more, DesktopResources.Get("ChatActions"));
         ControlAppearance.Native(rename);
         ControlAppearance.Native(delete);
         menu.Items.Add(rename);
@@ -98,7 +98,7 @@ internal sealed class ConversationRow
         }
         conversation = chat;
         AutomationProperties.SetName(container, chat?.Title ?? "");
-        AutomationProperties.SetName(more, chat is null ? "Chat actions" : "Chat actions for " + chat.Title);
+        AutomationProperties.SetName(more, chat is null ? DesktopResources.Get("ChatActions") : DesktopResources.Format("ChatActionsFor", chat.Title));
         UpdateVisibility();
     }
 

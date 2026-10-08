@@ -18,6 +18,7 @@ namespace AIHappey.Desktop.Core;
 internal static class ControlAppearance
 {
     private static readonly ConditionalWeakTable<Control, object> nativeControls = new();
+    private static readonly ConditionalWeakTable<SolidColorBrush, object> ownedBrushes = new();
     public static ControlPalette Palette(FrameworkElement control) => new AccessibilitySettings().HighContrast
         ? ControlPalette.HighContrast(new UISettings()) : control.ActualTheme == ElementTheme.Dark ? ControlPalette.Dark : ControlPalette.Light;
 
@@ -56,9 +57,15 @@ internal static class ControlAppearance
 
     public static void Brush(ResourceDictionary resources, string key, Color color)
     {
-        // Mutating existing brushes also updates an already-materialized native template.
-        if (resources.TryGetValue(key, out var value) && value is SolidColorBrush brush) brush.Color = color;
-        else resources[key] = new SolidColorBrush(color);
+        // TryGetValue can resolve framework-owned, immutable brushes through the native
+        // resource scope. Only mutate brushes this helper created; shadow all others locally.
+        if (resources.TryGetValue(key, out var value) && value is SolidColorBrush brush && ownedBrushes.TryGetValue(brush, out _)) brush.Color = color;
+        else
+        {
+            var owned = new SolidColorBrush(color);
+            ownedBrushes.Add(owned, new object());
+            resources[key] = owned;
+        }
     }
 
     public static void NativeResources(ResourceDictionary resources, ControlPalette palette)

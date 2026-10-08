@@ -24,7 +24,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
         CheckResponse(response);
         using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         if (!doc.RootElement.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Array)
-            throw new GatewayException("The service returned an invalid model catalog.");
+            throw new GatewayException(DesktopResources.Get("InvalidModelCatalog"));
         return data.EnumerateArray().Where(x => x.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String)
             .Select(x => new ChatTarget(x.GetProperty("id").GetString()!,
                 x.TryGetProperty("name", out var name) && name.ValueKind == JsonValueKind.String ? name.GetString()! : x.GetProperty("id").GetString()!))
@@ -42,7 +42,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         CheckResponse(response);
         if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")
-            throw new GatewayException("The service did not return a chat event stream.");
+            throw new GatewayException(DesktopResources.Get("ChatStreamRequired"));
         await using var stream = await response.Content.ReadAsStreamAsync(ct);
         await foreach (var payload in SseReader.ReadAsync(stream, ct))
         {
@@ -80,7 +80,7 @@ public static class SseReader
         var data = new StringBuilder();
         while (await reader.ReadLineAsync(ct) is { } line)
         {
-            if (line.Length > 2_000_000) throw new GatewayException("A stream event exceeded the supported size.");
+            if (line.Length > 2_000_000) throw new GatewayException(DesktopResources.Get("StreamSizeLimit"));
             if (line.Length == 0)
             {
                 if (data.Length > 0) { yield return data.ToString().TrimEnd('\n'); data.Clear(); }
@@ -90,7 +90,7 @@ public static class SseReader
             var value = line[5..];
             if (value.StartsWith(' ')) value = value[1..];
             data.Append(value).Append('\n');
-            if (data.Length > 2_000_000) throw new GatewayException("A stream event exceeded the supported size.");
+            if (data.Length > 2_000_000) throw new GatewayException(DesktopResources.Get("StreamSizeLimit"));
         }
         if (data.Length > 0) yield return data.ToString().TrimEnd('\n');
     }

@@ -15,7 +15,7 @@ public static class SettingsStore
         }
         catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException)
         {
-            throw new InvalidOperationException("Desktop settings could not be read. Restore or remove the settings file in the desktop data directory.");
+            throw new InvalidOperationException(DesktopResources.Get("SettingsReadFailed"));
         }
     }
 

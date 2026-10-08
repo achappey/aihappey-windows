@@ -75,12 +75,12 @@ public static class CatalogRoutes
     public static bool SupportsSkill(string id) => id.Split('/') is { Length: 2 } parts && parts.All(ValidSegment);
     public static string Skill(string id)
     {
-        if (!SupportsSkill(id)) throw new InvalidOperationException("This skill identifier does not support gateway content or version requests.");
+        if (!SupportsSkill(id)) throw new InvalidOperationException(DesktopResources.Get("InvalidSkillIdentifier"));
         return "v1/skills/" + string.Join("/", id.Split('/').Select(Uri.EscapeDataString));
     }
     public static string Version(string version)
     {
-        if (!ValidSegment(version)) throw new InvalidOperationException("The service returned an unsupported skill version.");
+        if (!ValidSegment(version)) throw new InvalidOperationException(DesktopResources.Get("InvalidSkillVersion"));
         return Uri.EscapeDataString(version);
     }
     private static bool ValidSegment(string value) => !string.IsNullOrWhiteSpace(value) && value is not "." and not ".."

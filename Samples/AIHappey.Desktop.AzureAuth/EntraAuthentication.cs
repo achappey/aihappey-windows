@@ -39,7 +39,7 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
     private IAccount? account;
     public string ProfileId => "AzureAuth";
     public bool AllowLocal => false;
-    public string AccountLabel => account?.Username ?? "Sign in";
+    public string AccountLabel => account?.Username ?? DesktopResources.Get("SignIn");
     public string HistoryIdentity => account?.HomeAccountId.Identifier ?? "signed-out";
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -47,7 +47,7 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
         if (app is not null) return;
         if (!Guid.TryParse(config.TenantId, out _) || !Guid.TryParse(config.ClientId, out _)
             || config.AiScopes.Length == 0 || config.AgentsScopes.Length == 0)
-            throw new InvalidOperationException("Configure desktop.json with your Entra tenant ID, desktop public-client ID, and gateway scopes, then restart the app.");
+            throw new InvalidOperationException(DesktopResources.Get("EnterpriseConfigurationRequired"));
         _ = DesktopSettings.RemoteUri(config.AiUrl); _ = DesktopSettings.RemoteUri(config.AgentsUrl);
         app = PublicClientApplicationBuilder.Create(config.ClientId)
             .WithAuthority($"https://login.microsoftonline.com/{config.TenantId}")
@@ -63,7 +63,7 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
                 finally { CryptographicOperations.ZeroMemory(plain); }
             }
             catch (Exception e) when (e is CryptographicException or IOException or UnauthorizedAccessException)
-            { throw new InvalidOperationException("The protected Entra cache cannot be read. Restore or remove tokens.bin in the AzureAuth data directory."); }
+            { throw new InvalidOperationException(DesktopResources.Get("TokenCacheReadFailed")); }
         });
         app.UserTokenCache.SetAfterAccess(args =>
         {
@@ -87,15 +87,15 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
         // Tokens may only go to the service configured by the enterprise distributor, never an arbitrary user-entered host.
         var allowed = DesktopSettings.RemoteUri(service == ServiceKind.Ai ? config.AiUrl : config.AgentsUrl);
         if (request.RequestUri is null || !allowed.IsBaseOf(request.RequestUri))
-            throw new InvalidOperationException("This destination is not approved by the enterprise host configuration. Update desktop.json and restart to change gateways.");
-        if (account is null) throw new InvalidOperationException("Sign in with your enterprise account using the account button.");
+            throw new InvalidOperationException(DesktopResources.Get("EnterpriseDestinationRejected"));
+        if (account is null) throw new InvalidOperationException(DesktopResources.Get("EnterpriseSignInRequired"));
         try
         {
             var result = await app!.AcquireTokenSilent(service == ServiceKind.Ai ? config.AiScopes : config.AgentsScopes, account).ExecuteAsync(cancellationToken);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
         }
-        catch (MsalUiRequiredException) { throw new InvalidOperationException("Your account needs interactive authentication or consent. Use the account button to sign in again."); }
-        catch (MsalException) { throw new InvalidOperationException("Entra token acquisition failed. Check the desktop registration, gateway scopes, and tenant policy."); }
+        catch (MsalUiRequiredException) { throw new InvalidOperationException(DesktopResources.Get("InteractiveSignInRequired")); }
+        catch (MsalException) { throw new InvalidOperationException(DesktopResources.Get("TokenAcquisitionFailed")); }
     }
 
     public async Task ManageAccountAsync(object xamlRoot, CancellationToken cancellationToken)
@@ -103,10 +103,10 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
         await InitializeAsync();
         var dialog = new ContentDialog
         {
-            XamlRoot = (XamlRoot)xamlRoot, Title = "Enterprise account",
-            Content = account?.Username ?? "Sign in through your system browser. No client secret or provider API key is stored in this application.",
-            PrimaryButtonText = account is null ? "Sign in" : "Sign in again",
-            SecondaryButtonText = account is null ? "" : "Sign out", CloseButtonText = "Cancel"
+            XamlRoot = (XamlRoot)xamlRoot, Title = DesktopResources.Get("EnterpriseAccount"),
+            Content = account?.Username ?? DesktopResources.Get("EnterpriseSignInHint"),
+            PrimaryButtonText = account is null ? DesktopResources.Get("SignIn") : DesktopResources.Get("SignInAgain"),
+            SecondaryButtonText = account is null ? "" : DesktopResources.Get("SignOut"), CloseButtonText = DesktopResources.Get("Cancel")
         };
         SystemAppearance.PrepareDialog(dialog);
         var choice = await dialog.ShowAsync();
@@ -129,9 +129,9 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
                 var agentsResult = await app.AcquireTokenInteractive(config.AgentsScopes).WithAccount(account)
                     .WithUseEmbeddedWebView(false).ExecuteAsync(cancellationToken);
                 if (agentsResult.Account.HomeAccountId.Identifier != account.HomeAccountId.Identifier)
-                    throw new InvalidOperationException("Use the same enterprise account for both services.");
+                    throw new InvalidOperationException(DesktopResources.Get("SameEnterpriseAccount"));
             }
         }
-        catch (MsalException) { throw new InvalidOperationException("Entra sign-in failed or was canceled. Check your desktop registration, consent, and tenant policy."); }
+        catch (MsalException) { throw new InvalidOperationException(DesktopResources.Get("EnterpriseSignInFailed")); }
     }
 }

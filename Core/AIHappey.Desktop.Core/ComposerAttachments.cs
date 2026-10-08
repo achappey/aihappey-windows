@@ -19,7 +19,7 @@ public sealed class ComposerAttachment
     {
         ComposerAttachments.ValidateSize(content.Length);
         var name = filename.Replace('\\', '/').Split('/').Last();
-        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("An attachment needs a filename.");
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(DesktopResources.Get("AttachmentFilenameRequired"));
         var type = UrlAttachments.ValidMediaType(mediaType) ?? UrlAttachments.TypeFromPath(name) ?? "application/octet-stream";
         return new(name, type, content.ToArray(), null);
     }
@@ -28,7 +28,7 @@ public sealed class ComposerAttachment
     {
         var url = value.Trim();
         var type = UrlAttachments.ValidMediaType(mediaType);
-        if (!UrlAttachments.IsHttpUrl(url) || type is null) throw new ArgumentException("Invalid URL or media type.");
+        if (!UrlAttachments.IsHttpUrl(url) || type is null) throw new ArgumentException(DesktopResources.Get("InvalidUrlOrType"));
         return new(UrlAttachments.Filename(url), type, null, url);
     }
 
@@ -46,7 +46,7 @@ public static class ComposerAttachments
     public const int MaximumFileBytes = 25 * 1024 * 1024;
     public static void ValidateSize(long size)
     {
-        if (size < 0 || size > MaximumFileBytes) throw new InvalidOperationException("The attachment exceeds the 25 MB per-file limit.");
+        if (size < 0 || size > MaximumFileBytes) throw new InvalidOperationException(DesktopResources.Get("AttachmentLimit"));
     }
 
     /// <summary>Shared picker/drop admission. Keep successful files, but never admit into a stale draft.</summary>
@@ -105,13 +105,13 @@ public static class ComposerAttachments
                 }
                 catch (OperationCanceledException) { throw; }
                 catch (Exception e) when (e is not OutOfMemoryException)
-                { warnings.Add($"Text could not be extracted from {file.Name}. The original file is still included."); }
+                { warnings.Add(DesktopResources.Format("ExtractionFailed", file.Name)); }
             }
         parts.AddRange(await Task.Run(() => snapshot.OrderBy(file => file.IsLink).Select(file =>
         { ct.ThrowIfCancellationRequested(); return (UIMessagePart)file.FilePart(); }).ToArray(), ct));
         if (!string.IsNullOrWhiteSpace(prompt)) parts.Add(new TextUIPart { Text = prompt.Trim() });
         ct.ThrowIfCancellationRequested();
-        if (parts.Count == 0) throw new InvalidOperationException("Add a message, attachment, or link before sending.");
+        if (parts.Count == 0) throw new InvalidOperationException(DesktopResources.Get("MessageRequired"));
         return new(new UIMessage
         {
             Id = Guid.NewGuid().ToString("N"), Role = Role.user, Parts = parts,

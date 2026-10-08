@@ -33,15 +33,15 @@ public sealed partial class ChatShell
     {
         foreach (var (page, label, icon) in new[]
         {
-            (DesktopPage.Agents, "Agents", (IconElement)ToolbarControls.BotIcon()),
-            (DesktopPage.Skills, "Skills", (IconElement)new FontIcon { Glyph = "\uE734" })
+            (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)ToolbarControls.BotIcon()),
+            (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)new FontIcon { Glyph = "\uE734" })
         })
         {
             if (page == DesktopPage.Agents)
-            { pageNavigation.Children.Add(SidebarSeparator("AgentsSeparator")); pageNavigation.Children.Add(SidebarHeading("Agents")); }
+            { pageNavigation.Children.Add(SidebarSeparator("AgentsSeparator")); pageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Agents"))); }
             var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
             content.Children.Add(icon); content.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center });
-            var button = new ToggleButton { Name = "Navigate" + label, Content = content, IsChecked = page == DesktopPage.Chat,
+            var button = new ToggleButton { Name = "Navigate" + page, Content = content, IsChecked = page == DesktopPage.Chat,
                 HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left,
                 Padding = new Thickness(12, 10, 12, 10), BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(6) };
             ControlAppearance.Apply(button, ControlAppearance.NativeResources, palette =>
@@ -51,7 +51,7 @@ public sealed partial class ChatShell
             pageButtons.Add(page, button); pageNavigation.Children.Add(button);
         }
         pageNavigation.Children.Add(SidebarSeparator("ChatsSeparator"));
-        pageNavigation.Children.Add(SidebarHeading("Chats"));
+        pageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Chats")));
         overviewHost.Children.Add(agentsOverview); overviewHost.Children.Add(skillsOverview);
         foreach (var page in new[] { agentsOverview, skillsOverview })
         {
@@ -85,7 +85,7 @@ public sealed partial class ChatShell
         agentsOverview.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         skillsOverview.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
         UpdatePageButtons();
-        AutomationProperties.SetHelpText(refresh, chat ? "Refresh models or agents" : page == DesktopPage.Agents ? "Refresh agent overview" : "Refresh skill overview");
+        AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : page == DesktopPage.Agents ? DesktopResources.Get("RefreshAgents") : DesktopResources.Get("RefreshSkills"));
     }
 
     private void UpdatePageButtons()
@@ -145,10 +145,10 @@ public sealed partial class ChatShell
                 target.ItemsSource = targets.Take(100).ToArray();
             }
         }
-        catch (OperationCanceledException) { page.Error("Catalog loading was canceled or timed out."); throw; }
+        catch (OperationCanceledException) { page.Error(DesktopResources.Get("CatalogCanceled")); throw; }
         catch (Exception error)
         {
-            page.Error(error is GatewayException or InvalidOperationException ? error.Message : "The catalog could not be loaded. Check your connection, account, and local storage permissions.");
+            page.Error(error is GatewayException or InvalidOperationException ? error.Message : DesktopResources.Get("CatalogFailed"));
             throw;
         }
     }
@@ -172,7 +172,7 @@ public sealed partial class ChatShell
         {
             // Confirm eligibility against the current service, not the display name/underlying model.
             var available = await client.ListAsync(ServiceKind.Agents, ct);
-            if (!available.Any(candidate => candidate.Id == item.Id)) throw new GatewayException("This agent is no longer available. Refresh the agent overview.");
+            if (!available.Any(candidate => candidate.Id == item.Id)) throw new GatewayException(DesktopResources.Get("AgentUnavailable"));
             UpdateMode(ServiceKind.Agents); targets = available; target.ItemsSource = available.Take(100).ToArray(); target.Text = item.Id;
             current = new() { Service = ServiceKind.Agents, Target = item.Id }; input.Text = "";
             suppress = true; chats.SelectedItem = null; suppress = false;
@@ -218,9 +218,9 @@ public sealed partial class ChatShell
             ct.ThrowIfCancellationRequested();
             if (catalogDialog == dialog && session.HistoryPartition == partition) dialog.SetVersions(versions, false);
         }
-        catch (OperationCanceledException) { if (catalogDialog == dialog && !closing) dialog.SetVersions([], false, "Version loading was canceled or timed out."); }
+        catch (OperationCanceledException) { if (catalogDialog == dialog && !closing) dialog.SetVersions([], false, DesktopResources.Get("VersionsCanceled")); }
         catch (Exception error) { if (catalogDialog == dialog && !closing) dialog.SetVersions([], false,
-            error is GatewayException ? error.Message : "Skill versions could not be loaded. You can still download the default version."); }
+            error is GatewayException ? error.Message : DesktopResources.Get("VersionsFailed")); }
     }
 
     private static Border SidebarSeparator(string name)
@@ -231,7 +231,7 @@ public sealed partial class ChatShell
     }
     private static TextBlock SidebarHeading(string title)
     {
-        var heading = new TextBlock { Name = title + "SectionHeading", Text = title, FontSize = 13, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(12, 0, 12, 8) };
+        var heading = new TextBlock { Name = "SectionHeading", Text = title, FontSize = 13, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(12, 0, 12, 8) };
         AutomationProperties.SetHeadingLevel(heading, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level2);
         return heading;
     }
@@ -246,7 +246,7 @@ public sealed partial class ChatShell
             var extension = json ? ".json" : ".zip";
             var name = AttachmentDownloads.SafeName(item.Name + (version is null ? "" : "-" + version) + extension, json ? "application/json" : "application/zip");
             var picker = new FileSavePicker { SuggestedFileName = Path.GetFileNameWithoutExtension(name) };
-            picker.FileTypeChoices.Add(json ? "Agent definition" : "Skill ZIP archive", new List<string> { extension });
+            picker.FileTypeChoices.Add(json ? DesktopResources.Get("AgentDefinition") : DesktopResources.Get("SkillArchive"), new List<string> { extension });
             WinRT.Interop.InitializeWithWindow.Initialize(picker, Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId));
             var destination = await picker.PickSaveFileAsync();
             if (destination is null) return;
@@ -257,7 +257,7 @@ public sealed partial class ChatShell
                 : await catalogClient.DownloadSkillAsync(item.Id, version, ct);
             ct.ThrowIfCancellationRequested();
             await using var output = await destination.OpenStreamForWriteAsync(); output.SetLength(0); await output.WriteAsync(bytes, ct);
-            Show(json ? "Agent definition downloaded." : "Skill archive downloaded. It has not been installed or enabled.", InfoBarSeverity.Success);
+            Show(json ? DesktopResources.Get("AgentDownloaded") : DesktopResources.Get("SkillDownloaded"), InfoBarSeverity.Success);
         });
     }
 }

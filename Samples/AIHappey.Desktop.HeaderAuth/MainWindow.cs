@@ -8,12 +8,9 @@ public sealed class MainWindow : Window
     private readonly ChatShell shell;
     private readonly SystemAppearance appearance;
     private bool allowClose;
-    public MainWindow()
+    public MainWindow(DesktopSession session)
     {
         Title = DesktopBranding.AppName;
-        var host = new HeaderAuthentication();
-        var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIHappey", "Desktop", host.ProfileId);
-        var session = new DesktopSession(host, new ManagedLocalRuntime(Path.Combine(AppContext.BaseDirectory, "runtimes"), directory), new DesktopSettings());
         shell = new ChatShell(session);
         appearance = new SystemAppearance(shell);
         Content = shell;

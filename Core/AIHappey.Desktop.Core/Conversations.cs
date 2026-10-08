@@ -11,7 +11,7 @@ namespace AIHappey.Desktop.Core;
 public sealed class Conversation
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string Title { get; set; } = "New chat";
+    public string Title { get; set; } = DesktopResources.Get("NewChat");
     public DateTimeOffset Updated { get; set; } = DateTimeOffset.UtcNow;
     public ServiceKind Service { get; set; }
     public string Target { get; set; } = "";
@@ -63,7 +63,7 @@ public sealed class MessageAssembler(ConversationMessage output)
                 Finished = true; output.Status = raw["finishReason"]?.ToString() == "error" ? "failed" : "complete"; break;
             case "error":
                 output.Status = "failed";
-                throw new GatewayException("The service reported a generation error. Check credentials and model availability. Partial output has been kept.");
+                throw new GatewayException(DesktopResources.Get("GenerationError"));
             case "abort": output.Status = "stopped"; Finished = true; break;
             case "tool-input-start": case "tool-input-delta": case "tool-input-available": case "tool-call":
             case "tool-input-error": case "tool-output-available": case "tool-output-error": case "tool-output-denied":
@@ -131,7 +131,7 @@ public sealed class MessageAssembler(ConversationMessage output)
     private void RefuseApproval()
     {
         ApprovalRequired = true; output.Status = "approval required";
-        throw new GatewayException("This agent requires tool approval, which is not supported yet. No approval was sent.");
+        throw new GatewayException(DesktopResources.Get("ApprovalUnsupported"));
     }
     private static string Required(JsonObject raw, string key) => raw[key]?.ToString() is { Length: > 0 } value ? value : throw new JsonException("Missing stream part ID.");
     private int Ensure(Dictionary<string, int> map, string id, JsonObject initial)
@@ -153,7 +153,7 @@ public sealed class HistoryStore(string root)
     public static string Partition(params string[] values) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(values))));
     private string DirectoryFor(string partition)
     {
-        if (partition.Length != 64 || !partition.All(Uri.IsHexDigit)) throw new ArgumentException("Invalid history partition.");
+        if (partition.Length != 64 || !partition.All(Uri.IsHexDigit)) throw new ArgumentException(DesktopResources.Get("InvalidHistoryPartition"));
         return Path.Combine(root, partition);
     }
     public async Task<IReadOnlyList<Conversation>> ListAsync(string partition, CancellationToken ct = default)
@@ -193,7 +193,7 @@ public sealed class HistoryStore(string root)
     public void Delete(string partition, string id) => File.Delete(PathFor(partition, id));
     private string PathFor(string partition, string id)
     {
-        if (string.IsNullOrWhiteSpace(id) || id.Length > 2048 || id.Contains('/') || id.Contains('\\') || id.Any(char.IsControl)) throw new ArgumentException("Invalid conversation ID.");
+        if (string.IsNullOrWhiteSpace(id) || id.Length > 2048 || id.Contains('/') || id.Contains('\\') || id.Any(char.IsControl)) throw new ArgumentException(DesktopResources.Get("InvalidConversationId"));
         // Browser IDs are opaque (UUIDs and SDK IDs). Never interpret them as paths.
         return Path.Combine(DirectoryFor(partition), Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(id))) + ".json");
     }

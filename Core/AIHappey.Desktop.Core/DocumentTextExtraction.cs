@@ -23,9 +23,9 @@ public sealed class PdfDocumentTextExtractor : IDocumentTextExtractor
     public Task<string?> ExtractAsync(ReadOnlyMemory<byte> content, CancellationToken ct) => Task.Run(() =>
     {
         ct.ThrowIfCancellationRequested();
-        if (content.Length > ComposerAttachments.MaximumFileBytes) throw new InvalidOperationException("The PDF exceeds the attachment limit.");
+        if (content.Length > ComposerAttachments.MaximumFileBytes) throw new InvalidOperationException(DesktopResources.Get("PdfAttachmentLimit"));
         using var document = PdfDocument.Open(content.ToArray());
-        if (document.NumberOfPages > MaximumPages) throw new InvalidOperationException("The PDF exceeds the text extraction page limit.");
+        if (document.NumberOfPages > MaximumPages) throw new InvalidOperationException(DesktopResources.Get("PdfPageLimit"));
         var text = new StringBuilder();
         var watch = Stopwatch.StartNew();
         foreach (var page in document.GetPages())
@@ -33,7 +33,7 @@ public sealed class PdfDocumentTextExtractor : IDocumentTextExtractor
             ct.ThrowIfCancellationRequested();
             var pageText = ContentOrderTextExtractor.GetText(page);
             if (text.Length + pageText.Length + 1 > MaximumCharacters || watch.Elapsed > TimeSpan.FromSeconds(15))
-                throw new InvalidOperationException("The PDF exceeds the text extraction limit.");
+                throw new InvalidOperationException(DesktopResources.Get("PdfTextLimit"));
             text.AppendLine(pageText);
         }
         ct.ThrowIfCancellationRequested();

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="General" xml:space="preserve"><value>General</value></data>
+  <data name="Endpoints" xml:space="preserve"><value>Endpoints</value></data>
+  <data name="Attachments" xml:space="preserve"><value>Attachments</value></data>
+  <data name="Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Rename" xml:space="preserve"><value>Rename</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Retry" xml:space="preserve"><value>Retry</value></data>
+  <data name="ShowMore" xml:space="preserve"><value>Show more</value></data>
+  <data name="Welcome" xml:space="preserve"><value>Your helpful replacement has arrived</value></data>
+  <data name="Disclaimer" xml:space="preserve"><value>AI can make mistakes. Check important information.</value></data>
+  <data name="AskAnything" xml:space="preserve"><value>Ask anything</value></data>
+  <data name="Models" xml:space="preserve"><value>Models</value></data>
+  <data name="Agents" xml:space="preserve"><value>Agents</value></data>
+  <data name="Skills" xml:space="preserve"><value>Skills</value></data>
+  <data name="Chats" xml:space="preserve"><value>Chats</value></data>
+  <data name="SelectModel" xml:space="preserve"><value>Select a model</value></data>
+  <data name="SelectAgent" xml:space="preserve"><value>Select an existing agent</value></data>
+  <data name="NewChat" xml:space="preserve"><value>New chat</value></data>
+  <data name="UserProfile" xml:space="preserve"><value>User profile</value></data>
+  <data name="SendMessage" xml:space="preserve"><value>Send message</value></data>
+  <data name="Message" xml:space="preserve"><value>Message</value></data>
+  <data name="InputHelp" xml:space="preserve"><value>Enter to send. Shift+Enter for a new line.</value></data>
+  <data name="ConnectionSettings" xml:space="preserve"><value>Connection settings</value></data>
+  <data name="RefreshTargets" xml:space="preserve"><value>Refresh models or agents</value></data>
+  <data name="RefreshAgents" xml:space="preserve"><value>Refresh agent overview</value></data>
+  <data name="RefreshSkills" xml:space="preserve"><value>Refresh skill overview</value></data>
+  <data name="Working" xml:space="preserve"><value>Working…</value></data>
+  <data name="Dismiss" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="ToggleHistory" xml:space="preserve"><value>Toggle chat history</value></data>
+  <data name="ManageAccount" xml:space="preserve"><value>Manage account</value></data>
+  <data name="SignIn" xml:space="preserve"><value>Sign in</value></data>
+  <data name="SignInAgain" xml:space="preserve"><value>Sign in again</value></data>
+  <data name="SignOut" xml:space="preserve"><value>Sign out</value></data>
+  <data name="ApiKeys" xml:space="preserve"><value>API keys</value></data>
+  <data name="ApiKey" xml:space="preserve"><value>API key</value></data>
+  <data name="You" xml:space="preserve"><value>You</value></data>
+  <data name="Reasoning" xml:space="preserve"><value>Reasoning</value></data>
+  <data name="ToolActivity" xml:space="preserve"><value>Tool activity</value></data>
+  <data name="Input" xml:space="preserve"><value>Input</value></data>
+  <data name="StreamingInput" xml:space="preserve"><value>Streaming input</value></data>
+  <data name="Approval" xml:space="preserve"><value>Approval (not sent by desktop)</value></data>
+  <data name="Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Success" xml:space="preserve"><value>Success</value></data>
+  <data name="Information" xml:space="preserve"><value>Information</value></data>
+  <data name="PreviousActivity" xml:space="preserve"><value>Previous activity</value></data>
+  <data name="NextActivity" xml:space="preserve"><value>Next activity</value></data>
+  <data name="ActivityList" xml:space="preserve"><value>Show activity list</value></data>
+  <data name="AttachmentsSources" xml:space="preserve"><value>Attachments and sources</value></data>
+  <data name="CopyMessage" xml:space="preserve"><value>Copy message</value></data>
+  <data name="RenameChat" xml:space="preserve"><value>Rename chat</value></data>
+  <data name="DeleteChat" xml:space="preserve"><value>Delete chat?</value></data>
+  <data name="DeleteChatHint" xml:space="preserve"><value>This removes the local conversation permanently.</value></data>
+  <data name="NoTargets" xml:space="preserve"><value>The service is ready but no targets are available. Configure API keys or install agent definitions.</value></data>
+  <data name="SelectTarget" xml:space="preserve"><value>Select a target from the model or agent catalog.</value></data>
+  <data name="StreamInterrupted" xml:space="preserve"><value>The stream ended before completion. Partial output was kept.</value></data>
+  <data name="HistorySaveFailed" xml:space="preserve"><value>Chat history could not be saved. The conversation remains available until the app closes.</value></data>
+  <data name="ClipboardUnavailable" xml:space="preserve"><value>The clipboard is currently unavailable.</value></data>
+  <data name="OperationCanceled" xml:space="preserve"><value>Operation canceled or timed out.</value></data>
+  <data name="OperationFailed" xml:space="preserve"><value>The operation failed. Check service availability, settings, and local storage permissions.</value></data>
+  <data name="SearchChats" xml:space="preserve"><value>Search chats</value></data>
+  <data name="SearchConversations" xml:space="preserve"><value>Search conversations</value></data>
+  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Search conversations…</value></data>
+  <data name="ChatActions" xml:space="preserve"><value>Chat actions</value></data>
+  <data name="RecentChats" xml:space="preserve"><value>Recent chats</value></data>
+  <data name="Searching" xml:space="preserve"><value>Searching…</value></data>
+  <data name="NoRecentChats" xml:space="preserve"><value>No recent chats.</value></data>
+  <data name="NoResults" xml:space="preserve"><value>No results.</value></data>
+  <data name="Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Activity" xml:space="preserve"><value>Activity</value></data>
+  <data name="Sources" xml:space="preserve"><value>Sources</value></data>
+  <data name="AllSources" xml:space="preserve"><value>All sources</value></data>
+  <data name="CloseDetails" xml:space="preserve"><value>Close details</value></data>
+  <data name="CopySource" xml:space="preserve"><value>Copy source</value></data>
+  <data name="OpenSource" xml:space="preserve"><value>Open source in browser</value></data>
+  <data name="SourceOpenFailed" xml:space="preserve"><value>The source could not be opened.</value></data>
+  <data name="Download" xml:space="preserve"><value>Download</value></data>
+  <data name="BrowserResourceHint" xml:space="preserve"><value>This resource needs browser or MCP access. Its reference is retained in the conversation.</value></data>
+  <data name="AttachmentDownloaded" xml:space="preserve"><value>Attachment downloaded.</value></data>
+  <data name="DownloadCanceled" xml:space="preserve"><value>The download was canceled or timed out.</value></data>
+  <data name="DownloadFailed" xml:space="preserve"><value>The attachment could not be downloaded. Check the destination and network connection.</value></data>
+  <data name="AddContext" xml:space="preserve"><value>Add context</value></data>
+  <data name="Link" xml:space="preserve"><value>Link</value></data>
+  <data name="PublicUrl" xml:space="preserve"><value>URL (publicly accessible)</value></data>
+  <data name="MimeType" xml:space="preserve"><value>MIME type</value></data>
+  <data name="CustomMimeType" xml:space="preserve"><value>Custom MIME type</value></data>
+  <data name="DetectingMime" xml:space="preserve"><value>Detecting MIME type…</value></data>
+  <data name="MimeNotDetected" xml:space="preserve"><value>MIME type could not be detected. Select the type of content at this URL.</value></data>
+  <data name="InvalidPublicUrl" xml:space="preserve"><value>Enter a valid HTTP or HTTPS URL without credentials.</value></data>
+  <data name="InvalidMime" xml:space="preserve"><value>Enter a valid MIME type, for example application/pdf.</value></data>
+  <data name="Custom" xml:space="preserve"><value>Custom</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Search…</value></data>
+  <data name="SearchAgents" xml:space="preserve"><value>Search agents</value></data>
+  <data name="SearchSkills" xml:space="preserve"><value>Search skills</value></data>
+  <data name="AgentsDescription" xml:space="preserve"><value>Agents bring capabilities, context, and execution logic together in a single model. Explore the available agents and choose one to start a conversation.</value></data>
+  <data name="SkillsDescription" xml:space="preserve"><value>An overview of available skills for tasks and workflows. See what each skill does and choose the right option. Skills combine instructions, logic, and execution in a consistent structure.</value></data>
+  <data name="Loading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="CatalogNoResults" xml:space="preserve"><value>No results. Try another search or filter.</value></data>
+  <data name="CatalogCanceled" xml:space="preserve"><value>Catalog loading was canceled or timed out.</value></data>
+  <data name="CatalogFailed" xml:space="preserve"><value>The catalog could not be loaded. Check your connection, account, and local storage permissions.</value></data>
+  <data name="AgentUnavailable" xml:space="preserve"><value>This agent is no longer available. Refresh the agent overview.</value></data>
+  <data name="VersionsCanceled" xml:space="preserve"><value>Version loading was canceled or timed out.</value></data>
+  <data name="VersionsFailed" xml:space="preserve"><value>Skill versions could not be loaded. You can still download the default version.</value></data>
+  <data name="AgentDefinition" xml:space="preserve"><value>Agent definition</value></data>
+  <data name="SkillArchive" xml:space="preserve"><value>Skill ZIP archive</value></data>
+  <data name="AgentDownloaded" xml:space="preserve"><value>Agent definition downloaded.</value></data>
+  <data name="SkillDownloaded" xml:space="preserve"><value>Skill archive downloaded. It has not been installed or enabled.</value></data>
+  <data name="AddFavorite" xml:space="preserve"><value>Add favorite</value></data>
+  <data name="RemoveFavorite" xml:space="preserve"><value>Remove favorite</value></data>
+  <data name="StartChat" xml:space="preserve"><value>Start chat</value></data>
+  <data name="Instructions" xml:space="preserve"><value>Instructions</value></data>
+  <data name="Definition" xml:space="preserve"><value>Definition</value></data>
+  <data name="Versions" xml:space="preserve"><value>Versions</value></data>
+  <data name="InstructionsReadOnly" xml:space="preserve"><value>Instructions (read-only)</value></data>
+  <data name="InstructionsUnavailable" xml:space="preserve"><value>The backend does not expose instructions for this agent.</value></data>
+  <data name="DefinitionReadOnly" xml:space="preserve"><value>Definition (read-only)</value></data>
+  <data name="DefinitionNotExposed" xml:space="preserve"><value>The backend does not expose this agent's definition. Definition download is unavailable.</value></data>
+  <data name="DownloadDefinition" xml:space="preserve"><value>Download definition</value></data>
+  <data name="DownloadDefault" xml:space="preserve"><value>Download default version</value></data>
+  <data name="Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="SkillDownloadHint" xml:space="preserve"><value>Downloading saves a ZIP file only. It does not install or enable this skill.</value></data>
+  <data name="DefinitionUnavailable" xml:space="preserve"><value>Definition unavailable</value></data>
+  <data name="DefinitionUnavailableHint" xml:space="preserve"><value>You can chat with this agent, but its backend does not expose a downloadable definition.</value></data>
+  <data name="LoadingVersions" xml:space="preserve"><value>Loading versions…</value></data>
+  <data name="VersionsUnavailable" xml:space="preserve"><value>Versions unavailable</value></data>
+  <data name="NoVersions" xml:space="preserve"><value>No versions are available.</value></data>
+  <data name="Default" xml:space="preserve"><value>Default</value></data>
+  <data name="Latest" xml:space="preserve"><value>Latest</value></data>
+  <data name="InvalidDataUrl" xml:space="preserve"><value>The attachment contains an invalid data URL.</value></data>
+  <data name="DownloadLimit" xml:space="preserve"><value>This attachment exceeds the 64 MB download limit.</value></data>
+  <data name="InvalidBinary" xml:space="preserve"><value>The attachment contains invalid binary data.</value></data>
+  <data name="ResourceDownloadUnsupported" xml:space="preserve"><value>This resource requires browser or MCP access and cannot be downloaded by desktop yet.</value></data>
+  <data name="AttachmentFilenameRequired" xml:space="preserve"><value>An attachment needs a filename.</value></data>
+  <data name="InvalidUrlOrType" xml:space="preserve"><value>Invalid URL or media type.</value></data>
+  <data name="AttachmentLimit" xml:space="preserve"><value>The attachment exceeds the 25 MB per-file limit.</value></data>
+  <data name="MessageRequired" xml:space="preserve"><value>Add a message, attachment, or link before sending.</value></data>
+  <data name="PdfAttachmentLimit" xml:space="preserve"><value>The PDF exceeds the attachment limit.</value></data>
+  <data name="PdfPageLimit" xml:space="preserve"><value>The PDF exceeds the text extraction page limit.</value></data>
+  <data name="PdfTextLimit" xml:space="preserve"><value>The PDF exceeds the text extraction limit.</value></data>
+  <data name="RemoteOnly" xml:space="preserve"><value>This host only supports remote gateways.</value></data>
+  <data name="InvalidRemoteUrl" xml:space="preserve"><value>Remote gateways must use an absolute HTTPS URL without credentials, query, or fragment; loopback is reserved for managed local mode.</value></data>
+  <data name="SettingsReadFailed" xml:space="preserve"><value>Desktop settings could not be read. Restore or remove the settings file in the desktop data directory.</value></data>
+  <data name="InvalidSkillIdentifier" xml:space="preserve"><value>This skill identifier does not support gateway content or version requests.</value></data>
+  <data name="InvalidSkillVersion" xml:space="preserve"><value>The service returned an unsupported skill version.</value></data>
+  <data name="InvalidCatalogContinuation" xml:space="preserve"><value>The service returned an invalid catalog continuation.</value></data>
+  <data name="CatalogPageLimit" xml:space="preserve"><value>The catalog exceeded the supported page limit.</value></data>
+  <data name="SkillZipRequired" xml:space="preserve"><value>The service did not return a skill ZIP archive.</value></data>
+  <data name="InvalidSkillArchive" xml:space="preserve"><value>The service returned invalid skill archive content.</value></data>
+  <data name="InvalidCatalogDocument" xml:space="preserve"><value>The service returned an invalid catalog document.</value></data>
+  <data name="InvalidCatalogList" xml:space="preserve"><value>The service returned an invalid catalog list.</value></data>
+  <data name="ResponseSizeLimit" xml:space="preserve"><value>The service response exceeded the supported size.</value></data>
+  <data name="UnsupportedFavorites" xml:space="preserve"><value>The saved catalog favorites format is unsupported.</value></data>
+  <data name="InvalidFavoritesPartition" xml:space="preserve"><value>Invalid catalog favorites partition.</value></data>
+  <data name="InvalidModelCatalog" xml:space="preserve"><value>The service returned an invalid model catalog.</value></data>
+  <data name="ChatStreamRequired" xml:space="preserve"><value>The service did not return a chat event stream.</value></data>
+  <data name="StreamSizeLimit" xml:space="preserve"><value>A stream event exceeded the supported size.</value></data>
+  <data name="GenerationError" xml:space="preserve"><value>The service reported a generation error. Check credentials and model availability. Partial output has been kept.</value></data>
+  <data name="ApprovalUnsupported" xml:space="preserve"><value>This agent requires tool approval, which is not supported yet. No approval was sent.</value></data>
+  <data name="InvalidHistoryPartition" xml:space="preserve"><value>Invalid history partition.</value></data>
+  <data name="InvalidConversationId" xml:space="preserve"><value>Invalid conversation ID.</value></data>
+  <data name="ApiKeysReadFailed" xml:space="preserve"><value>The protected API-key store could not be read. Restore or remove credentials.bin in the HeaderAuth data directory.</value></data>
+  <data name="InvalidProviderHeaders" xml:space="preserve"><value>Use valid X- provider header names and non-empty, single-line API keys.</value></data>
+  <data name="ApiKeysHint" xml:space="preserve"><value>Keys are protected for your Windows account. They are sent as HTTP headers to the selected local or remote gateways. Add the provider's exact header name, for example X-OpenAI-Key or X-Anthropic-Key. No keys are included in chat history.</value></data>
+  <data name="AddProviderKey" xml:space="preserve"><value>Add provider key</value></data>
+  <data name="ProviderApiKeys" xml:space="preserve"><value>Provider API keys</value></data>
+  <data name="UniqueProviderHeaders" xml:space="preserve"><value>Provider header names must be unique.</value></data>
+  <data name="EnterpriseConfigurationRequired" xml:space="preserve"><value>Configure desktop.json with your Entra tenant ID, desktop public-client ID, and gateway scopes, then restart the app.</value></data>
+  <data name="TokenCacheReadFailed" xml:space="preserve"><value>The protected Entra cache cannot be read. Restore or remove tokens.bin in the AzureAuth data directory.</value></data>
+  <data name="EnterpriseDestinationRejected" xml:space="preserve"><value>This destination is not approved by the enterprise host configuration. Update desktop.json and restart to change gateways.</value></data>
+  <data name="EnterpriseSignInRequired" xml:space="preserve"><value>Sign in with your enterprise account using the account button.</value></data>
+  <data name="InteractiveSignInRequired" xml:space="preserve"><value>Your account needs interactive authentication or consent. Use the account button to sign in again.</value></data>
+  <data name="TokenAcquisitionFailed" xml:space="preserve"><value>Entra token acquisition failed. Check the desktop registration, gateway scopes, and tenant policy.</value></data>
+  <data name="EnterpriseAccount" xml:space="preserve"><value>Enterprise account</value></data>
+  <data name="EnterpriseSignInHint" xml:space="preserve"><value>Sign in through your system browser. No client secret or provider API key is stored in this application.</value></data>
+  <data name="SameEnterpriseAccount" xml:space="preserve"><value>Use the same enterprise account for both services.</value></data>
+  <data name="EnterpriseSignInFailed" xml:space="preserve"><value>Entra sign-in failed or was canceled. Check your desktop registration, consent, and tenant policy.</value></data>
+  <data name="TokenUsage" xml:space="preserve"><value>Token usage: {0}</value></data>
+  <data name="ChatActionsFor" xml:space="preserve"><value>Chat actions for {0}</value></data>
+  <data name="RemoveContext" xml:space="preserve"><value>Remove {0}</value></data>
+  <data name="OpenConversation" xml:space="preserve"><value>Open conversation: {0}</value></data>
+  <data name="ConversationCount" xml:space="preserve"><value>{0}{1} conversations</value></data>
+  <data name="ConversationCountOne" xml:space="preserve"><value>{0} conversation</value></data>
+  <data name="MessageSummary" xml:space="preserve"><value>{0} messages · {1:g}</value></data>
+  <data name="MessageSummaryOne" xml:space="preserve"><value>{0} message · {1:g}</value></data>
+  <data name="AllCount" xml:space="preserve"><value>All ({0})</value></data>
+  <data name="FavoritesCount" xml:space="preserve"><value>Favorites ({0})</value></data>
+  <data name="LocalCount" xml:space="preserve"><value>Local ({0})</value></data>
+  <data name="NoAgents" xml:space="preserve"><value>No agents are available from this service. Check your connections and provider configuration.</value></data>
+  <data name="NoSkills" xml:space="preserve"><value>No skills are available from this service. Check your connections and provider configuration.</value></data>
+  <data name="ActionForItem" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="DefaultVersion" xml:space="preserve"><value>Default {0}</value></data>
+  <data name="LatestVersion" xml:space="preserve"><value>Latest {0}</value></data>
+  <data name="Owner" xml:space="preserve"><value>Owner: {0}</value></data>
+  <data name="Created" xml:space="preserve"><value>Created: {0:g}</value></data>
+  <data name="DownloadVersion" xml:space="preserve"><value>Download version {0}</value></data>
+  <data name="ExtractionFailed" xml:space="preserve"><value>Text could not be extracted from {0}. The original file is still included.</value></data>
+  <data name="RejectedFiles" xml:space="preserve"><value>Could not add: {0}. Drop individual files, check file access and the 25 MB per-file limit. Other files were kept.</value></data>
+  <data name="AttachmentHttpError" xml:space="preserve"><value>The attachment server returned HTTP {0}. No credentials or automatic redirects were sent.</value></data>
+  <data name="ShowActivity" xml:space="preserve"><value>Show activity {0}: {1}</value></data>
+  <data name="ShowSources" xml:space="preserve"><value>Show sources ({0})</value></data>
+  <data name="ShowAttachments" xml:space="preserve"><value>Show attachments ({0})</value></data>
+  <data name="SourceHost" xml:space="preserve"><value>Sources from {0}</value></data>
+  <data name="DownloadFile" xml:space="preserve"><value>Download {0}</value></data>
+  <data name="ManagedExited" xml:space="preserve"><value>The managed {0} service exited (code {1}). Refresh the catalog to restart it.</value></data>
+  <data name="ManagedStartFailed" xml:space="preserve"><value>The managed {0} service could not be started.</value></data>
+  <data name="ManagedStartupFailed" xml:space="preserve"><value>The managed {0} service failed during startup (code {1}). Check the bundled runtime configuration.</value></data>
+  <data name="ManagedMissing" xml:space="preserve"><value>The managed {0} runtime is missing. Publish with the bundled runtimes or configure a remote gateway.</value></data>
+  <data name="RestartRequired" xml:space="preserve"><value>Language saved. Restart the app to apply the new language.</value></data>
+  <data name="RestartHint" xml:space="preserve"><value>Language changes take effect after restarting the app.</value></data>
+  <data name="StartupFailed" xml:space="preserve"><value>The app could not start. Check settings and local storage permissions.</value></data>
+  <data name="ManagedLocal" xml:space="preserve"><value>Managed local</value></data>
+  <data name="Remote" xml:space="preserve"><value>Remote</value></data>
+  <data name="AiLocation" xml:space="preserve"><value>AI gateway location</value></data>
+  <data name="AgentsLocation" xml:space="preserve"><value>Agents gateway location</value></data>
+  <data name="AiUrl" xml:space="preserve"><value>AI gateway remote HTTPS URL</value></data>
+  <data name="AgentsUrl" xml:space="preserve"><value>Agents gateway remote HTTPS URL</value></data>
+  <data name="Extraction" xml:space="preserve"><value>Document-to-text extraction</value></data>
+  <data name="ExtractionHint" xml:space="preserve"><value>Extract text from local PDFs for model chat. Original files are always included. Agent chat sends originals only.</value></data>
+  <data name="ConnectionsHint" xml:space="preserve"><value>Connections and history are isolated by this configuration. Use the user profile menu to manage API keys or your enterprise account. Changing a remote destination changes where your prompts and configured credentials are sent.</value></data>
+  <data name="On" xml:space="preserve"><value>On</value></data>
+  <data name="Off" xml:space="preserve"><value>Off</value></data>
+  <data name="StatusComplete" xml:space="preserve"><value>complete</value></data>
+  <data name="StatusStreaming" xml:space="preserve"><value>streaming</value></data>
+  <data name="StatusInterrupted" xml:space="preserve"><value>interrupted</value></data>
+  <data name="StatusStopped" xml:space="preserve"><value>stopped</value></data>
+  <data name="StatusFailed" xml:space="preserve"><value>failed</value></data>
+  <data name="StatusApprovalRequired" xml:space="preserve"><value>approval required</value></data>
+  <data name="SettingsDialog.Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsDialog.PrimaryButtonText" xml:space="preserve"><value>Save</value></data>
+  <data name="SettingsDialog.CloseButtonText" xml:space="preserve"><value>Cancel</value></data>
+  <data name="SettingsTabs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsGeneral.Text" xml:space="preserve"><value>General</value></data>
+  <data name="SettingsEndpoints.Text" xml:space="preserve"><value>Endpoints</value></data>
+  <data name="SettingsAttachments.Text" xml:space="preserve"><value>Attachments</value></data>
+  <data name="SettingsGeneralTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>General</value></data>
+  <data name="SettingsEndpointsTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Endpoints</value></data>
+  <data name="SettingsAttachmentsTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Attachments</value></data>
+  <data name="SettingsLanguage.Header" xml:space="preserve"><value>Language</value></data>
+  <data name="SettingsRestartHint.Text" xml:space="preserve"><value>Language changes take effect after restarting the app.</value></data>
+  <data name="SettingsAiLocation.Header" xml:space="preserve"><value>AI gateway location</value></data>
+  <data name="SettingsAiUrl.Header" xml:space="preserve"><value>AI gateway remote HTTPS URL</value></data>
+  <data name="SettingsAgentsLocation.Header" xml:space="preserve"><value>Agents gateway location</value></data>
+  <data name="SettingsAgentsUrl.Header" xml:space="preserve"><value>Agents gateway remote HTTPS URL</value></data>
+  <data name="SettingsConnectionsHint.Text" xml:space="preserve"><value>Connections and history are isolated by this configuration. Use the user profile menu to manage API keys or your enterprise account. Changing a remote destination changes where your prompts and configured credentials are sent.</value></data>
+  <data name="SettingsExtraction.Header" xml:space="preserve"><value>Document-to-text extraction</value></data>
+  <data name="SettingsExtraction.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="SettingsExtraction.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="SettingsExtractionHint.Text" xml:space="preserve"><value>Extract text from local PDFs for model chat. Original files are always included. Agent chat sends originals only.</value></data>
+</root>

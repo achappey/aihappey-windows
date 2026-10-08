@@ -8,11 +8,9 @@ public sealed class MainWindow : Window
     private readonly ChatShell shell;
     private readonly SystemAppearance appearance;
     private bool allowClose;
-    public MainWindow()
+    public MainWindow(DesktopSession session)
     {
         Title = DesktopBranding.AppName + " — Enterprise";
-        var config = EnterpriseConfiguration.Load();
-        var session = new DesktopSession(new EntraAuthentication(config), new RemoteRuntimeResolver(), config.Settings);
         shell = new ChatShell(session);
         appearance = new SystemAppearance(shell);
         Content = shell;

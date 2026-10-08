@@ -8,13 +8,13 @@ namespace AIHappey.Desktop.Core;
 public sealed class UrlAttachmentDialog : ContentDialog
 {
     private readonly Func<string, CancellationToken, Task<string?>> resolve;
-    private readonly TextBox url = new() { Name = "AttachmentUrl", Header = "URL (publicly accessible)", PlaceholderText = "https://", TextWrapping = TextWrapping.NoWrap };
+    private readonly TextBox url = new() { Name = "AttachmentUrl", Header = DesktopResources.Get("PublicUrl"), PlaceholderText = "https://", TextWrapping = TextWrapping.NoWrap };
     private readonly StackPanel pending = new() { Orientation = Orientation.Horizontal, Spacing = 8, Visibility = Visibility.Collapsed };
     private readonly TextBlock detectedLabel = new() { VerticalAlignment = VerticalAlignment.Center };
     private readonly Border badge;
     private readonly StackPanel fallback = new() { Spacing = 8, Visibility = Visibility.Collapsed };
-    private readonly ComboBox types = new() { Name = "AttachmentMediaType", Header = "MIME type", HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly TextBox custom = new() { Name = "CustomAttachmentMediaType", Header = "Custom MIME type", Visibility = Visibility.Collapsed };
+    private readonly ComboBox types = new() { Name = "AttachmentMediaType", Header = DesktopResources.Get("MimeType"), HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly TextBox custom = new() { Name = "CustomAttachmentMediaType", Header = DesktopResources.Get("CustomMimeType"), Visibility = Visibility.Collapsed };
     private readonly TextBlock error = new() { Name = "AttachmentValidation", TextWrapping = TextWrapping.Wrap };
     private CancellationTokenSource? detection;
     private string? checkedUrl;
@@ -25,12 +25,12 @@ public sealed class UrlAttachmentDialog : ContentDialog
     public UrlAttachmentDialog(Func<string, CancellationToken, Task<string?>> resolve)
     {
         this.resolve = resolve;
-        Title = "Link"; PrimaryButtonText = "Add"; CloseButtonText = "Cancel";
+        Title = DesktopResources.Get("Link"); PrimaryButtonText = DesktopResources.Get("Add"); CloseButtonText = DesktopResources.Get("Cancel");
         DefaultButton = ContentDialogButton.Primary; IsPrimaryButtonEnabled = false;
         var panel = new StackPanel { Spacing = 12, MinWidth = 240, MaxWidth = 540 };
         panel.Children.Add(url);
         pending.Children.Add(new ProgressRing { Width = 20, Height = 20, IsActive = true });
-        pending.Children.Add(new TextBlock { Text = "Detecting MIME type…", VerticalAlignment = VerticalAlignment.Center });
+        pending.Children.Add(new TextBlock { Text = DesktopResources.Get("DetectingMime"), VerticalAlignment = VerticalAlignment.Center });
         panel.Children.Add(pending);
         var badgeContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         badgeContent.Children.Add(new FontIcon { Glyph = "\uE723", FontSize = 14 }); badgeContent.Children.Add(detectedLabel);
@@ -38,12 +38,12 @@ public sealed class UrlAttachmentDialog : ContentDialog
         ControlAppearance.TokenBadge(badge); panel.Children.Add(badge);
         types.Items.Add("Choose a MIME type");
         foreach (var type in UrlAttachments.CommonMediaTypes) types.Items.Add(type);
-        types.Items.Add("Custom"); types.SelectedIndex = 0;
+        types.Items.Add(DesktopResources.Get("Custom")); types.SelectedIndex = 0;
         fallback.Children.Add(types); fallback.Children.Add(custom);
-        fallback.Children.Add(new TextBlock { Text = "MIME type could not be detected. Select the type of content at this URL.", TextWrapping = TextWrapping.Wrap });
+        fallback.Children.Add(new TextBlock { Text = DesktopResources.Get("MimeNotDetected"), TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(fallback); panel.Children.Add(error); Content = panel;
-        AutomationProperties.SetName(url, "URL (publicly accessible)");
-        AutomationProperties.SetName(types, "MIME type"); AutomationProperties.SetName(custom, "Custom MIME type");
+        AutomationProperties.SetName(url, DesktopResources.Get("PublicUrl"));
+        AutomationProperties.SetName(types, DesktopResources.Get("MimeType")); AutomationProperties.SetName(custom, DesktopResources.Get("CustomMimeType"));
         AutomationProperties.SetLiveSetting(error, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         AutomationProperties.SetLiveSetting(detectedLabel, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         foreach (var control in new Control[] { url, types, custom }) ControlAppearance.Native(control);
@@ -60,14 +60,14 @@ public sealed class UrlAttachmentDialog : ContentDialog
     }
 
     private string? MediaType() => checkedUrl == url.Text.Trim() && UrlAttachments.IsHttpUrl(checkedUrl)
-        ? detected ?? (types.SelectedItem as string == "Custom" ? UrlAttachments.ValidMediaType(custom.Text)
+        ? detected ?? (types.SelectedItem as string == DesktopResources.Get("Custom") ? UrlAttachments.ValidMediaType(custom.Text)
             : types.SelectedIndex > 0 ? UrlAttachments.ValidMediaType(types.SelectedItem as string) : null) : null;
 
     private void UpdateValidation()
     {
-        custom.Visibility = types.SelectedItem as string == "Custom" ? Visibility.Visible : Visibility.Collapsed;
+        custom.Visibility = types.SelectedItem as string == DesktopResources.Get("Custom") ? Visibility.Visible : Visibility.Collapsed;
         IsPrimaryButtonEnabled = !closed && MediaType() is not null;
-        error.Text = url.Text.Length > 0 && !UrlAttachments.IsHttpUrl(url.Text) ? "Enter a valid HTTP or HTTPS URL without credentials."
+        error.Text = url.Text.Length > 0 && !UrlAttachments.IsHttpUrl(url.Text) ? DesktopResources.Get("InvalidPublicUrl")
             : custom.Visibility == Visibility.Visible && custom.Text.Length > 0 && UrlAttachments.ValidMediaType(custom.Text) is null ? "Enter a valid MIME type, such as application/pdf." : "";
     }
 

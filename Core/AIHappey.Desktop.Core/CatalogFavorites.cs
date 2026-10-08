@@ -12,7 +12,7 @@ public sealed class CatalogFavoritesStore(string directory)
         if (!File.Exists(path)) return new(StringComparer.Ordinal);
         await using var stream = File.OpenRead(path);
         var value = await JsonSerializer.DeserializeAsync<Document>(stream, cancellationToken: ct);
-        if (value is null || value.Version != 1) throw new InvalidOperationException("The saved catalog favorites format is unsupported.");
+        if (value is null || value.Version != 1) throw new InvalidOperationException(DesktopResources.Get("UnsupportedFavorites"));
         return new(value.Keys.Where(key => !string.IsNullOrWhiteSpace(key)), StringComparer.Ordinal);
     }
 
@@ -36,7 +36,7 @@ public sealed class CatalogFavoritesStore(string directory)
     private string FilePath(string partition)
     {
         if (partition.Length != 64 || partition.Any(character => !Uri.IsHexDigit(character)))
-            throw new InvalidOperationException("Invalid catalog favorites partition.");
+            throw new InvalidOperationException(DesktopResources.Get("InvalidFavoritesPartition"));
         return Path.Combine(directory, partition + ".json");
     }
     private sealed class Document

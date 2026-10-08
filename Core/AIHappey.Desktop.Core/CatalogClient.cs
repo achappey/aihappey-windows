@@ -33,10 +33,10 @@ public sealed class DesktopCatalogClient(DesktopChatClient requests, HttpClient 
             items.AddRange(Data(root).EnumerateArray().Select(project).OfType<T>());
             if (!root.TryGetProperty("has_more", out var more) || more.ValueKind == JsonValueKind.False) return items.DistinctBy(key).ToArray();
             if (more.ValueKind != JsonValueKind.True || CatalogProjection.Text(root, "last_id") is not { } next || !cursors.Add(next))
-                throw new GatewayException("The service returned an invalid catalog continuation.");
+                throw new GatewayException(DesktopResources.Get("InvalidCatalogContinuation"));
             cursor = next;
         }
-        throw new GatewayException("The catalog exceeded the supported page limit.");
+        throw new GatewayException(DesktopResources.Get("CatalogPageLimit"));
     }
 
     public async Task<byte[]> DownloadSkillAsync(string skillId, string? version, CancellationToken ct)
@@ -46,11 +46,11 @@ public sealed class DesktopCatalogClient(DesktopChatClient requests, HttpClient 
         request.Headers.Accept.ParseAdd("application/zip");
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         DesktopChatClient.CheckResponse(response);
-        if (response.Content.Headers.ContentType?.MediaType != "application/zip") throw new GatewayException("The service did not return a skill ZIP archive.");
+        if (response.Content.Headers.ContentType?.MediaType != "application/zip") throw new GatewayException(DesktopResources.Get("SkillZipRequired"));
         var bytes = await ReadBoundedAsync(response.Content, MaxDownloadBytes, ct);
         if (bytes.Length < 4 || bytes[0] != 'P' || bytes[1] != 'K'
             || !((bytes[2] == 3 && bytes[3] == 4) || (bytes[2] == 5 && bytes[3] == 6)))
-            throw new GatewayException("The service returned invalid skill archive content.");
+            throw new GatewayException(DesktopResources.Get("InvalidSkillArchive"));
         return bytes;
     }
 
@@ -60,23 +60,23 @@ public sealed class DesktopCatalogClient(DesktopChatClient requests, HttpClient 
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         DesktopChatClient.CheckResponse(response);
         try { return JsonDocument.Parse(await ReadBoundedAsync(response.Content, MaxCatalogBytes, ct)); }
-        catch (JsonException) { throw new GatewayException("The service returned an invalid catalog document."); }
+        catch (JsonException) { throw new GatewayException(DesktopResources.Get("InvalidCatalogDocument")); }
     }
 
     private static JsonElement Data(JsonElement root) => root.ValueKind == JsonValueKind.Object
         && root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array ? data
-        : throw new GatewayException("The service returned an invalid catalog list.");
+        : throw new GatewayException(DesktopResources.Get("InvalidCatalogList"));
 
     internal static async Task<byte[]> ReadBoundedAsync(HttpContent content, int limit, CancellationToken ct)
     {
-        if (content.Headers.ContentLength > limit) throw new GatewayException("The service response exceeded the supported size.");
+        if (content.Headers.ContentLength > limit) throw new GatewayException(DesktopResources.Get("ResponseSizeLimit"));
         await using var stream = await content.ReadAsStreamAsync(ct);
         using var buffer = new MemoryStream();
         var chunk = new byte[81920];
         int read;
         while ((read = await stream.ReadAsync(chunk, ct)) != 0)
         {
-            if (buffer.Length + read > limit) throw new GatewayException("The service response exceeded the supported size.");
+            if (buffer.Length + read > limit) throw new GatewayException(DesktopResources.Get("ResponseSizeLimit"));
             buffer.Write(chunk, 0, read);
         }
         return buffer.ToArray();

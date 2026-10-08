@@ -13,7 +13,7 @@ public sealed class HeaderAuthentication : IDesktopHost
     private Dictionary<string, string>? headers;
     public string ProfileId => "HeaderAuth";
     public bool AllowLocal => true;
-    public string AccountLabel => "API keys";
+    public string AccountLabel => DesktopResources.Get("ApiKeys");
     public string HistoryIdentity => "public-user";
 
     public async Task AuthenticateAsync(HttpRequestMessage request, ServiceKind service, CancellationToken cancellationToken)
@@ -34,7 +34,7 @@ public sealed class HeaderAuthentication : IDesktopHost
             finally { CryptographicOperations.ZeroMemory(plain); }
         }
         catch (Exception e) when (e is CryptographicException or JsonException or IOException or UnauthorizedAccessException or ArgumentException)
-        { throw new InvalidOperationException("The protected API-key store could not be read. Restore or remove credentials.bin in the HeaderAuth data directory."); }
+        { throw new InvalidOperationException(DesktopResources.Get("ApiKeysReadFailed")); }
     }
 
     public static void Validate(IReadOnlyDictionary<string, string> values)
@@ -44,7 +44,7 @@ public sealed class HeaderAuthentication : IDesktopHost
             if (!name.StartsWith("X-", StringComparison.OrdinalIgnoreCase) || name.Length < 3
                 || name.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-')
                 || value.Contains('\r') || value.Contains('\n') || string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException("Use valid X- provider header names and non-empty, single-line API keys.");
+                throw new ArgumentException(DesktopResources.Get("InvalidProviderHeaders"));
         }
     }
 
@@ -52,7 +52,7 @@ public sealed class HeaderAuthentication : IDesktopHost
     {
         await LoadAsync(cancellationToken);
         var panel = new StackPanel { Spacing = 12, MinWidth = 420 };
-        panel.Children.Add(new TextBlock { Text = "Keys are protected for your Windows account. They are sent as HTTP headers to the selected local or remote gateways. Add the provider's exact header name, for example X-OpenAI-Key or X-Anthropic-Key. No keys are included in chat history.", TextWrapping = TextWrapping.Wrap, MaxWidth = 440 });
+        panel.Children.Add(new TextBlock { Text = DesktopResources.Get("ApiKeysHint"), TextWrapping = TextWrapping.Wrap, MaxWidth = 440 });
         var rows = new StackPanel { Spacing = 8 };
         var entries = new List<(TextBox Name, PasswordBox Key, Grid Row)>();
         void Add(string name, string key)
@@ -62,8 +62,8 @@ public sealed class HeaderAuthentication : IDesktopHost
             row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
             var field = new TextBox { Text = name, PlaceholderText = "X-OpenAI-Key" };
-            var secret = new PasswordBox { Password = key, PlaceholderText = "API key" };
-            var remove = new Button { Content = "Remove" };
+            var secret = new PasswordBox { Password = key, PlaceholderText = DesktopResources.Get("ApiKey") };
+            var remove = new Button { Content = DesktopResources.Get("Remove") };
             row.Children.Add(field); Grid.SetColumn(secret, 1); row.Children.Add(secret); Grid.SetColumn(remove, 2); row.Children.Add(remove);
             entries.Add((field, secret, row)); rows.Children.Add(row);
             remove.Click += (_, _) => { entries.RemoveAll(x => x.Row == row); rows.Children.Remove(row); };
@@ -71,9 +71,9 @@ public sealed class HeaderAuthentication : IDesktopHost
         foreach (var item in headers!) Add(item.Key, item.Value);
         if (entries.Count == 0) Add("X-OpenAI-Key", "");
         panel.Children.Add(new ScrollViewer { Content = rows, MaxHeight = 320 });
-        var add = new Button { Content = "Add provider key" }; add.Click += (_, _) => Add("", ""); panel.Children.Add(add);
+        var add = new Button { Content = DesktopResources.Get("AddProviderKey") }; add.Click += (_, _) => Add("", ""); panel.Children.Add(add);
         var error = new TextBlock { TextWrapping = TextWrapping.Wrap }; panel.Children.Add(error);
-        var dialog = new ContentDialog { XamlRoot = (XamlRoot)xamlRoot, Title = "Provider API keys", Content = panel, PrimaryButtonText = "Save", CloseButtonText = "Cancel" };
+        var dialog = new ContentDialog { XamlRoot = (XamlRoot)xamlRoot, Title = DesktopResources.Get("ProviderApiKeys"), Content = panel, PrimaryButtonText = DesktopResources.Get("Save"), CloseButtonText = DesktopResources.Get("Cancel") };
         SystemAppearance.PrepareDialog(dialog);
         Dictionary<string, string>? next = null;
         dialog.PrimaryButtonClick += (_, args) =>
@@ -84,7 +84,7 @@ public sealed class HeaderAuthentication : IDesktopHost
                 foreach (var entry in entries)
                 {
                     if (string.IsNullOrWhiteSpace(entry.Key.Password)) continue;
-                    if (!next.TryAdd(entry.Name.Text.Trim(), entry.Key.Password.Trim())) throw new ArgumentException("Provider header names must be unique.");
+                    if (!next.TryAdd(entry.Name.Text.Trim(), entry.Key.Password.Trim())) throw new ArgumentException(DesktopResources.Get("UniqueProviderHeaders"));
                 }
                 Validate(next);
             }

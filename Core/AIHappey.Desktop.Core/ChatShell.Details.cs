@@ -15,7 +15,7 @@ public sealed partial class ChatShell
     private readonly SplitView details = new() { Name = "DetailsSplit", PanePlacement = SplitViewPanePlacement.Right,
         DisplayMode = SplitViewDisplayMode.Overlay, IsPaneOpen = false, OpenPaneLength = 440, CompactPaneLength = 0 };
     private readonly StackPanel detailsBody = new() { Name = "DetailsBody", Spacing = 12, Padding = new Thickness(16) };
-    private readonly TextBlock detailsTitle = new() { Text = "Details", FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+    private readonly TextBlock detailsTitle = new() { Text = DesktopResources.Get("Details"), FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center };
     private string? detailsConversation;
     private string? detailsBlock;
     private string? detailsKind;
@@ -33,7 +33,7 @@ public sealed partial class ChatShell
         header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         header.Children.Add(detailsTitle);
-        var close = ActivityButton("Close details", "\uE711"); close.Name = "CloseDetails";
+        var close = ActivityButton(DesktopResources.Get("CloseDetails"), "\uE711"); close.Name = "CloseDetails";
         close.Click += (_, _) => details.IsPaneOpen = false;
         Grid.SetColumn(close, 1); header.Children.Add(close); panel.Children.Add(header);
         var viewer = new ScrollViewer { Content = detailsBody, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
@@ -125,14 +125,14 @@ public sealed partial class ChatShell
         detailsBody.Children.Clear();
         if (detailsKind == "activity")
         {
-            detailsTitle.Text = "Activity";
+            detailsTitle.Text = DesktopResources.Get("Activity");
             var key = current.Id + ":" + row.Block.Key;
             var selected = activityPages.TryGetValue(key, out var page) ? Math.Clamp(page, 0, row.Block.Parts.Count - 1) : row.Block.Parts.Count - 1;
             for (var index = 0; index < row.Block.Parts.Count; index++)
             {
                 var part = row.Block.Parts[index]; var chosen = index;
-                var title = part.Type == "reasoning" ? "Reasoning" : PortableConversations.ToolName(part);
-                var button = FooterButton($"Show activity {index + 1}: {title}", $"{index + 1}. {title}"); button.Name = "ActivityListItem";
+                var title = part.Type == "reasoning" ? DesktopResources.Get("Reasoning") : PortableConversations.ToolName(part);
+                var button = FooterButton(DesktopResources.Format("ShowActivity", index + 1, title), $"{index + 1}. {title}"); button.Name = "ActivityListItem";
                 button.HorizontalAlignment = HorizontalAlignment.Stretch; button.HorizontalContentAlignment = HorizontalAlignment.Left;
                 if (index == selected) ControlAppearance.Native(button);
                 button.Click += (_, _) => { activityPages[key] = chosen; RenderTranscript(); };
@@ -142,9 +142,9 @@ public sealed partial class ChatShell
         }
         if (detailsKind == "sources")
         {
-            detailsTitle.Text = "Sources";
+            detailsTitle.Text = DesktopResources.Get("Sources");
             var filters = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-            var all = FooterButton("All sources", $"All ({row.Sources.Count})");
+            var all = FooterButton(DesktopResources.Get("AllSources"), $"All ({row.Sources.Count})");
             all.Click += (_, _) => { sourceHost = null; RefreshDetails(); }; filters.Children.Add(all);
             foreach (var group in row.Sources.Where(source => source.Host is not null).GroupBy(source => source.Host!))
             {
@@ -160,25 +160,25 @@ public sealed partial class ChatShell
                 if (source.Url is not null) card.Children.Add(SelectableText(source.Url));
                 if (source.Filename is not null) card.Children.Add(SelectableText(source.Filename));
                 var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-                var copy = ActivityButton("Copy source", "\uE8C8"); copy.Click += (_, _) => CopyDetails(source.Url ?? source.Title); actions.Children.Add(copy);
+                var copy = ActivityButton(DesktopResources.Get("CopySource"), "\uE8C8"); copy.Click += (_, _) => CopyDetails(source.Url ?? source.Title); actions.Children.Add(copy);
                 if (AttachmentDownloads.RemoteUri(source.Url) is { } uri)
                 {
-                    var open = ActivityButton("Open source in browser", "\uE8A7");
-                    open.Click += async (_, _) => { try { await Launcher.LaunchUriAsync(uri); } catch { Show("The source could not be opened.", InfoBarSeverity.Warning); } }; actions.Children.Add(open);
+                    var open = ActivityButton(DesktopResources.Get("OpenSource"), "\uE8A7");
+                    open.Click += async (_, _) => { try { await Launcher.LaunchUriAsync(uri); } catch { Show(DesktopResources.Get("SourceOpenFailed"), InfoBarSeverity.Warning); } }; actions.Children.Add(open);
                 }
                 card.Children.Add(actions);
             }
             return;
         }
-        detailsTitle.Text = "Attachments";
+        detailsTitle.Text = DesktopResources.Get("Attachments");
         foreach (var file in row.Attachments)
         {
             var card = DetailsCard(file.Name); card.Children.Add(SelectableText(file.MediaType));
             if (file.ResourceUri is not null) card.Children.Add(SelectableText(file.ResourceUri));
-            var download = FooterButton("Download " + file.Name, "Download", "\uE896"); download.Name = "DownloadAttachment";
+            var download = FooterButton(DesktopResources.Format("DownloadFile", file.Name), DesktopResources.Get("Download"), "\uE896"); download.Name = "DownloadAttachment";
             download.IsEnabled = !downloading && AttachmentDownloads.CanDownload(file);
             download.Click += async (_, _) => await DownloadAttachmentAsync(file); card.Children.Add(download);
-            if (!AttachmentDownloads.CanDownload(file)) card.Children.Add(SelectableText("This resource needs browser or MCP access. Its reference is retained in the conversation."));
+            if (!AttachmentDownloads.CanDownload(file)) card.Children.Add(SelectableText(DesktopResources.Get("BrowserResourceHint")));
         }
     }
 
@@ -193,7 +193,7 @@ public sealed partial class ChatShell
     private void CopyDetails(string value)
     {
         try { var package = new Windows.ApplicationModel.DataTransfer.DataPackage(); package.SetText(value); Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package); }
-        catch { Show("The clipboard is currently unavailable.", InfoBarSeverity.Warning); }
+        catch { Show(DesktopResources.Get("ClipboardUnavailable"), InfoBarSeverity.Warning); }
     }
 
     private async Task DownloadAttachmentAsync(MessageAttachment attachment)
@@ -216,10 +216,10 @@ public sealed partial class ChatShell
             await AttachmentDownloads.WriteAsync(attachment, buffer, downloadHttp, timeout.Token);
             await using var output = await destination.OpenStreamForWriteAsync();
             output.SetLength(0); buffer.Position = 0; await buffer.CopyToAsync(output, timeout.Token);
-            Show("Attachment downloaded.", InfoBarSeverity.Success);
+            Show(DesktopResources.Get("AttachmentDownloaded"), InfoBarSeverity.Success);
         }
-        catch (OperationCanceledException) { if (!closing) Show("The download was canceled or timed out.", InfoBarSeverity.Warning); }
-        catch (Exception error) { Show(error is InvalidOperationException ? error.Message : "The attachment could not be downloaded. Check the destination and network connection.", InfoBarSeverity.Warning); }
+        catch (OperationCanceledException) { if (!closing) Show(DesktopResources.Get("DownloadCanceled"), InfoBarSeverity.Warning); }
+        catch (Exception error) { Show(error is InvalidOperationException ? error.Message : DesktopResources.Get("DownloadFailed"), InfoBarSeverity.Warning); }
         finally { downloading = false; if (!closing) RefreshDetails(); }
     }
 }

@@ -75,20 +75,20 @@ public static class AttachmentDownloads
         else if (file.Url?.StartsWith("data:", StringComparison.OrdinalIgnoreCase) == true)
         {
             var comma = file.Url.IndexOf(',');
-            if (comma < 0) throw new InvalidOperationException("The attachment contains an invalid data URL.");
+            if (comma < 0) throw new InvalidOperationException(DesktopResources.Get("InvalidDataUrl"));
             var header = file.Url[..comma]; var payload = file.Url[(comma + 1)..];
-            if (payload.Length > MaximumBytes * 4L) throw new InvalidOperationException("This attachment exceeds the 64 MB download limit.");
+            if (payload.Length > MaximumBytes * 4L) throw new InvalidOperationException(DesktopResources.Get("DownloadLimit"));
             bytes = header.EndsWith(";base64", StringComparison.OrdinalIgnoreCase) ? DecodeBase64(Uri.UnescapeDataString(payload)) : DecodePercentBytes(payload);
         }
         else if (!string.IsNullOrWhiteSpace(file.Url) && !file.Url.Contains(':') && !file.Url.StartsWith('/') && !file.Url.Contains('\\')) bytes = DecodeBase64(file.Url);
-        if (bytes?.Length > MaximumBytes) throw new InvalidOperationException("This attachment exceeds the 64 MB download limit.");
+        if (bytes?.Length > MaximumBytes) throw new InvalidOperationException(DesktopResources.Get("DownloadLimit"));
         return bytes;
     }
     private static byte[] DecodeBase64(string text)
     {
-        if (text.Length > (MaximumBytes + 2L) / 3 * 4) throw new InvalidOperationException("This attachment exceeds the 64 MB download limit.");
+        if (text.Length > (MaximumBytes + 2L) / 3 * 4) throw new InvalidOperationException(DesktopResources.Get("DownloadLimit"));
         try { return Convert.FromBase64String(text); }
-        catch (FormatException) { throw new InvalidOperationException("The attachment contains invalid binary data."); }
+        catch (FormatException) { throw new InvalidOperationException(DesktopResources.Get("InvalidBinary")); }
     }
     private static byte[] DecodePercentBytes(string payload)
     {
@@ -102,24 +102,24 @@ public static class AttachmentDownloads
                 var count = char.IsHighSurrogate(payload[index]) && index + 1 < payload.Length && char.IsLowSurrogate(payload[index + 1]) ? 2 : 1;
                 output.Write(Encoding.UTF8.GetBytes(payload.Substring(index, count))); index += count - 1;
             }
-            if (output.Length > MaximumBytes) throw new InvalidOperationException("This attachment exceeds the 64 MB download limit.");
+            if (output.Length > MaximumBytes) throw new InvalidOperationException(DesktopResources.Get("DownloadLimit"));
         }
         return output.ToArray();
     }
     public static async Task WriteAsync(MessageAttachment file, Stream destination, HttpClient http, CancellationToken ct)
     {
         if (EmbeddedBytes(file) is { } bytes) { await destination.WriteAsync(bytes, ct); return; }
-        var uri = RemoteUri(file.Url) ?? throw new InvalidOperationException("This resource requires browser or MCP access and cannot be downloaded by desktop yet.");
+        var uri = RemoteUri(file.Url) ?? throw new InvalidOperationException(DesktopResources.Get("ResourceDownloadUnsupported"));
         using var request = new HttpRequestMessage(HttpMethod.Get, uri);
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-        if (!response.IsSuccessStatusCode) throw new InvalidOperationException($"The attachment server returned HTTP {(int)response.StatusCode}. No credentials or automatic redirects were sent.");
-        if (response.Content.Headers.ContentLength > MaximumBytes) throw new InvalidOperationException("This attachment exceeds the 64 MB download limit.");
+        if (!response.IsSuccessStatusCode) throw new InvalidOperationException(DesktopResources.Format("AttachmentHttpError", (int)response.StatusCode));
+        if (response.Content.Headers.ContentLength > MaximumBytes) throw new InvalidOperationException(DesktopResources.Get("DownloadLimit"));
         await using var source = await response.Content.ReadAsStreamAsync(ct);
         var buffer = new byte[81920]; long total = 0;
         while (await source.ReadAsync(buffer, ct) is var length && length > 0)
         {
             total += length;
-            if (total > MaximumBytes) throw new InvalidOperationException("This attachment exceeds the 64 MB download limit.");
+            if (total > MaximumBytes) throw new InvalidOperationException(DesktopResources.Get("DownloadLimit"));
             await destination.WriteAsync(buffer.AsMemory(0, length), ct);
         }
     }

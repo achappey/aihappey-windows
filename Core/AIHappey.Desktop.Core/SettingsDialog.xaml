@@ -1,0 +1,61 @@
+<ContentDialog
+    x:Class="AIHappey.Desktop.Core.SettingsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Uid="SettingsDialog"
+    DefaultButton="Primary">
+    <Grid x:Name="Layout" ColumnSpacing="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="NavigationColumn" Width="180" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border x:Name="NavigationSurface" CornerRadius="12" Padding="4">
+            <ListView x:Name="Tabs" SelectionMode="Single" IsItemClickEnabled="False"
+                      SelectionChanged="TabChanged" SelectedIndex="0" x:Uid="SettingsTabs">
+                <ListViewItem x:Name="GeneralTab" Tag="general" x:Uid="SettingsGeneralTab">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <SymbolIcon Symbol="Setting" />
+                        <TextBlock x:Uid="SettingsGeneral" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem x:Name="EndpointsTab" Tag="endpoints" x:Uid="SettingsEndpointsTab">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <FontIcon Glyph="&#xE95A;" />
+                        <TextBlock x:Uid="SettingsEndpoints" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem x:Name="AttachmentsTab" Tag="attachments" x:Uid="SettingsAttachmentsTab">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <FontIcon Glyph="&#xE723;" />
+                        <TextBlock x:Uid="SettingsAttachments" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+            </ListView>
+        </Border>
+        <ScrollViewer x:Name="PageScroll" Grid.Column="1" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled"
+                      HorizontalContentAlignment="Stretch">
+            <Grid Padding="0,4,8,8">
+                <StackPanel x:Name="GeneralPage" Spacing="16">
+                    <ComboBox x:Name="LanguageChoice" x:Uid="SettingsLanguage" HorizontalAlignment="Left" MinWidth="160">
+                        <ComboBoxItem Content="English" Tag="en" />
+                        <ComboBoxItem Content="Nederlands" Tag="nl" />
+                    </ComboBox>
+                    <TextBlock x:Uid="SettingsRestartHint" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel x:Name="EndpointsPage" Spacing="16" Visibility="Collapsed">
+                    <ComboBox x:Name="AiLocation" x:Uid="SettingsAiLocation" HorizontalAlignment="Stretch" />
+                    <TextBox x:Name="AiUrl" x:Uid="SettingsAiUrl" PlaceholderText="https://gateway.example.com/" />
+                    <ComboBox x:Name="AgentsLocation" x:Uid="SettingsAgentsLocation" HorizontalAlignment="Stretch" />
+                    <TextBox x:Name="AgentsUrl" x:Uid="SettingsAgentsUrl" PlaceholderText="https://gateway.example.com/" />
+                    <TextBlock x:Uid="SettingsConnectionsHint" TextWrapping="Wrap" />
+                    <TextBlock x:Name="Validation" TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive" />
+                </StackPanel>
+                <StackPanel x:Name="AttachmentsPage" Spacing="16" Visibility="Collapsed">
+                    <ToggleSwitch x:Name="DocumentTextExtraction" x:Uid="SettingsExtraction" />
+                    <TextBlock x:Uid="SettingsExtractionHint" TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</ContentDialog>

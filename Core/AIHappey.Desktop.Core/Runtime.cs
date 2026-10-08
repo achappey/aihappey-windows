@@ -14,6 +14,7 @@ public sealed class DesktopSettings
     public ServiceSettings Ai { get; set; } = new();
     public ServiceSettings Agents { get; set; } = new();
     public bool ConvertAttachmentsToText { get; set; } = true;
+    public string? Language { get; set; }
     public ServiceSettings For(ServiceKind kind) => kind == ServiceKind.Ai ? Ai : Agents;
 
     public void Validate(bool allowLocal)
@@ -21,7 +22,7 @@ public sealed class DesktopSettings
         foreach (var settings in new[] { Ai, Agents })
         {
             if (!allowLocal && settings.Location == RuntimeLocation.Local)
-                throw new InvalidOperationException("This host only supports remote gateways.");
+                throw new InvalidOperationException(DesktopResources.Get("RemoteOnly"));
             if (settings.Location == RuntimeLocation.Remote)
                 _ = RemoteUri(settings.RemoteUrl);
         }
@@ -33,7 +34,7 @@ public sealed class DesktopSettings
             || uri.Scheme != "https" || !string.IsNullOrEmpty(uri.UserInfo)
             || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment)
             || uri.IsLoopback)
-            throw new InvalidOperationException("Remote gateways must use an absolute HTTPS URL without credentials, query, or fragment; loopback is reserved for managed local mode.");
+            throw new InvalidOperationException(DesktopResources.Get("InvalidRemoteUrl"));
         return uri;
     }
 }
@@ -71,6 +72,7 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     public IDesktopHost Host { get; } = host;
     public IRuntimeResolver Runtime { get; } = runtime;
     public DesktopSettings Settings { get; set; } = settings;
+    public string ActiveLanguage { get; set; } = "en";
     public string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIHappey", "Desktop", Host.ProfileId);
     public string HistoryPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity,
         Settings.Ai.Location.ToString(), Settings.Ai.Location == RuntimeLocation.Remote ? Settings.Ai.RemoteUrl.TrimEnd('/') : "managed-ai",
