@@ -1,3 +1,4 @@
 {
+  "mcpCatalogUrls": [],
   "chatbotInstructions": "- Use **Markdown formatting** for your responses, including tables and lists, unless specifically instructed to output CSV.\n- Do **not** include base64 images; images are handled by the client.\n- Always respond in the user’s preferred language."
 }

@@ -1,3 +1,9 @@
 {
+  "mcpCatalogUrls": [
+    "https://mcp.aihappey.net/v0.1/servers",
+    "https://ai.aihappey.net/v0.1/servers",
+    "https://agents.aihappey.net/v0.1/servers",
+    "https://registry.modelcontextprotocol.io/v0.1/servers?limit=100&version=latest"
+  ],
   "chatbotInstructions": "- Use **Markdown formatting** for your responses, including tables and lists, unless specifically instructed to output CSV.\n- Do **not** include base64 images; images are handled by the client.\n- Always respond in the user’s preferred language."
 }

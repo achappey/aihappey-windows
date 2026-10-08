@@ -77,17 +77,22 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     public string ActiveLanguage { get; set; } = "en";
     public DesktopContextOptions ContextOptions { get; set; } = new();
     public ISystemContextComposer ContextComposer { get; set; } = new DesktopSystemContextComposer();
+    public IDesktopMcpClientFactory McpClientFactory { get; set; } = new DesktopMcpClientFactory();
+    public DesktopMcpManager? Mcp { get; private set; }
+    public string McpPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
+    public DesktopMcpManager InitializeMcp() => Mcp ??= new(McpClientFactory, new DesktopMcpStore(Path.Combine(DataDirectory, "mcp")));
     public Func<DateTimeOffset, System.Text.Json.Nodes.JsonObject> SystemInformationProvider { get; set; } = DesktopSystemContext.SystemInformation;
     public AIHappey.Vercel.Models.UIMessage CaptureSystemContext(bool darkMode = false,
-        System.Text.Json.Nodes.JsonObject? systemInformation = null, ChatPreferences? preferences = null)
+        System.Text.Json.Nodes.JsonObject? systemInformation = null, ChatPreferences? preferences = null, McpTurnSnapshot? mcp = null)
     {
         var now = DateTimeOffset.UtcNow;
         return ContextComposer.Compose(new(ContextOptions, systemInformation ?? SystemInformationProvider(now),
-            Host.UserContext, ActiveLanguage, darkMode, (preferences ?? Settings.Chat).SystemInstructions, now));
+            Host.UserContext, ActiveLanguage, darkMode, (preferences ?? Settings.Chat).SystemInstructions, now)
+            { Mcp = mcp ?? Mcp?.Capture() ?? McpTurnSnapshot.Empty });
     }
     public string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIHappey", "Desktop", Host.ProfileId);
     public string HistoryPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity,
         Settings.Ai.Location.ToString(), Settings.Ai.Location == RuntimeLocation.Remote ? Settings.Ai.RemoteUrl.TrimEnd('/') : "managed-ai",
         Settings.Agents.Location.ToString(), Settings.Agents.Location == RuntimeLocation.Remote ? Settings.Agents.RemoteUrl.TrimEnd('/') : "managed-agents");
-    public ValueTask DisposeAsync() => Runtime.DisposeAsync();
+    public async ValueTask DisposeAsync() { if (Mcp is not null) await Mcp.DisposeAsync(); await Runtime.DisposeAsync(); }
 }

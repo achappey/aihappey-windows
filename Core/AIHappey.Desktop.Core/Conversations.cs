@@ -38,6 +38,14 @@ public sealed class MessageAssembler(ConversationMessage output)
     public bool Finished { get; private set; }
     public bool ApprovalRequired { get; private set; }
 
+    public void Continue()
+    {
+        if (!Finished || output.Status != "complete") throw new InvalidOperationException("Only completed steps can continue.");
+        Finished = false; output.Status = "streaming";
+        // Text IDs are stream-local; tool IDs remain turn-wide to prevent repeated execution.
+        text.Clear(); reasoning.Clear(); data.Clear();
+    }
+
     public void Apply(StreamEvent item)
     {
         if (Finished || item.Type == "data-aihappey-debug") return;

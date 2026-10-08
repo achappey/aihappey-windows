@@ -45,7 +45,7 @@ public sealed class ChatPreferences
         return slash > 0 ? modelId[..slash].Trim().ToLowerInvariant() : null;
     }
 
-    public JsonObject RequestBody(string target, string conversationId, List<UIMessage> messages, string? providerKey)
+    public JsonObject RequestBody(string target, string conversationId, List<UIMessage> messages, string? providerKey, McpTurnSnapshot? mcp = null)
     {
         if (MaxOutputTokens is < 1) throw new InvalidOperationException(DesktopResources.Get("ChatTokensInvalid"));
         var request = new ChatRequest { Id = conversationId, Model = target, Messages = messages, MaxOutputTokens = MaxOutputTokens };
@@ -57,6 +57,7 @@ public sealed class ChatPreferences
         var body = JsonSerializer.SerializeToNode(request, PortableConversations.Json)!.AsObject();
         if (MaxOutputTokens is null) body.Remove("maxOutputTokens");
         if (request.ProviderMetadata is null) body.Remove("providerMetadata");
+        if (mcp is not null) body["tools"] = new JsonArray(mcp.Tools.Select(t => JsonNode.Parse(t.GetRawText())).ToArray());
         return body;
     }
 

@@ -523,5 +523,61 @@
   <data name="ChatForm_openai_realtimeSemanticEagerness" xml:space="preserve"><value>Gretigheid</value></data>
   <data name="ChatForm_openai_realtimeIncludeLogprobs" xml:space="preserve"><value>Logprobs van input-transcriptie opnemen</value></data>
   <data name="ChatForm_openai_realtimeTokenTtlSeconds" xml:space="preserve"><value>Levensduur token (seconden)</value></data>
+  <data name="All" xml:space="preserve"><value>Alle</value></data>
+  <data name="Name" xml:space="preserve"><value>Naam</value></data>
+  <data name="Edit" xml:space="preserve"><value>Bewerken</value></data>
+  <data name="Output" xml:space="preserve"><value>Uitvoer</value></data>
+  <data name="McpTitle" xml:space="preserve"><value>Model Context</value></data>
+  <data name="McpDescription" xml:space="preserve"><value>Verbind tools en diensten met je modellen via Model Context Protocol.</value></data>
+  <data name="McpAddServer" xml:space="preserve"><value>Server toevoegen</value></data>
+  <data name="McpInstalledServers" xml:space="preserve"><value>Geïnstalleerde servers</value></data>
+  <data name="McpManage" xml:space="preserve"><value>Beheren</value></data>
+  <data name="McpInstall" xml:space="preserve"><value>Installeren</value></data>
+  <data name="McpRemove" xml:space="preserve"><value>Verwijderen</value></data>
+  <data name="McpSearch" xml:space="preserve"><value>MCP-servers zoeken</value></data>
+  <data name="McpRefresh" xml:space="preserve"><value>MCP-registers vernieuwen</value></data>
+  <data name="McpRegistry" xml:space="preserve"><value>Register</value></data>
+  <data name="McpRegistryPartialFailure" xml:space="preserve"><value>Sommige registers konden niet volledig worden geladen. Beschikbare servers blijven zichtbaar. Probeer opnieuw om te vernieuwen.</value></data>
+  <data name="McpNoRegistries" xml:space="preserve"><value>Deze app heeft geen MCP-registers geconfigureerd. Je kunt handmatig een Streamable HTTP-server toevoegen.</value></data>
+  <data name="McpNoServers" xml:space="preserve"><value>Geen overeenkomende servers gevonden.</value></data>
+  <data name="McpNoInstalledServers" xml:space="preserve"><value>Geen servers geïnstalleerd. Installeer via Model Context of voeg een server-URL toe.</value></data>
+  <data name="McpEnableHint" xml:space="preserve"><value>Schakel vertrouwde servers in om hun tools beschikbaar te maken voor modelchat. Tools kunnen met jouw gegevens data lezen of wijzigen. Uitschakelen verbreekt de verbinding zonder de server te verwijderen.</value></data>
+  <data name="McpEnabled" xml:space="preserve"><value>Ingeschakeld</value></data>
+  <data name="McpDisabled" xml:space="preserve"><value>Uitgeschakeld</value></data>
+  <data name="McpStateDisabled" xml:space="preserve"><value>Niet verbonden</value></data>
+  <data name="McpStateConnecting" xml:space="preserve"><value>Verbinden…</value></data>
+  <data name="McpStateConnected" xml:space="preserve"><value>Verbonden</value></data>
+  <data name="McpStateError" xml:space="preserve"><value>Verbinding mislukt</value></data>
+  <data name="McpDisconnect" xml:space="preserve"><value>Verbinding met {0} verbreken</value></data>
+  <data name="McpToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
+  <data name="McpServerUrl" xml:space="preserve"><value>Streamable HTTP-server-URL</value></data>
+  <data name="McpHeadersHint" xml:space="preserve"><value>Optionele headers gaan alleen naar deze MCP-server en worden met je Windows-account beveiligd. Gatewaygegevens worden nooit doorgestuurd. Deze versie ondersteunt geen OAuth.</value></data>
+  <data name="McpAddHeader" xml:space="preserve"><value>Header toevoegen</value></data>
+  <data name="McpRemoveHeader" xml:space="preserve"><value>Header verwijderen</value></data>
+  <data name="McpHeaderName" xml:space="preserve"><value>Headernaam</value></data>
+  <data name="McpHeaderValue" xml:space="preserve"><value>Headerwaarde</value></data>
+  <data name="McpInvalidUrl" xml:space="preserve"><value>Gebruik een HTTPS-URL zonder aanmeldgegevens, query of fragment. HTTP is alleen toegestaan voor loopbackservers.</value></data>
+  <data name="McpInvalidHeaders" xml:space="preserve"><value>Controleer headernamen en waarden. Dubbele headers, besturingstekens, cookies en transport- of sessieheaders van de SDK zijn niet toegestaan.</value></data>
+  <data name="McpInvalidName" xml:space="preserve"><value>Een servernaam is verplicht (maximaal 256 tekens).</value></data>
+  <data name="McpServerLimit" xml:space="preserve"><value>Je kunt maximaal 200 verschillende servers installeren.</value></data>
+  <data name="McpAuthRequired" xml:space="preserve"><value>Deze server vereist authenticatie. Configureer de headers; interactieve MCP-OAuth wordt nog niet ondersteund.</value></data>
+  <data name="McpTimedOut" xml:space="preserve"><value>De MCP-bewerking is geannuleerd of heeft een time-out. Een toolaanroep is niet opnieuw geprobeerd.</value></data>
+  <data name="McpConnectionFailed" xml:space="preserve"><value>De MCP-bewerking is mislukt. Controleer de server-URL, headers en verbinding. Toolaanroepen worden niet automatisch opnieuw geprobeerd.</value></data>
+  <data name="McpDisconnected" xml:space="preserve"><value>De MCP-server is niet meer verbonden.</value></data>
+  <data name="McpInvalidArguments" xml:space="preserve"><value>Argumenten voor een MCP-tool moeten een JSON-object zijn.</value></data>
+  <data name="McpUnknownTool" xml:space="preserve"><value>Deze tool is niet beschikbaar in de actieve MCP-context.</value></data>
+  <data name="McpToolLimit" xml:space="preserve"><value>De limiet voor MCP-toolstappen is bereikt. Er zijn geen verdere toolaanroepen of modelverzoeken verzonden.</value></data>
+  <data name="McpResultTooLarge" xml:space="preserve"><value>Het MCP-resultaat is groter dan de ondersteunde limiet.</value></data>
+  <data name="McpInvalidStoredEntries" xml:space="preserve"><value>Sommige opgeslagen MCP-servers konden niet worden geladen of ontsleuteld. Voeg die servers opnieuw toe.</value></data>
+  <data name="McpReadOnly" xml:space="preserve"><value>Alleen-lezen</value></data>
+  <data name="McpIdempotent" xml:space="preserve"><value>Idempotent</value></data>
+  <data name="McpDestructive" xml:space="preserve"><value>Destructief</value></data>
+  <data name="McpOpenWorld" xml:space="preserve"><value>Open wereld</value></data>
+  <data name="McpMetadata" xml:space="preserve"><value>Metagegevens</value></data>
+  <data name="McpResources" xml:space="preserve"><value>Bronnen</value></data>
+  <data name="McpResourceTemplates" xml:space="preserve"><value>Bronsjablonen</value></data>
+  <data name="McpVersion" xml:space="preserve"><value>Versie</value></data>
+  <data name="McpWebsite" xml:space="preserve"><value>Website</value></data>
+  <data name="McpRepository" xml:space="preserve"><value>Repository</value></data>
+  <data name="McpServerProperties" xml:space="preserve"><value>Servereigenschappen</value></data>
 </root>
-

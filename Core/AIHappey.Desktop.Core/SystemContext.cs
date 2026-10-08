@@ -11,6 +11,7 @@ public sealed class DesktopContextOptions
 {
     public string? AppName { get; set; }
     public string? ChatbotInstructions { get; set; }
+    public string[] McpCatalogUrls { get; set; } = [];
 
     public static DesktopContextOptions Load(string path)
     {
@@ -24,7 +25,10 @@ public sealed class DesktopContextOptions
 public sealed record DesktopUserContext(string? Username = null, string? Name = null, string? Id = null, string? TenantId = null);
 
 public sealed record SystemContextInput(DesktopContextOptions Options, JsonObject SystemInformation,
-    DesktopUserContext? User, string PreferredLanguage, bool DarkMode, string? UserInstructions, DateTimeOffset Now);
+    DesktopUserContext? User, string PreferredLanguage, bool DarkMode, string? UserInstructions, DateTimeOffset Now)
+{
+    public McpTurnSnapshot Mcp { get; init; } = McpTurnSnapshot.Empty;
+}
 
 /// <summary>Hosts can replace composition, including adding future supported skills/MCP parts.</summary>
 public interface ISystemContextComposer
@@ -37,6 +41,7 @@ public sealed class DesktopSystemContextComposer : ISystemContextComposer
     public UIMessage Compose(SystemContextInput input)
     {
         var parts = new List<UIMessagePart>();
+        foreach (var block in input.Mcp.Context) parts.Add(Text(block.GetRawText()));
         if (!string.IsNullOrWhiteSpace(input.Options.ChatbotInstructions))
             parts.Add(Text(new JsonObject { ["chatBotInstructions"] = input.Options.ChatbotInstructions.Replace("\\n", "\n") }.ToJsonString()));
         var system = (JsonObject)input.SystemInformation.DeepClone();

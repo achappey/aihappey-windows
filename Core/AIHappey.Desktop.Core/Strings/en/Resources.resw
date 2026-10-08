@@ -527,4 +527,61 @@
   <data name="ChatForm_openai_realtimeSemanticEagerness" xml:space="preserve"><value>Eagerness</value></data>
   <data name="ChatForm_openai_realtimeIncludeLogprobs" xml:space="preserve"><value>Include input transcription logprobs</value></data>
   <data name="ChatForm_openai_realtimeTokenTtlSeconds" xml:space="preserve"><value>Token lifetime (seconds)</value></data>
+  <data name="All" xml:space="preserve"><value>All</value></data>
+  <data name="Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Output" xml:space="preserve"><value>Output</value></data>
+  <data name="McpTitle" xml:space="preserve"><value>Model Context</value></data>
+  <data name="McpDescription" xml:space="preserve"><value>Connect tools and services to your models with Model Context Protocol.</value></data>
+  <data name="McpAddServer" xml:space="preserve"><value>Add server</value></data>
+  <data name="McpInstalledServers" xml:space="preserve"><value>Installed servers</value></data>
+  <data name="McpManage" xml:space="preserve"><value>Manage</value></data>
+  <data name="McpInstall" xml:space="preserve"><value>Install</value></data>
+  <data name="McpRemove" xml:space="preserve"><value>Uninstall</value></data>
+  <data name="McpSearch" xml:space="preserve"><value>Search MCP servers</value></data>
+  <data name="McpRefresh" xml:space="preserve"><value>Refresh MCP registries</value></data>
+  <data name="McpRegistry" xml:space="preserve"><value>Registry</value></data>
+  <data name="McpRegistryPartialFailure" xml:space="preserve"><value>Some registries could not be fully loaded. Available servers are still shown. Retry to refresh.</value></data>
+  <data name="McpNoRegistries" xml:space="preserve"><value>No MCP registries are configured by this app. You can add a Streamable HTTP server manually.</value></data>
+  <data name="McpNoServers" xml:space="preserve"><value>No matching servers found.</value></data>
+  <data name="McpNoInstalledServers" xml:space="preserve"><value>No servers installed. Install from Model Context or add a server URL.</value></data>
+  <data name="McpEnableHint" xml:space="preserve"><value>Enable trusted servers to make their tools available to model chat. Tools may read or change data using your credentials. Disabling disconnects a server without uninstalling it.</value></data>
+  <data name="McpEnabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="McpDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="McpStateDisabled" xml:space="preserve"><value>Disconnected</value></data>
+  <data name="McpStateConnecting" xml:space="preserve"><value>Connecting…</value></data>
+  <data name="McpStateConnected" xml:space="preserve"><value>Connected</value></data>
+  <data name="McpStateError" xml:space="preserve"><value>Connection failed</value></data>
+  <data name="McpDisconnect" xml:space="preserve"><value>Disconnect {0}</value></data>
+  <data name="McpToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
+  <data name="McpServerUrl" xml:space="preserve"><value>Streamable HTTP server URL</value></data>
+  <data name="McpHeadersHint" xml:space="preserve"><value>Optional headers are sent only to this MCP server and protected with your Windows account. Gateway credentials are never forwarded. OAuth is not supported in this version.</value></data>
+  <data name="McpAddHeader" xml:space="preserve"><value>Add header</value></data>
+  <data name="McpRemoveHeader" xml:space="preserve"><value>Remove header</value></data>
+  <data name="McpHeaderName" xml:space="preserve"><value>Header name</value></data>
+  <data name="McpHeaderValue" xml:space="preserve"><value>Header value</value></data>
+  <data name="McpInvalidUrl" xml:space="preserve"><value>Use an HTTPS URL without credentials, query, or fragment. HTTP is allowed only for loopback servers.</value></data>
+  <data name="McpInvalidHeaders" xml:space="preserve"><value>Check header names and values. Duplicate, control-character, cookie, and SDK-owned transport/session headers are not allowed.</value></data>
+  <data name="McpInvalidName" xml:space="preserve"><value>A server name is required (up to 256 characters).</value></data>
+  <data name="McpServerLimit" xml:space="preserve"><value>Up to 200 distinct servers can be installed.</value></data>
+  <data name="McpAuthRequired" xml:space="preserve"><value>This server requires authentication. Configure its headers; interactive MCP OAuth is not yet supported.</value></data>
+  <data name="McpTimedOut" xml:space="preserve"><value>The MCP operation was canceled or timed out. A tool call was not retried.</value></data>
+  <data name="McpConnectionFailed" xml:space="preserve"><value>The MCP operation failed. Check the server URL, headers, and connection. Tool calls are not retried automatically.</value></data>
+  <data name="McpDisconnected" xml:space="preserve"><value>The MCP server is no longer connected.</value></data>
+  <data name="McpInvalidArguments" xml:space="preserve"><value>MCP tool arguments must be a JSON object.</value></data>
+  <data name="McpUnknownTool" xml:space="preserve"><value>This tool is not available in the active MCP context.</value></data>
+  <data name="McpToolLimit" xml:space="preserve"><value>The MCP tool continuation limit was reached. No further tool calls or inference requests were sent.</value></data>
+  <data name="McpResultTooLarge" xml:space="preserve"><value>The MCP result exceeds the supported size.</value></data>
+  <data name="McpInvalidStoredEntries" xml:space="preserve"><value>Some saved MCP entries could not be loaded or decrypted. Add those servers again.</value></data>
+  <data name="McpReadOnly" xml:space="preserve"><value>Read-only</value></data>
+  <data name="McpIdempotent" xml:space="preserve"><value>Idempotent</value></data>
+  <data name="McpDestructive" xml:space="preserve"><value>Destructive</value></data>
+  <data name="McpOpenWorld" xml:space="preserve"><value>Open world</value></data>
+  <data name="McpMetadata" xml:space="preserve"><value>Metadata</value></data>
+  <data name="McpResources" xml:space="preserve"><value>Resources</value></data>
+  <data name="McpResourceTemplates" xml:space="preserve"><value>Resource templates</value></data>
+  <data name="McpVersion" xml:space="preserve"><value>Version</value></data>
+  <data name="McpWebsite" xml:space="preserve"><value>Website</value></data>
+  <data name="McpRepository" xml:space="preserve"><value>Repository</value></data>
+  <data name="McpServerProperties" xml:space="preserve"><value>Server properties</value></data>
 </root>

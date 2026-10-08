@@ -18,7 +18,7 @@ public sealed partial class ChatShell
         viewSystemContext.Click += async (_, _) => await ShowSystemContextAsync();
     }
 
-    private UIMessage CaptureSystemContext(ChatPreferences? preferences = null)
+    private UIMessage CaptureSystemContext(ChatPreferences? preferences = null, McpTurnSnapshot? mcp = null)
     {
         var information = session.SystemInformationProvider(DateTimeOffset.UtcNow);
         var scale = XamlRoot.RasterizationScale;
@@ -35,7 +35,7 @@ public sealed partial class ChatShell
         {
             ["innerWidth"] = XamlRoot.Size.Width, ["innerHeight"] = XamlRoot.Size.Height, ["devicePixelRatio"] = scale
         };
-        return session.CaptureSystemContext(ActualTheme == ElementTheme.Dark, information, preferences);
+        return session.CaptureSystemContext(ActualTheme == ElementTheme.Dark, information, preferences, mcp ?? activeMcpTurn);
     }
 
     private async Task ShowSystemContextAsync()
