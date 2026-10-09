@@ -56,15 +56,19 @@ public sealed partial class ChatShell
     {
         var partition = ImageLibraryStore.Partition(session);
         if (imagePartition != partition) { InvalidateImages(); imagePartition = partition; }
-        var root = session.Settings.Images.EffectiveRoot;
-        imageLibrary = new(root, partition);
         // Load the on-disk library first; it remains usable if model discovery fails/offline.
-        libraryImages = await imageLibrary.ListAsync(ct); imagesPage.SetItems(libraryImages, pendingImages);
+        await ReloadImageLibraryAsync(ct);
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != ImageLibraryStore.Partition(session)) return;
         aiModelTargets = available; imageModels = AiModelCatalog.OfType(available, "image");
         if (SelectedImageModel is null) imageTarget.Text = imageModels.FirstOrDefault(m => m.Id == session.Settings.AiModels.ImageModel)?.Id ?? imageModels.FirstOrDefault()?.Id ?? "";
         ImageModelSuggestions(); imagesPage.SetModelAvailable(SelectedImageModel is not null);
+    }
+    private async Task ReloadImageLibraryAsync(CancellationToken ct)
+    {
+        imageLibrary = new(session.Settings.Images.EffectiveRoot, ImageLibraryStore.Partition(session));
+        libraryImages = await imageLibrary.ListAsync(ct);
+        imagesPage.SetItems(libraryImages, pendingImages);
     }
     private async Task SendImagesAsync()
     {

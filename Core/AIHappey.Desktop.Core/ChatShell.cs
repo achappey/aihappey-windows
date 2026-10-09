@@ -88,7 +88,7 @@ public sealed partial class ChatShell : UserControl
         ToolbarControls.Subtle(newChat);
         PrepareSearchChats();
         ToolbarControls.Label(newChat, DesktopResources.Get("NewChat"));
-        ControlAppearance.BorderlessItems(chats);
+        ControlAppearance.BorderlessItems(chats, compact: true);
         chats.ItemTemplate = ConversationRow.Template();
         chats.ContainerContentChanging += PrepareConversationRow;
         UpdateAccountMenu();
@@ -701,6 +701,7 @@ public sealed partial class ChatShell : UserControl
                 session.Settings.For(kind).Location != next.For(kind).Location || session.Settings.For(kind).RemoteUrl != next.For(kind).RemoteUrl);
             var elicitationChanged = session.Settings.ModelContext.EnableFormElicitation != next.ModelContext.EnableFormElicitation;
             var mcpSkillsChanged = session.Settings.ModelContext.EnableSkills != next.ModelContext.EnableSkills;
+            var imageStorageChanged = !string.Equals(session.Settings.Images.EffectiveRoot, next.Images.EffectiveRoot, StringComparison.OrdinalIgnoreCase);
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
             UpdateTargetSuggestions();
@@ -708,7 +709,11 @@ public sealed partial class ChatShell : UserControl
             RenderContextTags();
             if (next.Language != session.ActiveLanguage) Show(DesktopResources.Get("RestartRequired"), InfoBarSeverity.Informational);
             // Language and composer preferences do not change the runtime, account, history partition, or current draft.
-            if (!connectionsChanged) return;
+            if (!connectionsChanged)
+            {
+                if (imageStorageChanged && activePage == DesktopPage.Images) await ReloadImageLibraryAsync(ct);
+                return;
+            }
             await session.Runtime.DisposeAsync();
             current = new() { Service = Service }; targets = []; target.Text = "";
             aiModelTargets = null;

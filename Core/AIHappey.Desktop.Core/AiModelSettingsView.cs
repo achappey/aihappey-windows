@@ -12,7 +12,7 @@ public sealed class AiModelSettingsView : NavigationView
     private readonly Dictionary<string, StackPanel> pages = [];
     private IReadOnlyList<ChatTarget>? catalog;
 
-    public AiModelSettingsView(AiModelPreferences draft, IReadOnlyList<ChatTarget>? catalog = null)
+    public AiModelSettingsView(AiModelPreferences draft, IReadOnlyList<ChatTarget>? catalog = null, UIElement? imageSettings = null)
     {
         this.draft = draft;
         this.catalog = catalog;
@@ -84,6 +84,7 @@ public sealed class AiModelSettingsView : NavigationView
                 };
                 page.Children.Add(toggle);
             }
+            if (type == "image" && imageSettings is not null) page.Children.Add(imageSettings);
         }
         SelectionChanged += (_, _) =>
         {

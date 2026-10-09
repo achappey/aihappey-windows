@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Automation.Provider;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace AIHappey.Desktop.UiTests;
@@ -65,6 +66,8 @@ public partial class App
             var dialog = new ImageSettingsDialog(preferences, "openai", directory) { XamlRoot = page.XamlRoot, RequestedTheme = theme, SaveAsync = p => { saved = p; return Task.CompletedTask; } };
             SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(140); dialog.UpdateLayout();
             Check(Descendants(dialog).OfType<ToggleButton>().Any(t => t.Name == "ImageProviderTab" && t.Content.ToString() == "OpenAI"), context + ": OpenAI provider tab for OpenAI selection");
+            Check(!Descendants(dialog).OfType<FrameworkElement>().Any(e => e.Name is "ImageStorageCard" or "ImageStoragePath" or "ImageChooseFolder" or "ImageDefaultFolder"),
+                context + ": generation settings no longer contain storage controls");
             var count = Descendants(dialog).OfType<Slider>().Single(s => s.Name == "ImageCount"); count.Value = 3;
             var batch = Descendants(dialog).OfType<TextBox>().Single(t => t.Name == "ImageBatchLimit"); batch.Text = "0";
             InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await Task.Delay(100);
@@ -75,7 +78,7 @@ public partial class App
             Descendants(dialog).OfType<ComboBox>().Single(c => c.Name == "ImageOpenAIquality").SelectedIndex = 3;
             InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
             Check(saved?.N == 3 && saved.MaxImagesPerCall == 2 && saved.ProviderOptions["openai"]["quality"]!.GetValue<string>() == "high"
-                && saved.ProviderOptions["openai"]["future"]!["keep"]!.GetValue<bool>() && preferences.N == 1, context + ": saved image settings are independent and preserve unknown provider fields");
+                && saved.ProviderOptions["openai"]["future"]!["keep"]!.GetValue<bool>() && saved.StorageRoot == directory && preferences.N == 1, context + ": saved image settings are independent and preserve storage and unknown provider fields");
             foreach (var provider in new string?[] { "other", null })
             {
                 dialog = new ImageSettingsDialog(preferences, provider, directory) { XamlRoot = page.XamlRoot, RequestedTheme = theme };
@@ -89,8 +92,64 @@ public partial class App
             Check(Descendants(preview).OfType<Image>().Any(i => i.Name == "FullGeneratedImage")
                 && Descendants(preview).OfType<Button>().Count(b => b.Name.StartsWith("ImagePreview")) == 3, context + ": full-resolution native preview and Save/Delete/Add to prompt"); preview.Hide(); await previewShown;
             page.ClearDraft(); Check(page.Attachments.Count == 0 && page.PromptText == "", context + ": partition changes can clear image draft without chat mutation");
+            await CheckImageStorageAsync(page.XamlRoot, theme, directory, path);
             File.WriteAllLines(report, results);
         }
         finally { window!.Content = null; Directory.Delete(directory, true); }
+    }
+
+    private async Task CheckImageStorageAsync(XamlRoot root, ElementTheme theme, string directory, string originalImage)
+    {
+        var context = "Image storage settings / " + theme;
+        var original = new DesktopSettings { Images = new() { StorageRoot = directory, N = 8, Seed = -9, Size = "1024x1536", MaskPath = originalImage } };
+        original.Images.ProviderOptions["future"] = new() { ["keep"] = true };
+        original.Transcriptions.ProviderOptions["future"] = new() { ["keep"] = true };
+        SettingsDialog Create() => new(original, true, "en", []) { XamlRoot = root, RequestedTheme = theme };
+        void SelectImage(SettingsDialog dialog)
+        {
+            ((NavigationView)dialog.FindName("Tabs")).SelectedItem = dialog.FindName("ArtificialIntelligenceTab");
+            dialog.AiModelView.SelectedItem = dialog.AiModelView.MenuItems.OfType<NavigationViewItem>().Single(item => (string)item.Tag == "image");
+            dialog.UpdateLayout();
+        }
+        Button Action(SettingsDialog dialog, string name) => Descendants(dialog).OfType<Button>().Single(button => button.Name == name);
+        var canceled = Create(); SystemAppearance.PrepareDialog(canceled);
+        var shown = canceled.ShowAsync(); await Task.Delay(100); SelectImage(canceled);
+        var storage = Descendants(canceled).OfType<StackPanel>().Single(panel => panel.Name == "ImageStorageSettings");
+        Check(VisualTreeHelper.GetParent(storage) is StackPanel imagePage && imagePage.Children.Last() == storage
+            && imagePage.Children.OfType<ToggleSwitch>().Single().Name == "AiChatWith_image"
+            && Descendants(storage).OfType<CommunityToolkit.WinUI.Controls.SettingsCard>().Single().Name == "ImageStorageCard",
+            context + ": complete native Storage card follows existing Image model settings");
+        Check(Descendants(storage).OfType<TextBlock>().Single(text => text.Name == "ImageStoragePath").Text == directory
+            && new[] { "ImageChooseFolder", "ImageDefaultFolder" }.All(name => !string.IsNullOrEmpty(AutomationProperties.GetName(Action(canceled, name)))),
+            context + ": custom path and accessible native folder actions");
+        InvokeButton(Action(canceled, "ImageDefaultFolder")); canceled.UpdateLayout();
+        Check(DesktopBranding.AppName == "UI image app" && Descendants(storage).OfType<TextBlock>().Single(text => text.Name == "ImageStoragePath").Text
+            == Path.GetFullPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "UI image app", "Images"))
+            && original.Images.StorageRoot == directory, context + ": default-folder action uses injected app branding and edits only draft");
+        InvokeButton(Action(canceled, "CloseButton")); await shown;
+        Check(canceled.Result is null && original.Images.StorageRoot == directory && File.Exists(originalImage), context + ": Cancel leaves storage and files untouched");
+
+        var unchanged = Create(); shown = unchanged.ShowAsync(); await Task.Delay(100);
+        InvokeButton(Action(unchanged, "PrimaryButton")); await shown;
+        Check(unchanged.Result?.Images.StorageRoot == directory && unchanged.Result.Images.N == 8 && unchanged.Result.Images.Seed == -9
+            && unchanged.Result.Images.MaskPath == originalImage && unchanged.Result.Images.ProviderOptions["future"]["keep"]!.GetValue<bool>()
+            && unchanged.Result.Transcriptions.ProviderOptions["future"]["keep"]!.GetValue<bool>(),
+            context + ": saving unrelated user settings preserves custom storage, inference, masks, provider fields, and transcriptions");
+        unchanged.Result!.Images.ProviderOptions["future"]["keep"] = false;
+        Check(original.Images.ProviderOptions["future"]["keep"]!.GetValue<bool>(), context + ": saved image provider options remain deep-cloned");
+
+        var edited = Create(); shown = edited.ShowAsync(); await Task.Delay(100);
+        var draft = Field<ImagePreferences>(edited, "imagePreferences");
+        // Exercise the save boundary with a real disk error, without automating the OS-owned folder picker.
+        draft.StorageRoot = originalImage;
+        InvokeButton(Action(edited, "PrimaryButton")); await Task.Delay(80);
+        Check(shown.Status == Windows.Foundation.AsyncStatus.Started && edited.Result is null
+            && (string)((NavigationViewItem)edited.AiModelView.SelectedItem).Tag == "image"
+            && Descendants(edited).OfType<TextBlock>().Single(text => text.Name == "ImageStorageValidation").Visibility == Visibility.Visible,
+            context + ": invalid disk destination keeps dialog open and exposes error on Image tab");
+        var nextRoot = Path.Combine(directory, "new-library"); draft.StorageRoot = nextRoot;
+        InvokeButton(Action(edited, "PrimaryButton")); await shown;
+        Check(edited.Result?.Images.StorageRoot == nextRoot && Directory.Exists(nextRoot) && File.Exists(originalImage) && original.Images.StorageRoot == directory,
+            context + ": Save prepares new storage without moving files or mutating original settings");
     }
 }

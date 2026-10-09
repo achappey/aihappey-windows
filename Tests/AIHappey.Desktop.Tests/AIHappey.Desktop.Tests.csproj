@@ -11,6 +11,8 @@
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/nl/Resources.resw" LogicalName="Desktop.Resources.nl" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RelativeTime.cs" Link="Core/RelativeTime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/DesktopBranding.cs" Link="Core/DesktopBranding.cs" />
+    <AssemblyMetadata Include="DesktopAppName" Value="Image regression app" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AiModelPreferences.cs" Link="Core/AiModelPreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ModelOverviewCatalog.cs" Link="Core/ModelOverviewCatalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ModelProviders.cs" Link="Core/ModelProviders.cs" />

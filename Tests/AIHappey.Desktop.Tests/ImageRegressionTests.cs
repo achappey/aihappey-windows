@@ -30,11 +30,26 @@ internal static class ImageRegressionTests
         var otherModel = model with { ProviderKey = "other" };
         check(preferences.Request(otherModel, "x", [], null, 1).ProviderOptions!.Keys.SequenceEqual(["other"]), "non-OpenAI generation does not send OpenAI settings");
         check(new ImagePreferences().N == 1 && new ImagePreferences().ProviderOptions["openai"]["moderation"]!.GetValue<string>() == "auto"
-            && new ImagePreferences().EffectiveRoot.EndsWith(Path.Combine("aihappey", "Images")), "image defaults match browser and approved Pictures app name");
+            && DesktopBranding.AppName == "Image regression app"
+            && new ImagePreferences().EffectiveRoot == Path.GetFullPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Image regression app", "Images")),
+            "image default folder uses the entry app's compile-time branding");
+        check(DesktopBranding.ResolveStorageFolderName("chathappey") == "chathappey"
+            && DesktopBranding.ResolveStorageFolderName("  Contoso Studio  ") == "Contoso Studio"
+            && DesktopBranding.ResolveStorageFolderName(null) == "aihappey", "normal branding and fallback produce stable storage folders");
+        foreach (var name in new[] { "../Another\\app", "Brand: name?*", "CON", "nul.txt", "LPT1", "COM¹", "...", new string('x', 300) })
+        {
+            var folder = DesktopBranding.ResolveStorageFolderName(name);
+            check(folder.Length is > 0 and <= 121 && !folder.Contains(Path.DirectorySeparatorChar) && !folder.Contains(Path.AltDirectorySeparatorChar)
+                && !folder.Any(c => Path.GetInvalidFileNameChars().Contains(c)) && !folder.EndsWith('.') && !folder.EndsWith(' '), "branding is a safe single Windows folder: " + name);
+        }
+        check(DesktopBranding.ResolveStorageFolderName("CON") == "_CON" && DesktopBranding.ResolveStorageFolderName("nul.txt") == "_nul.txt",
+            "reserved Windows device names cannot become image folders");
         var defaults = JsonSerializer.Deserialize<DesktopSettings>("{}", JsonSerializerOptions.Web)!;
         var nullSettings = JsonSerializer.Deserialize<DesktopSettings>("{\"images\":null}", JsonSerializerOptions.Web)!;
         check(defaults.Images.N == 1 && nullSettings.Images.N == 1, "legacy/null image settings are backward compatible");
         preferences.StorageRoot = Path.Combine(root, "images");
+        check(preferences.EffectiveRoot == Path.GetFullPath(preferences.StorageRoot) && preferences.Clone().StorageRoot == preferences.StorageRoot,
+            "explicit custom image storage is independent of app branding and survives cloning");
         var settings = new DesktopSettings { Images = preferences }; var clone = settings.Clone(); clone.Images.ProviderOptions["openai"]["quality"] = "high";
         check(settings.Images.ProviderOptions["openai"]["quality"]!.GetValue<string>() == "auto", "image settings drafts deep clone provider objects");
         await SettingsStore.SaveAsync(Path.Combine(root, "image-settings"), settings);

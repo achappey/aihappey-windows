@@ -22,6 +22,9 @@ public partial class App
         var original = new DesktopSettings { AllowedToolList = ["keep-tool"] };
         foreach (var type in AiModelCatalog.Types) original.AiModels.SetDefault(type, "p/" + type + "-old");
         original.ModelContext.ToolTimeoutMinutes = 13;
+        original.Images = new() { StorageRoot = Path.Combine(Path.GetTempPath(), "ui-custom-images"), N = 7, Seed = -3, Size = "1024x1536", MaskPath = "retained-mask.png" };
+        original.Images.ProviderOptions["future"] = new() { ["keep"] = true };
+        original.Transcriptions.ProviderOptions["future"] = new() { ["keep"] = "transcription" };
         var dialog = new SettingsDialog(original, true, "en", catalog) { XamlRoot = root.XamlRoot, RequestedTheme = theme };
         SystemAppearance.PrepareDialog(dialog);
         var shown = dialog.ShowAsync(); await Task.Delay(100);
@@ -60,6 +63,10 @@ public partial class App
         Check(dialog.Result is { } saved && AiModelCatalog.Types.All(t => saved.AiModels.DefaultFor(t) == "p/" + t + "-new")
             && new[] { "image", "video", "speech", "transcription" }.All(saved.AiModels.AllowsChat)
             && saved.ModelContext.ToolTimeoutMinutes == 13 && saved.AllowedToolList.SequenceEqual(["keep-tool"])
+            && saved.Images.StorageRoot == original.Images.StorageRoot && saved.Images.N == 7 && saved.Images.Seed == -3
+            && saved.Images.Size == "1024x1536" && saved.Images.MaskPath == "retained-mask.png"
+            && saved.Images.ProviderOptions["future"]["keep"]!.GetValue<bool>()
+            && saved.Transcriptions.ProviderOptions["future"]["keep"]!.GetValue<string>() == "transcription"
             && !original.AiModels.ChatWithImageModels && original.AiModels.LanguageModel == "p/language-old",
             context + ": Save isolates all defaults/switches and preserves unrelated preferences");
 

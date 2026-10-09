@@ -212,9 +212,11 @@ public partial class App : Application
             Check(sidebarBody.Children.Count == 2 && sidebarBody.Children[0] == newChat && sidebarBody.Children[1] == Field<Button>(shell, "searchChats"), context + ": top section has New chat and modal Search chats actions only");
             var navigation = Field<StackPanel>(shell, "pageNavigation");
             Check(navigation.Children.OfType<TextBlock>().Select(text => text.Text).SequenceEqual(new[] { "Agents", "Chats" })
-                && navigation.Children.OfType<Border>().Select(border => border.Name).SequenceEqual(new[] { "AgentsSeparator", "ChatsSeparator" })
-                && navigation.Children.OfType<ToggleButton>().Select(button => button.Name).SequenceEqual(new[] { "NavigateImages", "NavigateAgents", "NavigateSkills", "NavigateMcp" })
+                && navigation.Children.OfType<Border>().Select(border => border.Name).SequenceEqual(new[] { "AgentsSeparator", "ArtificialIntelligenceSeparator", "ChatsSeparator" })
+                && navigation.Children.OfType<ToggleButton>().Select(button => button.Name).SequenceEqual(new[] { "NavigateImages", "NavigateTranscriptions", "NavigateAgents", "NavigateMcp", "NavigateSkills" })
                 && !Descendants(pane).OfType<TextBox>().Any(), context + ": browser-style categories and no extra Chat button or inline history search");
+            Check(navigation.Children.OfType<ToggleButton>().Skip(2).Select(button => AutomationProperties.GetName(button))
+                .SequenceEqual(new[] { "Agents", DesktopResources.Get("McpTitle"), "Skills" }), context + ": Agents → More context → Skills navigation order");
             foreach (var state in new[] { "Normal", "PointerOver", "Pressed" })
             {
                 VisualStateManager.GoToState(newChat, state, false);
@@ -324,6 +326,15 @@ public partial class App : Application
             Check(agents.IsChecked == true && models.IsChecked == false, context + ": reopened agent chat mode");
             var chatList = Field<ListView>(shell, "chats");
             Check(Readable(chatList.Foreground, chatList.Background, theme), context + ": chat list surface");
+            var chatRow = (ListViewItem)chatList.ContainerFromIndex(0);
+            Check(chatRow.Padding == new Thickness(12, 4, 12, 4) && chatRow.ActualHeight >= 40 && chatRow.ActualHeight <= 42
+                && chatRow.UseSystemFocusVisuals && chatList.ItemsPanelRoot is ItemsStackPanel,
+                context + $": compact native chat row retains system focus and virtualization ({chatRow.ActualHeight}px)");
+            Check(Descendants(chatRow).OfType<Button>().Single(button => button.Name == "ConversationActions").ActualHeight == 32
+                && !string.IsNullOrEmpty(AutomationProperties.GetName(chatRow)), context + ": compact row retains accessible 32px actions and chat name");
+            chatRow.Focus(FocusState.Keyboard); await Task.Delay(50);
+            Check(Descendants(chatRow).OfType<Button>().Single(button => button.Name == "ConversationActions").Opacity == 1,
+                context + ": keyboard focus still reveals compact chat actions");
             foreach (var presenter in Descendants(chatList).OfType<ListViewItemPresenter>())
             {
                 Check(Readable(chatList.Foreground, presenter.SelectedBackground, theme) && Readable(chatList.Foreground, presenter.PointerOverBackground, theme), context + ": rendered selected/hover chat item");

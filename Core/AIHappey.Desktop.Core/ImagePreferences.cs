@@ -22,7 +22,7 @@ public sealed class ImagePreferences
     public static readonly string[] SizePresets = ["256x256", "512x512", "768x768", "1024x1024", "1024x1536", "1536x1024"];
     public static readonly string[] AspectPresets = ["1:1", "4:3", "3:2", "16:9", "21:9", "5:2", "9:16", "2:3", "3:4"];
     public string EffectiveRoot => Path.GetFullPath(string.IsNullOrWhiteSpace(StorageRoot)
-        ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "aihappey", "Images") : StorageRoot);
+        ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), DesktopBranding.StorageFolderName, "Images") : StorageRoot);
     public ImagePreferences Clone() => new()
     {
         Size = Size, AspectRatio = AspectRatio, N = N, MaxImagesPerCall = MaxImagesPerCall, Seed = Seed,

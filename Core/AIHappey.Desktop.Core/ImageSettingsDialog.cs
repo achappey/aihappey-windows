@@ -159,27 +159,7 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
         };
         clearMask.Click += (_, _) => { if (pickerOpen) return; newMask = null; draft.MaskPath = null; maskChanged = true; preview.Source = null; maskName.Text = ""; clearMask.IsEnabled = false; };
         maskRow.Children.Add(pickMask); maskRow.Children.Add(clearMask); other.Children.Add(maskRow); other.Children.Add(maskName); other.Children.Add(preview);
-        var storage = Card(general, "ImageStorage");
-        var folder = new TextBlock { Name = "ImageStoragePath", Text = draft.EffectiveRoot, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true }; storage.Children.Add(folder);
-        storage.Children.Add(new TextBlock { Text = DesktopResources.Get("ImageFolderHint"), TextWrapping = TextWrapping.Wrap });
-        var folderRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        var choose = new Button { Name = "ImageChooseFolder", Content = DesktopResources.Get("ImageChooseFolder") };
-        var reset = new Button { Name = "ImageDefaultFolder", Content = DesktopResources.Get("ImageDefaultFolder") };
-        choose.Click += async (_, _) =>
-        {
-            if (pickerOpen) return; pickerOpen = true;
-            try
-            {
-                var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.PicturesLibrary }; picker.FileTypeFilter.Add("*"); InitializePicker(picker);
-                var selected = await picker.PickSingleFolderAsync().AsTask(lifetime.Token); if (selected is not null) { draft.StorageRoot = selected.Path; folder.Text = draft.EffectiveRoot; }
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception) { Error(DesktopResources.Get("ImageFolderFailed")); }
-            finally { pickerOpen = false; }
-        };
-        reset.Click += (_, _) => { if (!pickerOpen) { draft.StorageRoot = null; folder.Text = draft.EffectiveRoot; } };
-        folderRow.Children.Add(choose); folderRow.Children.Add(reset); storage.Children.Add(folderRow);
-        foreach (var control in new Control[] { batch, seed, count, pickMask, clearMask, choose, reset }) ControlAppearance.Stock(control);
+        foreach (var control in new Control[] { batch, seed, count, pickMask, clearMask }) ControlAppearance.Stock(control);
         providerForm = ImageProviderForms.Create(provider, draft);
         var generalTab = new ToggleButton { Name = "ImageGeneralTab", Content = DesktopResources.Get("General"), IsChecked = true }; tabs.Children.Add(generalTab); ControlAppearance.Stock(generalTab);
         ToggleButton? providerTab = null;

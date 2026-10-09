@@ -22,6 +22,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PRIResource Include="..\..\Core\AIHappey.Desktop.Core\Strings\**\*.resw" Link="Strings\%(RecursiveDir)%(Filename)%(Extension)" />
+    <AssemblyMetadata Include="DesktopAppName" Value="UI image app" />
     <Manifest Include="$(ApplicationManifest)" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.29648.1000-preview" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />

@@ -9,6 +9,9 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private readonly ChatPreferences chatPreferences;
     private readonly List<string> allowedTools;
     private readonly AiModelPreferences aiModelPreferences;
+    private readonly ImagePreferences imagePreferences;
+    private readonly TranscriptionPreferences transcriptionPreferences;
+    private readonly ImageStorageSettingsView imageStorage;
     private readonly CancellationTokenSource catalogLifetime = new();
     public AiModelSettingsView AiModelView { get; }
     public DesktopSettings? Result { get; private set; }
@@ -20,8 +23,11 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         chatPreferences = settings.Chat.Clone();
         allowedTools = settings.AllowedToolList.ToList();
         aiModelPreferences = settings.AiModels.Clone();
+        imagePreferences = settings.Images.Clone();
+        transcriptionPreferences = settings.Transcriptions.Clone();
         InitializeComponent();
-        AiModelView = new(aiModelPreferences, aiModels);
+        imageStorage = new(imagePreferences, catalogLifetime.Token);
+        AiModelView = new(aiModelPreferences, aiModels, imageStorage);
         ArtificialIntelligencePage.Children.Add(AiModelView);
         Name = "SettingsDialog";
         Resources["ContentDialogMaxWidth"] = 840d;
@@ -88,6 +94,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private void ValidateAndSave(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         Result = null;
+        if (imageStorage.PickerOpen) { args.Cancel = true; return; }
         var next = new DesktopSettings
         {
             Language = (string)((ComboBoxItem)LanguageChoice.SelectedItem).Tag,
@@ -103,16 +110,29 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
                 EnableSkills = EnableMcpSkills.IsOn
             },
             Chat = chatPreferences.Clone(),
+            Images = imagePreferences.Clone(),
+            Transcriptions = transcriptionPreferences.Clone(),
             AiModels = aiModelPreferences.Clone(),
             AllowedToolList = allowedTools.ToList()
         };
-        try { next.Validate(allowLocal); Result = next; }
+        try { next.Validate(allowLocal); }
         catch (InvalidOperationException error)
         {
             args.Cancel = true;
             Tabs.SelectedItem = EndpointsTab;
             Validation.Text = error.Message;
             PageScroll.ChangeView(null, PageScroll.ScrollableHeight, null, true);
+            return;
+        }
+        try { imageStorage.ValidateAndPrepare(); Result = next; }
+        catch (Exception error)
+        {
+            args.Cancel = true;
+            Tabs.SelectedItem = ArtificialIntelligenceTab;
+            AiModelView.SelectedItem = AiModelView.MenuItems.OfType<NavigationViewItem>().Single(item => (string)item.Tag == "image");
+            imageStorage.ShowError(error is InvalidOperationException ? error.Message : DesktopResources.Get("ImageFolderFailed"));
+            imageStorage.UpdateLayout();
+            imageStorage.StartBringIntoView();
         }
     }
 

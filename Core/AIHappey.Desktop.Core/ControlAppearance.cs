@@ -196,13 +196,14 @@ internal static class ControlAppearance
 
     public static void Refresh(Control control) => TemplateColors(control, Palette(control));
 
-    public static void BorderlessItems(ListView list)
+    public static void BorderlessItems(ListView list, bool compact = false)
     {
         // Keep the native presenter/selection engine, but do not inherit the default container's
         // border visual states. TemplateBinding only: no optional SDK resource keys are resolved.
         var style = new Style(typeof(ListViewItem));
         style.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(0)));
-        style.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(12, 10, 12, 10)));
+        style.Setters.Add(new Setter(Control.PaddingProperty, compact ? new Thickness(12, 4, 12, 4) : new Thickness(12, 10, 12, 10)));
+        if (compact) style.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, 40d));
         style.Setters.Add(new Setter(Control.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch));
         style.Setters.Add(new Setter(Control.UseSystemFocusVisualsProperty, true));
         style.Setters.Add(new Setter(Control.TemplateProperty, (ControlTemplate)XamlReader.Load("""
