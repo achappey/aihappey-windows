@@ -352,13 +352,13 @@ public sealed partial class ChatShell : UserControl
             Show(DesktopResources.Get("NoTargets"), InfoBarSeverity.Warning);
     }
 
-    private async Task SendAsync()
+    private async Task SendAsync(McpSelectedPrompt? selectedPrompt = null)
     {
         if (busy || closing || historyDialogOpen || catalogDialog is not null
-            || string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
+            || selectedPrompt is null && string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
         var selected = target.Text.Trim();
         if (!targets.Any(x => x.Id == selected)) { Show(DesktopResources.Get("SelectTarget"), InfoBarSeverity.Warning); return; }
-        var prompt = input.Text.Trim();
+        var prompt = selectedPrompt is null ? input.Text.Trim() : "";
         var snapshot = contextAttachments.ToArray();
         var resourceSnapshot = selectedResources.ToArray();
         var inferencePreferences = session.Settings.Chat.Clone();
@@ -368,22 +368,30 @@ public sealed partial class ChatShell : UserControl
         await RunAsync(async ct =>
         {
             // Finish preparation before committing a turn or clearing its draft. Cancellation retains input/context.
-            var prepared = await ComposerAttachments.PrepareAsync(prompt, snapshot, Service, extractDocuments, documentExtractor, ct, resourceSnapshot);
+            if (selectedPrompt is not null && (Service != ServiceKind.Ai || !selectedPrompt.Entry.IsCurrent()))
+                throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
+            var prepared = await ComposerAttachments.PrepareAsync(prompt, snapshot, Service, extractDocuments, documentExtractor, ct,
+                resourceSnapshot, selectedPrompt?.Parts);
             if (Service == ServiceKind.Ai && inferencePreferences.EnabledSkillIds.Any(id => !id.StartsWith("mcp:", StringComparison.Ordinal)))
                 await LoadRuntimeSkillsAsync(ct);
             var mcpTurn = Service == ServiceKind.Ai ? CaptureSkillRuntime(inferencePreferences) : McpTurnSnapshot.Empty;
             activeMcpTurn = mcpTurn;
             var systemContext = Service == ServiceKind.Ai ? CaptureSystemContext(inferencePreferences, mcpTurn) : null;
+            if (selectedPrompt is not null && !selectedPrompt.Entry.IsCurrent())
+                throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
             current.Service = Service; current.Target = selected;
             if (current.Messages.Count == 0)
             {
-                var title = string.IsNullOrWhiteSpace(prompt) ? string.Join(", ", snapshot.Select(file => file.Name).Concat(resourceSnapshot.Select(r => r.Name))) : prompt;
+                var title = selectedPrompt?.Entry.Title ?? (string.IsNullOrWhiteSpace(prompt)
+                    ? string.Join(", ", snapshot.Select(file => file.Name).Concat(resourceSnapshot.Select(r => r.Name))) : prompt);
                 current.Title = title.Length > 60 ? title[..60] + "…" : title;
             }
             current.Messages.Add(new() { Message = prepared.Message });
             var output = new ConversationMessage { Message = new UIMessage { Id = Guid.NewGuid().ToString("N"), Role = Role.assistant,
                 Metadata = new Dictionary<string, object> { ["model"] = selected, ["timestamp"] = DateTimeOffset.UtcNow.ToString("O") } }, Status = "streaming" };
-            current.Messages.Add(output); input.Text = ""; ResetContext(); followBottom = true; RenderTranscript();
+            current.Messages.Add(output);
+            if (selectedPrompt is null) input.Text = "";
+            ResetContext(); followBottom = true; RenderTranscript();
             if (prepared.Warnings.Count > 0) Show(string.Join("\n", prepared.Warnings), InfoBarSeverity.Warning);
             var watch = Stopwatch.StartNew();
             var saveAt = TimeSpan.Zero;
@@ -758,6 +766,7 @@ public sealed partial class ChatShell : UserControl
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
         resourcesDialog?.Hide();
+        promptsDialog?.Hide();
         approvalDialog?.Hide();
         systemContextDialog?.Hide();
         mcpDialog?.Shutdown(); Mcp.Changed -= McpChanged;

@@ -25,6 +25,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/SkillTools.cs" Link="Core/SkillTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpSkills.cs" Link="Core/McpSkills.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpResources.cs" Link="Core/McpResources.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/McpPrompts.cs" Link="Core/McpPrompts.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SystemContext.cs" Link="Core/SystemContext.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatClient.cs" Link="Core/ChatClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatPreferences.cs" Link="Core/ChatPreferences.cs" />

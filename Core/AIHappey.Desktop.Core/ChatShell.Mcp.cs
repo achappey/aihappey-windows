@@ -36,6 +36,7 @@ public sealed partial class ChatShell
         RenderContextTags();
         if (chatSettingsDialog is { } dialog) _ = dialog.RefreshSkillsAsync();
         resourcesDialog?.SetCatalog(Mcp.Capture().Resources);
+        promptsDialog?.SetCatalog(Mcp.CapturePrompts());
     });
     private void RenderMcpTags()
     {
@@ -63,6 +64,7 @@ public sealed partial class ChatShell
         UpdateComposerBadgeRow();
         manageMcp.Visibility = Service == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
         UpdateResourceMenu();
+        UpdatePromptMenu();
     }
     private async Task LoadMcpOverviewAsync(CancellationToken ct, bool useCache = false)
     {

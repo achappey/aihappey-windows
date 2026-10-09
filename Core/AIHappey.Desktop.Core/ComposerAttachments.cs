@@ -87,7 +87,7 @@ public static class ComposerAttachments
 
     public static async Task<PreparedComposerMessage> PrepareAsync(string prompt, IReadOnlyList<ComposerAttachment> attachments,
         ServiceKind service, bool extractDocuments, IDocumentTextExtractor extractor, CancellationToken ct,
-        IReadOnlyList<McpSelectedResource>? resources = null)
+        IReadOnlyList<McpSelectedResource>? resources = null, IReadOnlyList<UIMessagePart>? promptParts = null)
     {
         // Snapshot both settings and attachments before any asynchronous extraction.
         var snapshot = attachments.ToArray();
@@ -115,6 +115,7 @@ public static class ComposerAttachments
             }
         parts.AddRange(await Task.Run(() => snapshot.OrderBy(file => file.IsLink).Select(file =>
         { ct.ThrowIfCancellationRequested(); return (UIMessagePart)file.FilePart(); }).ToArray(), ct));
+        if (promptParts is not null) parts.AddRange(promptParts);
         if (!string.IsNullOrWhiteSpace(prompt)) parts.Add(new TextUIPart { Text = prompt.Trim() });
         ct.ThrowIfCancellationRequested();
         if (parts.Count == 0) throw new InvalidOperationException(DesktopResources.Get("MessageRequired"));

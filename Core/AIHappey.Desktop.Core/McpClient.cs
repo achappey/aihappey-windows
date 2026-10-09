@@ -28,6 +28,7 @@ public sealed record McpDiscovery(JsonElement ServerInfo, JsonElement Capabiliti
 {
     public IReadOnlyList<JsonElement> Resources { get; init; } = [];
     public IReadOnlyList<JsonElement> ResourceTemplates { get; init; } = [];
+    public IReadOnlyList<JsonElement> Prompts { get; init; } = [];
     public IReadOnlyList<McpSkillManifest> Skills { get; init; } = [];
 }
 
@@ -36,6 +37,11 @@ public interface IDesktopMcpConnection : IAsyncDisposable
     bool ManagesToolTimeout => false;
     event Action? ToolsChanged;
     event Action? ResourcesChanged;
+    event Action? PromptsChanged { add { } remove { } }
+    Task<JsonElement> GetPromptAsync(string name, IReadOnlyDictionary<string, string> arguments, CancellationToken ct) =>
+        throw new NotSupportedException();
+    Task<McpPromptCompletion> CompletePromptAsync(string prompt, string name, string value,
+        IReadOnlyDictionary<string, string> arguments, CancellationToken ct) => Task.FromResult(McpPromptCompletion.Empty);
     Task<McpDiscovery> DiscoverAsync(CancellationToken ct);
     Task<JsonElement> CallAsync(string name, JsonElement input, string callId, string locale, CancellationToken ct);
     Task<JsonElement> ReadAsync(string uri, string? cursor, int limit, CancellationToken ct);
@@ -97,8 +103,10 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
         private readonly IAsyncDisposable subscription;
         private readonly IAsyncDisposable resourceSubscription;
         private readonly IAsyncDisposable skillSubscription;
+        private readonly IAsyncDisposable promptSubscription;
         public event Action? ToolsChanged;
         public event Action? ResourcesChanged;
+        public event Action? PromptsChanged;
         public SdkConnection(McpClient client, Func<ModelContextPreferences> preferences, McpRequestLifetime requests)
         {
             this.client = client;
@@ -110,10 +118,18 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
             { ResourcesChanged?.Invoke(); return ValueTask.CompletedTask; });
             skillSubscription = client.RegisterNotificationHandler("notifications/skills/list_changed", (_, _) =>
             { ResourcesChanged?.Invoke(); return ValueTask.CompletedTask; });
+            promptSubscription = client.RegisterNotificationHandler(NotificationMethods.PromptListChangedNotification, (_, _) =>
+            { PromptsChanged?.Invoke(); return ValueTask.CompletedTask; });
         }
         public async Task<McpDiscovery> DiscoverAsync(CancellationToken ct)
         {
-            IReadOnlyList<JsonElement> tools = [], resources = [], templates = [];
+            IReadOnlyList<JsonElement> tools = [], resources = [], templates = [], prompts = [];
+            if (client.ServerCapabilities.Prompts is not null)
+                prompts = await McpCatalogPagination.ReadAsync(async (cursor, token) =>
+                {
+                    var page = await client.ListPromptsAsync(new ListPromptsRequestParams { Cursor = cursor }, token);
+                    return (page.Prompts.Select(p => JsonSerializer.SerializeToElement(p)).ToArray(), page.NextCursor);
+                }, ct);
             if (client.ServerCapabilities.Tools is not null)
                 tools = await McpCatalogPagination.ReadAsync(async (cursor, token) =>
                 {
@@ -149,7 +165,31 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
                 skills = entries.Select(McpSkillManifest.Parse).ToArray();
             }
             return new(JsonSerializer.SerializeToElement(client.ServerInfo), JsonSerializer.SerializeToElement(client.ServerCapabilities),
-                client.ServerInstructions, tools) { Resources = resources, ResourceTemplates = templates, Skills = skills };
+                client.ServerInstructions, tools) { Resources = resources, ResourceTemplates = templates, Skills = skills, Prompts = prompts };
+        }
+        public async Task<JsonElement> GetPromptAsync(string name, IReadOnlyDictionary<string, string> arguments, CancellationToken ct)
+        {
+            await requests.Gate.WaitAsync(ct); requests.SetActive(ct);
+            try
+            {
+                var result = await client.GetPromptAsync(new GetPromptRequestParams
+                    { Name = name, Arguments = arguments.ToDictionary(p => p.Key, p => JsonSerializer.SerializeToElement(p.Value)) }, ct);
+                // Only projected content is sent to the model; client-only metadata never becomes history.
+                var json = JsonSerializer.SerializeToNode(result)!.AsObject(); json.Remove("_meta");
+                return DesktopMcpPrompts.ValidateResult(JsonSerializer.SerializeToElement(json));
+            }
+            finally { requests.SetActive(default); requests.Gate.Release(); }
+        }
+        public async Task<McpPromptCompletion> CompletePromptAsync(string prompt, string name, string value,
+            IReadOnlyDictionary<string, string> arguments, CancellationToken ct)
+        {
+            if (client.ServerCapabilities.Completions is null) return McpPromptCompletion.Empty;
+            var result = await client.CompleteAsync(new CompleteRequestParams
+            {
+                Ref = new PromptReference { Name = prompt }, Argument = new() { Name = name, Value = value },
+                Context = new() { Arguments = arguments.ToDictionary(p => p.Key, p => p.Value) }
+            }, ct);
+            return new(result.Completion.Values.Take(100).ToArray(), result.Completion.Total, result.Completion.HasMore == true);
         }
         public async Task<JsonElement> ReadAsync(string uri, string? cursor, int limit, CancellationToken ct)
         {
@@ -200,7 +240,8 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
         public async ValueTask DisposeAsync()
         {
             requests.Dispose();
-            await subscription.DisposeAsync(); await resourceSubscription.DisposeAsync(); await skillSubscription.DisposeAsync(); await client.DisposeAsync();
+            await subscription.DisposeAsync(); await resourceSubscription.DisposeAsync(); await skillSubscription.DisposeAsync();
+            await promptSubscription.DisposeAsync(); await client.DisposeAsync();
         }
     }
 }
@@ -337,6 +378,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
             entry.Changed = () => _ = RefreshAsync(entry);
             connection.ToolsChanged += entry.Changed;
             connection.ResourcesChanged += entry.Changed;
+            connection.PromptsChanged += entry.Changed;
             connection = null;
         }
         catch (Exception e)
@@ -390,6 +432,25 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
                 .DistinctBy(s => s.Descriptor.Id).ToArray();
         }
     }
+    public bool HasPromptCapability => Servers.Any(s => s.State == McpConnectionState.Connected && s.Server.Enabled
+        && s.Discovery is { } discovery && DesktopMcpPrompts.Capability(discovery.Capabilities, "prompts"));
+
+    public IReadOnlyList<McpPromptEntry> CapturePrompts()
+    {
+        lock (sync) return entries.Values.Where(e => e.State == McpConnectionState.Connected && e.Server.Enabled
+            && e.Discovery is { } discovery && DesktopMcpPrompts.Capability(discovery.Capabilities, "prompts"))
+            .SelectMany(e => e.Discovery!.Prompts.Where(p => CatalogProjection.Text(p, "name") is { Length: > 0 })
+                .Select(p => new McpPromptEntry(e.Server.Id, CatalogProjection.Text(e.Discovery.ServerInfo, "title") ?? e.Server.Name,
+                    p.Clone(),
+                    (name, arguments, ct) => RequestAsync(e, (connection, token) => connection.GetPromptAsync(name, arguments, token), ct),
+                    DesktopMcpPrompts.Capability(e.Discovery.Capabilities, "completions")
+                        ? (prompt, name, value, arguments, ct) => RequestAsync(e,
+                            (connection, token) => connection.CompletePromptAsync(prompt, name, value, arguments, token), ct) : null,
+                    () => { lock (sync) return !disposed && entries.TryGetValue(e.Server.Id, out var current) && current == e
+                        && e.State == McpConnectionState.Connected && e.Server.Enabled && e.Discovery!.Prompts.Any(item =>
+                            CatalogProjection.Text(item, "name") == CatalogProjection.Text(p, "name") && item.GetRawText() == p.GetRawText()); })))
+            .ToArray();
+    }
     private Task<JsonElement> CallAsync(Entry entry, string name, JsonElement input, string callId, string locale, CancellationToken ct) =>
         RequestAsync(entry, (connection, token) => connection.CallAsync(name, input, callId, locale, token), ct, toolCall: true);
 
@@ -439,6 +500,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         {
             if (entry.Changed is not null) connection.ToolsChanged -= entry.Changed;
             if (entry.Changed is not null) connection.ResourcesChanged -= entry.Changed;
+            if (entry.Changed is not null) connection.PromptsChanged -= entry.Changed;
             try { await connection.DisposeAsync(); } catch { /* Shutdown/disable must still remove the connection. */ }
         }
         // Retain the canceled source: in-flight snapshots may still use its token.
