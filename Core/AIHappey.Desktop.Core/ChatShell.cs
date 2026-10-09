@@ -73,6 +73,7 @@ public sealed partial class ChatShell : UserControl
         PrepareToolApprovals();
         PrepareChatSettings();
         PrepareImages();
+        PrepareTranscriptions();
         PrepareSystemContext();
         PrepareTranscript();
         Content = BuildLayout();
@@ -248,6 +249,7 @@ public sealed partial class ChatShell : UserControl
         ToolbarControls.Outline(target);
         Grid.SetColumn(target, 1); top.Children.Add(target);
         Grid.SetColumn(imageTarget, 1); top.Children.Add(imageTarget);
+        Grid.SetColumn(transcriptionTarget, 1); top.Children.Add(transcriptionTarget);
         Grid.SetColumn(progress, 3); top.Children.Add(progress);
         var profileMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
         profileMenu.Items.Add(settingsButton); profileMenu.Items.Add(manageAccount);
@@ -743,6 +745,8 @@ public sealed partial class ChatShell : UserControl
         SetOverviewBusy(value);
         imageTarget.IsEnabled = !value;
         imagesPage.SetBusy(value, inference && activePage == DesktopPage.Images);
+        transcriptionTarget.IsEnabled = !value;
+        transcriptionsPage.SetBusy(value, inference && activePage == DesktopPage.Transcriptions);
         progress.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         stop.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         send.Visibility = inference ? Visibility.Collapsed : Visibility.Visible;
@@ -752,6 +756,7 @@ public sealed partial class ChatShell : UserControl
     private void Show(string message, InfoBarSeverity severity)
     {
         if (activePage == DesktopPage.Images) { imagesPage.Notice(message, severity); return; }
+        if (activePage == DesktopPage.Transcriptions) { transcriptionsPage.Notice(message, severity); return; }
         var label = severity switch
         {
             InfoBarSeverity.Error => DesktopResources.Get("Error"),
@@ -771,6 +776,8 @@ public sealed partial class ChatShell : UserControl
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
         imageLinkDialog?.Hide(); imagePreviewDialog?.Hide();
+        transcriptionDetailsDialog?.Hide(); transcriptionDeleteDialog?.Hide();
+        if (transcriptionSettingsDialog is not null) { transcriptionSettingsDialog.DiscardOnShutdown = true; transcriptionSettingsDialog.Hide(); }
         if (imageSettingsDialog is not null) { imageSettingsDialog.DiscardOnShutdown = true; imageSettingsDialog.Hide(); }
         resourcesDialog?.Hide();
         promptsDialog?.Hide();

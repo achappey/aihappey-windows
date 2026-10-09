@@ -732,4 +732,41 @@
   <data name="ImageDeleteHint" xml:space="preserve"><value>Dit verwijdert de geselecteerde afbeelding definitief uit de lokale bibliotheek.</value></data>
   <data name="ImageRefresh" xml:space="preserve"><value>Afbeeldingsmodellen en bibliotheek vernieuwen</value></data>
   <data name="ImageAttachmentTotalLimit" xml:space="preserve"><value>Gebruik maximaal 20 afbeeldingsbijlagen en 100 MB aan bronafbeeldingen en masker per aanvraag.</value></data>
+  <data name="Text" xml:space="preserve"><value>Tekst</value></data>
+  <data name="Transcriptions" xml:space="preserve"><value>Transcripties</value></data>
+  <data name="MyTranscriptions" xml:space="preserve"><value>Mijn transcripties</value></data>
+  <data name="TranscriptionDropHint" xml:space="preserve"><value>Sleep audio- of videobestanden hierheen, of kies bestanden om te transcriberen.</value></data>
+  <data name="TranscriptionFileHint" xml:space="preserve"><value>Bestanden worden direct getranscribeerd met het geselecteerde model. Maximaal 25 MB per bestand.</value></data>
+  <data name="TranscriptionAddFiles" xml:space="preserve"><value>Bestanden toevoegen om te transcriberen</value></data>
+  <data name="TranscriptionSettings" xml:space="preserve"><value>Transcriptie-instellingen</value></data>
+  <data name="TranscriptionNoModels" xml:space="preserve"><value>Er zijn geen transcriptiemodellen beschikbaar. Controleer je providersleutels of vernieuw de modellenlijst.</value></data>
+  <data name="TranscriptionEmptyLibrary" xml:space="preserve"><value>Je opgeslagen transcripties verschijnen hier.</value></data>
+  <data name="TranscriptionOpenFolder" xml:space="preserve"><value>Map openen</value></data>
+  <data name="TranscriptionProcessing" xml:space="preserve"><value>Bezig met transcriberen…</value></data>
+  <data name="TranscriptionUnsupported" xml:space="preserve"><value>Kies een niet-leeg audio- of videobestand.</value></data>
+  <data name="TranscriptionInvalidResponse" xml:space="preserve"><value>De transcriptieservice heeft een ongeldig of te groot antwoord teruggestuurd.</value></data>
+  <data name="TranscriptionLanguage" xml:space="preserve"><value>Taal</value></data>
+  <data name="TranscriptionLanguageHint" xml:space="preserve"><value>Invoertaal in ISO-639-1-formaat, bijvoorbeeld nl</value></data>
+  <data name="TranscriptionLanguages" xml:space="preserve"><value>Mogelijke talen</value></data>
+  <data name="TranscriptionLanguagesHint" xml:space="preserve"><value>ISO-639-1-codes gescheiden door komma's, bijvoorbeeld nl, en</value></data>
+  <data name="TranscriptionKeywords" xml:space="preserve"><value>Trefwoorden</value></data>
+  <data name="TranscriptionKeywordsHint" xml:space="preserve"><value>Eén woord of uitdrukking per regel om de transcriptie te sturen</value></data>
+  <data name="TranscriptionPrompt" xml:space="preserve"><value>Prompt</value></data>
+  <data name="TranscriptionPromptHint" xml:space="preserve"><value>Optionele instructies in de audiotaal om de stijl te sturen of een eerder fragment voort te zetten</value></data>
+  <data name="TranscriptionResponseFormat" xml:space="preserve"><value>Antwoordformaat</value></data>
+  <data name="TranscriptionFormatHint" xml:space="preserve"><value>JSON is de standaard. Ondersteunde antwoordformaten hangen af van het geselecteerde providermodel.</value></data>
+  <data name="TranscriptionSettingsSaveFailed" xml:space="preserve"><value>De transcriptie-instellingen konden niet worden opgeslagen. Probeer het opnieuw.</value></data>
+  <data name="TranscriptionNoProviderSettings" xml:space="preserve"><value>Voor deze providers zijn nog geen extra instellingen beschikbaar.</value></data>
+  <data name="TranscriptionActions" xml:space="preserve"><value>Transcriptie-acties</value></data>
+  <data name="TranscriptionView" xml:space="preserve"><value>Transcriptie bekijken</value></data>
+  <data name="TranscriptionSeconds" xml:space="preserve"><value>{0} sec</value></data>
+  <data name="TranscriptionSegments" xml:space="preserve"><value>Segmenten</value></data>
+  <data name="TranscriptionProviderInput" xml:space="preserve"><value>Providerinvoer</value></data>
+  <data name="TranscriptionProviderResult" xml:space="preserve"><value>Providerresultaat</value></data>
+  <data name="TranscriptionExportText" xml:space="preserve"><value>Tekst opslaan</value></data>
+  <data name="TranscriptionExportMedia" xml:space="preserve"><value>Originele media opslaan</value></data>
+  <data name="TranscriptionOriginalMedia" xml:space="preserve"><value>Originele media</value></data>
+  <data name="TranscriptionDeleteTitle" xml:space="preserve"><value>Transcriptie verwijderen?</value></data>
+  <data name="TranscriptionDeleteHint" xml:space="preserve"><value>Dit verwijdert de opgeslagen transcriptie en de mediakopie in de bibliotheek. Je originele bestand blijft ongewijzigd.</value></data>
+  <data name="TranscriptionRefresh" xml:space="preserve"><value>Transcriptiemodellen en bibliotheek vernieuwen</value></data>
 </root>

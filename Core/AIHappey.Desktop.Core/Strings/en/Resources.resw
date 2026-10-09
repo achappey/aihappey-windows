@@ -736,4 +736,41 @@
   <data name="ImageDeleteHint" xml:space="preserve"><value>This permanently deletes the selected image from the local library.</value></data>
   <data name="ImageRefresh" xml:space="preserve"><value>Refresh image models and library</value></data>
   <data name="ImageAttachmentTotalLimit" xml:space="preserve"><value>Use at most 20 image attachments and 100 MB of source images and mask per request.</value></data>
+  <data name="Text" xml:space="preserve"><value>Text</value></data>
+  <data name="Transcriptions" xml:space="preserve"><value>Transcriptions</value></data>
+  <data name="MyTranscriptions" xml:space="preserve"><value>My transcriptions</value></data>
+  <data name="TranscriptionDropHint" xml:space="preserve"><value>Drop audio or video files here, or choose files to transcribe.</value></data>
+  <data name="TranscriptionFileHint" xml:space="preserve"><value>Files are transcribed immediately with the selected model. Maximum 25 MB per file.</value></data>
+  <data name="TranscriptionAddFiles" xml:space="preserve"><value>Add files to transcribe</value></data>
+  <data name="TranscriptionSettings" xml:space="preserve"><value>Transcription settings</value></data>
+  <data name="TranscriptionNoModels" xml:space="preserve"><value>No transcription models are available. Check your provider keys or refresh the model list.</value></data>
+  <data name="TranscriptionEmptyLibrary" xml:space="preserve"><value>Your saved transcriptions will appear here.</value></data>
+  <data name="TranscriptionOpenFolder" xml:space="preserve"><value>Open folder</value></data>
+  <data name="TranscriptionProcessing" xml:space="preserve"><value>Transcribing…</value></data>
+  <data name="TranscriptionUnsupported" xml:space="preserve"><value>Choose a non-empty audio or video file.</value></data>
+  <data name="TranscriptionInvalidResponse" xml:space="preserve"><value>The transcription service returned an invalid or oversized response.</value></data>
+  <data name="TranscriptionLanguage" xml:space="preserve"><value>Language</value></data>
+  <data name="TranscriptionLanguageHint" xml:space="preserve"><value>Input language in ISO-639-1 format, e.g. en</value></data>
+  <data name="TranscriptionLanguages" xml:space="preserve"><value>Possible languages</value></data>
+  <data name="TranscriptionLanguagesHint" xml:space="preserve"><value>Comma-separated ISO-639-1 codes, e.g. en, nl</value></data>
+  <data name="TranscriptionKeywords" xml:space="preserve"><value>Keywords</value></data>
+  <data name="TranscriptionKeywordsHint" xml:space="preserve"><value>One word or phrase per line to guide transcription</value></data>
+  <data name="TranscriptionPrompt" xml:space="preserve"><value>Prompt</value></data>
+  <data name="TranscriptionPromptHint" xml:space="preserve"><value>Optional instructions in the audio language to guide style or continue an earlier segment</value></data>
+  <data name="TranscriptionResponseFormat" xml:space="preserve"><value>Response format</value></data>
+  <data name="TranscriptionFormatHint" xml:space="preserve"><value>JSON is the default. Supported response formats depend on the selected provider model.</value></data>
+  <data name="TranscriptionSettingsSaveFailed" xml:space="preserve"><value>Could not save transcription settings. Try again.</value></data>
+  <data name="TranscriptionNoProviderSettings" xml:space="preserve"><value>No additional settings are available for these providers yet.</value></data>
+  <data name="TranscriptionActions" xml:space="preserve"><value>Transcription actions</value></data>
+  <data name="TranscriptionView" xml:space="preserve"><value>View transcription</value></data>
+  <data name="TranscriptionSeconds" xml:space="preserve"><value>{0} sec</value></data>
+  <data name="TranscriptionSegments" xml:space="preserve"><value>Segments</value></data>
+  <data name="TranscriptionProviderInput" xml:space="preserve"><value>Provider input</value></data>
+  <data name="TranscriptionProviderResult" xml:space="preserve"><value>Provider result</value></data>
+  <data name="TranscriptionExportText" xml:space="preserve"><value>Save text</value></data>
+  <data name="TranscriptionExportMedia" xml:space="preserve"><value>Save original media</value></data>
+  <data name="TranscriptionOriginalMedia" xml:space="preserve"><value>Original media</value></data>
+  <data name="TranscriptionDeleteTitle" xml:space="preserve"><value>Delete transcription?</value></data>
+  <data name="TranscriptionDeleteHint" xml:space="preserve"><value>This deletes the saved transcription and its library media copy. Your original file is not changed.</value></data>
+  <data name="TranscriptionRefresh" xml:space="preserve"><value>Refresh transcription models and library</value></data>
 </root>

@@ -18,6 +18,8 @@ public sealed class DesktopSettings
     public ChatPreferences Chat { get; set; } = new();
     private ImagePreferences images = new();
     public ImagePreferences Images { get => images; set => images = value ?? new(); }
+    private TranscriptionPreferences transcriptions = new();
+    public TranscriptionPreferences Transcriptions { get => transcriptions; set => transcriptions = value ?? new(); }
     private AiModelPreferences aiModels = new();
     public AiModelPreferences AiModels { get => aiModels; set => aiModels = value ?? new(); }
     private ModelContextPreferences modelContext = new();
@@ -35,7 +37,7 @@ public sealed class DesktopSettings
         Ai = new() { Location = Ai.Location, RemoteUrl = Ai.RemoteUrl },
         Agents = new() { Location = Agents.Location, RemoteUrl = Agents.RemoteUrl },
         Language = Language, ConvertAttachmentsToText = ConvertAttachmentsToText,
-        Chat = Chat.Clone(), Images = Images.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
+        Chat = Chat.Clone(), Images = Images.Clone(), Transcriptions = Transcriptions.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
         AllowedToolList = AllowedToolList.ToList()
     };
 
