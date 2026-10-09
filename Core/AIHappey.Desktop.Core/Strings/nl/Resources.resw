@@ -671,4 +671,11 @@
   <data name="AiModelsLoadFailed" xml:space="preserve"><value>Modellen konden niet worden geladen. Open de instellingen opnieuw om het nogmaals te proberen. Opgeslagen standaardmodellen zijn behouden.</value></data>
   <data name="AiNoModels" xml:space="preserve"><value>Er zijn geen modellen van dit type beschikbaar.</value></data>
   <data name="AiDefaultUnavailable" xml:space="preserve"><value>Het opgeslagen standaardmodel is momenteel niet beschikbaar voor dit modeltype. Het is behouden. Nieuwe taalchats gebruiken het nieuwste beschikbare taalmodel.</value></data>
+  <data name="SkillsContextHint" xml:space="preserve"><value>Schakel vaardigheden in om hun beschrijvingen beschikbaar te maken in de chatcontext. Instructies en meegeleverde bestanden worden alleen geladen wanneer nodig.</value></data>
+  <data name="SkillsCatalogFailed" xml:space="preserve"><value>Vaardigheden konden niet worden geladen. Probeer opnieuw om de catalogus te vernieuwen.</value></data>
+  <data name="SkillsUnavailable" xml:space="preserve"><value>Niet-beschikbare selecties</value></data>
+  <data name="SkillUnavailableHint" xml:space="preserve"><value>Deze vaardigheid is niet beschikbaar of de MCP-server is niet verbonden. U kunt deze nog steeds uitschakelen.</value></data>
+  <data name="SkillPrefetchFailed" xml:space="preserve"><value>Een vaardigheid kon nu niet worden gedownload. Uw selectie blijft behouden en de download wordt bij het eerste gebruik opnieuw geprobeerd.</value></data>
+  <data name="SkillLoadFailed" xml:space="preserve"><value>De ingeschakelde vaardigheid of bron kon niet worden geladen of geverifieerd. Controleer de exacte skill_id en het relatieve pad, of vernieuw de vaardighedencatalogus en MCP-verbinding voordat u het opnieuw probeert.</value></data>
+  <data name="DisableSkill" xml:space="preserve"><value>Vaardigheid {0} uitschakelen</value></data>
 </root>

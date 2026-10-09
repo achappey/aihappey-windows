@@ -66,6 +66,7 @@ public sealed partial class ChatShell : UserControl
         history = new(Path.Combine(session.DataDirectory, "conversations"));
         catalogClient = new(client, http);
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
+        skillStore = new(Path.Combine(session.DataDirectory, "skills"), (item, version, ct) => catalogClient.DownloadSkillAsync(item.Id, version, ct));
         PrepareContext();
         session.ElicitationHandler = ShowElicitationAsync;
         PrepareMcp();
@@ -319,6 +320,7 @@ public sealed partial class ChatShell : UserControl
         ToolbarControls.Label(target, label);
         chatSettings.Visibility = selected == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
         RenderMcpTags();
+        RenderContextTags();
     }
 
     private async Task SelectServiceAsync(ServiceKind selected)
@@ -367,7 +369,9 @@ public sealed partial class ChatShell : UserControl
         {
             // Finish preparation before committing a turn or clearing its draft. Cancellation retains input/context.
             var prepared = await ComposerAttachments.PrepareAsync(prompt, snapshot, Service, extractDocuments, documentExtractor, ct, resourceSnapshot);
-            var mcpTurn = Service == ServiceKind.Ai ? Mcp.Capture() : McpTurnSnapshot.Empty;
+            if (Service == ServiceKind.Ai && inferencePreferences.EnabledSkillIds.Any(id => !id.StartsWith("mcp:", StringComparison.Ordinal)))
+                await LoadRuntimeSkillsAsync(ct);
+            var mcpTurn = Service == ServiceKind.Ai ? CaptureSkillRuntime(inferencePreferences) : McpTurnSnapshot.Empty;
             activeMcpTurn = mcpTurn;
             var systemContext = Service == ServiceKind.Ai ? CaptureSystemContext(inferencePreferences, mcpTurn) : null;
             current.Service = Service; current.Target = selected;
@@ -681,10 +685,12 @@ public sealed partial class ChatShell : UserControl
             var connectionsChanged = new[] { ServiceKind.Ai, ServiceKind.Agents }.Any(kind =>
                 session.Settings.For(kind).Location != next.For(kind).Location || session.Settings.For(kind).RemoteUrl != next.For(kind).RemoteUrl);
             var elicitationChanged = session.Settings.ModelContext.EnableFormElicitation != next.ModelContext.EnableFormElicitation;
+            var mcpSkillsChanged = session.Settings.ModelContext.EnableSkills != next.ModelContext.EnableSkills;
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
             UpdateTargetSuggestions();
-            if (elicitationChanged) await Mcp.ReconnectAsync(ct);
+            if (elicitationChanged || mcpSkillsChanged) await Mcp.ReconnectAsync(ct);
+            RenderContextTags();
             if (next.Language != session.ActiveLanguage) Show(DesktopResources.Get("RestartRequired"), InfoBarSeverity.Informational);
             // Language and composer preferences do not change the runtime, account, history partition, or current draft.
             if (!connectionsChanged) return;
@@ -755,7 +761,7 @@ public sealed partial class ChatShell : UserControl
         approvalDialog?.Hide();
         systemContextDialog?.Hide();
         mcpDialog?.Shutdown(); Mcp.Changed -= McpChanged;
-        if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.Hide(); }
+        if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.CancelSkillLoading(); chatSettingsDialog.Hide(); }
         while (busy) await Task.Delay(20);
         await approvalSettingsWrite.WaitAsync(); approvalSettingsWrite.Release();
         // A save picker may remain open until dismissed; no download continues after shutdown.

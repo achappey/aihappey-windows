@@ -11,7 +11,7 @@ public sealed class ModelContextPreferences
         set => toolTimeoutMinutes = Math.Clamp(value, 1, 60);
     }
     public bool ResetTimeoutOnProgress { get; set; } = true;
-    // Extension execution is intentionally not implemented yet.
+    // Apps remain a future extension; Skills gates discovery and all retained skill readers.
     public bool EnableApps { get; set; } = true;
     public bool EnableSkills { get; set; } = true;
     public ModelContextPreferences Clone() => (ModelContextPreferences)MemberwiseClone();

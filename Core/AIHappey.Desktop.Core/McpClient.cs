@@ -28,6 +28,7 @@ public sealed record McpDiscovery(JsonElement ServerInfo, JsonElement Capabiliti
 {
     public IReadOnlyList<JsonElement> Resources { get; init; } = [];
     public IReadOnlyList<JsonElement> ResourceTemplates { get; init; } = [];
+    public IReadOnlyList<McpSkillManifest> Skills { get; init; } = [];
 }
 
 public interface IDesktopMcpConnection : IAsyncDisposable
@@ -95,6 +96,7 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
         public bool ManagesToolTimeout => true;
         private readonly IAsyncDisposable subscription;
         private readonly IAsyncDisposable resourceSubscription;
+        private readonly IAsyncDisposable skillSubscription;
         public event Action? ToolsChanged;
         public event Action? ResourcesChanged;
         public SdkConnection(McpClient client, Func<ModelContextPreferences> preferences, McpRequestLifetime requests)
@@ -105,6 +107,8 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
             subscription = client.RegisterNotificationHandler(NotificationMethods.ToolListChangedNotification, (_, _) =>
             { ToolsChanged?.Invoke(); return ValueTask.CompletedTask; });
             resourceSubscription = client.RegisterNotificationHandler(NotificationMethods.ResourceListChangedNotification, (_, _) =>
+            { ResourcesChanged?.Invoke(); return ValueTask.CompletedTask; });
+            skillSubscription = client.RegisterNotificationHandler("notifications/skills/list_changed", (_, _) =>
             { ResourcesChanged?.Invoke(); return ValueTask.CompletedTask; });
         }
         public async Task<McpDiscovery> DiscoverAsync(CancellationToken ct)
@@ -129,8 +133,23 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
                     return (page.ResourceTemplates.Select(r => JsonSerializer.SerializeToElement(r)).ToArray(), page.NextCursor);
                 }, ct);
             }
+            IReadOnlyList<McpSkillManifest> skills = [];
+            if (preferences().EnableSkills && client.ServerCapabilities.Resources is not null
+                && client.ServerCapabilities.Extensions?.ContainsKey("io.modelcontextprotocol/skills") == true)
+            {
+                var entries = await McpCatalogPagination.ReadAsync(async (cursor, token) =>
+                {
+                    var response = await client.SendRequestAsync(new JsonRpcRequest { Method = "skills/list",
+                        Params = cursor is null ? new JsonObject() : new JsonObject { ["cursor"] = cursor } }, token);
+                    var page = JsonSerializer.SerializeToElement(response.Result);
+                    if (!page.TryGetProperty("skills", out var list) || list.ValueKind != JsonValueKind.Array)
+                        throw new InvalidDataException("Invalid MCP skills list.");
+                    return (list.EnumerateArray().Select(s => s.Clone()).ToArray(), CatalogProjection.Text(page, "nextCursor"));
+                }, ct);
+                skills = entries.Select(McpSkillManifest.Parse).ToArray();
+            }
             return new(JsonSerializer.SerializeToElement(client.ServerInfo), JsonSerializer.SerializeToElement(client.ServerCapabilities),
-                client.ServerInstructions, tools) { Resources = resources, ResourceTemplates = templates };
+                client.ServerInstructions, tools) { Resources = resources, ResourceTemplates = templates, Skills = skills };
         }
         public async Task<JsonElement> ReadAsync(string uri, string? cursor, int limit, CancellationToken ct)
         {
@@ -181,7 +200,7 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
         public async ValueTask DisposeAsync()
         {
             requests.Dispose();
-            await subscription.DisposeAsync(); await resourceSubscription.DisposeAsync(); await client.DisposeAsync();
+            await subscription.DisposeAsync(); await resourceSubscription.DisposeAsync(); await skillSubscription.DisposeAsync(); await client.DisposeAsync();
         }
     }
 }
@@ -357,6 +376,19 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
                 (uri, cursor, limit, ct) => RequestAsync(e, (connection, token) => connection.ReadAsync(uri, cursor, limit, token), ct),
                 (template, name, value, arguments, ct) => RequestAsync(e,
                     (connection, token) => connection.CompleteAsync(template, name, value, arguments, token), ct))));
+    }
+    public IReadOnlyList<DesktopMcpSkill> CaptureSkills()
+    {
+        lock (sync)
+        {
+            if (preferences?.Invoke().EnableSkills == false) return [];
+            return entries.Values.Where(e => e.State == McpConnectionState.Connected && e.Server.Enabled && e.Discovery is not null)
+                .SelectMany(e => e.Discovery!.Skills.Select(manifest => new DesktopMcpSkill(e.Server.Url, manifest,
+                    (uri, ct) => RequestAsync(e, (connection, token) => connection.ReadAsync(uri, null, 100, token), ct),
+                    () => { lock (sync) return preferences?.Invoke().EnableSkills != false && !disposed
+                        && entries.TryGetValue(e.Server.Id, out var current) && current == e && e.State == McpConnectionState.Connected && e.Server.Enabled; })))
+                .DistinctBy(s => s.Descriptor.Id).ToArray();
+        }
     }
     private Task<JsonElement> CallAsync(Entry entry, string name, JsonElement input, string callId, string locale, CancellationToken ct) =>
         RequestAsync(entry, (connection, token) => connection.CallAsync(name, input, callId, locale, token), ct, toolCall: true);

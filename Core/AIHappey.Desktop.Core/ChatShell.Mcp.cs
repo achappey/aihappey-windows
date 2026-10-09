@@ -33,6 +33,8 @@ public sealed partial class ChatShell
     {
         if (closing) return;
         RenderMcpTags(); mcpOverview.SetInstalled(Mcp.Servers);
+        RenderContextTags();
+        if (chatSettingsDialog is { } dialog) _ = dialog.RefreshSkillsAsync();
         resourcesDialog?.SetCatalog(Mcp.Capture().Resources);
     });
     private void RenderMcpTags()

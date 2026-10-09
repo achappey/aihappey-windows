@@ -675,4 +675,11 @@
   <data name="AiModelsLoadFailed" xml:space="preserve"><value>Models could not be loaded. Reopen settings to try again. Saved defaults have been retained.</value></data>
   <data name="AiNoModels" xml:space="preserve"><value>No models of this type are available.</value></data>
   <data name="AiDefaultUnavailable" xml:space="preserve"><value>The saved default is not currently available for this model type. It has been retained. New language chats use the newest available language model.</value></data>
+  <data name="SkillsContextHint" xml:space="preserve"><value>Enable skills to make their descriptions available in chat context. Instructions and bundled files are loaded only when needed.</value></data>
+  <data name="SkillsCatalogFailed" xml:space="preserve"><value>Skills could not be loaded. Retry to refresh the catalog.</value></data>
+  <data name="SkillsUnavailable" xml:space="preserve"><value>Unavailable selections</value></data>
+  <data name="SkillUnavailableHint" xml:space="preserve"><value>This skill is unavailable or its MCP server is disconnected. You can still disable it.</value></data>
+  <data name="SkillPrefetchFailed" xml:space="preserve"><value>A skill could not be downloaded right now. Your selection is retained and the download will retry on first use.</value></data>
+  <data name="SkillLoadFailed" xml:space="preserve"><value>The enabled skill or resource could not be loaded or verified. Check the exact skill_id and relative path, or refresh the skill catalog and MCP connection before retrying.</value></data>
+  <data name="DisableSkill" xml:space="preserve"><value>Disable skill {0}</value></data>
 </root>

@@ -16,12 +16,22 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private TextBox instructions = null!;
     private StackPanel general = null!;
     private IChatProviderForm? providerForm;
+    private SkillsSettingsView? skillsView;
+    private readonly Func<CancellationToken, Task<DesktopSkillSelection>>? loadSkills;
+    private readonly Func<string, CancellationToken, Task>? prefetchSkill;
+    private Action? selectSkillsTab;
     public ChatPreferences? Result { get; private set; }
     public Func<ChatPreferences, Task>? SaveAsync { get; set; }
     public bool DiscardOnShutdown { get; set; }
+    public Task RefreshSkillsAsync() => skillsView?.RefreshAsync() ?? Task.CompletedTask;
+    public void CancelSkillLoading() => skillsView?.Dispose();
+    public void ShowSkillsTab() => selectSkillsTab?.Invoke();
 
-    public ChatSettingsDialog(ChatPreferences preferences, string? provider)
+    public ChatSettingsDialog(ChatPreferences preferences, string? provider,
+        Func<CancellationToken, Task<DesktopSkillSelection>>? loadSkills = null,
+        Func<string, CancellationToken, Task>? prefetchSkill = null)
     {
+        this.loadSkills = loadSkills; this.prefetchSkill = prefetchSkill;
         Name = "ChatSettingsDialog"; this.provider = provider; draft = preferences.Clone();
         Title = DesktopResources.Get("ChatSettings"); CloseButtonText = DesktopResources.Get("Close");
         PrimaryButtonText = DesktopResources.Get("ChatRestoreDefaults");
@@ -40,11 +50,12 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         };
         Closing += CommitOnClose;
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; tokens.Focus(FocusState.Programmatic); };
-        Closed += (_, _) => XamlRoot.Changed -= RootChanged;
+        Closed += (_, _) => { XamlRoot.Changed -= RootChanged; skillsView?.Dispose(); };
     }
 
     private void Build()
     {
+        skillsView?.Dispose(); skillsView = new(draft, loadSkills, prefetchSkill);
         tabs.Children.Clear(); general = new StackPanel { Spacing = 16 };
         ChatSettingsFields.Card(general, "GeneralChatCard", "artificialIntelligence", out var body, out _);
         tokens = new TextBox { Name = "MaxOutputTokens", Header = DesktopResources.Get("ChatMaxOutputTokens"), PlaceholderText = DesktopResources.Get("ChatOptional"), Text = draft.MaxOutputTokens?.ToString() ?? "" };
@@ -58,14 +69,19 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         providerForm = ChatProviderForms.Create(provider, draft);
         var generalTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatGeneralTab", Content = DesktopResources.Get("General"), IsChecked = true };
         ControlAppearance.Stock(generalTab); tabs.Children.Add(generalTab);
+        var skillsTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatSkillsTab", Content = DesktopResources.Get("Skills") };
+        ControlAppearance.Stock(skillsTab); tabs.Children.Add(skillsTab);
         Microsoft.UI.Xaml.Controls.Primitives.ToggleButton? providerTab = null;
         if (providerForm is not null)
         {
             providerTab = new() { Name = "ChatProviderTab", Content = provider == "openai" ? "OpenAI" : provider };
             ControlAppearance.Stock(providerTab); tabs.Children.Add(providerTab);
-            providerTab.Click += (_, _) => { generalTab.IsChecked = false; providerTab.IsChecked = true; page.Content = providerForm.View; page.ChangeView(null, 0, null, true); };
+            providerTab.Click += (_, _) => { generalTab.IsChecked = skillsTab.IsChecked = false; providerTab.IsChecked = true; page.Content = providerForm.View; page.ChangeView(null, 0, null, true); };
         }
-        generalTab.Click += (_, _) => { generalTab.IsChecked = true; if (providerTab is not null) providerTab.IsChecked = false; page.Content = general; page.ChangeView(null, 0, null, true); };
+        generalTab.Click += (_, _) => { generalTab.IsChecked = true; skillsTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false; page.Content = general; page.ChangeView(null, 0, null, true); };
+        selectSkillsTab = () => { skillsTab.IsChecked = true; generalTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false;
+            page.Content = skillsView; page.ChangeView(null, 0, null, true); };
+        skillsTab.Click += (_, _) => ShowSkillsTab();
         page.Content = general;
     }
 

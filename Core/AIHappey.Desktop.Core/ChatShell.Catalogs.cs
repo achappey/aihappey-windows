@@ -118,6 +118,7 @@ public sealed partial class ChatShell
     private void InvalidateCatalogs()
     {
         catalogs.Clear(); favorites.Clear(); catalogPartition = null;
+        runtimeSkillCatalog = []; runtimeSkillPartition = null;
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide();
         details.IsPaneOpen = false;
@@ -140,6 +141,11 @@ public sealed partial class ChatShell
             ct.ThrowIfCancellationRequested();
             if (closing || session.HistoryPartition != partition) return;
             catalogs[page.Kind] = items;
+            if (page.Kind == CatalogKind.Skill)
+            {
+                await skillStore.SaveCatalogAsync(partition, items, ct);
+                runtimeSkillCatalog = items; runtimeSkillPartition = partition; RenderContextTags();
+            }
             var config = session.Settings.For(page.Kind == CatalogKind.Agent ? ServiceKind.Agents : ServiceKind.Ai);
             var source = config.Location == RuntimeLocation.Local ? "localhost" : DesktopSettings.RemoteUri(config.RemoteUrl).Host;
             page.SetItems(items, favorites, source);

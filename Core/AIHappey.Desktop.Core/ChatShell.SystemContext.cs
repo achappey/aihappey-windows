@@ -35,12 +35,16 @@ public sealed partial class ChatShell
         {
             ["innerWidth"] = XamlRoot.Size.Width, ["innerHeight"] = XamlRoot.Size.Height, ["devicePixelRatio"] = scale
         };
-        return session.CaptureSystemContext(ActualTheme == ElementTheme.Dark, information, preferences, mcp ?? activeMcpTurn);
+        return session.CaptureSystemContext(ActualTheme == ElementTheme.Dark, information, preferences,
+            mcp ?? activeMcpTurn ?? CaptureSkillRuntime(preferences ?? session.Settings.Chat));
     }
 
     private async Task ShowSystemContextAsync()
     {
         if (closing || historyDialogOpen || catalogDialog is not null || systemContextDialog is not null) return;
+        if (!busy && Service == ServiceKind.Ai && session.Settings.Chat.EnabledSkillIds.Any(id => !id.StartsWith("mcp:", StringComparison.Ordinal)))
+            await RunAsync(ct => LoadRuntimeSkillsAsync(ct));
+        if (closing) return;
         var dialog = new SystemContextDialog(CaptureSystemContext(), session.ContextOptions.AppName ?? DesktopBranding.AppName,
             Service == ServiceKind.Agents) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog); systemContextDialog = dialog; historyDialogOpen = true;

@@ -34,13 +34,14 @@ public sealed class McpTurnSnapshot
         var hasResources = servers.Any(s => s.Discovery.Resources.Count > 0 || s.Discovery.ResourceTemplates.Count > 0);
         used.Add(DesktopMcpResources.ToolName);
         used.Add(DesktopMcpToolExecution.ElicitationToolName);
+        used.Add(DesktopSkillTurn.ActivateTool); used.Add(DesktopSkillTurn.ResourceTool);
         foreach (var server in servers)
         {
             var serverTools = new JsonArray();
             foreach (var candidate in candidates.Where(c => c.Server.Id == server.Server.Id))
             {
                 var name = candidate.Name;
-                if (name is DesktopMcpResources.ToolName or DesktopMcpToolExecution.ElicitationToolName || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
+                if (name is DesktopMcpResources.ToolName or DesktopMcpToolExecution.ElicitationToolName || DesktopSkillTurn.Reserved(name) || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
                 {
                     var stem = Regex.Replace(name, "[^a-zA-Z0-9_-]", "_");
                     stem = stem[..Math.Min(stem.Length, 40)];
@@ -95,6 +96,12 @@ public sealed class McpTurnSnapshot
     }
 
     public bool Contains(string name) => routes.ContainsKey(name);
+    public void AddLocal(JsonElement tool, Func<JsonElement, CancellationToken, Task<JsonElement>> call)
+    {
+        var name = CatalogProjection.Text(tool, "name") ?? throw new InvalidOperationException("Missing local tool name.");
+        routes.Add(name, new(name, (_, input, _, _, ct) => call(input, ct))); tools.Add(tool.Clone());
+    }
+    public void AddContext(JsonElement block) => context.Add(block.Clone());
     public Task<JsonElement> CallAsync(string name, JsonElement input, string callId, string locale, CancellationToken ct) =>
         routes.TryGetValue(name, out var route) ? route.Call(route.OriginalName, input, callId, locale, ct)
             : throw new InvalidOperationException(DesktopResources.Get("McpUnknownTool"));

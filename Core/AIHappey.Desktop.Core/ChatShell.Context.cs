@@ -87,7 +87,8 @@ public sealed partial class ChatShell
             contextTags.Children.Add(tag);
         }
         RenderResourceTags();
-        contextTagScroll.Visibility = contextAttachments.Count + selectedResources.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        RenderSkillTags();
+        contextTagScroll.Visibility = contextTags.Children.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private async Task PickAttachmentsAsync()
