@@ -7,7 +7,10 @@ using System.Text.Json.Nodes;
 namespace AIHappey.Desktop.Core;
 
 public sealed record McpCatalogItem(string Id, string Name, string Description, string Url,
-    string? Version = null, string? RegistryUrl = null);
+    string? Version = null, string? RegistryUrl = null)
+{
+    public IReadOnlyList<McpIcon> Icons { get; init; } = [];
+}
 public sealed record McpCatalogResult(IReadOnlyList<McpCatalogItem> Items, IReadOnlyList<string> FailedSources);
 
 public static class McpValidation
@@ -82,7 +85,7 @@ public sealed class DesktopMcpCatalogClient(HttpClient http)
                                 var url = McpValidation.Endpoint(CatalogProjection.Text(remote, "url") ?? "").AbsoluteUri;
                                 var id = McpValidation.Id(name);
                                 items.TryAdd(source + "|" + id, new(id, name, CatalogProjection.Text(server, "description") ?? "", url,
-                                    CatalogProjection.Text(server, "version"), source));
+                                    CatalogProjection.Text(server, "version"), source) { Icons = McpIcons.Read(server) });
                                 break;
                             }
                             catch (InvalidOperationException) { /* Unusable remote: try another endpoint. */ }

@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$TranscriptOnly)
+param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -17,6 +17,7 @@ $report = Join-Path ([IO.Path]::GetTempPath()) ('AIHappey-ui-tests-' + [guid]::N
 try {
     $arguments = @('"' + $report + '"')
     if ($TranscriptOnly) { $arguments += '--transcript-only' }
+    if ($McpPresentationOnly) { $arguments += '--mcp-presentation-only' }
     $process = Start-Process (Join-Path $output 'AIHappey.Desktop.UiTests.exe') -ArgumentList $arguments -PassThru
     if (-not $process.WaitForExit(60000)) {
         $process.Kill()

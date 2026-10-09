@@ -34,14 +34,15 @@ public sealed class McpResourcesDialog : ContentDialog
         // Fixed native markup, never constructed from server-provided strings.
         list.ItemTemplate = (DataTemplate)XamlReader.Load("""
             <DataTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-              <StackPanel Spacing="4" Margin="4,8" HorizontalAlignment="Stretch">
-                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding Kind}" FontSize="12" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding Uri}" FontSize="12" TextWrapping="Wrap" />
-              </StackPanel>
+              <ContentControl Margin="4,8" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" IsTabStop="False" />
             </DataTemplate>
             """);
+        list.ContainerContentChanging += (_, args) =>
+        {
+            if (args.ItemContainer.ContentTemplateRoot is not ContentControl row) return;
+            row.Content = !args.InRecycleQueue && args.Item is McpResourceEntry entry ? McpResourceView.Details(entry, true) : null;
+            args.Handled = true;
+        };
         ControlAppearance.Native(list);
         ToolbarControls.Label(list, DesktopResources.Get("McpResources"));
         panel.Children.Add(list); panel.Children.Add(empty);
@@ -100,8 +101,7 @@ public sealed class McpResourcesDialog : ContentDialog
         list.Visibility = empty.Visibility = Visibility.Collapsed; fields.Visibility = Visibility.Visible;
         Title = entry.Name; PrimaryButtonText = DesktopResources.Get("McpExecute"); IsPrimaryButtonEnabled = true;
         CloseButtonText = DesktopResources.Get("Cancel"); DefaultButton = ContentDialogButton.Primary;
-        fields.Children.Add(new TextBlock { Text = entry.Description, TextWrapping = TextWrapping.Wrap });
-        fields.Children.Add(new TextBlock { Text = entry.Uri, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true });
+        fields.Children.Add(McpResourceView.Details(entry, false));
         foreach (var name in DesktopMcpResources.TemplateArguments(entry.Uri))
         {
             values[name] = "";

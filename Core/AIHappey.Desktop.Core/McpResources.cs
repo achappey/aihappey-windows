@@ -18,8 +18,9 @@ public sealed record McpResourceEntry(string ServerId, string ServerName, string
     public string Name => CatalogProjection.Text(Resource, "title") ?? CatalogProjection.Text(Resource, "name") ?? Uri;
     public string Uri => CatalogProjection.Text(Resource, IsTemplate ? "uriTemplate" : "uri") ?? "";
     public string Description => CatalogProjection.Text(Resource, "description") ?? "";
-    public string Kind => DesktopResources.Get(IsTemplate ? "McpResourceTemplate" : "McpResource")
-        + " · " + ServerName + (CatalogProjection.Text(Resource, "mimeType") is { } mime ? " · " + mime : "");
+    public string ResourceType => DesktopResources.Get(IsTemplate ? "McpResourceTemplate" : "McpResource");
+    public string? MimeType => CatalogProjection.Text(Resource, "mimeType");
+    public string Kind => ResourceType + " · " + ServerName + (MimeType is { } mime ? " · " + mime : "");
 }
 
 public sealed record McpSelectedResource(string ServerId, string Uri, string Name, JsonElement Result)

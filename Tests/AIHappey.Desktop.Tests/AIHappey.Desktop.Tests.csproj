@@ -12,6 +12,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/RelativeTime.cs" Link="Core/RelativeTime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpCatalog.cs" Link="Core/McpCatalog.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/McpIcons.cs" Link="Core/McpIcons.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpStore.cs" Link="Core/McpStore.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpClient.cs" Link="Core/McpClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpTools.cs" Link="Core/McpTools.cs" />

@@ -26,7 +26,7 @@ public sealed partial class ChatShell
         mcpOverview.AddRequested = async () => await ManageMcpAsync(add: true);
         mcpOverview.ManageRequested = async () => await ManageMcpAsync();
         mcpOverview.InstallRequested = async item => await RunAsync(ct => Mcp.InstallAsync(new DesktopMcpServer
-        { Id = item.Id, Name = item.Name, Description = item.Description, Url = item.Url, RegistryUrl = item.RegistryUrl, Version = item.Version }, ct));
+        { Id = item.Id, Name = item.Name, Description = item.Description, Url = item.Url, RegistryUrl = item.RegistryUrl, Version = item.Version, Icons = item.Icons.ToArray() }, ct));
         mcpOverview.RemoveRequested = async item => await RunAsync(ct => Mcp.RemoveAsync(item.Id, ct));
     }
     private void McpChanged() => DispatcherQueue.TryEnqueue(() =>
@@ -47,7 +47,7 @@ public sealed partial class ChatShell
             content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
             content.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
             content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-            content.Children.Add(new FontIcon { Glyph = "\uE774", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+            content.Children.Add(new McpServerIcon(McpIcons.ForServer(view), 16));
             var label = new TextBlock { Text = displayName, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(label, 1); content.Children.Add(label);
             var remove = new Button { Name = "DisconnectMcpServer", Content = new FontIcon { Glyph = "\uE711", FontSize = 10 }, Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };

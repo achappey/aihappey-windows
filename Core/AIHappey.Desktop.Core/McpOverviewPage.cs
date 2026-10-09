@@ -102,10 +102,13 @@ internal sealed class McpOverviewPage : UserControl
     {
         var installedServer = installed.FirstOrDefault(s => s.Server.Id == item.Id);
         var content = new StackPanel { Spacing = 12 };
-        var header = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(16, 16, 16, 0) };
-        header.Children.Add(new FontIcon { Glyph = "\uE774", FontSize = 24 });
-        header.Children.Add(new TextBlock { Text = item.Name, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-            TextWrapping = TextWrapping.Wrap, MaxLines = 2, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 240 });
+        var header = new Grid { ColumnSpacing = 12, Margin = new Thickness(16, 16, 16, 0) };
+        header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        header.Children.Add(new McpServerIcon(installedServer is null ? item.Icons : McpIcons.ForServer(installedServer, item.Icons), 32));
+        var title = new TextBlock { Text = item.Name, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            TextWrapping = TextWrapping.Wrap, MaxLines = 2, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
+        Grid.SetColumn(title, 1); header.Children.Add(title);
         content.Children.Add(header);
         var labels = new StackPanel { Spacing = 6, Margin = new Thickness(16, 0, 16, 0) };
         if (item.Version is { Length: > 0 }) labels.Children.Add(new TextBlock { Text = item.Version, FontSize = 12 });

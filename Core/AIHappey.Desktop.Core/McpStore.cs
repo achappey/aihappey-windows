@@ -13,19 +13,21 @@ public sealed class DesktopMcpServer
     public string Url { get; set; } = "";
     public string? RegistryUrl { get; set; }
     public string? Version { get; set; }
+    public IReadOnlyList<McpIcon> Icons { get; set; } = [];
     public bool Enabled { get; set; }
     [JsonIgnore] public Dictionary<string, string> Headers { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public string? ProtectedHeaders { get; set; }
 
     public DesktopMcpServer Clone() => new() { Id = Id, Name = Name, Description = Description, Url = Url,
-        RegistryUrl = RegistryUrl, Version = Version, Enabled = Enabled, Headers = new(Headers, StringComparer.OrdinalIgnoreCase) };
-    public McpCatalogItem CatalogItem => new(Id, Name, Description, Url, Version, RegistryUrl);
+        RegistryUrl = RegistryUrl, Version = Version, Icons = Icons.ToArray(), Enabled = Enabled, Headers = new(Headers, StringComparer.OrdinalIgnoreCase) };
+    public McpCatalogItem CatalogItem => new(Id, Name, Description, Url, Version, RegistryUrl) { Icons = Icons.ToArray() };
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Id) || Id.Length > 2048 || string.IsNullOrWhiteSpace(Name) || Name.Length > 256)
             throw new InvalidOperationException(DesktopResources.Get("McpInvalidName"));
         Url = McpValidation.Endpoint(Url).AbsoluteUri;
         Headers = McpValidation.Headers(Headers);
+        Icons = (Icons ?? []).Where(icon => icon is not null && McpIcons.Supported(icon)).Take(32).ToArray();
     }
 }
 

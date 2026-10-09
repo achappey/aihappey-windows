@@ -8,7 +8,7 @@ namespace AIHappey.Desktop.Core;
 public sealed class ToolApprovalDialog : ContentDialog, IResponsiveDialog
 {
     private readonly StackPanel layout = new() { Spacing = 12 };
-    private readonly TabView tabs = ReviewTabs("ToolApprovalTabs");
+    private readonly ToolReviewTabs tabs = new("ToolApprovalTabs");
     private readonly TextBox reason = new() { Name = "ToolDenyReason", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap,
         MaxLength = 4000, MinHeight = 96, MaxHeight = 180, Visibility = Visibility.Collapsed };
     private readonly SplitButton automatic = new() { Name = "AutomaticToolApproval", Content = DesktopResources.Get("Automatic") };
@@ -26,10 +26,10 @@ public sealed class ToolApprovalDialog : ContentDialog, IResponsiveDialog
         Content = layout;
         layout.Children.Add(new TextBlock { Text = pending.Title, TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
         if (pending.Title != pending.ToolName) layout.Children.Add(Text(pending.ToolName));
-        var input = Tab(DesktopResources.Get("Input"), pending.Part.TryGetProperty("input", out var value)
+        tabs.Add(DesktopResources.Get("Input"), pending.Part.TryGetProperty("input", out var value)
             ? ValueView(value) : Text(DesktopResources.Get("NoToolInput")), "ToolApprovalInput");
-        var output = Tab(DesktopResources.Get("Output"), OutputView(pending.Part), "ToolApprovalOutput");
-        tabs.TabItems.Add(input); tabs.TabItems.Add(output); tabs.SelectedItem = output;
+        tabs.Add(DesktopResources.Get("Output"), OutputView(pending.Part), "ToolApprovalOutput");
+        tabs.SelectedIndex = 1;
         layout.Children.Add(tabs);
         reason.Header = DesktopResources.Get("DenyReason"); layout.Children.Add(reason);
         var menu = new MenuFlyout();
@@ -70,9 +70,9 @@ public sealed class ToolApprovalDialog : ContentDialog, IResponsiveDialog
             return Text(PortableConversations.String(part, "errorText") ?? DesktopResources.Get("NoToolOutput"));
         var output = part.GetProperty("output");
         if (output.ValueKind != JsonValueKind.Object) return ValueView(output);
-        var sections = ReviewTabs("ToolApprovalOutputTabs");
+        var sections = new ToolReviewTabs("ToolApprovalOutputTabs");
         if (output.TryGetProperty("structuredContent", out var structured) && structured.ValueKind != JsonValueKind.Null)
-            sections.TabItems.Add(Tab(DesktopResources.Get("StructuredContent"), ValueView(structured), "ToolStructuredOutput"));
+            sections.Add(DesktopResources.Get("StructuredContent"), ValueView(structured), "ToolStructuredOutput");
         if (output.TryGetProperty("content", out var content) && content.ValueKind == JsonValueKind.Array)
         {
             var i = 0;
@@ -83,21 +83,15 @@ public sealed class ToolApprovalDialog : ContentDialog, IResponsiveDialog
                     ? (UIElement)new ChatMarkdown { Text = text } : ValueView(block);
                 var label = DesktopResources.Get(kind switch { "text" => "ToolContentText", "image" => "ToolContentImage",
                     "audio" => "ToolContentAudio", "resource" => "ToolContentResource", "resource_link" => "ToolContentLink", _ => "ToolContentOther" });
-                sections.TabItems.Add(Tab($"{label} {++i}", view, "ToolOutputBlock"));
+                sections.Add($"{label} {++i}", view, "ToolOutputBlock");
             }
         }
-        if (sections.TabItems.Count == 0) return ValueView(output);
-        sections.TabItems.Add(Tab(DesktopResources.Get("RawOutput"), ValueView(output), "ToolRawOutput"));
+        if (sections.Count == 0) return ValueView(output);
+        sections.Add(DesktopResources.Get("RawOutput"), ValueView(output), "ToolRawOutput");
         sections.SelectedIndex = 0;
         return sections;
     }
 
-    private static TabView ReviewTabs(string name) => new() { Name = name, IsAddTabButtonVisible = false,
-        CanDragTabs = false, CanReorderTabs = false, TabWidthMode = TabViewWidthMode.SizeToContent };
-    private static TabViewItem Tab(string title, UIElement content, string name) => new() { Name = name, Header = title,
-        IsClosable = false, Content = new ScrollViewer { Content = content, Padding = new Thickness(4, 12, 4, 8),
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch } };
     private static TextBlock Text(string value) => new() { Text = value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
     private static UIElement ValueView(JsonElement value) => Text(value.ValueKind == JsonValueKind.String
         ? value.GetString() ?? "" : JsonSerializer.Serialize(value, PortableConversations.Json));
