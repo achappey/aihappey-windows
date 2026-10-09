@@ -81,8 +81,12 @@ public sealed partial class ChatShell
         catch (OperationCanceledException) { mcpOverview.Error(DesktopResources.Get("CatalogCanceled")); throw; }
         catch { mcpOverview.Error(DesktopResources.Get("McpRegistryPartialFailure")); throw; }
     }
-    private Task LoadActiveOverviewAsync(CancellationToken ct, bool useCache = false) => activePage == DesktopPage.Mcp
-        ? LoadMcpOverviewAsync(ct, useCache) : LoadOverviewAsync(ActiveOverview, ct, useCache);
+    private Task LoadActiveOverviewAsync(CancellationToken ct, bool useCache = false) => activePage switch
+    {
+        DesktopPage.Images => LoadImagesAsync(ct, useCache),
+        DesktopPage.Mcp => LoadMcpOverviewAsync(ct, useCache),
+        _ => LoadOverviewAsync(ActiveOverview, ct, useCache)
+    };
 
     private async Task ManageMcpAsync(bool add = false)
     {

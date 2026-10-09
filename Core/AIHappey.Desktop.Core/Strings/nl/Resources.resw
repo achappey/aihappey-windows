@@ -682,4 +682,54 @@
   <data name="SkillPrefetchFailed" xml:space="preserve"><value>Een vaardigheid kon nu niet worden gedownload. Uw selectie blijft behouden en de download wordt bij het eerste gebruik opnieuw geprobeerd.</value></data>
   <data name="SkillLoadFailed" xml:space="preserve"><value>De ingeschakelde vaardigheid of bron kon niet worden geladen of geverifieerd. Controleer de exacte skill_id en het relatieve pad, of vernieuw de vaardighedencatalogus en MCP-verbinding voordat u het opnieuw probeert.</value></data>
   <data name="DisableSkill" xml:space="preserve"><value>Vaardigheid {0} uitschakelen</value></data>
+  <data name="Images" xml:space="preserve"><value>Afbeeldingen</value></data>
+  <data name="MyImages" xml:space="preserve"><value>Mijn afbeeldingen</value></data>
+  <data name="ImageSettings" xml:space="preserve"><value>Afbeeldingsinstellingen</value></data>
+  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Beschrijf de afbeelding die je wilt maken…</value></data>
+  <data name="ImageGenerate" xml:space="preserve"><value>Afbeeldingen genereren</value></data>
+  <data name="ImageNoModels" xml:space="preserve"><value>Geen afbeeldingsmodel geselecteerd. Selecteer een beschikbaar model in de koptekst.</value></data>
+  <data name="ImageEmptyLibrary" xml:space="preserve"><value>Je gegenereerde afbeeldingen verschijnen hier.</value></data>
+  <data name="ImageOpenFolder" xml:space="preserve"><value>Map openen</value></data>
+  <data name="ImageSize" xml:space="preserve"><value>Formaat</value></data>
+  <data name="ImageAspectRatio" xml:space="preserve"><value>Beeldverhouding</value></data>
+  <data name="ImageProviderDefault" xml:space="preserve"><value>Standaard van provider</value></data>
+  <data name="ImageOutput" xml:space="preserve"><value>Uitvoer</value></data>
+  <data name="ImageCount" xml:space="preserve"><value>Aantal afbeeldingen: {0}</value></data>
+  <data name="ImageBatchLimit" xml:space="preserve"><value>Maximum afbeeldingen per aanvraag (optioneel)</value></data>
+  <data name="ImageOther" xml:space="preserve"><value>Overig</value></data>
+  <data name="ImageSeed" xml:space="preserve"><value>Seed (optioneel)</value></data>
+  <data name="ImageMask" xml:space="preserve"><value>Afbeeldingsmasker selecteren</value></data>
+  <data name="ImageMaskFailed" xml:space="preserve"><value>Het afbeeldingsmasker kon niet worden gelezen.</value></data>
+  <data name="ImageStorage" xml:space="preserve"><value>Opslag</value></data>
+  <data name="ImageChooseFolder" xml:space="preserve"><value>Map kiezen…</value></data>
+  <data name="ImageDefaultFolder" xml:space="preserve"><value>Map Afbeeldingen gebruiken</value></data>
+  <data name="ImageFolderHint" xml:space="preserve"><value>Elk account en elke AI-backend heeft een aparte bibliotheek. Een andere map kiezen wisselt van bibliotheek; bestaande bestanden worden niet verplaatst of verwijderd.</value></data>
+  <data name="ImageFolderFailed" xml:space="preserve"><value>De afbeeldingsmap kon niet worden geopend. Controleer de locatie en toegangsrechten.</value></data>
+  <data name="ImageFolderInvalid" xml:space="preserve"><value>Selecteer een absoluut Windows-mappad.</value></data>
+  <data name="ImageSettingsInvalid" xml:space="preserve"><value>Gebruik positieve gehele getallen voor afmetingen en batchgrootte, 1 tot 20 afbeeldingen en een gehele seed. Laat optionele waarden leeg voor providerstandaarden.</value></data>
+  <data name="ImageSettingsSaveFailed" xml:space="preserve"><value>Afbeeldingsinstellingen konden niet worden opgeslagen. Controleer de toegangsrechten en probeer opnieuw.</value></data>
+  <data name="ImageAttachmentRequired" xml:space="preserve"><value>Voeg een PNG-, JPEG-, WebP-, GIF-, BMP- of TIFF-afbeelding toe. Lege bestanden worden niet ondersteund.</value></data>
+  <data name="ImageResponseInvalid" xml:space="preserve"><value>De service gaf een ongeldige, niet-ondersteunde of te grote afbeeldingsrespons.</value></data>
+  <data name="ImagePromptRequired" xml:space="preserve"><value>Voer een afbeeldingsprompt in en selecteer een beschikbaar afbeeldingsmodel.</value></data>
+  <data name="ImageQuality" xml:space="preserve"><value>Kwaliteit</value></data>
+  <data name="ImageBackground" xml:space="preserve"><value>Achtergrond</value></data>
+  <data name="ImageModeration" xml:space="preserve"><value>Moderatie</value></data>
+  <data name="ImageOption_auto" xml:space="preserve"><value>Automatisch</value></data>
+  <data name="ImageOption_low" xml:space="preserve"><value>Laag</value></data>
+  <data name="ImageOption_medium" xml:space="preserve"><value>Gemiddeld</value></data>
+  <data name="ImageOption_high" xml:space="preserve"><value>Hoog</value></data>
+  <data name="ImageOption_transparent" xml:space="preserve"><value>Transparant</value></data>
+  <data name="ImageOption_opaque" xml:space="preserve"><value>Dekkend</value></data>
+  <data name="ImageAttachFiles" xml:space="preserve"><value>Afbeeldingen toevoegen</value></data>
+  <data name="ImageCut" xml:space="preserve"><value>Knippen</value></data>
+  <data name="ImageCopy" xml:space="preserve"><value>Kopiëren</value></data>
+  <data name="ImagePaste" xml:space="preserve"><value>Plakken</value></data>
+  <data name="ImageSelectAll" xml:space="preserve"><value>Alles selecteren</value></data>
+  <data name="ImagePreview" xml:space="preserve"><value>Afbeeldingsvoorbeeld</value></data>
+  <data name="ImageSaveCopy" xml:space="preserve"><value>Kopie opslaan…</value></data>
+  <data name="ImageAddToPrompt" xml:space="preserve"><value>Aan prompt toevoegen</value></data>
+  <data name="ImageDeleteTitle" xml:space="preserve"><value>Afbeelding verwijderen?</value></data>
+  <data name="ImageDeleteHint" xml:space="preserve"><value>Dit verwijdert de geselecteerde afbeelding definitief uit de lokale bibliotheek.</value></data>
+  <data name="ImageRefresh" xml:space="preserve"><value>Afbeeldingsmodellen en bibliotheek vernieuwen</value></data>
+  <data name="ImageAttachmentTotalLimit" xml:space="preserve"><value>Gebruik maximaal 20 afbeeldingsbijlagen en 100 MB aan bronafbeeldingen en masker per aanvraag.</value></data>
 </root>

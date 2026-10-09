@@ -686,4 +686,54 @@
   <data name="SkillPrefetchFailed" xml:space="preserve"><value>A skill could not be downloaded right now. Your selection is retained and the download will retry on first use.</value></data>
   <data name="SkillLoadFailed" xml:space="preserve"><value>The enabled skill or resource could not be loaded or verified. Check the exact skill_id and relative path, or refresh the skill catalog and MCP connection before retrying.</value></data>
   <data name="DisableSkill" xml:space="preserve"><value>Disable skill {0}</value></data>
+  <data name="Images" xml:space="preserve"><value>Images</value></data>
+  <data name="MyImages" xml:space="preserve"><value>My images</value></data>
+  <data name="ImageSettings" xml:space="preserve"><value>Image settings</value></data>
+  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Describe the image you want to create…</value></data>
+  <data name="ImageGenerate" xml:space="preserve"><value>Generate images</value></data>
+  <data name="ImageNoModels" xml:space="preserve"><value>No image model selected. Select an available image model in the header.</value></data>
+  <data name="ImageEmptyLibrary" xml:space="preserve"><value>Your generated images will appear here.</value></data>
+  <data name="ImageOpenFolder" xml:space="preserve"><value>Open folder</value></data>
+  <data name="ImageSize" xml:space="preserve"><value>Size</value></data>
+  <data name="ImageAspectRatio" xml:space="preserve"><value>Aspect ratio</value></data>
+  <data name="ImageProviderDefault" xml:space="preserve"><value>Provider default</value></data>
+  <data name="ImageOutput" xml:space="preserve"><value>Output</value></data>
+  <data name="ImageCount" xml:space="preserve"><value>Number of images: {0}</value></data>
+  <data name="ImageBatchLimit" xml:space="preserve"><value>Maximum images per call (optional)</value></data>
+  <data name="ImageOther" xml:space="preserve"><value>Other</value></data>
+  <data name="ImageSeed" xml:space="preserve"><value>Seed (optional)</value></data>
+  <data name="ImageMask" xml:space="preserve"><value>Select image mask</value></data>
+  <data name="ImageMaskFailed" xml:space="preserve"><value>The image mask could not be read.</value></data>
+  <data name="ImageStorage" xml:space="preserve"><value>Storage</value></data>
+  <data name="ImageChooseFolder" xml:space="preserve"><value>Choose folder…</value></data>
+  <data name="ImageDefaultFolder" xml:space="preserve"><value>Use Pictures folder</value></data>
+  <data name="ImageFolderHint" xml:space="preserve"><value>Each account and AI backend has a separate library. Changing this folder switches libraries; existing files are not moved or deleted.</value></data>
+  <data name="ImageFolderFailed" xml:space="preserve"><value>The image folder could not be opened. Check its location and permissions.</value></data>
+  <data name="ImageFolderInvalid" xml:space="preserve"><value>Select an absolute Windows folder path.</value></data>
+  <data name="ImageSettingsInvalid" xml:space="preserve"><value>Use positive whole numbers for dimensions and batch size, an image count from 1 to 20, and a whole-number seed. Leave optional values blank for provider defaults.</value></data>
+  <data name="ImageSettingsSaveFailed" xml:space="preserve"><value>Image settings could not be saved. Check folder permissions and try again.</value></data>
+  <data name="ImageAttachmentRequired" xml:space="preserve"><value>Attach a PNG, JPEG, WebP, GIF, BMP or TIFF image. Empty files are not supported.</value></data>
+  <data name="ImageResponseInvalid" xml:space="preserve"><value>The service returned an invalid, unsupported or oversized image response.</value></data>
+  <data name="ImagePromptRequired" xml:space="preserve"><value>Enter an image prompt and select an available image model.</value></data>
+  <data name="ImageQuality" xml:space="preserve"><value>Quality</value></data>
+  <data name="ImageBackground" xml:space="preserve"><value>Background</value></data>
+  <data name="ImageModeration" xml:space="preserve"><value>Moderation</value></data>
+  <data name="ImageOption_auto" xml:space="preserve"><value>Auto</value></data>
+  <data name="ImageOption_low" xml:space="preserve"><value>Low</value></data>
+  <data name="ImageOption_medium" xml:space="preserve"><value>Medium</value></data>
+  <data name="ImageOption_high" xml:space="preserve"><value>High</value></data>
+  <data name="ImageOption_transparent" xml:space="preserve"><value>Transparent</value></data>
+  <data name="ImageOption_opaque" xml:space="preserve"><value>Opaque</value></data>
+  <data name="ImageAttachFiles" xml:space="preserve"><value>Attach images</value></data>
+  <data name="ImageCut" xml:space="preserve"><value>Cut</value></data>
+  <data name="ImageCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="ImagePaste" xml:space="preserve"><value>Paste</value></data>
+  <data name="ImageSelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="ImagePreview" xml:space="preserve"><value>Image preview</value></data>
+  <data name="ImageSaveCopy" xml:space="preserve"><value>Save a copy…</value></data>
+  <data name="ImageAddToPrompt" xml:space="preserve"><value>Add to prompt</value></data>
+  <data name="ImageDeleteTitle" xml:space="preserve"><value>Delete image?</value></data>
+  <data name="ImageDeleteHint" xml:space="preserve"><value>This permanently deletes the selected image from the local library.</value></data>
+  <data name="ImageRefresh" xml:space="preserve"><value>Refresh image models and library</value></data>
+  <data name="ImageAttachmentTotalLimit" xml:space="preserve"><value>Use at most 20 image attachments and 100 MB of source images and mask per request.</value></data>
 </root>

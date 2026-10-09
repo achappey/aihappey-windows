@@ -8,6 +8,7 @@ namespace AIHappey.Desktop.Core;
 public sealed class UrlAttachmentDialog : ContentDialog
 {
     private readonly Func<string, CancellationToken, Task<string?>> resolve;
+    private readonly IReadOnlyList<string>? allowedMediaTypes;
     private readonly TextBox url = new() { Name = "AttachmentUrl", Header = DesktopResources.Get("PublicUrl"), PlaceholderText = "https://", TextWrapping = TextWrapping.NoWrap };
     private readonly StackPanel pending = new() { Orientation = Orientation.Horizontal, Spacing = 8, Visibility = Visibility.Collapsed };
     private readonly TextBlock detectedLabel = new() { VerticalAlignment = VerticalAlignment.Center };
@@ -22,9 +23,9 @@ public sealed class UrlAttachmentDialog : ContentDialog
     private bool closed;
     public ComposerAttachment? Attachment { get; private set; }
 
-    public UrlAttachmentDialog(Func<string, CancellationToken, Task<string?>> resolve)
+    public UrlAttachmentDialog(Func<string, CancellationToken, Task<string?>> resolve, IReadOnlyList<string>? allowedMediaTypes = null)
     {
-        this.resolve = resolve;
+        this.resolve = resolve; this.allowedMediaTypes = allowedMediaTypes;
         Title = DesktopResources.Get("Link"); PrimaryButtonText = DesktopResources.Get("Add"); CloseButtonText = DesktopResources.Get("Cancel");
         DefaultButton = ContentDialogButton.Primary; IsPrimaryButtonEnabled = false;
         var panel = new StackPanel { Spacing = 12, MinWidth = 240, MaxWidth = 540 };
@@ -37,8 +38,8 @@ public sealed class UrlAttachmentDialog : ContentDialog
         badge = new Border { Name = "DetectedAttachmentMediaType", Child = badgeContent, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), HorizontalAlignment = HorizontalAlignment.Left, Visibility = Visibility.Collapsed };
         ControlAppearance.TokenBadge(badge); panel.Children.Add(badge);
         types.Items.Add("Choose a MIME type");
-        foreach (var type in UrlAttachments.CommonMediaTypes) types.Items.Add(type);
-        types.Items.Add(DesktopResources.Get("Custom")); types.SelectedIndex = 0;
+        foreach (var type in allowedMediaTypes ?? UrlAttachments.CommonMediaTypes) types.Items.Add(type);
+        if (allowedMediaTypes is null) types.Items.Add(DesktopResources.Get("Custom")); types.SelectedIndex = 0;
         fallback.Children.Add(types); fallback.Children.Add(custom);
         fallback.Children.Add(new TextBlock { Text = DesktopResources.Get("MimeNotDetected"), TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(fallback); panel.Children.Add(error); Content = panel;
@@ -66,7 +67,7 @@ public sealed class UrlAttachmentDialog : ContentDialog
     private void UpdateValidation()
     {
         custom.Visibility = types.SelectedItem as string == DesktopResources.Get("Custom") ? Visibility.Visible : Visibility.Collapsed;
-        IsPrimaryButtonEnabled = !closed && MediaType() is not null;
+        IsPrimaryButtonEnabled = !closed && MediaType() is { } type && (allowedMediaTypes is null || allowedMediaTypes.Contains(type));
         error.Text = url.Text.Length > 0 && !UrlAttachments.IsHttpUrl(url.Text) ? DesktopResources.Get("InvalidPublicUrl")
             : custom.Visibility == Visibility.Visible && custom.Text.Length > 0 && UrlAttachments.ValidMediaType(custom.Text) is null ? "Enter a valid MIME type, such as application/pdf." : "";
     }

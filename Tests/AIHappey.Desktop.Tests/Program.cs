@@ -19,6 +19,11 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--images-only"))
+    {
+        await ImageRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} image checks passed."); return;
+    }
     if (args.Contains("--skills-only"))
     {
         await SkillRegressionTests.RunAsync(Check, root);
@@ -35,6 +40,7 @@ try
     await McpPresentationRegressionTests.RunAsync(Check, root);
     await ElicitationRegressionTests.RunAsync(Check, root);
     await SkillRegressionTests.RunAsync(Check, root);
+    await ImageRegressionTests.RunAsync(Check, root);
     var defaults = new DesktopSettings();
     Check(defaults.Ai.Location == RuntimeLocation.Local && defaults.Agents.Location == RuntimeLocation.Local, "public defaults are local");
     Reject(() => defaults.Validate(false), "enterprise rejects local");

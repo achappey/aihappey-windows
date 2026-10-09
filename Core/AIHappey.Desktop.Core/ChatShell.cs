@@ -72,6 +72,7 @@ public sealed partial class ChatShell : UserControl
         PrepareMcp();
         PrepareToolApprovals();
         PrepareChatSettings();
+        PrepareImages();
         PrepareSystemContext();
         PrepareTranscript();
         Content = BuildLayout();
@@ -246,6 +247,7 @@ public sealed partial class ChatShell : UserControl
         chatModes.Children.Add(models); chatModes.Children.Add(agents); top.Children.Add(chatModes);
         ToolbarControls.Outline(target);
         Grid.SetColumn(target, 1); top.Children.Add(target);
+        Grid.SetColumn(imageTarget, 1); top.Children.Add(imageTarget);
         Grid.SetColumn(progress, 3); top.Children.Add(progress);
         var profileMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
         profileMenu.Items.Add(settingsButton); profileMenu.Items.Add(manageAccount);
@@ -739,6 +741,8 @@ public sealed partial class ChatShell : UserControl
         RenderContextTags();
         RenderApprovalBadges();
         SetOverviewBusy(value);
+        imageTarget.IsEnabled = !value;
+        imagesPage.SetBusy(value, inference && activePage == DesktopPage.Images);
         progress.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         stop.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         send.Visibility = inference ? Visibility.Collapsed : Visibility.Visible;
@@ -747,6 +751,7 @@ public sealed partial class ChatShell : UserControl
 
     private void Show(string message, InfoBarSeverity severity)
     {
+        if (activePage == DesktopPage.Images) { imagesPage.Notice(message, severity); return; }
         var label = severity switch
         {
             InfoBarSeverity.Error => DesktopResources.Get("Error"),
@@ -765,6 +770,8 @@ public sealed partial class ChatShell : UserControl
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
+        imageLinkDialog?.Hide(); imagePreviewDialog?.Hide();
+        if (imageSettingsDialog is not null) { imageSettingsDialog.DiscardOnShutdown = true; imageSettingsDialog.Hide(); }
         resourcesDialog?.Hide();
         promptsDialog?.Hide();
         approvalDialog?.Hide();

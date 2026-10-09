@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly)
+param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -20,6 +20,7 @@ try {
     if ($McpPresentationOnly) { $arguments += '--mcp-presentation-only' }
     if ($ElicitationOnly) { $arguments += '--elicitation-only' }
     if ($SkillsOnly) { $arguments += '--skills-only' }
+    if ($ImagesOnly) { $arguments += '--images-only' }
     $process = Start-Process (Join-Path $output 'AIHappey.Desktop.UiTests.exe') -ArgumentList $arguments -PassThru
     if (-not $process.WaitForExit(60000)) {
         $process.Kill()

@@ -9,7 +9,7 @@ using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
 
-internal enum DesktopPage { Chat, Agents, Skills, Mcp }
+internal enum DesktopPage { Chat, Images, Agents, Skills, Mcp }
 
 public sealed partial class ChatShell
 {
@@ -33,6 +33,7 @@ public sealed partial class ChatShell
     {
         foreach (var (page, label, icon) in new[]
         {
+            (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)new FontIcon { Glyph = "\uEB9F" }),
             (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)ToolbarControls.BotIcon()),
             (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)new FontIcon { Glyph = "\uE734" }),
             (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)new FontIcon { Glyph = "\uE774" })
@@ -53,7 +54,7 @@ public sealed partial class ChatShell
         }
         pageNavigation.Children.Add(SidebarSeparator("ChatsSeparator"));
         pageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Chats")));
-        overviewHost.Children.Add(agentsOverview); overviewHost.Children.Add(skillsOverview); overviewHost.Children.Add(mcpOverview);
+        overviewHost.Children.Add(imagesPage); overviewHost.Children.Add(agentsOverview); overviewHost.Children.Add(skillsOverview); overviewHost.Children.Add(mcpOverview);
         foreach (var page in new[] { agentsOverview, skillsOverview })
         {
             page.RetryRequested = async () => await RunAsync(ct => LoadOverviewAsync(page, ct));
@@ -86,9 +87,10 @@ public sealed partial class ChatShell
         agentsOverview.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         skillsOverview.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
         mcpOverview.Visibility = page == DesktopPage.Mcp ? Visibility.Visible : Visibility.Collapsed;
+        imagesPage.Visibility = imageTarget.Visibility = page == DesktopPage.Images ? Visibility.Visible : Visibility.Collapsed;
         UpdatePageButtons();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
-        { DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", _ => "RefreshSkills" }));
+        { DesktopPage.Images => "ImageRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", _ => "RefreshSkills" }));
     }
 
     private void UpdatePageButtons()
@@ -118,6 +120,7 @@ public sealed partial class ChatShell
     private void InvalidateCatalogs()
     {
         catalogs.Clear(); favorites.Clear(); catalogPartition = null;
+        InvalidateImages();
         runtimeSkillCatalog = []; runtimeSkillPartition = null;
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide();
