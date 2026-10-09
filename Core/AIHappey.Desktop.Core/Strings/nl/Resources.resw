@@ -9,8 +9,8 @@
   <data name="AutomaticApprovalHint" xml:space="preserve"><value>Deze tool automatisch toestaan, of alle tools kiezen via het menu</value></data>
   <data name="AutoApproveTool" xml:space="preserve"><value>{0} automatisch goedkeuren</value></data>
   <data name="AutoApproveAll" xml:space="preserve"><value>Alle tools (BRRR)</value></data>
-  <data name="AutoApproveAllBadge" xml:space="preserve"><value>Automatisch: Alle tools (BRRR)</value></data>
-  <data name="AutoApproveToolBadge" xml:space="preserve"><value>Automatisch: {0}</value></data>
+  <data name="AutoApproveAllBadge" xml:space="preserve"><value>BRRR</value></data>
+  <data name="AutoApproveToolBadge" xml:space="preserve"><value>{0}</value></data>
   <data name="ManageAutoApproval" xml:space="preserve"><value>{0}. Klik om automatische goedkeuring uit te schakelen.</value></data>
   <data name="DisableAutoApproval" xml:space="preserve"><value>Deze automatische goedkeuring uitschakelen</value></data>
   <data name="DisableAllAutoApprovals" xml:space="preserve"><value>Alle automatische goedkeuringen uitschakelen</value></data>

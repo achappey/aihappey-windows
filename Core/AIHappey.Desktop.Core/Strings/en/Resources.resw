@@ -8,9 +8,9 @@
   <data name="Automatic" xml:space="preserve"><value>Automatic</value></data>
   <data name="AutomaticApprovalHint" xml:space="preserve"><value>Automatically allow this tool, or choose all tools from the menu</value></data>
   <data name="AutoApproveTool" xml:space="preserve"><value>Auto-approve {0}</value></data>
-  <data name="AutoApproveAll" xml:space="preserve"><value>All tools (BRRR) — this session</value></data>
-  <data name="AutoApproveAllBadge" xml:space="preserve"><value>Auto-approve: All tools (BRRR)</value></data>
-  <data name="AutoApproveToolBadge" xml:space="preserve"><value>Auto-approve: {0}</value></data>
+  <data name="AutoApproveAll" xml:space="preserve"><value>All tools (BRRR)</value></data>
+  <data name="AutoApproveAllBadge" xml:space="preserve"><value>BRRR</value></data>
+  <data name="AutoApproveToolBadge" xml:space="preserve"><value>{0}</value></data>
   <data name="ManageAutoApproval" xml:space="preserve"><value>{0}. Click to disable automatic approval.</value></data>
   <data name="DisableAutoApproval" xml:space="preserve"><value>Disable this auto-approval rule</value></data>
   <data name="DisableAllAutoApprovals" xml:space="preserve"><value>Disable all automatic approvals</value></data>
