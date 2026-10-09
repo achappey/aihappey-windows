@@ -86,6 +86,7 @@ public sealed partial class ChatShell
         DesktopPage.Images => LoadImagesAsync(ct, useCache),
         DesktopPage.Transcriptions => LoadTranscriptionsAsync(ct, useCache),
         DesktopPage.Mcp => LoadMcpOverviewAsync(ct, useCache),
+        DesktopPage.Models => LoadModelsOverviewAsync(ct, useCache),
         _ => LoadOverviewAsync(ActiveOverview, ct, useCache)
     };
 

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 
 namespace AIHappey.Desktop.Core;
@@ -79,14 +80,36 @@ public static class AiModelCatalog
     public static ChatTarget Project(JsonElement value, ServiceKind service)
     {
         var id = value.GetProperty("id").GetString()!;
-        return new(id, CatalogProjection.Text(value, "name") ?? id)
+        var displayId = CatalogProjection.Text(value, "displayId");
+        var providerModelId = CatalogProjection.Text(value, "providerModelId");
+        return new(id, CatalogProjection.Text(value, "name") ?? ModelOverviewCatalog.DisplayId(id, displayId, providerModelId))
         {
             ProviderKey = ChatPreferences.ResolveProvider(service, id,
                 CatalogProjection.Text(value, "sourceProviderKey") ?? CatalogProjection.Text(value, "providerKey")),
             ModelType = service == ServiceKind.Ai ? ResolveType(id, CatalogProjection.Text(value, "type")) : null,
             Created = value.TryGetProperty("created", out var created) && created.ValueKind == JsonValueKind.Number
-                && created.TryGetInt64(out var timestamp) ? timestamp : null
+                && created.TryGetInt64(out var timestamp) ? timestamp : null,
+            DisplayId = displayId, ProviderModelId = providerModelId,
+            Description = CatalogProjection.Text(value, "description"), OwnedBy = CatalogProjection.Text(value, "owned_by"),
+            Tags = value.TryGetProperty("tags", out var tags) && tags.ValueKind == JsonValueKind.Array
+                ? tags.EnumerateArray().Where(t => t.ValueKind == JsonValueKind.String).Select(t => t.GetString()!.Trim())
+                    .Where(t => t.Length > 0).Distinct(StringComparer.Ordinal).ToArray() : [],
+            ContextWindow = Number(value, "context_window"), MaxTokens = Number(value, "max_tokens"),
+            InputPrice = Price(value, "input"), OutputPrice = Price(value, "output")
         };
+    }
+
+    private static double? Price(JsonElement value, string field) => value.TryGetProperty("pricing", out var pricing)
+        && Number(pricing, field) is >= 0 and var price ? price : null;
+
+    private static double? Number(JsonElement value, string field)
+    {
+        if (value.ValueKind != JsonValueKind.Object || !value.TryGetProperty(field, out var raw)) return null;
+        double number;
+        return (raw.ValueKind == JsonValueKind.Number && raw.TryGetDouble(out number)
+            || raw.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(raw.GetString())
+                && double.TryParse(raw.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out number))
+            && double.IsFinite(number) ? number : null;
     }
 
     // OrderByDescending is stable: equal/missing dates keep the gateway's order, as in the browser.

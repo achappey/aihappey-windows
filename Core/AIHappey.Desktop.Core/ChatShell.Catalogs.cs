@@ -9,7 +9,7 @@ using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
 
-internal enum DesktopPage { Chat, Images, Transcriptions, Agents, Skills, Mcp }
+internal enum DesktopPage { Chat, Images, Transcriptions, Agents, Skills, Mcp, Models }
 
 public sealed partial class ChatShell
 {
@@ -37,11 +37,29 @@ public sealed partial class ChatShell
             (DesktopPage.Transcriptions, DesktopResources.Get("Transcriptions"), (IconElement)new FontIcon { Glyph = "\uE720" }),
             (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)ToolbarControls.BotIcon()),
             (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)new FontIcon { Glyph = "\uE734" }),
-            (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)new FontIcon { Glyph = "\uE774" })
+            (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)new FontIcon { Glyph = "\uE774" }),
+            (DesktopPage.Models, DesktopResources.Get("Models"), (IconElement)ToolbarControls.BrainIcon())
         })
         {
             if (page == DesktopPage.Agents)
             { pageNavigation.Children.Add(SidebarSeparator("AgentsSeparator")); pageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Agents"))); }
+            if (page == DesktopPage.Models)
+            {
+                pageNavigation.Children.Add(SidebarSeparator("ArtificialIntelligenceSeparator"));
+                var header = new Grid { ColumnSpacing = 12 };
+                header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+                header.Children.Add(ToolbarControls.BrainIcon());
+                var title = new TextBlock { Text = DesktopResources.Get("ArtificialIntelligence"), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+                Grid.SetColumn(title, 1); header.Children.Add(title);
+                var chevron = new FontIcon { Glyph = "\uE70E", FontSize = 12 }; Grid.SetColumn(chevron, 2); header.Children.Add(chevron);
+                aiCategory = new Button { Name = "ArtificialIntelligenceCategory", Content = header,
+                    HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                    Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(0) };
+                ToolbarControls.Subtle(aiCategory); ToolbarControls.Label(aiCategory, DesktopResources.Get("ArtificialIntelligence"));
+                void UpdateCategory() { aiNavigation.Visibility = aiCategoryExpanded ? Visibility.Visible : Visibility.Collapsed; chevron.Glyph = aiCategoryExpanded ? "\uE70E" : "\uE70D"; }
+                aiCategory.Click += (_, _) => { aiCategoryExpanded = !aiCategoryExpanded; UpdateCategory(); };
+                pageNavigation.Children.Add(aiCategory); pageNavigation.Children.Add(aiNavigation);
+            }
             var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
             content.Children.Add(icon); content.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center });
             var button = new ToggleButton { Name = "Navigate" + page, Content = content, IsChecked = page == DesktopPage.Chat,
@@ -51,12 +69,15 @@ public sealed partial class ChatShell
             { button.Background = new SolidColorBrush(activePage == page ? palette.Selected : palette.Background); button.Foreground = new SolidColorBrush(palette.Text); icon.Foreground = button.Foreground; });
             ToolbarControls.Label(button, label);
             button.Click += async (_, _) => await NavigateAsync(page);
-            pageButtons.Add(page, button); pageNavigation.Children.Add(button);
+            pageButtons.Add(page, button);
+            if (page == DesktopPage.Models) { button.Margin = new Thickness(24, 0, 0, 0); aiNavigation.Children.Add(button); }
+            else pageNavigation.Children.Add(button);
         }
         pageNavigation.Children.Add(SidebarSeparator("ChatsSeparator"));
         pageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Chats")));
         overviewHost.Children.Add(imagesPage); overviewHost.Children.Add(agentsOverview); overviewHost.Children.Add(skillsOverview); overviewHost.Children.Add(mcpOverview);
         overviewHost.Children.Add(transcriptionsPage);
+        overviewHost.Children.Add(modelsOverview);
         foreach (var page in new[] { agentsOverview, skillsOverview })
         {
             page.RetryRequested = async () => await RunAsync(ct => LoadOverviewAsync(page, ct));
@@ -88,12 +109,19 @@ public sealed partial class ChatShell
         scroll.Visibility = chat && current.Messages.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         agentsOverview.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         skillsOverview.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
+        modelsOverview.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
+        modelFilters.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
+        if (page == DesktopPage.Models && aiCategory is not null)
+        {
+            aiCategoryExpanded = true; aiNavigation.Visibility = Visibility.Visible;
+            if (aiCategory.Content is Grid categoryHeader && categoryHeader.Children.OfType<FontIcon>().FirstOrDefault() is { } chevron) chevron.Glyph = "\uE70E";
+        }
         mcpOverview.Visibility = page == DesktopPage.Mcp ? Visibility.Visible : Visibility.Collapsed;
         imagesPage.Visibility = imageTarget.Visibility = page == DesktopPage.Images ? Visibility.Visible : Visibility.Collapsed;
         transcriptionsPage.Visibility = transcriptionTarget.Visibility = page == DesktopPage.Transcriptions ? Visibility.Visible : Visibility.Collapsed;
         UpdatePageButtons();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
-        { DesktopPage.Images => "ImageRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", _ => "RefreshSkills" }));
+        { DesktopPage.Images => "ImageRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", _ => "RefreshSkills" }));
     }
 
     private void UpdatePageButtons()
@@ -111,6 +139,7 @@ public sealed partial class ChatShell
         foreach (var button in pageButtons.Values) button.IsEnabled = !value;
         agentsOverview.SetActionsEnabled(!value); skillsOverview.SetActionsEnabled(!value);
         mcpOverview.SetActionsEnabled(!value);
+        modelsOverview.SetActionsEnabled(!value);
         catalogDialog?.SetActionsEnabled(!value);
     }
 
@@ -125,6 +154,7 @@ public sealed partial class ChatShell
         catalogs.Clear(); favorites.Clear(); catalogPartition = null;
         InvalidateImages();
         InvalidateTranscriptions();
+        InvalidateModelsOverview();
         runtimeSkillCatalog = []; runtimeSkillPartition = null;
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide();

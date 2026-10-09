@@ -74,6 +74,7 @@ public sealed partial class ChatShell : UserControl
         PrepareChatSettings();
         PrepareImages();
         PrepareTranscriptions();
+        PrepareModelsOverview();
         PrepareSystemContext();
         PrepareTranscript();
         Content = BuildLayout();
@@ -245,6 +246,7 @@ public sealed partial class ChatShell : UserControl
         top.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         top.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         top.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        top.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         chatModes.Children.Add(models); chatModes.Children.Add(agents); top.Children.Add(chatModes);
         ToolbarControls.Outline(target);
         Grid.SetColumn(target, 1); top.Children.Add(target);
@@ -272,7 +274,8 @@ public sealed partial class ChatShell : UserControl
             foreach (var item in profileMenu.Items.OfType<MenuFlyoutItem>()) ControlAppearance.Refresh(item);
         };
         account.Flyout = profileMenu;
-        Grid.SetColumn(account, 4); top.Children.Add(account);
+        Grid.SetColumn(modelFilters, 4); top.Children.Add(modelFilters);
+        Grid.SetColumn(account, 5); top.Children.Add(account);
         workspace.Children.Add(top);
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
         composer.Children.Add(welcome); composer.Children.Add(contextTagScroll); composer.Children.Add(composerBadgeRow);
@@ -740,6 +743,7 @@ public sealed partial class ChatShell : UserControl
         addContext.IsEnabled = !value;
         chatSettings.IsEnabled = !value;
         manageMcp.IsEnabled = !value; RenderMcpTags();
+        modelFilters.IsEnabled = !value;
         RenderContextTags();
         RenderApprovalBadges();
         SetOverviewBusy(value);

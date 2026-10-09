@@ -1,0 +1,5654 @@
+{
+  "abliteration": {
+    "name": "Abliteration",
+    "homepage": "https://abliteration.ai",
+    "icons": [
+      {
+        "src": "https://abliteration.ai/icon-512.png"
+      }
+    ]
+  },
+  "addisai": {
+    "name": "AddisAI",
+    "homepage": "https://addisassistant.com",
+    "icons": [
+      {
+        "src": "https://platform.addisassistant.com/logo/addis_ai_main_icon.png"
+      }
+    ]
+  },
+  "aether": {
+    "name": "Aether",
+    "homepage": "https://aetherapi.dev",
+    "icons": [
+      {
+        "src": "https://aetherapi.dev/logo-icon-black.png"
+      }
+    ]
+  },
+  "agdev": {
+    "name": "AgDev",
+    "homepage": "https://ag.dev",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fag.dev&size=128"
+      }
+    ]
+  },
+  "agen": {
+    "name": "Agen",
+    "homepage": "https://agenhq.com",
+    "icons": [
+      {
+        "theme": "light",
+        "src": "https://agenhq.com/favicon-light.svg"
+      },
+      {
+        "theme": "dark",
+        "src": "https://agenhq.com/favicon-dark.svg"
+      }
+    ]
+  },
+  "agent37": {
+    "name": "Agent37",
+    "homepage": "https://www.agent37.com",
+    "icons": [
+      {
+        "src": "https://cdn.prod.website-files.com/6a46b5c5cf9e0794bd922196/6a46b5f0a054a7038de0b283_400.jpg"
+      }
+    ]
+  },
+  "agentaigateway": {
+    "name": "AgentAIGateway",
+    "homepage": "https://www.agentaigateway.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.agentaigateway.com&size=128"
+      }
+    ]
+  },
+  "agentcontainer": {
+    "name": "AgentContainer",
+    "homepage": "https://www.agentcontainer.co",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.agentcontainer.co&size=128"
+      }
+    ]
+  },
+  "agentdiscuss": {
+    "name": "AgentDiscuss",
+    "homepage": "https://www.agentdiscuss.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.agentdiscuss.com&size=128"
+      }
+    ]
+  },
+  "agentics": {
+    "name": "Agentics",
+    "homepage": "https://agentics.co.za",
+    "icons": [
+      {
+        "src": "https://agentics.co.za/assets/img/brand/primary/icon.svg"
+      }
+    ]
+  },
+  "agentphone": {
+    "name": "AgentPhone",
+    "homepage": "https://agentphone.ai",
+    "icons": [
+      {
+        "src": "https://agentphone.ai/favicon.png?v=3"
+      }
+    ]
+  },
+  "agentsky": {
+    "name": "AgentSky",
+    "homepage": "https://agentsky.dev",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fagentsky.dev&size=128"
+      }
+    ]
+  },
+  "agnesai": {
+    "name": "AgnesAI",
+    "homepage": "https://agnes-ai.com",
+    "icons": [
+      {
+        "src": "https://agnes-ai.com/images/biglogo.png"
+      }
+    ]
+  },
+  "ai21": {
+    "name": "AI21",
+    "homepage": "https://www.ai21.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQGi7Q43f9KESg/company-logo_200_200/B4DZu2qBPvJgAI-/0/1768296027620/ai21_logo?e=2147483647&v=beta&t=wR4j-IVlUaQA18d3_P0uJo4dXht0PvhowIC_vAuqXFo"
+      }
+    ]
+  },
+  "ai302": {
+    "name": "302AI",
+    "homepage": "https://302.ai",
+    "icons": [
+      {
+        "src": "https://302.ai/img/logo.png"
+      }
+    ]
+  },
+  "aiapiworld": {
+    "name": "AiApiWorld",
+    "homepage": "https://aiapi.world",
+    "icons": [
+      {
+        "src": "https://aiapi.world/apple-touch-icon.png"
+      }
+    ]
+  },
+  "aibadgr": {
+    "name": "AIBadgr",
+    "homepage": "https://aibadgr.com",
+    "icons": [
+      {
+        "src": "https://aibadgr.com/favicon.ico"
+      }
+    ]
+  },
+  "aibramha": {
+    "name": "AIBramha",
+    "homepage": "https://aibramha.in",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Faibramha.in&size=128"
+      }
+    ]
+  },
+  "aicc": {
+    "name": "AICC",
+    "homepage": "https://www.ai.cc",
+    "icons": [
+      {
+        "src": "https://ecdn6-nc.globalso.com/upload/p/5220/image_other/2025-12/icon.png"
+      }
+    ]
+  },
+  "aichixia": {
+    "name": "Aichixia",
+    "homepage": "https://www.aichixia.xyz",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.aichixia.xyz&size=128"
+      }
+    ]
+  },
+  "aicredits": {
+    "name": "AICredits",
+    "homepage": "https://aicredits.in",
+    "icons": [
+      {
+        "src": "https://aicredits.in/favicon.ico?favicon.9cc22f94.ico"
+      }
+    ]
+  },
+  "aiduet": {
+    "name": "AIDuet",
+    "homepage": "https://aiduet.app",
+    "icons": [
+      {
+        "src": "https://aiduet.app/favicon.svg"
+      }
+    ]
+  },
+  "aigateway": {
+    "name": "AIgateway",
+    "homepage": "https://aigateway.sh",
+    "icons": [
+      {
+        "src": "https://aigateway.sh/favicon.ico"
+      }
+    ]
+  },
+  "aihorde": {
+    "name": "AIHorde",
+    "homepage": "https://aihorde.net",
+    "icons": [
+      {
+        "src": "https://nlnet.nl/project/AI-Horde/haidra.logo.svg"
+      }
+    ]
+  },
+  "aihubmix": {
+    "name": "AIHubMix",
+    "homepage": "https://aihubmix.com",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/aihubmix-color.png"
+      }
+    ]
+  },
+  "aimagicx": {
+    "name": "AIMagicx",
+    "homepage": "https://www.aimagicx.com",
+    "icons": [
+      {
+        "src": "https://www.aimagicx.com/favicon/favicon.ico"
+      }
+    ]
+  },
+  "aiml": {
+    "name": "AIML",
+    "homepage": "https://aimlapi.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQFF5cVF9c_cOw/company-logo_200_200/company-logo_200_200/0/1709201452469/aimlapi_logo?e=2147483647&v=beta&t=l2fmaW9qdhOZ9wR3sukZpFYETyNGEA5jatU66ECxdFQ",
+        "theme": "dark"
+      },
+      {
+        "src": "https://cdn.prod.website-files.com/65b8f36fa600366bc7cf9a67/67600ef9b7e887578cc772f0_aimlapi_logo_square_vector.png",
+        "theme": "light"
+      }
+    ]
+  },
+  "ainative": {
+    "name": "AINative",
+    "homepage": "https://www.ainative.studio",
+    "icons": [
+      {
+        "src": "https://www.ainative.studio/ainative-icon.svg"
+      }
+    ]
+  },
+  "ainvented": {
+    "name": "Ainvented",
+    "homepage": "https://ainvented.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fainvented.com&size=128"
+      }
+    ]
+  },
+  "aionlabs": {
+    "name": "AionLabs",
+    "homepage": "https://www.aionlabs.ai",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1446018321317519363/Z1xBeAKy_400x400.jpg"
+      }
+    ]
+  },
+  "airouter": {
+    "name": "AIRouter",
+    "homepage": "https://airouter.io",
+    "icons": [
+      {
+        "src": "https://airouter.io/images/favicon/apple-touch-icon.png"
+      }
+    ]
+  },
+  "aisa": {
+    "name": "AIsa",
+    "homepage": "https://aisa.one",
+    "icons": [
+      {
+        "src": "https://aisa.one/docs/_mintlify/favicons/aisa/sF46-BbquMn_od3c/_generated/favicon/android-chrome-192x192.png"
+      }
+    ]
+  },
+  "aivara": {
+    "name": "Aivara",
+    "homepage": "https://www.aivara-ai.com",
+    "icons": [
+      {
+        "src": "https://www.aivara-ai.com/lovable-uploads/b82302f7-e3fc-4f22-9792-8d1d460a6e49.png"
+      }
+    ]
+  },
+  "akashml": {
+    "name": "AkashML",
+    "homepage": "https://akashml.com",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/2001383750513631232/MZarJAy-.jpg"
+      }
+    ]
+  },
+  "aki": {
+    "name": "AKI",
+    "homepage": "https://aki.io",
+    "icons": [
+      {
+        "src": "https://aki.io/static/favicon/apple-touch-icon.png"
+      }
+    ]
+  },
+  "akumi": {
+    "name": "Akumi",
+    "homepage": "https://akumi.cloud",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fakumi.cloud&size=128"
+      }
+    ]
+  },
+  "alibaba": {
+    "name": "Alibaba",
+    "homepage": "https://www.alibabacloud.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcREXxWppPgNoDOukU_2RHGUnoU-_i664iBN5w&s"
+      }
+    ]
+  },
+  "alltoken": {
+    "name": "AllToken",
+    "homepage": "https://alltoken.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Falltoken.ai&size=128"
+      }
+    ]
+  },
+  "alphaneural": {
+    "name": "AlphaNeural",
+    "homepage": "https://www.alphaneural.io",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQHIY8p0tBMw5A/company-logo_200_200/B4DZYcT0Q3G4AM-/0/1744231679376/alphaneural_ai_logo?e=2147483647&v=beta&t=fuyMj2CiYXvuaXRbq3amSjzpsYHRENP69NBp965qfJU"
+      }
+    ]
+  },
+  "amazonbedrock": {
+    "name": "AmazonBedrock",
+    "homepage": "https://aws.amazon.com/bedrock",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/bedrock-color.png"
+      }
+    ]
+  },
+  "ambient": {
+    "name": "Ambient",
+    "homepage": "https://ambient.xyz",
+    "icons": [
+      {
+        "src": "https://ambient.xyz/favicon.png"
+      }
+    ]
+  },
+  "amnt": {
+    "name": "Amnt",
+    "homepage": "https://www.amnt.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.amnt.io&size=128"
+      }
+    ]
+  },
+  "andyapi": {
+    "name": "AndyAPI",
+    "homepage": "https://andy.mindcraft-ce.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fandy.mindcraft-ce.com&size=128"
+      }
+    ]
+  },
+  "antbase": {
+    "name": "Antbase",
+    "homepage": "https://antbase.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fantbase.ai&size=128"
+      }
+    ]
+  },
+  "anthropic": {
+    "name": "Anthropic",
+    "homepage": "https://www.anthropic.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.anthropic.com&size=128"
+      }
+    ]
+  },
+  "anyrouter": {
+    "name": "AnyRouter",
+    "homepage": "https://anyrouter.dev",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3epToGyxYvyeFDy9h7FEM2ErT2rbCLnWcq7vCxlIJ3g&s"
+      }
+    ]
+  },
+  "apekey": {
+    "name": "Apekey",
+    "homepage": "https://apekey.ai",
+    "icons": [
+      {
+        "src": "https://apekey.ai/logo.png"
+      }
+    ]
+  },
+  "apertis": {
+    "name": "Apertis",
+    "homepage": "https://apertis.ai",
+    "icons": [
+      {
+        "src": "https://apertis.ai/logo.svg"
+      }
+    ]
+  },
+  "apiairforce": {
+    "name": "ApiAirforce",
+    "homepage": "https://api.airforce",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fapi.airforce&size=128"
+      }
+    ]
+  },
+  "apipass": {
+    "name": "APIPASS",
+    "homepage": "https://apipass.dev",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1uKoVTju8Wz9liZXusAlDD7pRbIAQwD-RMDMCSVKUObrt-f--pYuW6xHg&s=10"
+      }
+    ]
+  },
+  "apipie": {
+    "name": "APIpie",
+    "homepage": "https://apipie.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZOKtmO7fayNnJdtNQtYp_rNkcRpULyPhQMA&s"
+      }
+    ]
+  },
+  "apipod": {
+    "name": "APIPod",
+    "homepage": "https://www.apipod.ai",
+    "icons": [
+      {
+        "src": "https://www.apipod.ai/logo.svg"
+      }
+    ]
+  },
+  "apiyi": {
+    "name": "APIyi",
+    "homepage": "https://api.apiyi.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fapi.apiyi.com&size=128"
+      }
+    ]
+  },
+  "appnz": {
+    "name": "AppNZ",
+    "homepage": "https://app.nz",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fapp.nz&size=128"
+      }
+    ]
+  },
+  "arceeai": {
+    "name": "ArceeAI",
+    "homepage": "https://www.arcee.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQGetmflM6vLLQ/company-logo_200_200/B56ZnFWAkDG0AM-/0/1759952505432/arcee_ai_logo?e=2147483647&v=beta&t=H9pKIOZq5TckIkJ5Ruh9jVRIe86raLCxO9sta-fnI28"
+      }
+    ]
+  },
+  "arklabs": {
+    "name": "ARKLabs",
+    "homepage": "https://ark-labs.cloud",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1953784719708934144/GJ-a2b5O_400x400.jpg"
+      }
+    ]
+  },
+  "arkroute": {
+    "name": "ArkRoute",
+    "homepage": "https://ark-route.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fark-route.com&size=128"
+      }
+    ]
+  },
+  "arliai": {
+    "name": "ArliAI",
+    "homepage": "https://www.arliai.com",
+    "icons": [
+      {
+        "src": "https://www.arliai.com/apple-touch-icon.png"
+      }
+    ]
+  },
+  "arwriter": {
+    "name": "ARWriter",
+    "homepage": "https://arwriterai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Farwriterai.com&size=128"
+      }
+    ]
+  },
+  "asione": {
+    "name": "ASIOne",
+    "homepage": "https://asi1.ai",
+    "icons": [
+      {
+        "src": "https://storage.googleapis.com/aiagents_1/agent-logos/asi-one-logo.png"
+      }
+    ]
+  },
+  "askarc": {
+    "name": "AskARC",
+    "homepage": "https://askarc.app",
+    "icons": [
+      {
+        "src": "https://askarc.app/assets/images/fenx_head.png"
+      }
+    ]
+  },
+  "askcodi": {
+    "name": "AskCodi",
+    "homepage": "https://askcodi.com",
+    "icons": [
+      {
+        "src": "https://images.saasworthy.com/askcodi_45399_logo_1706881149_81pfq.png"
+      }
+    ]
+  },
+  "assemblyai": {
+    "name": "AssemblyAI",
+    "homepage": "https://www.assemblyai.com",
+    "icons": [
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/assemblyai-color.png"
+      }
+    ]
+  },
+  "assisters": {
+    "name": "Assisters",
+    "homepage": "https://www.assisters.dev",
+    "icons": [
+      {
+        "src": "https://www.assisters.dev/_next/image?url=%2Flogo_dark_transparent.png&w=64&q=75"
+      }
+    ]
+  },
+  "astica": {
+    "name": "Astica",
+    "homepage": "https://astica.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTSxd9KGqn33rj8VDcizegh6D5cW346_x0Ng&s"
+      }
+    ]
+  },
+  "async": {
+    "name": "Async",
+    "homepage": "https://www.async.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4E0BAQH8IAPHkrLBIA/company-logo_200_200/company-logo_200_200/0/1738686836840/async_ai_logo?e=2147483647&v=beta&t=xzU-nIDFl9Fvyye-7Ki46HPuZyq1ZKxbnFjexRjFbK4"
+      }
+    ]
+  },
+  "atlascloud": {
+    "name": "AtlasCloud",
+    "homepage": "https://www.atlascloud.ai",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/249862100?s=200&v=4"
+      }
+    ]
+  },
+  "audixa": {
+    "name": "Audixa",
+    "homepage": "https://audixa.ai",
+    "icons": [
+      {
+        "src": "https://cdn.audixa.ai/brand.png"
+      }
+    ]
+  },
+  "augure": {
+    "name": "Augure",
+    "homepage": "https://augureai.ca",
+    "icons": [
+      {
+        "src": "https://chat.augureai.ca/apple-icon.png?apple-icon.14kqp1d9p~xnp.png"
+      }
+    ]
+  },
+  "auriko": {
+    "name": "Auriko",
+    "homepage": "https://www.auriko.ai",
+    "icons": [
+      {
+        "src": "https://www.auriko.ai/icon.svg"
+      }
+    ]
+  },
+  "avian": {
+    "name": "Avian",
+    "homepage": "https://avian.io",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1546527736331649027/ZlspXiCL_400x400.jpg"
+      }
+    ]
+  },
+  "azerion": {
+    "name": "Azerion",
+    "homepage": "https://www.azerion.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQEvh-Otsqg93Q/company-logo_200_200/B4DZcQ_7UuGkAI-/0/1748336883414/azerion_logo?e=2147483647&v=beta&t=9_SBcLqsilOCTUFwFnWonWnglLgyhJnnLzkh6AIZBK4"
+      }
+    ]
+  },
+  "azure": {
+    "name": "Azure",
+    "homepage": "https://azure.microsoft.com",
+    "icons": [
+      {
+        "src": "https://brandlogos.net/wp-content/uploads/2022/07/microsoft_azure-logo_brandlogos.net_mlyt6-512x512.png"
+      }
+    ]
+  },
+  "baidu": {
+    "name": "Baidu",
+    "homepage": "https://aistudio.baidu.com",
+    "icons": [
+      {
+        "src": "https://paddlepaddle-org-cn.cdn.bcebos.com/paddle-site-front/favicon-128.png"
+      }
+    ]
+  },
+  "bananapeel": {
+    "name": "BananaPeel",
+    "homepage": "https://bananapeel.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fbananapeel.com&size=128"
+      }
+    ]
+  },
+  "baseapi": {
+    "name": "BaseAPI",
+    "homepage": "https://baseapi.dev",
+    "icons": [
+      {
+        "src": "https://baseapi.dev/logo.png"
+      }
+    ]
+  },
+  "baseten": {
+    "name": "Baseten",
+    "homepage": "https://www.baseten.co",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4E0BAQErc_txZeY4KQ/company-logo_200_200/B4EZbpF.n_HAAI-/0/1747667381016/baseten_logo?e=2147483647&v=beta&t=0GAeyVAJ8A3jjAnI7JBzLCYiFHQrq3EicZwidL9AALo"
+      }
+    ]
+  },
+  "bastiongpt": {
+    "name": "BastionGPT",
+    "homepage": "https://bastiongpt.com",
+    "icons": [
+      {
+        "src": "https://cdn.prod.website-files.com/638549769ccf6a3427350721/683047e2447163e4b96c83ee_favicon.svg"
+      }
+    ]
+  },
+  "bazaarlink": {
+    "name": "BazaarLink",
+    "homepage": "https://bazaarlink.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fbazaarlink.ai&size=128"
+      }
+    ]
+  },
+  "beastlabai": {
+    "name": "BeastLabAI",
+    "homepage": "https://www.beastlab.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.beastlab.ai&size=128"
+      }
+    ]
+  },
+  "bergetai": {
+    "name": "BergetAI",
+    "homepage": "https://berget.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQHQGuTgU7ix9w/company-logo_200_200/B4DZWbcxfDGkAI-/0/1742069766482/bergetai_logo?e=2147483647&v=beta&t=EkSpekwlwpXxB9L4u92NEy8s1jqTJaxMnEaSTr1tfZA"
+      }
+    ]
+  },
+  "bineric": {
+    "name": "Bineric",
+    "homepage": "https://www.bineric.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQEMXQsylgk1tQ/company-logo_200_200/company-logo_200_200/0/1727125032999/bineric_logo?e=2147483647&v=beta&t=WCy9WYGg7Fo8jru8Vn12U3qt7ruiuHGYWhPYuvNYpcc"
+      }
+    ]
+  },
+  "blackbox": {
+    "name": "BLACKBOX",
+    "homepage": "https://www.blackbox.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0JYatcWOVQTjMrMQaaIIyyw_Ae6xV3z4wjw&s"
+      }
+    ]
+  },
+  "blackforestlabs": {
+    "name": "BlackForestLabs",
+    "homepage": "https://bfl.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fbfl.ai&size=128"
+      }
+    ]
+  },
+  "blink": {
+    "name": "Blink",
+    "homepage": "https://blink.new",
+    "icons": [
+      {
+        "src": "https://blink.new/apple-touch-icon.png"
+      }
+    ]
+  },
+  "blockrun": {
+    "name": "BlockRun",
+    "homepage": "https://blockrun.ai",
+    "icons": [
+      {
+        "src": "https://blockrun.ai/favicon-32x32.png"
+      }
+    ]
+  },
+  "botverse": {
+    "name": "BotVerse",
+    "homepage": "https://www.botverse.dev",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.botverse.dev&size=128"
+      }
+    ]
+  },
+  "brainiall": {
+    "name": "Brainiall",
+    "homepage": "https://app.brainiall.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fapp.brainiall.com&size=128"
+      }
+    ]
+  },
+  "brave": {
+    "name": "Brave",
+    "homepage": "https://brave.com/search/api",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fbrave.com%2Fsearch%2Fapi&size=128"
+      }
+    ]
+  },
+  "bria": {
+    "name": "Bria",
+    "homepage": "https://bria.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQE49KK-YdA1Sw/company-logo_200_200/B56ZgemHKHHMAM-/0/1752859967087/briaai_logo?e=2147483647&v=beta&t=RCAM92DfkmxueBQG_92cZNWumsoBu5BHrCSBBX1vQak"
+      }
+    ]
+  },
+  "browseruse": {
+    "name": "BrowserUse",
+    "homepage": "https://browser-use.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQRJmqhQBiLgAmohdbTE3YwAO3ApuMTME2Qew&s"
+      }
+    ]
+  },
+  "byteplus": {
+    "name": "BytePlus",
+    "homepage": "https://www.byteplus.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJpF-GaGgjh9vGom4cCE4O3c83d7YSogg-uQ&s"
+      }
+    ]
+  },
+  "bytespace": {
+    "name": "ByteSpace",
+    "homepage": "https://bytespace.sg",
+    "icons": [
+      {
+        "src": "https://www.bytespace.sg/logo-b.png"
+      }
+    ]
+  },
+  "bytez": {
+    "name": "Bytez",
+    "homepage": "https://bytez.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTq-FM1H-8h8v2kJOjVa7gYIXq45Wl2c4fXEw&s"
+      }
+    ]
+  },
+  "cailos": {
+    "name": "Cailos",
+    "homepage": "https://cailos.com",
+    "icons": [
+      {
+        "src": "https://cailos.com/static/favicon.03d2ae203536.svg"
+      }
+    ]
+  },
+  "callmissed": {
+    "name": "CallMissed",
+    "homepage": "https://www.callmissed.com",
+    "icons": [
+      {
+        "src": "https://www.callmissed.com/logo.png"
+      }
+    ]
+  },
+  "cambai": {
+    "name": "CAMBAI",
+    "homepage": "https://www.camb.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQGzDuvmLYPpJA/company-logo_200_200/B4DZvGQdCMH0AQ-/0/1768557761738/cambhq_logo?e=2147483647&v=beta&t=m0x89x4ZJgXQMYsDCxWChs8ltYVIEhVmYQcMw2kw0uw"
+      }
+    ]
+  },
+  "camelai": {
+    "name": "camelAI",
+    "homepage": "https://camelai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fcamelai.com&size=128"
+      }
+    ]
+  },
+  "canopywave": {
+    "name": "CanopyWave",
+    "homepage": "https://canopywave.com",
+    "icons": [
+      {
+        "src": "https://canopywave.com/canopy.png"
+      }
+    ]
+  },
+  "canrouter": {
+    "name": "CanRouter",
+    "homepage": "https://www.canrouter.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.canrouter.ai&size=128"
+      }
+    ]
+  },
+  "carouter": {
+    "name": "CARouter",
+    "homepage": "https://carouter.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fcarouter.ai&size=128"
+      }
+    ]
+  },
+  "cartesia": {
+    "name": "Cartesia",
+    "homepage": "https://cartesia.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fcartesia.ai&size=128"
+      }
+    ]
+  },
+  "casedev": {
+    "name": "CaseDev",
+    "homepage": "https://case.dev",
+    "icons": [
+      {
+        "theme": "light",
+        "src": "https://docs.case.dev/mintlify-assets/_mintlify/favicons/casemark/DWtCT9lACuTaN9uc/_generated/favicon/android-chrome-192x192.png"
+      },
+      {
+        "theme": "dark",
+        "src": "https://case.dev/favicon.svg"
+      }
+    ]
+  },
+  "cencori": {
+    "name": "Cencori",
+    "homepage": "https://cencori.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fcencori.com&size=128"
+      }
+    ]
+  },
+  "cerebras": {
+    "name": "Cerebras",
+    "homepage": "https://www.cerebras.ai",
+    "icons": [
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/cerebras-color.png"
+      }
+    ]
+  },
+  "chaingpt": {
+    "name": "ChainGPT",
+    "homepage": "https://www.chaingpt.org",
+    "icons": [
+      {
+        "src": "https://cdn.prod.website-files.com/64354b8ce4872ad8cd1c7b04/64cbab06a7b38caff30097f3_chaingpt-icon.svg"
+      }
+    ]
+  },
+  "chainhub": {
+    "name": "ChainHub",
+    "homepage": "https://chainhub.tech",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fchainhub.tech&size=128"
+      }
+    ]
+  },
+  "chatqt": {
+    "name": "ChatQT",
+    "homepage": "https://chatqt.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fchatqt.com&size=128"
+      }
+    ]
+  },
+  "cheaperinference": {
+    "name": "CheaperInference",
+    "homepage": "https://www.cheaperinference.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.cheaperinference.com&size=128"
+      }
+    ]
+  },
+  "cheapgrok": {
+    "name": "CheapGrok",
+    "homepage": "https://www.cheapgrok.com",
+    "icons": [
+      {
+        "src": "https://www.cheapgrok.com/favicon.ico"
+      }
+    ]
+  },
+  "chutes": {
+    "name": "Chutes",
+    "homepage": "https://chutes.ai/",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1917615766574084153/PAw68mt5_400x400.jpg"
+      }
+    ]
+  },
+  "circuitnotion": {
+    "name": "CircuitNotion",
+    "homepage": "https://www.circuitnotion.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.circuitnotion.com&size=128"
+      }
+    ]
+  },
+  "cirrascale": {
+    "name": "Cirrascale",
+    "homepage": "https://www.cirrascale.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsw2BACdjpHicnOtmnwkxEAJj6lyVMrNUcHw&s"
+      }
+    ]
+  },
+  "citadelis": {
+    "name": "Citadelis",
+    "homepage": "https://citadelis.eu",
+    "icons": [
+      {
+        "src": "https://citadelis.eu/icon-152x152.png"
+      }
+    ]
+  },
+  "clankie": {
+    "name": "Clankie",
+    "homepage": "https://clankie.ai",
+    "icons": [
+      {
+        "src": "https://clankie.ai/icon.svg"
+      }
+    ]
+  },
+  "clauddy": {
+    "name": "Clauddy",
+    "homepage": "https://clauddy.com",
+    "icons": [
+      {
+        "src": "https://clauddy.com/favicon.ico"
+      }
+    ]
+  },
+  "claudible": {
+    "name": "Claudible",
+    "homepage": "https://claudible.io",
+    "icons": [
+      {
+        "src": "https://claudible.io/shared/static/logo-dark.png",
+        "theme": "dark"
+      },
+      {
+        "src": "https://claudible.io/shared/static/logo-light.png",
+        "theme": "light"
+      }
+    ]
+  },
+  "clawhub": {
+    "name": "ClawHub",
+    "homepage": "https://clawhub.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMlWDOFxJWyFXVHsSJkDu1jWCjEkjmVXuJXQ&s"
+      }
+    ]
+  },
+  "clawlite": {
+    "name": "ClawLite",
+    "homepage": "https://www.clawlite.ai",
+    "icons": [
+      {
+        "src": "https://www.clawlite.ai/clawlitelogo.png"
+      }
+    ]
+  },
+  "cline": {
+    "name": "Cline",
+    "homepage": "https://cline.bot",
+    "icons": [
+      {
+        "src": "https://cline.bot/assets/branding/favicons/favicon-256x256.png"
+      }
+    ]
+  },
+  "clod": {
+    "name": "Clod",
+    "homepage": "https://clod.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fclod.io&size=128"
+      }
+    ]
+  },
+  "cloudferro": {
+    "name": "CloudFerro",
+    "homepage": "https://sherlock.cloudferro.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYcrPo-JrcTP0DgLEGOL6E9Lc3H5U9Xmnk4g&s"
+      }
+    ]
+  },
+  "cloudrift": {
+    "name": "CloudRift",
+    "homepage": "https://www.cloudrift.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.cloudrift.ai&size=128"
+      }
+    ]
+  },
+  "codebase": {
+    "name": "Codebase",
+    "homepage": "https://codebase.design",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fcodebase.design&size=128"
+      }
+    ]
+  },
+  "cognitivessai": {
+    "name": "CognitivessAI",
+    "homepage": "https://cognitivess.com",
+    "icons": [
+      {
+        "src": "https://cognitivess.com/assets/logo.svg"
+      }
+    ]
+  },
+  "cohere": {
+    "name": "Cohere",
+    "homepage": "https://cohere.com",
+    "icons": [
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/cohere-color.png",
+        "theme": "dark"
+      },
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/cohere-color.png",
+        "theme": "light"
+      }
+    ]
+  },
+  "cometapi": {
+    "name": "CometAPI",
+    "homepage": "https://www.cometapi.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.cometapi.com&size=128"
+      }
+    ]
+  },
+  "commandcode": {
+    "name": "CommandCode",
+    "homepage": "https://commandcode.ai",
+    "icons": [
+      {
+        "src": "https://commandcode.ai/favicon/2024/favicon-32x32.png"
+      }
+    ]
+  },
+  "commonstack": {
+    "name": "Commonstack",
+    "homepage": "https://commonstack.ai",
+    "icons": [
+      {
+        "src": "https://commonstack.ai/favicon.ico"
+      }
+    ]
+  },
+  "concentrate": {
+    "name": "Concentrate",
+    "homepage": "https://concentrate.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4E0BAQE6MuILSVRdnA/company-logo_200_200/B4EZtMPn7QGoAI-/0/1766510723104/concentrateai_logo?e=2147483647&v=beta&t=oyfgjZUO_YdHIRwqPPftxm5rKl_B8YuEho5mXrK4F58"
+      }
+    ]
+  },
+  "condensechat": {
+    "name": "CondenseChat",
+    "homepage": "https://condense.chat",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fcondense.chat&size=128"
+      }
+    ]
+  },
+  "connect0": {
+    "name": "Connect0",
+    "homepage": "https://connect0.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fconnect0.ai&size=128"
+      }
+    ]
+  },
+  "copilot": {
+    "name": "Copilot",
+    "homepage": "https://www.microsoft.com/en-us/microsoft-365-copilot",
+    "icons": [
+      {
+        "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Microsoft-copilot-2026-seeklogo.svg/1280px-Microsoft-copilot-2026-seeklogo.svg.png"
+      }
+    ]
+  },
+  "cortecs": {
+    "name": "Cortecs",
+    "homepage": "https://cortecs.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fcortecs.ai&size=128"
+      }
+    ]
+  },
+  "cortex": {
+    "name": "Cortex",
+    "homepage": "https://cortexai.io",
+    "icons": [
+      {
+        "src": "https://cortexai.com.tr/favicon.ico"
+      }
+    ]
+  },
+  "crazyrouter": {
+    "name": "Crazyrouter",
+    "homepage": "https://crazyrouter.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fcrazyrouter.com&size=128"
+      }
+    ]
+  },
+  "critique": {
+    "name": "Critique",
+    "homepage": "https://www.critique.sh",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.critique.sh&size=128"
+      }
+    ]
+  },
+  "crusoe": {
+    "name": "Crusoe",
+    "homepage": "https://www.crusoe.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.crusoe.ai&size=128"
+      }
+    ]
+  },
+  "cursor": {
+    "name": "Cursor",
+    "homepage": "https://cursor.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fcursor.com&size=128"
+      }
+    ]
+  },
+  "daglo": {
+    "name": "Daglo",
+    "homepage": "https://daglo.ai",
+    "icons": [
+      {
+        "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAkFBMVEUDfv////8Ad/8AfP8Ae/8Aef8Adv+ryf86jf+uzv8uif8Ac/9ZoP/s8v93sf9zqf/w9/+lyv/4/P+82P/z+f/Q5P+KuP+cxP/J4P/e7P8Acf87kv9kpf/b6/+qzf+00v+Svv9Mm/8KhP90rf+Ltf9TmP+MvP+At//E3f+61/8Igv+gxv/W5v8eh//t8v8ykP+kohthAAAHyUlEQVR4nO2ba3vyrBKFUwi0GrWeD42tRt/WNtXt//9328QEBkKSerr62Gvd32wgsGAYhiH1PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwJ3ARQa/VQs3b6CG/fr5yPuNehDfuoEaROcho8Fu0gB/yhtY3KaBOrTCx1srvNEQ1gGFFwOFNwcKLwYKbw4UXgwU3py/qdAX7IDwk0i4UiFPC7L6U4FZkOWkj6oU8rwrl0qiCLmKNt9vjd5Hq3noQ7lCX3rv60mv11s+74WsEMkZC5+Xh4KTTehJ4XnfvYxVtULGmq2PtF60SupdBSbno2HeZH828V5KFIoganRVwXYjDErGmQfNySwv+NAdzKXXz381eYVCGU9mquRwOpfXMGLf+1C9zuhtXAo5m8+sgp+hswcsnFoFX+eqjQqFbPdm1et+8IuNlT21H8ohCkX85SiwiAs98MVHxRsrFIqlo/jr/sJplB3HW10KZWTPdNaDnbVYRHNb+cpEoedQyIVrBA90LpIoe5W90QrluqxI+8mQ6IfDspJaoWMOuTcqq9GTFwhcVPdGKRTz8jJ9KpHzGoElCnn8Wl7lLThXoGjV9CZXyFdVi7W709uGsH3MDxWK0hlMeD9z2+Cxe2kVFb5UL62pXq3fdW90KxSliyClG5+XkpPG0p69jccTeySPCtmG/q07GI+XX336pzBzqH5E/9r/nIzHC3uHcSrkxlhPD/UaRr2vs5aiT230K3xhQrBgNTG6flS4In8bzaU8FJR8TAx3lE1iQBbTsCMkOxQM5uYKcylkEzIu36sg6cpLOCC1WufYKSMTNpfZLHD5RC0yVciI6S1Y3hSLiZt6T6tTf7Rt5qYrmLHPuRTutHvaPuXBoB+QnWx0xpahWzkIJPX9FfGGqcJYz5bhuAMt8WhF8lP9YeqTSMDYahwKhV4FXRrDyGdd7en0lcj0VvhhWLkITYVkZj5fjFcQT5X+flFDMfOMDgXEw7oUarMJDWuUOjrqnT6JgVrKW6syCQMShUwHi9YrhB7jedIzvV6tZcN3VQrJU3tzZ2oNj073NUy9dm2tYr5TPU0VqhVfGEemRmnCqMsf2Vt0oL1GUaGvjKS/s2xRv7J98q6vHfuw8Ewqq0kVKhML7Shb+5CppL++7aEg20hRoa63LU6UWggvhUc1iP9KB5w0ma7D3Od2Y7ug3nD+d3gJa+S/xgXfvqpS+Jj/WhYWW6Ac/gUKB4WBM8/4SuGs8BK+zwu2axR6FedDrbBTqCeVef/rCuNfUKjW8Kxopcp7putQGcqu8BLlTFOFqlrR2n5mpW9FK1W+7GSFXO16/aa9mQrlo01PUwidpJq1RKE+27/ZZkEi66JCMVaDbTfAm7lb75+s0AtUm/aIa/FHhSpAL9iztr1UofL6bXsuAr2nO3aLSD20vbX2eafvFp5Uxte1nrzogDVV2CvrgNQBZ9oBofbRsTkWQmtwxTSxeji1Z0oN4fT0HZ/kiz6N2vSs9GgOcdsIxmh4lyrUi8aKvhg5hzgUMh3PbozZJ4HuxxmHCz1yxrqRZLyPkbdelg9bkloTHjkWpQqZDsW7JEXGGU0SNr1iXErOJDQ/SesV9uIfQPrz0OPsODsi6NBEy6MV+j/Mdtnhxg8iekZNFerN4+AZ1lm6mMumkdlwKPQ8PcfDTiCycRGkg2d9lUKPTw/d5U4yJr21eSQ/noAlzdL09iwpGZkJmaMjkPTQOohEUnDXMAo6z4dGEmO29llSb0nP/WccnjzqqI6dnE4L+a6jQjM58TAcTUd2hueokK+MDEH/dToqpLCccxiMrHpTs15xg/2hxMoEl1boBTVpVeXMWXVGqVShNYY2o3OvaHjzhwprkn1aoScnNQVLsonVqWnvvFRbMuTPVe8lCnVsUaOwLvFYmvOW9qUM4fmCWzbWqu65yuqLZlVOmIYcvGa6y25mSme/Pz9zEWYS95Vjrm9m/HhQVZAEVaLaUEvvngL3JdHFl08+c9xdKE9J7w9d11Rq76RhIwsd8/2DG1IWOe4u3tjlt91yvzBNdRSpGMO4A2bxt7lJtDvKVRmBsS825rban1SdgHW9oGWaeH+xv+DeScPl6mPaPqrsbr8jKcu+oGXefJAVHM4acy5VZNo1Q3/Got7sOMH99mC9kkShV/EFrZDR97ab1ZtuVlWfCpyGYPFT1Gq1wpVIrKLZyggLR0fpNZOC7zs/+Y4gzgtGti35jO/C5MFT+qFCPKQKvXhe1oDPxOpYL2bX+lAhg/sH8vb8DNcQpgV9q6BzsehX6pRof1fbgNmVO0FnhWZ31nM3wrOnVF9KfV7Fdfwu/HCuiswlRC6bN1deXL9A+jHNq5Xu0Bvk/t6tlHmNbBcgSkg+p5hgvzNEJ5+tTy83R5+kso53VHcMPXC2o+SyWrCgReKbYvb5zjA/u2k3OvP1xIg17Yu8+8MVxhO2dy/wgP1xCWXYvOpXsb8DjyuO1OFfmMKKL8n6f0PgYSm+u/Md/eh3Psu/ASJ2JZWmzT8ygynGFpjy2gruPVozEay10AmP4ef62ofZfwBfxq1NbzAYLJat3dX+q+AfwxdMSsmukCsDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOD++D/HzG68kjTBywAAAABJRU5ErkJggg=="
+      }
+    ]
+  },
+  "dandolo": {
+    "name": "Dandolo",
+    "homepage": "https://dandolo.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fdandolo.ai&size=128"
+      }
+    ]
+  },
+  "darkbloom": {
+    "name": "Darkbloom",
+    "homepage": "https://www.darkbloom.dev",
+    "icons": [
+      {
+        "src": "https://openrouter.ai/images/icons/Darkbloom.png"
+      }
+    ]
+  },
+  "databricks": {
+    "name": "Databricks",
+    "homepage": "https://www.databricks.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.databricks.com&size=128"
+      }
+    ]
+  },
+  "dataforseo": {
+    "name": "DataForSEO",
+    "homepage": "https://dataforseo.com",
+    "icons": [
+      {
+        "src": "https://s3-eu-west-1.amazonaws.com/tpd/logos/619bd381f655d97d3dc57d7a/0x0.png"
+      }
+    ]
+  },
+  "deapi": {
+    "name": "DeAPI",
+    "homepage": "https://deapi.ai",
+    "icons": [
+      {
+        "src": "https://s3-eu-west-1.amazonaws.com/tpd/logos/692038db2a6043b23f4df897/0x0.png"
+      }
+    ]
+  },
+  "decart": {
+    "name": "Decart",
+    "homepage": "https://decart.ai",
+    "icons": [
+      {
+        "src": "https://storage.googleapis.com/clean-finder-353810/$bQq0ks0xSdvRsJY1WjayY9ck9qGR1V9MtFzr7KUmp7YNU9GAqBd7fG.jpeg"
+      }
+    ]
+  },
+  "dedaluslabs": {
+    "name": "DedalusLabs",
+    "homepage": "https://www.dedaluslabs.ai",
+    "icons": [
+      {
+        "src": "https://dedaluslabs.ai/images/logos/logo.png"
+      }
+    ]
+  },
+  "deepbricks": {
+    "name": "Deepbricks",
+    "homepage": "https://deepbricks.ai",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1793491402493771776/7wCjgiQZ_400x400.jpg"
+      }
+    ]
+  },
+  "deepgram": {
+    "name": "Deepgram",
+    "homepage": "https://deepgram.com",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/17422641?s=280&v=4"
+      }
+    ]
+  },
+  "deepinfra": {
+    "name": "DeepInfra",
+    "homepage": "https://deepinfra.com",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/116928265?s=280&v=4"
+      }
+    ]
+  },
+  "deepl": {
+    "name": "DeepL",
+    "homepage": "https://www.deepl.com",
+    "icons": [
+      {
+        "src": "https://hel1.your-objectstorage.com/ztudium-cms/deepl_7baa54aa02.jpeg"
+      }
+    ]
+  },
+  "deepseek": {
+    "name": "DeepSeek",
+    "homepage": "https://www.deepseek.com",
+    "icons": [
+      {
+        "src": "https://images.seeklogo.com/logo-png/61/1/deepseek-ai-icon-logo-png_seeklogo-611473.png"
+      }
+    ]
+  },
+  "depaza": {
+    "name": "Depaza",
+    "homepage": "https://depaza.eu",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fdepaza.eu&size=128"
+      }
+    ]
+  },
+  "devicai": {
+    "name": "DevicAI",
+    "homepage": "https://www.devic.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.devic.ai&size=128"
+      }
+    ]
+  },
+  "digitalocean": {
+    "name": "DigitalOcean",
+    "homepage": "https://www.digitalocean.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.digitalocean.com&size=128"
+      }
+    ]
+  },
+  "docsrouter": {
+    "name": "DocsRouter",
+    "homepage": "https://docsrouter.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fdocsrouter.com&size=128"
+      }
+    ]
+  },
+  "doubleword": {
+    "name": "Doubleword",
+    "homepage": "https://doubleword.ai",
+    "icons": [
+      {
+        "src": "https://doubleword.ai/favicon.png"
+      }
+    ]
+  },
+  "eachlabs": {
+    "name": "Eachlabs",
+    "homepage": "https://www.eachlabs.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQF2izZ2H-icGg/company-logo_200_200/B4DZuOpBHRG8AM-/0/1767624676180/eachlabs_logo?e=2147483647&v=beta&t=jAnlmRC174MzKJqX9HE8R_7NxZbPqbEfXpo0ksc3a1g"
+      }
+    ]
+  },
+  "eagm": {
+    "name": "EAGM",
+    "homepage": "https://eagmgroup.com",
+    "icons": [
+      {
+        "src": "https://api.eagmgroup.com/img/fav.ico"
+      }
+    ]
+  },
+  "echo": {
+    "name": "Echo",
+    "homepage": "https://en.wikipedia.org/wiki/Echo_Protocol",
+    "icons": [
+      {
+        "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=",
+        "theme": "dark"
+      },
+      {
+        "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=",
+        "theme": "light"
+      }
+    ]
+  },
+  "ecoia": {
+    "name": "Ecoia",
+    "homepage": "https://ecoia.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fecoia.ai&size=128"
+      }
+    ]
+  },
+  "edenai": {
+    "name": "EdenAI",
+    "homepage": "https://www.edenai.co",
+    "icons": [
+      {
+        "src": "https://meta-q.cdn.bubble.io/cdn-cgi/image/w=,h=,f=auto,dpr=1,fit=contain/f1680187367069x814617384157327800/edenlogowebclip.png"
+      }
+    ]
+  },
+  "edgee": {
+    "name": "Edgee",
+    "homepage": "https://www.edgee.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.edgee.ai&size=128"
+      }
+    ]
+  },
+  "electronhub": {
+    "name": "ElectronHub",
+    "homepage": "https://www.electronhub.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.electronhub.ai&size=128"
+      }
+    ]
+  },
+  "elevenlabs": {
+    "name": "ElevenLabs",
+    "homepage": "https://elevenlabs.io",
+    "icons": [
+      {
+        "src": "https://help.elevenlabs.io/hc/theming_assets/01HZQ08B6SDY5X53YN9ABG4B99"
+      }
+    ]
+  },
+  "eliza": {
+    "name": "Eliza",
+    "homepage": "https://www.elizacloud.ai",
+    "icons": [
+      {
+        "src": "https://www.elizacloud.ai/brand/favicons/favicon.ico"
+      }
+    ]
+  },
+  "ellipsis": {
+    "name": "Ellipsis",
+    "homepage": "https://www.ellipsis.dev",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.ellipsis.dev&size=128"
+      }
+    ]
+  },
+  "embercloud": {
+    "name": "EmberCloud",
+    "homepage": "https://www.embercloud.ai",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/2024677596462792704/UMZ_5miq_400x400.jpg"
+      }
+    ]
+  },
+  "embyai": {
+    "name": "EmbyAI",
+    "homepage": "https://emby.ai",
+    "icons": [
+      {
+        "src": "https://api.emby.ai/favicon.ico"
+      }
+    ]
+  },
+  "empiriolabsai": {
+    "name": "EmpirioLabsAI",
+    "homepage": "https://empiriolabs.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fempiriolabs.ai&size=128"
+      }
+    ]
+  },
+  "entrim": {
+    "name": "Entrim",
+    "homepage": "https://entrim.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fentrim.ai&size=128"
+      }
+    ]
+  },
+  "epho": {
+    "name": "Epho",
+    "homepage": "https://epho.io/",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fepho.io%2F&size=128"
+      }
+    ]
+  },
+  "eugpt": {
+    "name": "EuGPT",
+    "homepage": "https://www.eugpt.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.eugpt.ai&size=128"
+      }
+    ]
+  },
+  "euqai": {
+    "name": "Euqai",
+    "homepage": "https://euqai.eu",
+    "icons": [
+      {
+        "src": "https://euqai.eu/home/images/euqai-q-logo.png"
+      }
+    ]
+  },
+  "eurouter": {
+    "name": "EUrouter",
+    "homepage": "https://www.eurouter.ai",
+    "icons": [
+      {
+        "src": "https://www.eurouter.ai/favicon.ico"
+      }
+    ]
+  },
+  "everypixellabs": {
+    "name": "EverypixelLabs",
+    "homepage": "https://labs.everypixel.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcST5tEzVEN62U9SIQpHzqgC9fDRJWELnG3A4w&s"
+      }
+    ]
+  },
+  "evidencemd": {
+    "name": "EvidenceMD",
+    "homepage": "https://evidencemd.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fevidencemd.ai&size=128"
+      }
+    ]
+  },
+  "evolinkai": {
+    "name": "EvoLinkAI",
+    "homepage": "https://evolink.ai",
+    "icons": [
+      {
+        "src": "https://evolink.ai/favicon.svg"
+      }
+    ]
+  },
+  "exa": {
+    "name": "Exa",
+    "homepage": "https://exa.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQEGEKPKKLiNvA/company-logo_200_200/company-logo_200_200/0/1721090778302/exa_ai_logo?e=2147483647&v=beta&t=bNJAmBL2v359QkVTUgGTEbdBOqsnYSMaOuCtMDuG920"
+      }
+    ]
+  },
+  "fal": {
+    "name": "Fal",
+    "homepage": "https://fal.ai",
+    "icons": [
+      {
+        "src": "https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/fal-ai-icon.png"
+      }
+    ]
+  },
+  "fastrouter": {
+    "name": "FastRouter",
+    "homepage": "https://fastrouter.ai",
+    "icons": [
+      {
+        "src": "https://fastrouter.ai/favicon.ico"
+      }
+    ]
+  },
+  "featherless": {
+    "name": "Featherless",
+    "homepage": "https://featherless.ai",
+    "icons": [
+      {
+        "src": "https://featherless.ai/images/feather-icon.png"
+      }
+    ]
+  },
+  "fikra": {
+    "name": "Fikra",
+    "homepage": "https://fikraapi.co.ke",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Ffikraapi.co.ke&size=128"
+      }
+    ]
+  },
+  "finora": {
+    "name": "Finora",
+    "homepage": "https://finorahq.org",
+    "icons": [
+      {
+        "src": "https://finorahq.org/brand/icons/finora-logo-192.png"
+      }
+    ]
+  },
+  "fireworks": {
+    "name": "Fireworks",
+    "homepage": "https://fireworks.ai",
+    "icons": [
+      {
+        "src": "https://images.crunchbase.com/image/upload/c_pad,f_auto,q_auto:eco,dpr_1/xgb8cpbz7pcvovoowrmk?ik-sanitizeSvg=true"
+      }
+    ]
+  },
+  "fishaudio": {
+    "name": "FishAudio",
+    "homepage": "https://fish.audio",
+    "icons": [
+      {
+        "src": "https://fish.audio/apple-touch-icon.png"
+      }
+    ]
+  },
+  "fivedock": {
+    "name": "FiveDock",
+    "homepage": "https://5dock.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2F5dock.com&size=128"
+      }
+    ]
+  },
+  "flatseek": {
+    "name": "Flatseek",
+    "homepage": "https://flatseek.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fflatseek.io&size=128"
+      }
+    ]
+  },
+  "fortytwo": {
+    "name": "Fortytwo",
+    "homepage": "https://fortytwo.network",
+    "icons": [
+      {
+        "src": "https://fortytwo.network/favicon.ico"
+      }
+    ]
+  },
+  "founden": {
+    "name": "Founden",
+    "homepage": "https://founden.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Ffounden.ai&size=128"
+      }
+    ]
+  },
+  "foundry": {
+    "name": "Foundry",
+    "homepage": "https://azure.microsoft.com/en-us/products/ai-foundry",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCkIPADhN2Y4Pw6r2TjV8gTIrZ0-E1vqK5Jr6B7GIi1ffvP8O88U96qNw&s=10"
+      }
+    ]
+  },
+  "foureverland": {
+    "name": "Foureverland",
+    "homepage": "https://www.4everland.org",
+    "icons": [
+      {
+        "src": "https://www.4everland.org/icons/64x64-icon.png"
+      }
+    ]
+  },
+  "fred": {
+    "name": "Fred",
+    "homepage": "https://www.fredcode.net",
+    "icons": [
+      {
+        "src": "https://www.fredcode.net/icon"
+      }
+    ]
+  },
+  "freedomgpt": {
+    "name": "FreedomGPT",
+    "homepage": "https://www.freedomgpt.com",
+    "icons": [
+      {
+        "src": "https://mintcdn.com/freedomgpt/D4TIAfSjvcCKBtov/logo/icon.svg?w=2500&fit=max&auto=format&n=D4TIAfSjvcCKBtov&q=85&s=b4b918521d3a3291f1c48f1ab6ddc117"
+      }
+    ]
+  },
+  "freeinference": {
+    "name": "FreeInference",
+    "homepage": "https://freeinference.org",
+    "icons": [
+      {
+        "src": "https://www.seas.harvard.edu/sites/default/files/images/About%20SEAS/image_large.png"
+      }
+    ]
+  },
+  "freepik": {
+    "name": "Freepik",
+    "homepage": "https://www.freepik.com",
+    "icons": [
+      {
+        "src": "https://cdn.freebiesupply.com/logos/large/2x/freepik-logo-png-transparent.png"
+      }
+    ]
+  },
+  "friendli": {
+    "name": "Friendli",
+    "homepage": "https://friendli.ai",
+    "icons": [
+      {
+        "src": "https://friendli.ai/favicon/apple-touch-icon.png"
+      }
+    ]
+  },
+  "fullai": {
+    "name": "FullAI",
+    "homepage": "https://www.fullai.com",
+    "icons": [
+      {
+        "src": "https://www.fullai.com/icon.svg"
+      }
+    ]
+  },
+  "gaterouter": {
+    "name": "GateRouter",
+    "homepage": "https://www.gaterouter.ai",
+    "icons": [
+      {
+        "src": "https://www.gaterouter.ai/favicon.png"
+      }
+    ]
+  },
+  "geekai": {
+    "name": "GeekAI",
+    "homepage": "https://geekai.co",
+    "icons": [
+      {
+        "src": "https://static.geekai.co/icon/geekai-icon-wr.png"
+      }
+    ]
+  },
+  "generalcompute": {
+    "name": "GeneralCompute",
+    "homepage": "https://www.generalcompute.com",
+    "icons": [
+      {
+        "src": "https://www.generalcompute.com/favicon.ico"
+      }
+    ]
+  },
+  "getgoapi": {
+    "name": "GetGoAPI",
+    "homepage": "https://getgoapi.com",
+    "icons": [
+      {
+        "src": "https://getgoapi.com/logo.png"
+      }
+    ]
+  },
+  "gladia": {
+    "name": "Gladia",
+    "homepage": "https://www.gladia.io",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1671129329302896640/bX2pGpi0_400x400.jpg"
+      }
+    ]
+  },
+  "glio": {
+    "name": "Glio",
+    "homepage": "https://glio.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fglio.io&size=128"
+      }
+    ]
+  },
+  "gmicloud": {
+    "name": "GMICloud",
+    "homepage": "https://www.gmicloud.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.gmicloud.ai&size=128"
+      }
+    ]
+  },
+  "gonkagate": {
+    "name": "GonkaGate",
+    "homepage": "https://gonkagate.com",
+    "icons": [
+      {
+        "src": "https://gonkagate.com/favicon.ico?524675125717c35d"
+      }
+    ]
+  },
+  "google": {
+    "name": "Google",
+    "homepage": "https://ai.google",
+    "icons": [
+      {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Google-gemini-icon.svg/250px-Google-gemini-icon.svg.png"
+      }
+    ]
+  },
+  "googletranslate": {
+    "name": "GoogleTranslate",
+    "homepage": "https://translate.google.com",
+    "icons": [
+      {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Google_Translate_logo.svg/960px-Google_Translate_logo.svg.png"
+      }
+    ]
+  },
+  "gooseai": {
+    "name": "GooseAI",
+    "homepage": "https://goose.ai",
+    "icons": [
+      {
+        "src": "https://cdn-1.webcatalog.io/catalog/gooseai/gooseai-icon-filled-256.png?v=1714783054795"
+      }
+    ]
+  },
+  "gptproto": {
+    "name": "GPTProto",
+    "homepage": "https://gptproto.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fgptproto.com&size=128"
+      }
+    ]
+  },
+  "gptsapi": {
+    "name": "GPTsAPI",
+    "homepage": "https://gptsapi.net",
+    "icons": [
+      {
+        "src": "https://gptsapi.net/favicon.ico"
+      }
+    ]
+  },
+  "gradium": {
+    "name": "Gradium",
+    "homepage": "https://gradium.ai",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/229105977?s=200&v=4"
+      }
+    ]
+  },
+  "greenpt": {
+    "name": "GreenPT",
+    "homepage": "https://greenpt.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fgreenpt.com&size=128"
+      }
+    ]
+  },
+  "groovedev": {
+    "name": "GrooveDev",
+    "homepage": "https://groovedev.ai",
+    "icons": [
+      {
+        "src": "https://groovedev.ai/favicon.png"
+      }
+    ]
+  },
+  "groq": {
+    "name": "Groq",
+    "homepage": "https://groq.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnze6t-thGVKlIKNKF9zeiTfaoxLdYdVzX0g&s"
+      }
+    ]
+  },
+  "gtranslate": {
+    "name": "GTranslate",
+    "homepage": "https://github.com/d4n3436/GTranslate",
+    "icons": [
+      {
+        "src": "https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png"
+      }
+    ]
+  },
+  "haimaker": {
+    "name": "Haimaker",
+    "homepage": "https://haimaker.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fhaimaker.ai&size=128"
+      }
+    ]
+  },
+  "hanzo": {
+    "name": "Hanzo",
+    "homepage": "https://hanzo.ai",
+    "icons": [
+      {
+        "src": "https://hanzo.ai/brand/hanzo-logo.png"
+      }
+    ]
+  },
+  "harnessrouter": {
+    "name": "HarnessRouter",
+    "homepage": "https://harnessrouter.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fharnessrouter.ai&size=128"
+      }
+    ]
+  },
+  "hcompany": {
+    "name": "HCompany",
+    "homepage": "https://hcompany.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fhcompany.ai&size=128"
+      }
+    ]
+  },
+  "helicone": {
+    "name": "Helicone",
+    "homepage": "https://www.helicone.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.helicone.ai&size=128"
+      }
+    ]
+  },
+  "helyxai": {
+    "name": "HelyxAI",
+    "homepage": "https://helyxai.space",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fhelyxai.space&size=128"
+      }
+    ]
+  },
+  "herma": {
+    "name": "Herma",
+    "homepage": "https://hermaai.com",
+    "icons": [
+      {
+        "src": "https://hermaai.com/apple-touch-icon.png"
+      }
+    ]
+  },
+  "hetzner": {
+    "name": "Hetzner",
+    "homepage": "https://www.hetzner.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.hetzner.com&size=128"
+      }
+    ]
+  },
+  "heygen": {
+    "name": "HeyGen",
+    "homepage": "https://www.heygen.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZmrChHtfnAtTZb13JfQBUeFHHxZM6ARBhwA&s"
+      }
+    ]
+  },
+  "hicap": {
+    "name": "Hicap",
+    "homepage": "https://hicap.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fhicap.ai&size=128"
+      }
+    ]
+  },
+  "hinow": {
+    "name": "HiNow",
+    "homepage": "https://hinow.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fhinow.ai&size=128"
+      }
+    ]
+  },
+  "holysheepai": {
+    "name": "HolySheepAI",
+    "homepage": "https://holysheep.ai",
+    "icons": [
+      {
+        "src": "https://holysheep.ai/favicon.svg"
+      }
+    ]
+  },
+  "horayai": {
+    "name": "HorayAI",
+    "homepage": "https://www.horay.ai",
+    "icons": [
+      {
+        "src": "https://www.horay.ai/favicon.ico"
+      }
+    ]
+  },
+  "hostyourai": {
+    "name": "HostYourAI",
+    "homepage": "https://hostyourai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fhostyourai.com&size=128"
+      }
+    ]
+  },
+  "huggingface": {
+    "name": "HuggingFace",
+    "homepage": "https://huggingface.co",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/huggingface-color.png"
+      }
+    ]
+  },
+  "humeai": {
+    "name": "HumeAI",
+    "homepage": "https://www.hume.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.hume.ai&size=128"
+      }
+    ]
+  },
+  "hush": {
+    "name": "Hush",
+    "homepage": "https://www.hushcompute.xyz",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.hushcompute.xyz&size=128"
+      }
+    ]
+  },
+  "hyperbolic": {
+    "name": "Hyperbolic",
+    "homepage": "https://www.hyperbolic.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.hyperbolic.ai&size=128"
+      }
+    ]
+  },
+  "hyperbrowser": {
+    "name": "Hyperbrowser",
+    "homepage": "https://www.hyperbrowser.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.hyperbrowser.ai&size=128"
+      }
+    ]
+  },
+  "hyperrouter": {
+    "name": "HyperRouter",
+    "homepage": "https://www.hyperrouter.ai",
+    "icons": [
+      {
+        "src": "https://www.hyperrouter.ai/apple-touch-icon.png"
+      }
+    ]
+  },
+  "hyperstack": {
+    "name": "Hyperstack",
+    "homepage": "https://www.hyperstack.cloud",
+    "icons": [
+      {
+        "src": "https://www.hyperstack.cloud/hubfs/hyperstack_2023/blog/plain.jpg"
+      }
+    ]
+  },
+  "iapp": {
+    "name": "iApp",
+    "homepage": "https://iapp.co.th",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJpius3xWKLMTf4iid_lUIStJJ1Hm7-qO0CQ&s"
+      }
+    ]
+  },
+  "ideogram": {
+    "name": "Ideogram",
+    "homepage": "https://ideogram.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRno6I3vTdmNUsCoGju9rB0NUuq9Qjzw0uyg&s"
+      }
+    ]
+  },
+  "igpt": {
+    "name": "IGPT",
+    "homepage": "https://www.igpt.ai",
+    "icons": [
+      {
+        "src": "https://www.igpt.ai/wp-content/uploads/2026/04/favicon-512-2127bab8-b02e-4d96-bd7b-3f9013cb222c-150x150.png"
+      }
+    ]
+  },
+  "ilmu": {
+    "name": "ILMU",
+    "homepage": "https://www.ilmu.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.ilmu.ai&size=128"
+      }
+    ]
+  },
+  "imagerouter": {
+    "name": "ImageRouter",
+    "homepage": "https://imagerouter.io",
+    "icons": [
+      {
+        "src": "https://imagerouter.io/apple-touch-icon.png"
+      }
+    ]
+  },
+  "impossibl": {
+    "name": "Impossibl",
+    "homepage": "https://impossibl.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR08gpRvZq9AQs100xPjsTZrp4GmmBD0rGUot5_7NZL4A&s"
+      }
+    ]
+  },
+  "inceptionlabs": {
+    "name": "InceptionLabs",
+    "homepage": "https://www.inceptionlabs.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQGX6fGhzNwZAg/company-logo_200_200/B56ZU6qjrZHQAM-/0/1740445990159/inception_labs_ai_logo?e=2147483647&v=beta&t=BE4furKKZDksGfYj1GFBIxY92AgmN-CWXINy8gonlvI"
+      }
+    ]
+  },
+  "inceptron": {
+    "name": "Inceptron",
+    "homepage": "https://www.inceptron.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.inceptron.io&size=128"
+      }
+    ]
+  },
+  "infercom": {
+    "name": "Infercom",
+    "homepage": "https://infercom.ai",
+    "icons": [
+      {
+        "src": "https://infercom.ai/favicon.png"
+      }
+    ]
+  },
+  "inferencenet": {
+    "name": "Inferencenet",
+    "homepage": "https://inference.net",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQGxl6yWZL2F7w/company-logo_200_200/B56ZT34NF3GQAM-/0/1739325493857/kuzco_xyz_logo?e=2147483647&v=beta&t=80Ojsf4X0HWDwKBt9Hfz4q0mRkD7BaNP34GaazC3nQQ"
+      }
+    ]
+  },
+  "inferlink": {
+    "name": "InferLink",
+    "homepage": "https://inferlink.ai",
+    "icons": [
+      {
+        "src": "https://inferlink.ai/static/favicon.svg"
+      }
+    ]
+  },
+  "infomaniak": {
+    "name": "Infomaniak",
+    "homepage": "https://www.infomaniak.com",
+    "icons": [
+      {
+        "src": "https://i0.wp.com/news.infomaniak.com/wp-content/uploads/2015/05/avatar-infomaniak.jpg?fit=500%2C500&ssl=1"
+      }
+    ]
+  },
+  "infraxa": {
+    "name": "Infraxa",
+    "homepage": "https://www.infraxa.ai",
+    "icons": [
+      {
+        "src": "https://www.infraxa.ai/infraxa.png"
+      }
+    ]
+  },
+  "infron": {
+    "name": "Infron",
+    "homepage": "https://infron.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Finfron.ai&size=128"
+      }
+    ]
+  },
+  "interfaze": {
+    "name": "Interfaze",
+    "homepage": "https://interfaze.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Finterfaze.ai&size=128"
+      }
+    ]
+  },
+  "inworld": {
+    "name": "Inworld",
+    "homepage": "https://inworld.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Finworld.ai&size=128"
+      }
+    ]
+  },
+  "ionet": {
+    "name": "IOnet",
+    "homepage": "https://io.net",
+    "icons": [
+      {
+        "src": "https://io.net/images/share-card.png"
+      }
+    ]
+  },
+  "ionos": {
+    "name": "IONOS",
+    "homepage": "https://cloud.ionos.com",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/67323449?s=200&v=4"
+      }
+    ]
+  },
+  "ionrouter": {
+    "name": "IonRouter",
+    "homepage": "https://ionrouter.io",
+    "icons": [
+      {
+        "src": "https://ph-files.imgix.net/e10dc76b-c908-4fc8-bd5e-f3d89c3ef126.png?auto=format"
+      }
+    ]
+  },
+  "ishi": {
+    "name": "Ishi",
+    "homepage": "https://ishi.so",
+    "icons": [
+      {
+        "src": "https://ishi.so/_next/image?url=%2Fimages%2Flogo.png&w=96&q=75&dpl=dpl_dfKCWYVL7N7BGZ69DQsvgSLhYsEd"
+      }
+    ]
+  },
+  "jassieai": {
+    "name": "JassieAI",
+    "homepage": "https://jassie.ai",
+    "icons": [
+      {
+        "src": "https://jassie.ai/favicon.svg"
+      }
+    ]
+  },
+  "jiekouai": {
+    "name": "JiekouAI",
+    "homepage": "https://jiekou.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fjiekou.ai&size=128"
+      }
+    ]
+  },
+  "jigsawstack": {
+    "name": "JigsawStack",
+    "homepage": "https://jigsawstack.com",
+    "icons": [
+      {
+        "src": "https://jigsawstack.com/jigsaw_app_icon.svg"
+      }
+    ]
+  },
+  "jina": {
+    "name": "Jina",
+    "homepage": "https://jina.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fjina.ai&size=128"
+      }
+    ]
+  },
+  "jkaihub": {
+    "name": "JKAIHub",
+    "homepage": "https://aihub.jk.hk",
+    "icons": [
+      {
+        "src": "https://aihub.jk.hk/jk-logo.svg"
+      }
+    ]
+  },
+  "json2video": {
+    "name": "JSON2Video",
+    "homepage": "https://json2video.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fjson2video.com&size=128"
+      }
+    ]
+  },
+  "jules": {
+    "name": "Jules",
+    "homepage": "https://jules.google",
+    "icons": [
+      {
+        "src": "https://jules.google/favicon.svg"
+      }
+    ]
+  },
+  "keyplex": {
+    "name": "Keyplex",
+    "homepage": "https://keyplex.ai",
+    "icons": [
+      {
+        "src": "https://keyplex.ai/images/favicon.png"
+      }
+    ]
+  },
+  "kilo": {
+    "name": "Kilo",
+    "homepage": "https://kilo.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMLlNkfiVjeIdE8Sw7_GmVbxfOaqo-GnRX3w&s"
+      }
+    ]
+  },
+  "kimrel": {
+    "name": "Kimrel",
+    "homepage": "https://kimrel.com",
+    "icons": [
+      {
+        "src": "https://kimrel.com/logo.svg"
+      }
+    ]
+  },
+  "kirha": {
+    "name": "Khira",
+    "homepage": "https://kirha.com",
+    "icons": [
+      {
+        "src": "https://kirha.com/favicon.png"
+      }
+    ]
+  },
+  "kissapi": {
+    "name": "KissAPI",
+    "homepage": "https://api.kissapi.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fapi.kissapi.ai&size=128"
+      }
+    ]
+  },
+  "klingai": {
+    "name": "KlingAI",
+    "homepage": "https://klingai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fklingai.com&size=128"
+      }
+    ]
+  },
+  "knoxchat": {
+    "name": "KnoxChat",
+    "homepage": "https://knox.chat",
+    "icons": [
+      {
+        "src": "https://knox.chat/favicon.ico?favicon.6a2b28ef.ico"
+      }
+    ]
+  },
+  "langbaseagent": {
+    "name": "LangbaseAgent",
+    "homepage": "https://langbase.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flangbase.com&size=128"
+      }
+    ]
+  },
+  "langbasepipe": {
+    "name": "LangbasePipe",
+    "homepage": "https://langbase.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flangbase.com&size=128"
+      }
+    ]
+  },
+  "laozhang": {
+    "name": "LaoZhang",
+    "homepage": "https://laozhang.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flaozhang.ai&size=128"
+      }
+    ]
+  },
+  "lara": {
+    "name": "Lara",
+    "homepage": "https://laratranslate.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flaratranslate.com&size=128"
+      }
+    ]
+  },
+  "lazu": {
+    "name": "Lazu",
+    "homepage": "https://lazu.ai",
+    "icons": [
+      {
+        "src": "https://lazu.ai/apple-touch-icon.png"
+      }
+    ]
+  },
+  "lectoai": {
+    "name": "LectoAI",
+    "homepage": "https://lecto.ai",
+    "icons": [
+      {
+        "src": "https://lecto.ai/favicon.svg"
+      }
+    ]
+  },
+  "lelapaai": {
+    "name": "LelapaAI",
+    "homepage": "https://lelapa.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQHzeq6nJSu0kA/company-logo_200_200/company-logo_200_200/0/1709302348371/lelapa_ai_logo?e=2147483647&v=beta&t=B1arU4Yj_cVDw5YidejPT1wnudUFY_-E76rMgs2v0Ds"
+      }
+    ]
+  },
+  "lexico": {
+    "name": "LexiCo",
+    "homepage": "https://lexisaas.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flexisaas.com&size=128"
+      }
+    ]
+  },
+  "libertai": {
+    "name": "LibertAI",
+    "homepage": "https://libertai.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flibertai.io&size=128"
+      }
+    ]
+  },
+  "lilac": {
+    "name": "Lilac",
+    "homepage": "https://getlilac.com",
+    "icons": [
+      {
+        "src": "https://getlilac.com/favicon.png"
+      }
+    ]
+  },
+  "lingvanex": {
+    "name": "Lingvanex",
+    "homepage": "https://lingvanex.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/C4D0BAQHIYe-AlXNXcw/company-logo_200_200/company-logo_200_200/0/1630569764634/lingvanex_logo?e=2147483647&v=beta&t=NHkF-KaIYGhU4wkrQi2hr1H1dnyZhV_tRr0HjuWMcBg"
+      }
+    ]
+  },
+  "linkup": {
+    "name": "Linkup",
+    "homepage": "https://www.linkup.so",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.linkup.so&size=128"
+      }
+    ]
+  },
+  "litai": {
+    "name": "LitAI",
+    "homepage": "https://lightning.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flightning.ai&size=128"
+      }
+    ]
+  },
+  "literouter": {
+    "name": "LiteRouter",
+    "homepage": "https://literouter.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fliterouter.com&size=128"
+      }
+    ]
+  },
+  "llama": {
+    "name": "Llama",
+    "homepage": "https://www.llama.com",
+    "icons": [
+      {
+        "src": "https://static.xx.fbcdn.net/rsrc.php/yf/r/-7pQO6hUGK_.svg"
+      }
+    ]
+  },
+  "llm7": {
+    "name": "LLM7",
+    "homepage": "https://llm7.io",
+    "icons": [
+      {
+        "src": "https://llm7.io/llm7.png"
+      }
+    ]
+  },
+  "llmapi": {
+    "name": "LLMAPI",
+    "homepage": "https://llmapi.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fllmapi.ai&size=128"
+      }
+    ]
+  },
+  "llmbase": {
+    "name": "LLMBase",
+    "homepage": "https://llmbase.ai",
+    "icons": [
+      {
+        "src": "https://llmbase.ai/apple-touch-icon.png"
+      }
+    ]
+  },
+  "llmgateway": {
+    "name": "LLMGateway",
+    "homepage": "https://llmgateway.io",
+    "icons": [
+      {
+        "src": "https://ph-files.imgix.net/c2dfedf5-ce71-4f9f-97c4-b06c4940b6a8.png?auto=format"
+      }
+    ]
+  },
+  "llmkiwi": {
+    "name": "LLMkiwi",
+    "homepage": "https://llm.kiwi",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRr8Sl-_UVZUl2_tGQXMZY4fFmBcGAmjtrFBg&s"
+      }
+    ]
+  },
+  "llmlayer": {
+    "name": "LLMLayer",
+    "homepage": "https://llmlayer.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fllmlayer.ai&size=128"
+      }
+    ]
+  },
+  "llmstats": {
+    "name": "LLMStats",
+    "homepage": "https://llm-stats.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fllm-stats.com&size=128"
+      }
+    ]
+  },
+  "llmtr": {
+    "name": "LLMTR",
+    "homepage": "https://llmtr.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fllmtr.com&size=128"
+      }
+    ]
+  },
+  "llmwise": {
+    "name": "LLMWise",
+    "homepage": "https://llmwise.ai",
+    "icons": [
+      {
+        "src": "https://rhmtzjuamblkzvakneou.supabase.co/storage/v1/object/public/logos/1771180490341-product-icon-4a88266a-eedf-41ce-a83c-dcf71fedd95c.jpg"
+      }
+    ]
+  },
+  "lmrouter": {
+    "name": "LMRouter",
+    "homepage": "https://lmrouter.com",
+    "icons": [
+      {
+        "src": "https://lmrouter.com/favicon.ico?favicon.d4648f25.ico"
+      }
+    ]
+  },
+  "logfare": {
+    "name": "Logfare",
+    "homepage": "https://logfare.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flogfare.ai&size=128"
+      }
+    ]
+  },
+  "logicosllmhub": {
+    "name": "LogicosLLMHub",
+    "homepage": "https://www.llmhub.one",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.llmhub.one&size=128"
+      }
+    ]
+  },
+  "longcat": {
+    "name": "LongCat",
+    "homepage": "https://longcat.chat",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/229435942?s=200&v=4"
+      }
+    ]
+  },
+  "lovo": {
+    "name": "LOVO",
+    "homepage": "https://lovo.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSg6g7t1OTIegv3sJShbcj69qBL-ceST3ukMw&s"
+      }
+    ]
+  },
+  "ltx": {
+    "name": "LTX",
+    "homepage": "https://ltx.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fltx.io&size=128"
+      }
+    ]
+  },
+  "lucidquery": {
+    "name": "LucidQuery",
+    "homepage": "https://lucidquery.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flucidquery.com&size=128"
+      }
+    ]
+  },
+  "lumaai": {
+    "name": "LumaAI",
+    "homepage": "https://lumalabs.ai",
+    "icons": [
+      {
+        "src": "https://awsmp-logos.s3.amazonaws.com/seller-p22x27mw3bvj2/a6a97dd612a0405476a18abdeb550f2f.png"
+      }
+    ]
+  },
+  "lumecoder": {
+    "name": "Lumecoder",
+    "homepage": "https://lumecoder.com",
+    "icons": [
+      {
+        "src": "https://lumecoder.com/favicon.ico"
+      }
+    ]
+  },
+  "lumenfall": {
+    "name": "Lumenfall",
+    "homepage": "https://lumenfall.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flumenfall.ai&size=128"
+      }
+    ]
+  },
+  "luminoai": {
+    "name": "LuminoAI",
+    "homepage": "https://luminoai.co.in",
+    "icons": [
+      {
+        "src": "https://luminoai.co.in/logo.png"
+      }
+    ]
+  },
+  "lunos": {
+    "name": "Lunos",
+    "homepage": "https://lunosrouter.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flunosrouter.com&size=128"
+      }
+    ]
+  },
+  "lxg2it": {
+    "name": "LXG2IT",
+    "homepage": "https://lxg2it.com",
+    "icons": [
+      {
+        "src": "https://lxg2it.com/favicon.svg"
+      }
+    ]
+  },
+  "lyceum": {
+    "name": "Lyceum",
+    "homepage": "https://lyceum.technology",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Flyceum.technology&size=128"
+      }
+    ]
+  },
+  "m8tes": {
+    "name": "M8tes",
+    "homepage": "https://www.m8tes.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.m8tes.ai&size=128"
+      }
+    ]
+  },
+  "magisterium": {
+    "name": "Magisterium",
+    "homepage": "https://www.magisterium.com",
+    "icons": [
+      {
+        "src": "https://www.magisterium.com/apple-icon.png?apple-icon.2847d4d4.png"
+      }
+    ]
+  },
+  "mancerai": {
+    "name": "MancerAI",
+    "homepage": "https://mancer.tech",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmancer.tech&size=128"
+      }
+    ]
+  },
+  "manus": {
+    "name": "Manus",
+    "homepage": "https://manus.im",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmanus.im&size=128"
+      }
+    ]
+  },
+  "mara": {
+    "name": "MARA",
+    "homepage": "https://www.mara.com/",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4E0BAQHozkwYKPFMoA/company-logo_200_200/company-logo_200_200/0/1720738348079/marathon_digital_holdings_logo?e=2147483647&v=beta&t=-YaFT7YvwhbN6_h2PtV-foWFHtwY09tGMaqXZ9P_U9w"
+      }
+    ]
+  },
+  "maritacaai": {
+    "name": "MaritacaAI",
+    "homepage": "https://www.maritaca.ai",
+    "icons": [
+      {
+        "src": "https://static.wixstatic.com/media/ebd79d_3601105d0b1c46198da7ad9b6e80e56b~mv2.png"
+      }
+    ]
+  },
+  "martian": {
+    "name": "Martian",
+    "homepage": "https://withmartian.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQEmKgGx6bpNLA/company-logo_200_200/company-logo_200_200/0/1712255496487/withmartian_logo?e=2147483647&v=beta&t=yQG5vL9gWNrhAbae_LDzHAyFPd-Cy0PHm_SXo-1n9rQ"
+      }
+    ]
+  },
+  "matterai": {
+    "name": "MatterAI",
+    "homepage": "https://www.matterai.so",
+    "icons": [
+      {
+        "src": "https://www.matterai.so/favicon.png"
+      }
+    ]
+  },
+  "maxlayer": {
+    "name": "Maxlayer",
+    "homepage": "https://maxlayer.cloud",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmaxlayer.cloud&size=128"
+      }
+    ]
+  },
+  "megallm": {
+    "name": "MegaLLM",
+    "homepage": "https://megallm.io",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcREs3-hwqOebFprvFl0slcw5RYHb1VETFy1-w&s"
+      }
+    ]
+  },
+  "meganova": {
+    "name": "MegaNova",
+    "homepage": "https://www.meganova.ai",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1975056965773799425/XdSENWc-.jpg"
+      }
+    ]
+  },
+  "melious": {
+    "name": "Melious",
+    "homepage": "https://melious.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmelious.ai&size=128"
+      }
+    ]
+  },
+  "memoryrouter": {
+    "name": "MemoryRouter",
+    "homepage": "https://memoryrouter.ai",
+    "icons": [
+      {
+        "src": "https://memoryrouter.ai/logo.png"
+      }
+    ]
+  },
+  "merge": {
+    "name": "Merge",
+    "homepage": "https://www.merge.dev",
+    "icons": [
+      {
+        "src": "https://cdn.prod.website-files.com/624b192df0b0151225c10026/67d1d4249635c073f58064c5_Favicon%2032x32.png"
+      }
+    ]
+  },
+  "meshapi": {
+    "name": "MeshAPI",
+    "homepage": "https://meshapi.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmeshapi.ai&size=128"
+      }
+    ]
+  },
+  "messari": {
+    "name": "Messari",
+    "homepage": "https://messari.io",
+    "icons": [
+      {
+        "src": "https://messari.io/apple-icon.png?e8e84c5ccf80b384"
+      }
+    ]
+  },
+  "mia21": {
+    "name": "Mia21",
+    "homepage": "https://mia21.com",
+    "icons": [
+      {
+        "src": "https://mia21.com/favicon.ico"
+      }
+    ]
+  },
+  "miapi": {
+    "name": "MIAPI",
+    "homepage": "https://miapi.uk",
+    "icons": [
+      {
+        "src": "https://miapi.uk/favicon.svg"
+      }
+    ]
+  },
+  "mimicxai": {
+    "name": "MIMICXAI",
+    "homepage": "https://mimicx.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmimicx.ai&size=128"
+      }
+    ]
+  },
+  "minimax": {
+    "name": "MiniMax",
+    "homepage": "https://www.minimax.io",
+    "icons": [
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/minimax-color.png"
+      }
+    ]
+  },
+  "mintrouter": {
+    "name": "MintRouter",
+    "homepage": "https://mintrouter.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmintrouter.ai&size=128"
+      }
+    ]
+  },
+  "mireye": {
+    "name": "Mireye",
+    "homepage": "https://www.mireye.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.mireye.com&size=128"
+      }
+    ]
+  },
+  "miromind": {
+    "name": "MiroMind",
+    "homepage": "https://www.miromind.ai",
+    "icons": [
+      {
+        "src": "https://framerusercontent.com/images/gn6veviMOvzT38FMyTaZmK4uow.png"
+      }
+    ]
+  },
+  "mistral": {
+    "name": "Mistral",
+    "homepage": "https://mistral.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmistral.ai&size=128"
+      }
+    ]
+  },
+  "mixedbread": {
+    "name": "Mixedbread",
+    "homepage": "https://www.mixedbread.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.mixedbread.com&size=128"
+      }
+    ]
+  },
+  "mixlayer": {
+    "name": "Mixlayer",
+    "homepage": "https://www.mixlayer.com",
+    "icons": [
+      {
+        "src": "https://www.mixlayer.com/favicon.ico"
+      }
+    ]
+  },
+  "mljunction": {
+    "name": "MLJunction",
+    "homepage": "https://mljunction.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmljunction.com&size=128"
+      }
+    ]
+  },
+  "modal": {
+    "name": "Modal",
+    "homepage": "https://modal.com",
+    "icons": [
+      {
+        "src": "https://rwqqrnsxhishecvdnalx.supabase.co/storage/v1/object/public/assets/ab2659bd-e948-4236-a6eb-57f254741e11/9f2b47cc-81fd-4acb-9470-e2c84b058181.svg"
+      }
+    ]
+  },
+  "modelmax": {
+    "name": "ModelMax",
+    "homepage": "https://www.modelmax.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.modelmax.io&size=128"
+      }
+    ]
+  },
+  "modelrouter": {
+    "name": "ModelRouter",
+    "homepage": "https://modelrouter.app",
+    "icons": [
+      {
+        "src": "https://modelrouter.app/fav.png"
+      }
+    ]
+  },
+  "modelslab": {
+    "name": "ModelsLab",
+    "homepage": "https://modelslab.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQFGBuKZseZoDg/company-logo_200_200/company-logo_200_200/0/1702881574177/stablediffusion_logo?e=2147483647&v=beta&t=zJuAxgH6lhjLKCT7R48m1te3TR696M6BArSsesvap-E"
+      }
+    ]
+  },
+  "modelsync": {
+    "name": "ModelSync",
+    "homepage": "https://modelsync.ai",
+    "icons": [
+      {
+        "src": "https://modelsync.ai/favicon.ico"
+      }
+    ]
+  },
+  "moleapi": {
+    "name": "MoleAPI",
+    "homepage": "https://www.moleapi.com",
+    "icons": [
+      {
+        "src": "https://docs.moleapi.com/favicon.ico"
+      }
+    ]
+  },
+  "monica": {
+    "name": "Monica",
+    "homepage": "https://platform.monica.im",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fplatform.monica.im&size=128"
+      }
+    ]
+  },
+  "monstergaming": {
+    "name": "MonsterGaming",
+    "homepage": "https://monstergaming.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmonstergaming.ai&size=128"
+      }
+    ]
+  },
+  "moonshot": {
+    "name": "Moonshot",
+    "homepage": "https://www.moonshot.ai",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/moonshot.png",
+        "theme": "light"
+      },
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/moonshot.png",
+        "theme": "dark"
+      }
+    ]
+  },
+  "morph": {
+    "name": "Morph",
+    "homepage": "https://www.morphllm.com",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/139094100?s=280&v=4"
+      }
+    ]
+  },
+  "morpheus": {
+    "name": "Morpheus",
+    "homepage": "https://mor.org",
+    "icons": [
+      {
+        "src": "https://s2.coinmarketcap.com/static/img/coins/200x200/31656.png"
+      }
+    ]
+  },
+  "mulerouter": {
+    "name": "MuleRouter",
+    "homepage": "https://www.mulerouter.ai",
+    "icons": [
+      {
+        "src": "https://www.mulerouter.ai/docs/_mintlify/favicons/mulerouter/vbgd1_NbBwUfmOI3/_generated/favicon/apple-touch-icon.png"
+      }
+    ]
+  },
+  "mulerun": {
+    "name": "MuleRun",
+    "homepage": "https://mulerun.com",
+    "icons": [
+      {
+        "src": "https://mulerun.com/assets/image/logo.png"
+      }
+    ]
+  },
+  "mumeai": {
+    "name": "MumeAI",
+    "homepage": "https://mume.ai",
+    "icons": [
+      {
+        "src": "https://mume.ai/favicon-48x48.png"
+      }
+    ]
+  },
+  "murfai": {
+    "name": "MurfAI",
+    "homepage": "https://murf.ai",
+    "icons": [
+      {
+        "src": "https://website.cdn.speechify.com/murf-ai-app-logo.png?quality=95&width=2800"
+      }
+    ]
+  },
+  "mycoai": {
+    "name": "MyCoAI",
+    "homepage": "https://mycoai.dev",
+    "icons": [
+      {
+        "src": "https://mycoai.dev/icon.svg"
+      }
+    ]
+  },
+  "myrouter": {
+    "name": "MyRouter",
+    "homepage": "https://www.myrouter.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.myrouter.ai&size=128"
+      }
+    ]
+  },
+  "nagaai": {
+    "name": "NagaAI",
+    "homepage": "https://naga.ac",
+    "icons": [
+      {
+        "src": "https://naga.ac/icon0.svg?icon0.cf9a32a1.svg"
+      }
+    ]
+  },
+  "nanogpt": {
+    "name": "NanoGPT",
+    "homepage": "https://nano-gpt.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0reRd8eXZTLB0R15TLR-gp7UWUVMGFFLb9A&s"
+      }
+    ]
+  },
+  "nataris": {
+    "name": "Nataris",
+    "homepage": "https://nataris.ai",
+    "icons": [
+      {
+        "src": "https://nataris.ai/favicon.svg"
+      }
+    ]
+  },
+  "navyai": {
+    "name": "NavyAI",
+    "homepage": "https://api.navy",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fapi.navy&size=128"
+      }
+    ]
+  },
+  "nearai": {
+    "name": "NEARAI",
+    "homepage": "https://near.ai",
+    "icons": [
+      {
+        "src": "https://s3.coinmarketcap.com/static-gravity/image/ef3ad80e423a4449ab8e961b0d1edea4.png"
+      }
+    ]
+  },
+  "nebius": {
+    "name": "Nebius",
+    "homepage": "https://nebius.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQKRoO9XCNhc_7_DVpQm8BsTL_oVF6q57IZPA&s"
+      }
+    ]
+  },
+  "neosantara": {
+    "name": "Neosantara",
+    "homepage": "https://www.neosantara.xyz",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQg5qPIKSu4pARbFosPtS7Jc1u9LCa-9lBWPg&s"
+      }
+    ]
+  },
+  "netmind": {
+    "name": "NetMind",
+    "homepage": "https://www.netmind.ai",
+    "icons": [
+      {
+        "src": "https://www.netmind.ai/assets/netmind_svg-61eb4f47.svg"
+      }
+    ]
+  },
+  "neuralring": {
+    "name": "NeuralRing",
+    "homepage": "https://neuralring.eu",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fneuralring.eu&size=128"
+      }
+    ]
+  },
+  "neuralwatt": {
+    "name": "Neuralwatt",
+    "homepage": "https://portal.neuralwatt.com",
+    "icons": [
+      {
+        "src": "https://portal.neuralwatt.com/static/images/og-default.png"
+      }
+    ]
+  },
+  "nexosai": {
+    "name": "NexosAI",
+    "homepage": "https://nexos.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fnexos.ai&size=128"
+      }
+    ]
+  },
+  "nextbit": {
+    "name": "Nextbit",
+    "homepage": "https://www.nextbit256.com",
+    "icons": [
+      {
+        "src": "https://www.nextbit256.com/Nextbit_mark_Main@2x.png"
+      }
+    ]
+  },
+  "nexusify": {
+    "name": "Nexusify",
+    "homepage": "https://nexusify.co",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fnexusify.co&size=128"
+      }
+    ]
+  },
+  "nimbleway": {
+    "name": "NimbleWay",
+    "homepage": "https://www.nimbleway.com",
+    "icons": [
+      {
+        "src": "https://docs.nimbleway.com/images/favicon.png"
+      }
+    ]
+  },
+  "ninjachat": {
+    "name": "NinjaChat",
+    "homepage": "https://www.ninjachat.ai",
+    "icons": [
+      {
+        "src": "https://www.ninjachat.ai/favicon.ico?favicon.cbe4e1c3.ico"
+      }
+    ]
+  },
+  "nlpcloud": {
+    "name": "NLPCloud",
+    "homepage": "https://nlpcloud.com",
+    "icons": [
+      {
+        "src": "https://nlpcloud.com/assets/images/logo.png"
+      }
+    ]
+  },
+  "nodebyt": {
+    "name": "Nodebyt",
+    "homepage": "https://www.nodebyt.com",
+    "icons": [
+      {
+        "src": "https://www.nodebyt.com/favicon.svg"
+      }
+    ]
+  },
+  "nodion": {
+    "name": "Nodion",
+    "homepage": "https://www.nodion.ai",
+    "icons": [
+      {
+        "src": "https://www.nodion.ai/favicon.ico"
+      }
+    ]
+  },
+  "noiz": {
+    "name": "Noiz",
+    "homepage": "https://noiz.ai",
+    "icons": [
+      {
+        "src": "https://ph-files.imgix.net/9e2393ae-8f49-438e-8c01-a9f0e0d485e6.jpeg?auto=format"
+      }
+    ]
+  },
+  "nonkycai": {
+    "name": "NONKYCAI",
+    "homepage": "https://api.nonkycai.com",
+    "icons": [
+      {
+        "src": "https://api.nonkycai.com/favicon.ico?favicon.99e58b66.ico"
+      }
+    ]
+  },
+  "notte": {
+    "name": "Notte",
+    "homepage": "https://www.notte.cc",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.notte.cc&size=128"
+      }
+    ]
+  },
+  "nousresearch": {
+    "name": "NousResearch",
+    "homepage": "https://nousresearch.com",
+    "icons": [
+      {
+        "src": "https://nousresearch.com/wp-content/uploads/2024/03/Noushirt-2.webp"
+      }
+    ]
+  },
+  "nouswise": {
+    "name": "Nouswise",
+    "homepage": "https://nouswise.com",
+    "icons": [
+      {
+        "src": "https://framerusercontent.com/images/dNw2cPLdln6McWIrHrbElAkbts.png",
+        "theme": "dark"
+      },
+      {
+        "src": "https://framerusercontent.com/images/BaImlpbrLw8FnDw1alp0IJ4smI.png",
+        "theme": "light"
+      }
+    ]
+  },
+  "novai": {
+    "name": "NovAI",
+    "homepage": "https://aiapi-pro.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Faiapi-pro.com&size=128"
+      }
+    ]
+  },
+  "novita": {
+    "name": "Novita",
+    "homepage": "https://novita.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQG04_X3qbYWrg/company-logo_200_200/company-logo_200_200/0/1737460982063/novita_ai_labs_logo?e=2147483647&v=beta&t=PP0ulFsya1NvYiEtpQDIdmmnEfbrQ03kl6XA7TT1pJ0"
+      }
+    ]
+  },
+  "nrpnautilus": {
+    "name": "NRPNautilus",
+    "homepage": "https://nrp.ai",
+    "icons": [
+      {
+        "src": "https://avatars.observableusercontent.com/avatar/85c1919560b09ca3a26d663970a16af967526a351f93b43563e3664e882c1f6c"
+      }
+    ]
+  },
+  "nscale": {
+    "name": "Nscale",
+    "homepage": "https://www.nscale.com",
+    "icons": [
+      {
+        "src": "https://startuprise.co.uk/wp-content/uploads/2025/04/nscale_cloud_logo.jpg"
+      }
+    ]
+  },
+  "nvidia": {
+    "name": "NVIDIA",
+    "homepage": "https://www.nvidia.com",
+    "icons": [
+      {
+        "src": "https://www.citypng.com/public/uploads/preview/hd-nvidia-eye-logo-icon-png-701751694965655t2lbe7yugk.png"
+      }
+    ]
+  },
+  "occludra": {
+    "name": "Occludra",
+    "homepage": "https://occludra.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Foccludra.ai&size=128"
+      }
+    ]
+  },
+  "ocrskill": {
+    "name": "OCRSkill",
+    "homepage": "https://www.ocrskill.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.ocrskill.com&size=128"
+      }
+    ]
+  },
+  "octagon": {
+    "name": "Octagon",
+    "homepage": "https://octagonai.co",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/156035937?s=280&v=4"
+      }
+    ]
+  },
+  "ofoxai": {
+    "name": "OfoxAI",
+    "homepage": "https://ofox.ai",
+    "icons": [
+      {
+        "src": "https://ofox.ai/favicon.ico"
+      }
+    ]
+  },
+  "ohmygpt": {
+    "name": "OhMyGPT",
+    "homepage": "https://www.ohmygpt.com",
+    "icons": [
+      {
+        "src": "https://docs.ohmygpt.com/icon.png?icon.f741d7a1.png"
+      }
+    ]
+  },
+  "ollama": {
+    "name": "Ollama",
+    "homepage": "https://ollama.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFVZ9JJ3PrF8m-lYW-rPzJpZJVMzq3CwpdsQ&s"
+      }
+    ]
+  },
+  "omneity": {
+    "name": "Omneity",
+    "homepage": "https://www.omneitylabs.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.omneitylabs.com&size=128"
+      }
+    ]
+  },
+  "omniakey": {
+    "name": "OmniaKey",
+    "homepage": "https://omniakey.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fomniakey.com&size=128"
+      }
+    ]
+  },
+  "oneinfer": {
+    "name": "OneInfer",
+    "homepage": "https://oneinfer.ai",
+    "icons": [
+      {
+        "src": "https://oneinfer.ai/favicon.ico"
+      }
+    ]
+  },
+  "onekey": {
+    "name": "OneKey",
+    "homepage": "https://1key4ai.com",
+    "icons": [
+      {
+        "src": "https://1key4ai.com/favicon.ico"
+      }
+    ]
+  },
+  "onlypixai": {
+    "name": "OnlyPixAI",
+    "homepage": "https://onlypixai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fonlypixai.com&size=128"
+      }
+    ]
+  },
+  "oodaai": {
+    "name": "OODAAI",
+    "homepage": "https://ooda.ai",
+    "icons": [
+      {
+        "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/TfjT2nKvD4OW3Bt29RXeS4zGMZk1/social-images/social-1773614696137-Screenshot_2026-03-15_at_23.44.42.webp"
+      }
+    ]
+  },
+  "opeai": {
+    "name": "OPEAI",
+    "homepage": "https://ope.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fope.ai&size=128"
+      }
+    ]
+  },
+  "openadapter": {
+    "name": "OpenAdapter",
+    "homepage": "https://openadapter.dev",
+    "icons": [
+      {
+        "src": "https://openadapter.dev/apple-touch-icon.png"
+      }
+    ]
+  },
+  "openai": {
+    "name": "OpenAI",
+    "homepage": "https://openai.com",
+    "icons": [
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/openai.png",
+        "theme": "dark"
+      },
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/1.74.0/files/light/openai.png",
+        "theme": "light"
+      }
+    ]
+  },
+  "opencodego": {
+    "name": "OpenCodeGo",
+    "homepage": "https://opencode.ai",
+    "icons": [
+      {
+        "src": "https://ph-files.imgix.net/c8b3ba9e-e0e9-42d4-ad46-42566610e39f.svg?auto=format"
+      }
+    ]
+  },
+  "opencodezen": {
+    "name": "OpenCodeZen",
+    "homepage": "https://opencode.ai",
+    "icons": [
+      {
+        "src": "https://ph-files.imgix.net/c8b3ba9e-e0e9-42d4-ad46-42566610e39f.svg?auto=format"
+      }
+    ]
+  },
+  "openference": {
+    "name": "Openference",
+    "homepage": "https://openference.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fopenference.com&size=128"
+      }
+    ]
+  },
+  "opengate": {
+    "name": "OpenGate",
+    "homepage": "https://www.opengate.host",
+    "icons": [
+      {
+        "src": "https://www.opengate.host/logo.svg"
+      }
+    ]
+  },
+  "opengateway": {
+    "name": "OpenGateway",
+    "homepage": "https://opengateway.ai",
+    "icons": [
+      {
+        "src": "https://opengateway.ai/icon.svg?07de003a1a421a3a"
+      }
+    ]
+  },
+  "openhands": {
+    "name": "OpenHands",
+    "homepage": "https://www.openhands.dev",
+    "icons": [
+      {
+        "src": "https://cdn.prod.website-files.com/68ff4057b35616cdd47d5ac7/69713f9399681daa2add2d28_favicon.ico"
+      }
+    ]
+  },
+  "openlimits": {
+    "name": "OpenLimits",
+    "homepage": "https://openlimits.app",
+    "icons": [
+      {
+        "src": "https://openlimits.app/favicon.ico"
+      }
+    ]
+  },
+  "openrouter": {
+    "name": "OpenRouter",
+    "homepage": "https://openrouter.ai",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/2076693957258727424/AyRghTGJ_400x400.jpg"
+      }
+    ]
+  },
+  "opperai": {
+    "name": "OpperAI",
+    "homepage": "https://opper.ai",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/145928785?s=280&v=4"
+      }
+    ]
+  },
+  "opuscode": {
+    "name": "OpusCode",
+    "homepage": "https://www.opuscode.pro",
+    "icons": [
+      {
+        "src": "https://www.opuscode.pro/favicon.ico?favicon.2b7001c7.ico"
+      }
+    ]
+  },
+  "oraicle": {
+    "name": "Oraicle",
+    "homepage": "https://oraicle.me",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Foraicle.me&size=128"
+      }
+    ]
+  },
+  "orbigpu": {
+    "name": "OrbiGPU",
+    "homepage": "https://orbigpu.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Forbigpu.com&size=128"
+      }
+    ]
+  },
+  "orcarouter": {
+    "name": "OrcaRouter",
+    "homepage": "https://www.orcarouter.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.orcarouter.ai&size=128"
+      }
+    ]
+  },
+  "orqagentruntime": {
+    "name": "OrqAgentRuntime",
+    "homepage": "https://orq.ai/platform/agent-runtime",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/92824965?s=280&v=4"
+      }
+    ]
+  },
+  "orqrouter": {
+    "name": "OrqRouter",
+    "homepage": "https://router.orq.ai",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/92824965?s=280&v=4"
+      }
+    ]
+  },
+  "osiris": {
+    "name": "Osiris",
+    "homepage": "https://osiris-code.com/",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHmWjsig2nHKUfbzYUs8EFE89Vf8WrB6tN1VdyXSoXh6jIoPR--GdWLgI&s=10"
+      }
+    ]
+  },
+  "ourtoken": {
+    "name": "OurToken",
+    "homepage": "https://ourtoken.ai",
+    "icons": [
+      {
+        "src": "https://ourtoken.ai/favicon.ico"
+      }
+    ]
+  },
+  "ovhcloud": {
+    "name": "OVHcloud",
+    "homepage": "https://www.ovhcloud.com",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1178940876078407680/p0SH0xKH_400x400.jpg"
+      }
+    ]
+  },
+  "parallel": {
+    "name": "Parallel",
+    "homepage": "https://parallel.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQGXvJBt9J3NKg/company-logo_200_200/B56ZbvGWMYHUAQ-/0/1747768140820/parallel_web_logo?e=2147483647&v=beta&t=NS4V8dGByW1NDw80Vs4g6U3XxmAwXHosbWOi9jlaz2o"
+      }
+    ]
+  },
+  "paraloncloud": {
+    "name": "ParalonCloud",
+    "homepage": "https://ai.paraloncloud.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fai.paraloncloud.com&size=128"
+      }
+    ]
+  },
+  "parasail": {
+    "name": "Parasail",
+    "homepage": "https://parasail.io",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQGHagBOKtWpwQ/company-logo_200_200/company-logo_200_200/0/1732316921073/parasail_io_logo?e=2147483647&v=beta&t=jaZXF1RDXLtJNk15-69YLKarukGLRdtG5m9v9Jx0P4w"
+      }
+    ]
+  },
+  "paul": {
+    "name": "Paul",
+    "homepage": "https://www.fatherpaulai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.fatherpaulai.com&size=128"
+      }
+    ]
+  },
+  "pawaai": {
+    "name": "PawaAI",
+    "homepage": "https://pawa-ai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fpawa-ai.com&size=128"
+      }
+    ]
+  },
+  "paxalabs": {
+    "name": "PaxaLabs",
+    "homepage": "https://paxalabs.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fpaxalabs.com&size=128"
+      }
+    ]
+  },
+  "payperq": {
+    "name": "PayPerQ",
+    "homepage": "https://ppq.ai",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1789437103064899584/WSypEuS2_400x400.jpg"
+      }
+    ]
+  },
+  "perceptron": {
+    "name": "Perceptron",
+    "homepage": "https://www.perceptron.inc",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQHNCdA1M2SjVw/company-logo_200_200/B56ZlW5NTGKIAM-/0/1758099461612/perceptron_ai_inc_logo?e=2147483647&v=beta&t=2uSEIHWWCcoAo0PU0VO3KApyXaegf4B-3HLqKCZf8ZU"
+      }
+    ]
+  },
+  "perplexity": {
+    "name": "Perplexity",
+    "homepage": "https://www.perplexity.ai/api-platform",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.perplexity.ai%2Fapi-platform&size=128"
+      }
+    ]
+  },
+  "piapi": {
+    "name": "PiAPI",
+    "homepage": "https://piapi.ai",
+    "icons": [
+      {
+        "src": "https://piapi.ai/piapi_favicon.webp"
+      }
+    ]
+  },
+  "picklyone": {
+    "name": "Picklyone",
+    "homepage": "https://www.picklyone.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.picklyone.com&size=128"
+      }
+    ]
+  },
+  "picsart": {
+    "name": "Picsart",
+    "homepage": "https://picsart.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzCWMPhz9hnGN1JLsTJedaLSUhG67uzGZlOg&s"
+      }
+    ]
+  },
+  "pinecone": {
+    "name": "Pinecone",
+    "homepage": "https://www.pinecone.io",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpSbtuc0QVk1KuqDSweEzC0NcGnTYWHDJtKA&s"
+      }
+    ]
+  },
+  "pioneer": {
+    "name": "Pioneer",
+    "homepage": "https://pioneer.ai",
+    "icons": [
+      {
+        "src": "https://framerusercontent.com/images/5bei35cQS2OwWW6BiYHeCpUpMI.png"
+      }
+    ]
+  },
+  "pixserp": {
+    "name": "Pixserp",
+    "homepage": "https://pixserp.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fpixserp.com&size=128"
+      }
+    ]
+  },
+  "plori": {
+    "name": "Plori",
+    "homepage": "https://plori.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fplori.ai&size=128"
+      }
+    ]
+  },
+  "poe": {
+    "name": "Poe",
+    "homepage": "https://poe.com",
+    "icons": [
+      {
+        "src": "https://poe.com/favicon.ico"
+      }
+    ]
+  },
+  "pollinations": {
+    "name": "Pollinations",
+    "homepage": "https://pollinations.ai",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/86964862?v=4",
+        "theme": "dark"
+      },
+      {
+        "src": "https://images.seeklogo.com/logo-png/61/2/pollinations-icon-logo-png_seeklogo-611686.png",
+        "theme": "light"
+      }
+    ]
+  },
+  "poolside": {
+    "name": "Poolside",
+    "homepage": "https://poolside.ai",
+    "icons": [
+      {
+        "src": "https://poolside.ai/favicon.ico"
+      }
+    ]
+  },
+  "portkey": {
+    "name": "Portkey",
+    "homepage": "https://portkey.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQF6D3Bf64c7_Q/company-logo_200_200/company-logo_200_200/0/1706756517195/portkey_ai_logo?e=2147483647&v=beta&t=m4yu6L4zWSJ_N1EPpuWrqN3BN7sDZzprqPqQqnpllCE"
+      }
+    ]
+  },
+  "preapi": {
+    "name": "PreAPI",
+    "homepage": "https://preapi.net",
+    "icons": [
+      {
+        "src": "https://preapi.net/favicon/favicon-96x96.png"
+      }
+    ]
+  },
+  "primeintellect": {
+    "name": "PrimeIntellect",
+    "homepage": "https://www.primeintellect.ai",
+    "icons": [
+      {
+        "src": "https://app.primeintellect.ai/favicon-256x256.png",
+        "theme": "light"
+      },
+      {
+        "src": "https://avatars.githubusercontent.com/u/148051844?s=200&v=4",
+        "theme": "dark"
+      }
+    ]
+  },
+  "prunaai": {
+    "name": "PrunaAI",
+    "homepage": "https://www.pruna.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.pruna.ai&size=128"
+      }
+    ]
+  },
+  "publicai": {
+    "name": "PublicAI",
+    "homepage": "https://publicai.co",
+    "icons": [
+      {
+        "src": "https://substackcdn.com/image/fetch/$s_!c8nI!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F741518ed-a7e5-4054-a0b5-c1faeceb2f09_551x551.png"
+      }
+    ]
+  },
+  "puter": {
+    "name": "Puter",
+    "homepage": "https://puter.com",
+    "icons": [
+      {
+        "src": "https://assets.puter.site/puter-logo.png"
+      }
+    ]
+  },
+  "qiniu": {
+    "name": "Qiniu",
+    "homepage": "https://www.qiniu.com",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/1563636?s=280&v=4"
+      }
+    ]
+  },
+  "quantanova": {
+    "name": "Quantanova",
+    "homepage": "https://ai.quantanova.net",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fai.quantanova.net&size=128"
+      }
+    ]
+  },
+  "quiverai": {
+    "name": "QuiverAI",
+    "homepage": "https://quiver.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fquiver.ai&size=128"
+      }
+    ]
+  },
+  "radiance": {
+    "name": "Radiance",
+    "homepage": "https://radiance.cloud",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4E0BAQHSEsfWHffl1g/company-logo_200_200/company-logo_200_200/0/1726051971751/radiance_energy_logo?e=2147483647&v=beta&t=_xkqh1jFFqspgxRfXqtQ-vLwhYQLkYV34YV0Tg74RI8"
+      }
+    ]
+  },
+  "radient": {
+    "name": "Radient",
+    "homepage": "https://radienthq.com",
+    "icons": [
+      {
+        "src": "https://radienthq.com/favicon-192x192.png"
+      }
+    ]
+  },
+  "railwail": {
+    "name": "Railwail",
+    "homepage": "https://railwail.com",
+    "icons": [
+      {
+        "src": "https://railwail.com/favicon.ico"
+      }
+    ]
+  },
+  "ramprouter": {
+    "name": "RampRouter",
+    "homepage": "https://router.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Frouter.com&size=128"
+      }
+    ]
+  },
+  "raxai": {
+    "name": "RaxAI",
+    "homepage": "https://www.ai.raxcore.dev",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHHIfr8Or726AECTe5Eu-Y5Xvw7euMYYPmBg&s"
+      }
+    ]
+  },
+  "rebytemodels": {
+    "name": "RebyteModels",
+    "homepage": "https://rebyte.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Frebyte.ai&size=128"
+      }
+    ]
+  },
+  "rebytetasks": {
+    "name": "ReByteTasks",
+    "homepage": "https://rebyte.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Frebyte.ai&size=128"
+      }
+    ]
+  },
+  "recraft": {
+    "name": "Recraft",
+    "homepage": "https://www.recraft.ai",
+    "icons": [
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/recraft.png",
+        "theme": "light"
+      },
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/recraft.png",
+        "theme": "dark"
+      }
+    ]
+  },
+  "redpill": {
+    "name": "RedPill",
+    "homepage": "https://www.redpill.ai",
+    "icons": [
+      {
+        "src": "https://www.redpill.ai/android-chrome-512x512.png"
+      }
+    ]
+  },
+  "regoloai": {
+    "name": "RegoloAI",
+    "homepage": "https://regolo.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fregolo.ai&size=128"
+      }
+    ]
+  },
+  "regraph": {
+    "name": "ReGraph",
+    "homepage": "https://regraph.tech",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fregraph.tech&size=128"
+      }
+    ]
+  },
+  "rekaai": {
+    "name": "RekaAI",
+    "homepage": "https://reka.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8CsOEbRgvL2rm3WdVU2bSTfZp2Vpli4tKTg&s"
+      }
+    ]
+  },
+  "relace": {
+    "name": "Relace",
+    "homepage": "https://relace.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQGyEC9dN4ThLg/company-logo_200_200/company-logo_200_200/0/1729798780244?e=2147483647&v=beta&t=Ce04Sph9QwEIIQeAA7yUtIXegtFQZZQ7zeI87lIcb-U"
+      }
+    ]
+  },
+  "relaxai": {
+    "name": "RelaxAI",
+    "homepage": "https://relax.ai",
+    "icons": [
+      {
+        "src": "https://relax.ai/docs/favicon.svg"
+      }
+    ]
+  },
+  "renderful": {
+    "name": "Renderful",
+    "homepage": "https://renderful.ai",
+    "icons": [
+      {
+        "src": "https://renderful.ai/icon-512.png"
+      }
+    ]
+  },
+  "replicate": {
+    "name": "Replicate",
+    "homepage": "https://replicate.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQGbWdPmxf-NMA/company-logo_200_200/company-logo_200_200/0/1701798584156/replicate_logo?e=2147483647&v=beta&t=_xwx0D-qYlw-CzeBbHT7DDFoaxHp9WPen28-FTvoZak"
+      }
+    ]
+  },
+  "requesty": {
+    "name": "Requesty",
+    "homepage": "https://www.requesty.ai",
+    "icons": [
+      {
+        "src": "https://requesty.ai/favicon.ico"
+      }
+    ]
+  },
+  "researchagent": {
+    "name": "Research Agent",
+    "homepage": "https://research-agent.net",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fresearch-agent.net&size=128"
+      }
+    ]
+  },
+  "resembleai": {
+    "name": "ResembleAI",
+    "homepage": "https://www.resemble.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.resemble.ai&size=128"
+      }
+    ]
+  },
+  "reve": {
+    "name": "Reve",
+    "homepage": "https://api.reve.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4E0BAQHJ0FZruc6k0Q/company-logo_200_200/B4EZkwq5SrKcAI-/0/1757458175427/reve_art_logo?e=2147483647&v=beta&t=Zj5RyWx5VbQUwj0QZ3Nd3PC686YJrs-6O7FzK1hB2jQ",
+        "theme": "dark"
+      },
+      {
+        "src": "https://avatars.githubusercontent.com/u/165961799?s=200&v=4",
+        "theme": "light"
+      }
+    ]
+  },
+  "rewindai": {
+    "name": "RewindAI",
+    "homepage": "https://rewind.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Frewind.ai&size=128"
+      }
+    ]
+  },
+  "rime": {
+    "name": "Rime",
+    "homepage": "https://rime.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/C4D0BAQG7aI-UZ5MpVQ/company-logo_200_200/company-logo_200_200/0/1645466914944?e=2147483647&v=beta&t=kxYYnCZRQJxWeLz0clLfhgMkLqopvPoJTWp1juYQ33c"
+      }
+    ]
+  },
+  "rodiumai": {
+    "name": "RodiumAI",
+    "homepage": "https://www.rodiumai.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.rodiumai.io&size=128"
+      }
+    ]
+  },
+  "routeplex": {
+    "name": "RoutePlex",
+    "homepage": "https://routeplex.com",
+    "icons": [
+      {
+        "src": "https://routeplex.com/favicon.ico?favicon.e051eb8e.ico"
+      }
+    ]
+  },
+  "router9": {
+    "name": "Router9",
+    "homepage": "https://router9.com",
+    "icons": [
+      {
+        "src": "https://router9.com/favicon.ico"
+      }
+    ]
+  },
+  "routera": {
+    "name": "Routera",
+    "homepage": "https://www.routera.one",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.routera.one&size=128"
+      }
+    ]
+  },
+  "routerlink": {
+    "name": "RouterLink",
+    "homepage": "https://routerlink.ai",
+    "icons": [
+      {
+        "src": "https://routerlink.ai/apple-touch-icon.png"
+      }
+    ]
+  },
+  "routeway": {
+    "name": "Routeway",
+    "homepage": "https://routeway.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZTap4zhFeqtbJcCE2DcZgjVamwxxou7fP-A&s"
+      }
+    ]
+  },
+  "routmy": {
+    "name": "Routmy",
+    "homepage": "https://rout.my",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Frout.my&size=128"
+      }
+    ]
+  },
+  "routstr": {
+    "name": "Routstr",
+    "homepage": "https://routstr.com",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/206718449?s=280&v=4"
+      }
+    ]
+  },
+  "roxy": {
+    "name": "Roxy",
+    "homepage": "https://roxy.gg",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Froxy.gg&size=128"
+      }
+    ]
+  },
+  "runapi": {
+    "name": "RunAPI",
+    "homepage": "https://runapi.co",
+    "icons": [
+      {
+        "src": "https://runapi.co/logo1.png"
+      }
+    ]
+  },
+  "runcrate": {
+    "name": "Runcrate",
+    "homepage": "https://www.runcrate.ai",
+    "icons": [
+      {
+        "src": "https://www.runcrate.ai/apple-touch-icon.png"
+      }
+    ]
+  },
+  "runpod": {
+    "name": "Runpod",
+    "homepage": "https://www.runpod.io",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/95939477?s=200&v=4"
+      }
+    ]
+  },
+  "runtimo": {
+    "name": "Runtimo",
+    "homepage": "https://runtimo.com",
+    "icons": [
+      {
+        "src": "https://runtimo.com/images/favicon.png"
+      }
+    ]
+  },
+  "runtype": {
+    "name": "Runtype",
+    "homepage": "https://www.runtype.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.runtype.com&size=128"
+      }
+    ]
+  },
+  "runware": {
+    "name": "Runware",
+    "homepage": "https://runware.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4E0BAQFzsJTSfpkCbQ/company-logo_200_200/B4EZfR3QUwGcAQ-/0/1751572612962/runware_logo?e=2147483647&v=beta&t=HvfRm7Kk85KGMPVDzoiTBWuFN9v5bnyFSRvPuie2BBQ"
+      }
+    ]
+  },
+  "runway": {
+    "name": "Runway",
+    "homepage": "https://runwayml.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQE01cLcJx7cJONWLVmk5tRBhGB0LIJ8SqSQ&s"
+      }
+    ]
+  },
+  "sailresearch": {
+    "name": "SailResearch",
+    "homepage": "https://www.sailresearch.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.sailresearch.com&size=128"
+      }
+    ]
+  },
+  "sambanova": {
+    "name": "SambaNova",
+    "homepage": "https://sambanova.ai",
+    "icons": [
+      {
+        "src": "https://sambanova.ai/hubfs/logotype_sambanova_orange.png"
+      }
+    ]
+  },
+  "samtal": {
+    "name": "Samtal",
+    "homepage": "https://samtal.moln.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQFwEsVmfq9tVw/company-logo_200_200/company-logo_200_200/0/1719256077462/samtal_io_logo?e=2147483647&v=beta&t=RqmU1ROPwDGsd8nfkY8TvU5CHWU2fnO4Ba1qh9BGi84"
+      }
+    ]
+  },
+  "sandbase": {
+    "name": "SandBase",
+    "homepage": "https://sandbase.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsandbase.ai&size=128"
+      }
+    ]
+  },
+  "sapiom": {
+    "name": "Sapiom",
+    "homepage": "https://www.sapiom.ai",
+    "icons": [
+      {
+        "src": "https://www.sapiom.ai/favicon.png"
+      }
+    ]
+  },
+  "sargalay": {
+    "name": "Sargalay",
+    "homepage": "https://www.sargalay.com",
+    "icons": [
+      {
+        "src": "https://www.sargalay.com/favicon.ico?favicon.0b3bf435.ico",
+        "theme": "light"
+      },
+      {
+        "src": "https://www.sargalay.com/favicon-dark.svg",
+        "theme": "dark"
+      }
+    ]
+  },
+  "sarvam": {
+    "name": "Sarvam",
+    "homepage": "https://www.sarvam.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.sarvam.ai&size=128"
+      }
+    ]
+  },
+  "scaleway": {
+    "name": "Scaleway",
+    "homepage": "https://www.scaleway.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUm31jglhBhnZtoN2OG8LMZqYrIH7KdIyOzctVchkGXZOeDHyXylbP4ABi&s=10"
+      }
+    ]
+  },
+  "scalixworld": {
+    "name": "ScalixWorld",
+    "homepage": "https://scalix.world",
+    "icons": [
+      {
+        "src": "https://scalix.world/scalix-logo.svg"
+      }
+    ]
+  },
+  "schatziai": {
+    "name": "SchatziAI",
+    "homepage": "https://schatziai.ch",
+    "icons": [
+      {
+        "src": "https://schatziai.ch/logo/apple-touch-icon.png"
+      }
+    ]
+  },
+  "scrapellm": {
+    "name": "ScrapeLLM",
+    "homepage": "https://scrapellm.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fscrapellm.com&size=128"
+      }
+    ]
+  },
+  "sealion": {
+    "name": "SEALION",
+    "homepage": "https://sea-lion.ai",
+    "icons": [
+      {
+        "src": "https://asean.newsroom.ibm.com/image/purple_sealion2.jpg"
+      }
+    ]
+  },
+  "secrypt": {
+    "name": "Secrypt",
+    "homepage": "https://secrypt.space",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsecrypt.space&size=128"
+      }
+    ]
+  },
+  "segmind": {
+    "name": "Segmind",
+    "homepage": "https://www.segmind.com",
+    "icons": [
+      {
+        "src": "https://www.segmind.com/favicon-192x192.png"
+      }
+    ]
+  },
+  "select": {
+    "name": "Select",
+    "homepage": "https://select.ax",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fselect.ax&size=128"
+      }
+    ]
+  },
+  "selinaai": {
+    "name": "SelinaAI",
+    "homepage": "https://selina.ai",
+    "icons": [
+      {
+        "src": "https://selina.ai/favicon.svg"
+      }
+    ]
+  },
+  "sennoric": {
+    "name": "Sennoric",
+    "homepage": "https://sennoric.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsennoric.com&size=128"
+      }
+    ]
+  },
+  "setapp": {
+    "name": "Setapp",
+    "homepage": "https://setapp.com",
+    "icons": [
+      {
+        "src": "https://setapp.com/favicon.svg"
+      }
+    ]
+  },
+  "shadowos": {
+    "name": "ShadowOS",
+    "homepage": "https://shadow-os-ai.vercel.app",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fshadow-os-ai.vercel.app&size=128"
+      }
+    ]
+  },
+  "shakespeare": {
+    "name": "Shakespeare",
+    "homepage": "https://shakespeare.diy",
+    "icons": [
+      {
+        "src": "https://shakespeare.diy/shakespeare-192x192.png"
+      }
+    ]
+  },
+  "shannonai": {
+    "name": "ShannonAI",
+    "homepage": "https://shannon-ai.com",
+    "icons": [
+      {
+        "src": "https://d21oz30g4w22sz.cloudfront.net/logos/shannon-a-i-labs-793b94d5-9ee1-48e0-a093-3793e3bfdde5.png"
+      }
+    ]
+  },
+  "shareai": {
+    "name": "ShareAI",
+    "homepage": "https://shareai.now",
+    "icons": [
+      {
+        "src": "https://shareai.now/wp-content/uploads/2025/09/shareai-faviconborders-300x300.png"
+      }
+    ]
+  },
+  "shengsuanyun": {
+    "name": "Shengsuanyun",
+    "homepage": "https://shengsuanyun.com",
+    "icons": [
+      {
+        "src": "https://shengsuanyun.com/favicon.ico"
+      }
+    ]
+  },
+  "shuttleai": {
+    "name": "ShuttleAI",
+    "homepage": "https://shuttleai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fshuttleai.com&size=128"
+      }
+    ]
+  },
+  "siliconflow": {
+    "name": "SiliconFlow",
+    "homepage": "https://www.siliconflow.com",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/siliconcloud-color.png"
+      }
+    ]
+  },
+  "simplellm": {
+    "name": "SimpleLLM",
+    "homepage": "https://simplellm.eu",
+    "icons": [
+      {
+        "src": "https://simplellm.eu/favicon.svg"
+      }
+    ]
+  },
+  "simplismart": {
+    "name": "Simplismart",
+    "homepage": "https://simplismart.ai",
+    "icons": [
+      {
+        "src": "https://images.crunchbase.com/image/upload/c_pad,h_256,w_256,f_auto,q_auto:eco,dpr_1/d54ab4fa20db4b0f887938e7a118d979?ik-sanitizeSvg=true"
+      }
+    ]
+  },
+  "skypooltoken": {
+    "name": "SkypoolToken",
+    "homepage": "https://skypool.xyz",
+    "icons": [
+      {
+        "src": "https://skypool.xyz/favicon.svg"
+      }
+    ]
+  },
+  "skyvern": {
+    "name": "Skyvern",
+    "homepage": "https://www.skyvern.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.skyvern.com&size=128"
+      }
+    ]
+  },
+  "sluis": {
+    "name": "Sluis",
+    "homepage": "https://sluis.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsluis.ai&size=128"
+      }
+    ]
+  },
+  "smallestai": {
+    "name": "SmallestAI",
+    "homepage": "https://smallest.ai",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/177307862?s=280&v=4"
+      }
+    ]
+  },
+  "smartaipi": {
+    "name": "SmartAIPI",
+    "homepage": "https://smartaipi.com",
+    "icons": [
+      {
+        "src": "https://smartaipi.com/assets/smartaipi-favicon.png"
+      }
+    ]
+  },
+  "smooth": {
+    "name": "Smooth",
+    "homepage": "https://smooth.sh",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsmooth.sh&size=128"
+      }
+    ]
+  },
+  "softref": {
+    "name": "Softref",
+    "homepage": "https://softref.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsoftref.com&size=128"
+      }
+    ]
+  },
+  "soniox": {
+    "name": "Soniox",
+    "homepage": "https://soniox.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsoniox.com&size=128"
+      }
+    ]
+  },
+  "sovereigneg": {
+    "name": "SovereignEG",
+    "homepage": "https://sovereigneg.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsovereigneg.com&size=128"
+      }
+    ]
+  },
+  "sovinfra": {
+    "name": "Sovinfra",
+    "homepage": "https://sovinfra.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsovinfra.ai&size=128"
+      }
+    ]
+  },
+  "sovrgpt": {
+    "name": "SovrGPT",
+    "homepage": "https://sovrgpt.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsovrgpt.com&size=128"
+      }
+    ]
+  },
+  "spacexai": {
+    "name": "SpaceXAI",
+    "homepage": "https://x.ai",
+    "icons": [
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/1.74.0/files/dark/xai.png",
+        "theme": "dark"
+      },
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/1.74.0/files/light/xai.png",
+        "theme": "light"
+      }
+    ]
+  },
+  "speechactors": {
+    "name": "Speechactors",
+    "homepage": "https://speechactors.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtPt7FrZJ4hhmfHcl-je_wr6gBM5cd2OFg0A&s"
+      }
+    ]
+  },
+  "speechify": {
+    "name": "Speechify",
+    "homepage": "https://speechify.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fspeechify.com&size=128"
+      }
+    ]
+  },
+  "speechmatics": {
+    "name": "Speechmatics",
+    "homepage": "https://www.speechmatics.com",
+    "icons": [
+      {
+        "src": "https://upload.wikimedia.org/wikipedia/commons/1/1a/SM-Icon-Dark_Cyan1000.png"
+      }
+    ]
+  },
+  "stabilityai": {
+    "name": "StabilityAI",
+    "homepage": "https://stability.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQGCth_DU2z1Fg/company-logo_200_200/B56Zh18sPOHMAU-/0/1754325501246/stability_ai_logo?e=2147483647&v=beta&t=K2vnKQAZRmg2Nqe0fJY7sYHDbLA752NOG1E45JbZC5s"
+      }
+    ]
+  },
+  "standardcompute": {
+    "name": "StandardCompute",
+    "homepage": "https://standardcompute.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fstandardcompute.com&size=128"
+      }
+    ]
+  },
+  "stealthgpt": {
+    "name": "StealthGPT",
+    "homepage": "https://www.stealthgpt.ai",
+    "icons": [
+      {
+        "src": "https://www.watsonout.com/media/products/logo/512x512bb.png"
+      }
+    ]
+  },
+  "stepfun": {
+    "name": "StepFun",
+    "homepage": "https://platform.stepfun.ai",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/178004800?s=200&v=4"
+      }
+    ]
+  },
+  "streamlake": {
+    "name": "StreamLake",
+    "homepage": "https://streamlake.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOSxdknj_7LSKL32C3QbisOtjearCjondGqw&s"
+      }
+    ]
+  },
+  "sudorouter": {
+    "name": "SudoRouter",
+    "homepage": "https://sudorouter.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsudorouter.ai&size=128"
+      }
+    ]
+  },
+  "sufy": {
+    "name": "SUFY",
+    "homepage": "https://sufy.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsufy.com&size=128"
+      }
+    ]
+  },
+  "summa": {
+    "name": "SUMMA",
+    "homepage": "https://summachat.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsummachat.com&size=128"
+      }
+    ]
+  },
+  "sunbirdai": {
+    "name": "SunbirdAI",
+    "homepage": "https://sunbird.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fsunbird.ai&size=128"
+      }
+    ]
+  },
+  "sunoapi": {
+    "name": "SunoAPI",
+    "homepage": "https://sunoapi.org",
+    "icons": [
+      {
+        "src": "https://sunoapi.org/logo.png"
+      }
+    ]
+  },
+  "supa": {
+    "name": "SUPA",
+    "homepage": "https://supa.works",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYuRgMhcHBkM7NhX8H11NZsGc5CXNPoNVldw&s"
+      }
+    ]
+  },
+  "surfercloud": {
+    "name": "SurferCloud",
+    "homepage": "https://www.surfercloud.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.surfercloud.com&size=128"
+      }
+    ]
+  },
+  "swarms": {
+    "name": "Swarms",
+    "homepage": "https://swarms.world",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fswarms.world&size=128"
+      }
+    ]
+  },
+  "synexa": {
+    "name": "Synexa",
+    "homepage": "https://synexa.ai",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/ext_tw_video_thumb/1892346379894222848/pu/img/jUFHl2xNmS5crh-a.jpg"
+      }
+    ]
+  },
+  "synthetic": {
+    "name": "Synthetic",
+    "homepage": "https://synthetic.new",
+    "icons": [
+      {
+        "src": "https://synthetic.new/logo_with_text_bottom_512.png"
+      }
+    ]
+  },
+  "tapas": {
+    "name": "Tapas",
+    "homepage": "https://tapas.one",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Ftapas.one&size=128"
+      }
+    ]
+  },
+  "tavily": {
+    "name": "Tavily",
+    "homepage": "https://www.tavily.com",
+    "icons": [
+      {
+        "src": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/tavily-color.png"
+      }
+    ]
+  },
+  "teai": {
+    "name": "TEAI",
+    "homepage": "https://teai.io",
+    "icons": [
+      {
+        "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2310b981'/%3E%3Cstop offset='1' stop-color='%2334d399'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-weight='900' font-family='system-ui,sans-serif' fill='white'%3Ete%3C/text%3E%3C/svg%3E"
+      }
+    ]
+  },
+  "teamday": {
+    "name": "TeamDay",
+    "homepage": "https://www.teamday.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.teamday.ai&size=128"
+      }
+    ]
+  },
+  "telnyx": {
+    "name": "Telnyx",
+    "homepage": "https://telnyx.com",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/10522416?s=200&v=4"
+      }
+    ]
+  },
+  "tembo": {
+    "name": "Tembo",
+    "homepage": "https://www.tembo.io",
+    "icons": [
+      {
+        "src": "https://www.tembo.io/favicon.ico"
+      }
+    ]
+  },
+  "tencenthunyuan": {
+    "name": "TencentHunyuan",
+    "homepage": "https://hunyuan.tencent.com",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/hunyuan-color.png"
+      }
+    ]
+  },
+  "tensorblock": {
+    "name": "TensorBlock",
+    "homepage": "https://www.tensorblock.co",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.tensorblock.co&size=128"
+      }
+    ]
+  },
+  "tensorx": {
+    "name": "TensorX",
+    "homepage": "https://tensorx.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQHG5uQlSgoWNw/company-logo_200_200/B4DZukf7BfKcAI-/0/1767991390900/tensorix_logo?e=2147483647&v=beta&t=0i2g-vdKdy-v-H9Zu2CR5RGaU5LyteRbdrqQ8Kcov_c"
+      }
+    ]
+  },
+  "terminalskills": {
+    "name": "TerminalSkills",
+    "homepage": "https://terminalskills.io",
+    "icons": [
+      {
+        "src": "https://terminalskills.io/logo-512.png"
+      }
+    ]
+  },
+  "tetrate": {
+    "name": "Tetrate",
+    "homepage": "https://tetrate.io",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQEJ_6CK6j16Og/company-logo_200_200/B56Zb5QAiyHwAM-/0/1747938445812/tetrate_logo?e=2147483647&v=beta&t=O16xsiiYafA6MGDeKmv29-vEOSb1GxQ5yctOjUDi93k"
+      }
+    ]
+  },
+  "textsynth": {
+    "name": "TextSynth",
+    "homepage": "https://textsynth.com",
+    "icons": [
+      {
+        "src": "https://cdn-1.webcatalog.io/catalog/textsynth/textsynth-icon-filled-256.png?v=1719828380535"
+      }
+    ]
+  },
+  "thalam": {
+    "name": "Thalam",
+    "homepage": "https://thalam.ai",
+    "icons": [
+      {
+        "src": "https://thalam.ai/apple-touch-icon.png"
+      }
+    ]
+  },
+  "thaura": {
+    "name": "Thaura",
+    "homepage": "https://thaura.ai",
+    "icons": [
+      {
+        "src": "https://thaura.ai/apple-touch-icon.png"
+      }
+    ]
+  },
+  "theoldapi": {
+    "name": "TheOldAPI",
+    "homepage": "https://theoldllm.com",
+    "icons": [
+      {
+        "src": "https://theoldllm.com/static/apple-touch-icon.png?v=2"
+      }
+    ]
+  },
+  "therouterai": {
+    "name": "TheRouterAI",
+    "homepage": "https://therouter.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Ftherouter.ai&size=128"
+      }
+    ]
+  },
+  "tiarina": {
+    "name": "Tiarina",
+    "homepage": "https://tiarina.id",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Ftiarina.id&size=128"
+      }
+    ]
+  },
+  "tierup": {
+    "name": "TierUp",
+    "homepage": "https://tierup.ai",
+    "icons": [
+      {
+        "src": "https://tierup.ai/icon-192.png"
+      }
+    ]
+  },
+  "tigercity": {
+    "name": "TigerCity",
+    "homepage": "https://tigercity.ai/",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Ftigercity.ai%2F&size=128"
+      }
+    ]
+  },
+  "tikhubai": {
+    "name": "TikHubAI",
+    "homepage": "https://ai.tikhub.io",
+    "icons": [
+      {
+        "src": "https://ai.tikhub.io/logo.png"
+      }
+    ]
+  },
+  "tinfoil": {
+    "name": "Tinfoil",
+    "homepage": "https://tinfoil.sh",
+    "icons": [
+      {
+        "src": "https://mintcdn.com/tinfoil/0ViQTbwRCR_TUpT7/logo/dark.png?fit=max&auto=format&n=0ViQTbwRCR_TUpT7&q=85&s=4286f60f42762cf23a4354c8e52f888b",
+        "theme": "dark"
+      },
+      {
+        "src": "https://tinfoil.sh/icon.png",
+        "theme": "light"
+      }
+    ]
+  },
+  "tinyfish": {
+    "name": "TinyFish",
+    "homepage": "https://www.tinyfish.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.tinyfish.ai&size=128"
+      }
+    ]
+  },
+  "toapis": {
+    "name": "ToAPIs",
+    "homepage": "https://toapis.com",
+    "icons": [
+      {
+        "src": "https://toapis.com/icon-192.png"
+      }
+    ]
+  },
+  "together": {
+    "name": "Together",
+    "homepage": "https://www.together.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQHe__yU45OuCQ/company-logo_200_200/B56Zy0qe7rIcAI-/0/1772557561927/togethercomputer_logo?e=2147483647&v=beta&t=fDi1CeF0dyF1w0_wZXhr-DkRGjgNFj0YXMFals7KN18"
+      }
+    ]
+  },
+  "token360": {
+    "name": "Token360",
+    "homepage": "https://www.token360.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJK67s95ikD_dVm-bCpn-7N9qxwWSLT10x0Q&s"
+      }
+    ]
+  },
+  "tokenflux": {
+    "name": "TokenFlux",
+    "homepage": "https://tokenflux.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQhVHsVpjnHiM-cNcSHkVIXvmYJsYPjaF5aA&s"
+      }
+    ]
+  },
+  "tokenhub": {
+    "name": "TokenHub",
+    "homepage": "https://www.tokenhub.link",
+    "icons": [
+      {
+        "src": "https://www.tokenhub.link/icon.jpg"
+      }
+    ]
+  },
+  "tokenlab": {
+    "name": "TokenLab",
+    "homepage": "https://tokenlab.sh",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Ftokenlab.sh&size=128"
+      }
+    ]
+  },
+  "tokenspend": {
+    "name": "TokenSpend",
+    "homepage": "https://tokenspend.dev",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Ftokenspend.dev&size=128"
+      }
+    ]
+  },
+  "truefoundry": {
+    "name": "TrueFoundry",
+    "homepage": "https://www.truefoundry.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.truefoundry.com&size=128"
+      }
+    ]
+  },
+  "trustedrouter": {
+    "name": "TrustedRouter",
+    "homepage": "https://trustedrouter.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Ftrustedrouter.com&size=128"
+      }
+    ]
+  },
+  "ttsreader": {
+    "name": "TTSReader",
+    "homepage": "https://ttsreader.com",
+    "icons": [
+      {
+        "src": "https://ttsreader.com/android-chrome-512x512.png"
+      }
+    ]
+  },
+  "typecast": {
+    "name": "Typecast",
+    "homepage": "https://typecast.ai",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQGMi1VQFmpL9w/company-logo_200_200/company-logo_200_200/0/1690863759318/typecastai_logo?e=2147483647&v=beta&t=rhppFYXlTYKnOfNeHrKPQbguYHPT6Cfm7KzyDXjvaBw"
+      }
+    ]
+  },
+  "ultrasafe": {
+    "name": "UltraSafe",
+    "homepage": "https://app.us.inc",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fapp.us.inc&size=128"
+      }
+    ]
+  },
+  "unbound": {
+    "name": "Unbound",
+    "homepage": "https://getunbound.ai",
+    "icons": [
+      {
+        "src": "https://framerusercontent.com/images/tPJz6TDrSmZIxtNcoXhlIhvezwM.png"
+      }
+    ]
+  },
+  "uncensoredchat": {
+    "name": "UncensoredChat",
+    "homepage": "https://uncensored.chat",
+    "icons": [
+      {
+        "src": "https://uncensored.chat/favicon.ico"
+      }
+    ]
+  },
+  "uncloseai": {
+    "name": "UncloseAI",
+    "homepage": "https://uncloseai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Funcloseai.com&size=128"
+      }
+    ]
+  },
+  "uniapi": {
+    "name": "UniAPI",
+    "homepage": "https://uniapi.ai",
+    "icons": [
+      {
+        "src": "https://docs.uniapi.ai/logo.svg"
+      }
+    ]
+  },
+  "unrealspeech": {
+    "name": "UnrealSpeech",
+    "homepage": "https://unrealspeech.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQETnkv3rb41Bw/company-logo_200_200/company-logo_200_200/0/1663606553324?e=2147483647&v=beta&t=M6L9owNcAFghDwHNpzbt5cvl4buCJ824838zV-aLcos"
+      }
+    ]
+  },
+  "upstage": {
+    "name": "Upstage",
+    "homepage": "https://www.upstage.ai",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/upstage-color.png"
+      }
+    ]
+  },
+  "uvoiceai": {
+    "name": "UVoiceAI",
+    "homepage": "https://uvoice.app",
+    "icons": [
+      {
+        "src": "https://uvoice.app/images/icons/icon-192x192.png"
+      }
+    ]
+  },
+  "valyu": {
+    "name": "Valyu",
+    "homepage": "https://www.valyu.ai",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1988216499220238336/50QDcgT6_400x400.jpg"
+      }
+    ]
+  },
+  "vanceai": {
+    "name": "VanceAI",
+    "homepage": "https://vanceai.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fvanceai.com&size=128"
+      }
+    ]
+  },
+  "vapi": {
+    "name": "Vapi",
+    "homepage": "https://vapi.ai",
+    "icons": [
+      {
+        "src": "https://vapi.ai/brand/img/va-square-5.svg"
+      }
+    ]
+  },
+  "venice": {
+    "name": "Venice",
+    "homepage": "https://venice.ai",
+    "icons": [
+      {
+        "src": "https://cryptoast.fr/wp-content/uploads/2025/03/venice-ai-logo.png"
+      }
+    ]
+  },
+  "verbatik": {
+    "name": "Verbatik",
+    "homepage": "https://verbatik.com",
+    "icons": [
+      {
+        "src": "https://docs.verbatik.com/images/logo.png"
+      }
+    ]
+  },
+  "verda": {
+    "name": "Verda",
+    "homepage": "https://verda.com",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSLDvVEuW0laXWa1GuUxB6U9Of-yhQiXJ3bLw&s"
+      }
+    ]
+  },
+  "viablelab": {
+    "name": "VIABLELab",
+    "homepage": "https://www.viablelab.org",
+    "icons": [
+      {
+        "src": "https://www.viablelab.org/favicon.ico"
+      }
+    ]
+  },
+  "vibekit": {
+    "name": "VibeKit",
+    "homepage": "https://vibekit.bot",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fvibekit.bot&size=128"
+      }
+    ]
+  },
+  "vidu": {
+    "name": "Vidu",
+    "homepage": "https://www.vidu.com",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/dark/vidu-color.png"
+      }
+    ]
+  },
+  "vikasit": {
+    "name": "Vikasit",
+    "homepage": "https://vikasit.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fvikasit.ai&size=128"
+      }
+    ]
+  },
+  "virouter": {
+    "name": "Virouter",
+    "homepage": "https://virouter.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fvirouter.com&size=128"
+      }
+    ]
+  },
+  "vivgrid": {
+    "name": "Vivgrid",
+    "homepage": "https://vivgrid.com",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/167048357?s=280&v=4"
+      }
+    ]
+  },
+  "vlmrun": {
+    "name": "VLMRun",
+    "homepage": "https://www.vlm.run",
+    "icons": [
+      {
+        "src": "https://framerusercontent.com/images/F67tDUdviqB8N3PiGmEICReI3U.png"
+      }
+    ]
+  },
+  "vogent": {
+    "name": "Vogent",
+    "homepage": "https://www.vogent.ai",
+    "icons": [
+      {
+        "src": "https://cdn-1.webcatalog.io/catalog/elto/elto-icon-filled-256.png?v=1723176279997"
+      }
+    ]
+  },
+  "voiceai": {
+    "name": "VoiceAI",
+    "homepage": "https://voice.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fvoice.ai&size=128"
+      }
+    ]
+  },
+  "voyageai": {
+    "name": "VoyageAI",
+    "homepage": "https://www.voyageai.com",
+    "icons": [
+      {
+        "src": "https://blog.voyageai.com/wp-content/uploads/2023/10/logo.png"
+      }
+    ]
+  },
+  "vultr": {
+    "name": "Vultr",
+    "homepage": "https://www.vultr.com",
+    "icons": [
+      {
+        "src": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/vultr.webp"
+      }
+    ]
+  },
+  "wafer": {
+    "name": "Wafer",
+    "homepage": "https://www.wafer.ai",
+    "icons": [
+      {
+        "src": "https://www.wafer.ai/favicon-36.png"
+      }
+    ]
+  },
+  "wai": {
+    "name": "WAI",
+    "homepage": "https://w.ai",
+    "icons": [
+      {
+        "src": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwwUlOytsdiSWMB5qIuUe_QTxEJvSHoLcKXA&s"
+      }
+    ]
+  },
+  "waslo": {
+    "name": "Waslo",
+    "homepage": "https://waslo.io",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwaslo.io&size=128"
+      }
+    ]
+  },
+  "wayscloud": {
+    "name": "WAYSCloud",
+    "homepage": "https://wayscloud.eu",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwayscloud.eu&size=128"
+      }
+    ]
+  },
+  "webcrawlerapi": {
+    "name": "WebCrawlerAPI",
+    "homepage": "https://webcrawlerapi.com",
+    "icons": [
+      {
+        "src": "https://webcrawlerapi.com/images/logo.svg",
+        "theme": "light"
+      },
+      {
+        "src": "https://webcrawlerapi.com/images/logo_transparent.png",
+        "theme": "dark"
+      }
+    ]
+  },
+  "websearchapi": {
+    "name": "WebsearchAPI",
+    "homepage": "https://websearchapi.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwebsearchapi.ai&size=128"
+      }
+    ]
+  },
+  "wiro": {
+    "name": "Wiro",
+    "homepage": "https://wiro.ai",
+    "icons": [
+      {
+        "src": "https://wiro.ai/images/logos/logo/icon.png"
+      }
+    ]
+  },
+  "wiserouter": {
+    "name": "WiseRouter",
+    "homepage": "https://wiserouter.ai/",
+    "icons": [
+      {
+        "src": "https://wiserouter.ai/favicon.ico"
+      }
+    ]
+  },
+  "writer": {
+    "name": "Writer",
+    "homepage": "https://writer.com",
+    "icons": [
+      {
+        "src": "https://writer.com/wp-content/uploads/2023/08/writer.png"
+      }
+    ]
+  },
+  "xiaomimimo": {
+    "name": "XiaomiMIMO",
+    "homepage": "https://mimo.xiaomi.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fmimo.xiaomi.com&size=128"
+      }
+    ]
+  },
+  "xpersona": {
+    "name": "Xpersona",
+    "homepage": "https://www.xpersona.co",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.xpersona.co&size=128"
+      }
+    ]
+  },
+  "yollomi": {
+    "name": "Yollomi",
+    "homepage": "https://yollomi.com",
+    "icons": [
+      {
+        "src": "https://yollomi.com/logo.svg"
+      }
+    ]
+  },
+  "youcom": {
+    "name": "YouCom",
+    "homepage": "https://you.com",
+    "icons": [
+      {
+        "src": "https://upload.wikimedia.org/wikipedia/en/8/8f/Youcom_new_logo.jpg"
+      }
+    ]
+  },
+  "yourvoic": {
+    "name": "YourVoic",
+    "homepage": "https://yourvoic.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D4D0BAQGrckw1tVN4Hg/company-logo_200_200/B4DZd5Ux7ZH4AQ-/0/1750087180489/yourvoic_logo?e=2147483647&v=beta&t=8WYz4yy1kJSpUWbkpkYqHN8JU1NKmb0fn5u0KRm6SVE"
+      }
+    ]
+  },
+  "yutori": {
+    "name": "Yutori",
+    "homepage": "https://yutori.com",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fyutori.com&size=128"
+      }
+    ]
+  },
+  "zai": {
+    "name": "Zai",
+    "homepage": "https://z.ai/model-api",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/223098841?s=200&v=4"
+      }
+    ]
+  },
+  "zeabur": {
+    "name": "Zeabur",
+    "homepage": "https://zeabur.com",
+    "icons": [
+      {
+        "src": "https://zeabur.com/logo-dark.svg",
+        "theme": "dark"
+      },
+      {
+        "src": "https://zeabur.com/logo.svg",
+        "theme": "light"
+      }
+    ]
+  },
+  "zebracat": {
+    "name": "Zebracat",
+    "homepage": "https://www.zebracat.ai",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fwww.zebracat.ai&size=128"
+      }
+    ]
+  },
+  "zenlayer": {
+    "name": "Zenlayer",
+    "homepage": "https://www.zenlayer.com",
+    "icons": [
+      {
+        "src": "https://media.licdn.com/dms/image/v2/D560BAQEKRZ55ciSdTA/company-logo_200_200/B56ZXUBbWAGsAM-/0/1743018899101/zenlayer_logo?e=2147483647&v=beta&t=dK7TWs_fI5SK7cR8FxTL4ko-LgUXSikocwGw9fawdg4"
+      }
+    ]
+  },
+  "zenmux": {
+    "name": "ZenMux",
+    "homepage": "https://zenmux.ai",
+    "icons": [
+      {
+        "src": "https://avatars.githubusercontent.com/u/234901775?s=200&v=4"
+      }
+    ]
+  },
+  "zeroentropy": {
+    "name": "ZeroEntropy",
+    "homepage": "https://zeroentropy.dev",
+    "icons": [
+      {
+        "src": "https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https%3A%2F%2Fzeroentropy.dev&size=128"
+      }
+    ]
+  },
+  "zyloapi": {
+    "name": "ZyloAPI",
+    "homepage": "https://zyloai.net",
+    "icons": [
+      {
+        "src": "https://8upload.com/image/054d4df0a6b77374/logo.png"
+      }
+    ]
+  },
+  "zyphra": {
+    "name": "Zyphra",
+    "homepage": "https://www.zyphra.com",
+    "icons": [
+      {
+        "src": "https://pbs.twimg.com/profile_images/1798151336594460672/uLtkoaeS_400x400.jpg"
+      }
+    ]
+  }
+}

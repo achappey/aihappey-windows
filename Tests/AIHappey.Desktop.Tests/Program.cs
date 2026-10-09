@@ -24,6 +24,13 @@ try
         await ImageRegressionTests.RunAsync(Check, root);
         Console.WriteLine($"All {tests} image checks passed."); return;
     }
+    if (args.Contains("--models-overview-only"))
+    {
+        await ModelsOverviewRegressionTests.RunAsync(Check, root);
+        await AiModelRegressionTests.RunAsync(Check, root, new DesktopSession(new TestHost(), new TestRuntime(), new()));
+        Console.WriteLine($"All {tests} model overview and preference checks passed."); return;
+    }
+    await ModelsOverviewRegressionTests.RunAsync(Check, root);
     if (args.Contains("--skills-only"))
     {
         await SkillRegressionTests.RunAsync(Check, root);

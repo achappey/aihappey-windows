@@ -773,4 +773,27 @@
   <data name="TranscriptionDeleteTitle" xml:space="preserve"><value>Delete transcription?</value></data>
   <data name="TranscriptionDeleteHint" xml:space="preserve"><value>This deletes the saved transcription and its library media copy. Your original file is not changed.</value></data>
   <data name="TranscriptionRefresh" xml:space="preserve"><value>Refresh transcription models and library</value></data>
+  <data name="ArtificialIntelligence" xml:space="preserve"><value>Artificial Intelligence</value></data>
+  <data name="ModelsDescription" xml:space="preserve"><value>An overview of all {0} available AI models. Explore their capabilities, intended use and how they compare to choose the right model for your task, use case or workflow.</value></data>
+  <data name="SearchModels" xml:space="preserve"><value>Search models</value></data>
+  <data name="RefreshModels" xml:space="preserve"><value>Refresh models</value></data>
+  <data name="NoModels" xml:space="preserve"><value>No models are available from this AI service.</value></data>
+  <data name="Providers" xml:space="preserve"><value>Providers</value></data>
+  <data name="ModelsProviderFilter" xml:space="preserve"><value>Model provider filter</value></data>
+  <data name="Filters" xml:space="preserve"><value>Filters</value></data>
+  <data name="CloseFilters" xml:space="preserve"><value>Close filters</value></data>
+  <data name="ContextWindow" xml:space="preserve"><value>Context window</value></data>
+  <data name="ModelsPricePerMillion" xml:space="preserve"><value>Price per million tokens</value></data>
+  <data name="Min" xml:space="preserve"><value>Minimum</value></data>
+  <data name="Max" xml:space="preserve"><value>Maximum</value></data>
+  <data name="Tags" xml:space="preserve"><value>Tags</value></data>
+  <data name="ModelsNoRange" xml:space="preserve"><value>No values are available for this model type.</value></data>
+  <data name="ModelsContextBadge" xml:space="preserve"><value>Context window: {0} tokens</value></data>
+  <data name="ModelsOutputBadge" xml:space="preserve"><value>Maximum output: {0} tokens</value></data>
+  <data name="New" xml:space="preserve"><value>New</value></data>
+  <data name="Copy" xml:space="preserve"><value>Copy model ID</value></data>
+  <data name="ModelsLaunch" xml:space="preserve"><value>Use model</value></data>
+  <data name="ModelsProviderWebsite" xml:space="preserve"><value>Open {0} website</value></data>
+  <data name="ModelsWebsiteFailed" xml:space="preserve"><value>The provider website could not be opened.</value></data>
+  <data name="ModelsUnavailable" xml:space="preserve"><value>This model is no longer available from the current AI service. Refresh the model overview.</value></data>
 </root>

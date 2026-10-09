@@ -769,4 +769,27 @@
   <data name="TranscriptionDeleteTitle" xml:space="preserve"><value>Transcriptie verwijderen?</value></data>
   <data name="TranscriptionDeleteHint" xml:space="preserve"><value>Dit verwijdert de opgeslagen transcriptie en de mediakopie in de bibliotheek. Je originele bestand blijft ongewijzigd.</value></data>
   <data name="TranscriptionRefresh" xml:space="preserve"><value>Transcriptiemodellen en bibliotheek vernieuwen</value></data>
+  <data name="ArtificialIntelligence" xml:space="preserve"><value>Artificial Intelligence</value></data>
+  <data name="ModelsDescription" xml:space="preserve"><value>Een overzicht van alle {0} beschikbare AI-modellen. Bekijk hun mogelijkheden, beoogde gebruik en hoe ze zich tot elkaar verhouden om het juiste model voor je taak, use-case of workflow te kiezen.</value></data>
+  <data name="SearchModels" xml:space="preserve"><value>Modellen zoeken</value></data>
+  <data name="RefreshModels" xml:space="preserve"><value>Modellen vernieuwen</value></data>
+  <data name="NoModels" xml:space="preserve"><value>Er zijn geen modellen beschikbaar bij deze AI-service.</value></data>
+  <data name="Providers" xml:space="preserve"><value>Providers</value></data>
+  <data name="ModelsProviderFilter" xml:space="preserve"><value>Filter op modelprovider</value></data>
+  <data name="Filters" xml:space="preserve"><value>Filters</value></data>
+  <data name="CloseFilters" xml:space="preserve"><value>Filters sluiten</value></data>
+  <data name="ContextWindow" xml:space="preserve"><value>Contextvenster</value></data>
+  <data name="ModelsPricePerMillion" xml:space="preserve"><value>Prijs per miljoen tokens</value></data>
+  <data name="Min" xml:space="preserve"><value>Minimum</value></data>
+  <data name="Max" xml:space="preserve"><value>Maximum</value></data>
+  <data name="Tags" xml:space="preserve"><value>Tags</value></data>
+  <data name="ModelsNoRange" xml:space="preserve"><value>Er zijn geen waarden beschikbaar voor dit modeltype.</value></data>
+  <data name="ModelsContextBadge" xml:space="preserve"><value>Contextvenster: {0} tokens</value></data>
+  <data name="ModelsOutputBadge" xml:space="preserve"><value>Maximale uitvoer: {0} tokens</value></data>
+  <data name="New" xml:space="preserve"><value>Nieuw</value></data>
+  <data name="Copy" xml:space="preserve"><value>Model-ID kopiëren</value></data>
+  <data name="ModelsLaunch" xml:space="preserve"><value>Model gebruiken</value></data>
+  <data name="ModelsProviderWebsite" xml:space="preserve"><value>Website van {0} openen</value></data>
+  <data name="ModelsWebsiteFailed" xml:space="preserve"><value>De website van de provider kon niet worden geopend.</value></data>
+  <data name="ModelsUnavailable" xml:space="preserve"><value>Dit model is niet meer beschikbaar bij de huidige AI-service. Vernieuw het modellenoverzicht.</value></data>
 </root>

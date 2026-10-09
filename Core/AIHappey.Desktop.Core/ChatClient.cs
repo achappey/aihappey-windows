@@ -13,6 +13,15 @@ public sealed record ChatTarget(string Id, string Label)
     public string? ProviderKey { get; init; }
     public string? ModelType { get; init; }
     public long? Created { get; init; }
+    public string? DisplayId { get; init; }
+    public string? ProviderModelId { get; init; }
+    public string? Description { get; init; }
+    public string? OwnedBy { get; init; }
+    public IReadOnlyList<string> Tags { get; init; } = [];
+    public double? ContextWindow { get; init; }
+    public double? MaxTokens { get; init; }
+    public double? InputPrice { get; init; }
+    public double? OutputPrice { get; init; }
     public override string ToString() => Label;
 }
 

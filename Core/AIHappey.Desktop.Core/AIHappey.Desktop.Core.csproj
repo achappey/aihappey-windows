@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="ModelProviders.json" LogicalName="Desktop.ModelProviders" />
     <!-- x:Uid in this library resolves through the library's native resource scope. -->
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.3.260402-preview2" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
