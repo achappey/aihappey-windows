@@ -1,0 +1,63 @@
+
+name: Publish chathappey release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Releases/chathappey-*.zip'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chathappey-releases
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Publish new releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          if [[ "$BEFORE" =~ ^0+$ ]]; then
+            files=$(git ls-files 'Releases/chathappey-*.zip')
+          else
+            files=$(git diff --name-only --diff-filter=A \
+              "$BEFORE" "$AFTER" -- Releases/)
+          fi
+
+          while IFS= read -r file; do
+            [[ -n "$file" ]] || continue
+
+            if [[ ! "$file" =~ ^Releases/chathappey-([0-9]{6}\.[0-9]{4})-win-x64\.zip$ ]]; then
+              continue
+            fi
+
+            version="${BASH_REMATCH[1]}"
+            tag="$version"
+
+            if git show-ref --verify --quiet "refs/tags/$tag"; then
+              echo "Tag $tag already exists. Skipping."
+              continue
+            fi
+
+            echo "Publishing chathappey $version"
+
+            gh release create "$tag" "$file" \
+              --target "$AFTER" \
+              --title "chathappey $version" \
+              --notes "Self-contained Windows x64 release."
+
+          done <<< "$files"
