@@ -65,8 +65,10 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
             AutomationProperties.SetName(toggle, server.Name);
             toggle.Toggled += async (_, _) => await ActAsync(ct => manager.SetEnabledAsync(server.Id, toggle.IsOn, ct));
             Grid.SetColumn(toggle, 1); header.Children.Add(toggle); panel.Children.Add(header);
-            panel.Children.Add(new TextBlock { Text = server.Url, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true });
-            panel.Children.Add(new TextBlock { Name = "McpConnectionStatus", Text = DesktopResources.Get("McpState" + view.State), TextWrapping = TextWrapping.Wrap });
+            var address = new TextBlock { Text = server.Url, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+            NativeCardSurface.Secondary(address); panel.Children.Add(address);
+            var state = new TextBlock { Name = "McpConnectionStatus", Text = DesktopResources.Get("McpState" + view.State), TextWrapping = TextWrapping.Wrap };
+            NativeCardSurface.Secondary(state, true); panel.Children.Add(state);
             if (view.Error is not null) panel.Children.Add(new TextBlock { Text = view.Error, TextWrapping = TextWrapping.Wrap });
             var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
             actions.Children.Add(Button("Edit", () => Edit(server.Clone())));
@@ -90,8 +92,8 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
                     HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch };
                 ControlAppearance.Native(toolsView); panel.Children.Add(toolsView);
             }
-            var card = new Border { Name = "McpInstalledServer", Child = panel, Padding = new Thickness(16), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
-            ControlAppearance.TokenBadge(card); body.Children.Add(card);
+            var card = new Border { Name = "McpInstalledServer", Child = panel };
+            NativeCardSurface.Card(card, true); body.Children.Add(card);
         }
     }
     private void Edit(DesktopMcpServer server)

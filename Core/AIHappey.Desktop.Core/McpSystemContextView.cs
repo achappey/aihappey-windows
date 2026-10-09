@@ -129,7 +129,8 @@ internal sealed class McpSystemContextView : UserControl
     private static void AddField(StackPanel parent, string key, string value)
     {
         var field = new StackPanel { Spacing = 4 };
-        field.Children.Add(new TextBlock { Text = DesktopResources.Get(key), FontSize = 12 });
+        var label = new TextBlock { Text = DesktopResources.Get(key) };
+        NativeCardSurface.Secondary(label, true); field.Children.Add(label);
         field.Children.Add(new TextBlock { Text = value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true });
         parent.Children.Add(field);
     }
@@ -142,7 +143,8 @@ internal sealed class McpSystemContextView : UserControl
             || !(uri.Scheme == "https" || uri.Scheme == "http" && uri.IsLoopback))
         { AddField(parent, key, value); return; }
         var field = new StackPanel { Spacing = 4 };
-        field.Children.Add(new TextBlock { Text = DesktopResources.Get(key), FontSize = 12 });
+        var label = new TextBlock { Text = DesktopResources.Get(key) };
+        NativeCardSurface.Secondary(label, true); field.Children.Add(label);
         var link = new HyperlinkButton { NavigateUri = uri, Content = new TextBlock { Text = value, TextWrapping = TextWrapping.Wrap },
             HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(0) };
         ControlAppearance.Native(link); ToolbarControls.Label(link, DesktopResources.Get(key) + ": " + value);
@@ -155,8 +157,7 @@ internal sealed class McpSystemContextView : UserControl
         var heading = new TextBlock { Text = title, FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap };
         AutomationProperties.SetHeadingLevel(heading, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level3);
         body.Children.Add(heading); body.Children.Add(child);
-        var card = new Border { Name = "McpContextSectionCard", Child = body, Padding = new Thickness(20),
-            BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8) };
-        ControlAppearance.TokenBadge(card); return card;
+        var card = new Border { Name = "McpContextSectionCard", Child = body };
+        NativeCardSurface.Card(card, true); return card;
     }
 }

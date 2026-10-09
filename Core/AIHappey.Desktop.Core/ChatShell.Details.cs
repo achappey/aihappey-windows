@@ -108,13 +108,14 @@ public sealed partial class ChatShell
         }
     }
 
-    private static Button FooterButton(string label, string text, string? glyph = null)
+    private static Button FooterButton(string label, string text, string? glyph = null, bool nativeCard = false)
     {
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         if (glyph is not null) content.Children.Add(new FontIcon { Glyph = glyph, FontSize = 14 });
         content.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
         var button = new Button { Content = content, Padding = new Thickness(8, 4, 8, 4), MinHeight = 32 };
-        ToolbarControls.Subtle(button); ToolbarControls.Label(button, label); return button;
+        if (nativeCard) NativeCardSurface.Action(button); else ToolbarControls.Subtle(button);
+        ToolbarControls.Label(button, label); return button;
     }
 
     private void RefreshDetails()
@@ -160,10 +161,13 @@ public sealed partial class ChatShell
                 if (source.Url is not null) card.Children.Add(SelectableText(source.Url));
                 if (source.Filename is not null) card.Children.Add(SelectableText(source.Filename));
                 var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-                var copy = ActivityButton(DesktopResources.Get("CopySource"), "\uE8C8"); copy.Click += (_, _) => CopyDetails(source.Url ?? source.Title); actions.Children.Add(copy);
+                var copy = new Button { Content = new FontIcon { Glyph = "\uE8C8", FontSize = 14 }, Width = 32, Height = 32, Padding = new Thickness(0) };
+                NativeCardSurface.Action(copy); ToolbarControls.Label(copy, DesktopResources.Get("CopySource"));
+                copy.Click += (_, _) => CopyDetails(source.Url ?? source.Title); actions.Children.Add(copy);
                 if (AttachmentDownloads.RemoteUri(source.Url) is { } uri)
                 {
-                    var open = ActivityButton(DesktopResources.Get("OpenSource"), "\uE8A7");
+                    var open = new Button { Content = new FontIcon { Glyph = "\uE8A7", FontSize = 14 }, Width = 32, Height = 32, Padding = new Thickness(0) };
+                    NativeCardSurface.Action(open); ToolbarControls.Label(open, DesktopResources.Get("OpenSource"));
                     open.Click += async (_, _) => { try { await Launcher.LaunchUriAsync(uri); } catch { Show(DesktopResources.Get("SourceOpenFailed"), InfoBarSeverity.Warning); } }; actions.Children.Add(open);
                 }
                 card.Children.Add(actions);
@@ -175,7 +179,7 @@ public sealed partial class ChatShell
         {
             var card = DetailsCard(file.Name); card.Children.Add(SelectableText(file.MediaType));
             if (file.ResourceUri is not null) card.Children.Add(SelectableText(file.ResourceUri));
-            var download = FooterButton(DesktopResources.Format("DownloadFile", file.Name), DesktopResources.Get("Download"), "\uE896"); download.Name = "DownloadAttachment";
+            var download = FooterButton(DesktopResources.Format("DownloadFile", file.Name), DesktopResources.Get("Download"), "\uE896", nativeCard: true); download.Name = "DownloadAttachment";
             download.IsEnabled = !downloading && AttachmentDownloads.CanDownload(file);
             download.Click += async (_, _) => await DownloadAttachmentAsync(file); card.Children.Add(download);
             if (!AttachmentDownloads.CanDownload(file)) card.Children.Add(SelectableText(DesktopResources.Get("BrowserResourceHint")));
@@ -186,8 +190,8 @@ public sealed partial class ChatShell
     {
         var content = new StackPanel { Spacing = 8 };
         content.Children.Add(new TextBlock { Text = title, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
-        var border = new Border { Child = content, Padding = new Thickness(12), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
-        ControlAppearance.MessageCard(border, false); detailsBody.Children.Add(border); return content;
+        var border = new Border { Child = content };
+        NativeCardSurface.Card(border, true); detailsBody.Children.Add(border); return content;
     }
 
     private void CopyDetails(string value)

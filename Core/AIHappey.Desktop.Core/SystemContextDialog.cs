@@ -119,8 +119,8 @@ internal sealed class SystemContextDialog : ContentDialog, IResponsiveDialog
         if (part.Json is { } json) card.Children.Add(JsonTree(json, null, 0));
         else if (part.Markdown) card.Children.Add(new ChatMarkdown { Text = part.Text });
         else card.Children.Add(Text(part.Text));
-        var border = new Border { Child = card, Padding = new Thickness(20), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8) };
-        ControlAppearance.TokenBadge(border); body.Children.Add(border);
+        var border = new Border { Child = card };
+        NativeCardSurface.Card(border, true); body.Children.Add(border);
         viewer.ChangeView(null, 0, null, true);
     }
 
@@ -140,9 +140,8 @@ internal sealed class SystemContextDialog : ContentDialog, IResponsiveDialog
                 ("destructiveHint", "McpDestructive"), ("openWorldHint", "McpOpenWorld") })
             {
                 if (!annotations.TryGetProperty(flag, out var enabled) || enabled.ValueKind != JsonValueKind.True) continue;
-                var badge = new Border { Child = new TextBlock { Text = DesktopResources.Get(key), FontSize = 12 },
-                    Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16) };
-                ControlAppearance.TokenBadge(badge); badges.Children.Add(badge);
+                var badge = new Border { Child = new TextBlock { Text = DesktopResources.Get(key), FontSize = 12 } };
+                NativeCardSurface.Badge(badge); badges.Children.Add(badge);
             }
             if (badges.Children.Count > 0) content.Children.Add(badges);
         }
@@ -154,9 +153,8 @@ internal sealed class SystemContextDialog : ContentDialog, IResponsiveDialog
                 HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch };
             ControlAppearance.Native(expander); content.Children.Add(expander);
         }
-        var card = new Border { Name = "SystemContextToolCard", Child = content, Padding = new Thickness(20),
-            BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8) };
-        ControlAppearance.TokenBadge(card); return card;
+        var card = new Border { Name = "SystemContextToolCard", Child = content };
+        NativeCardSurface.Card(card, true); return card;
     }
 
     internal static UIElement JsonTree(JsonElement value, string? name, int depth)

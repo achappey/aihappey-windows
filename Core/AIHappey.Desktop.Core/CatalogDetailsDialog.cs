@@ -164,19 +164,19 @@ internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
     private static TextBlock Text(string text) => new() { Text = text, IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap, FontSize = 14 };
     private static Border Badge(string text)
     {
-        var badge = new Border { Child = Text(text), CornerRadius = new CornerRadius(16), Padding = new Thickness(10, 4, 10, 4) };
-        ControlAppearance.TokenBadge(badge); return badge;
+        var badge = new Border { Child = Text(text) };
+        NativeCardSurface.Badge(badge); return badge;
     }
     private static Button Button(string label, string glyph)
     {
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         content.Children.Add(new FontIcon { Glyph = glyph, FontSize = 16 }); content.Children.Add(Text(label));
         var button = new Button { Name = "CatalogDialogAction", Content = content, Padding = new Thickness(8), MinHeight = 36 };
-        ToolbarControls.Subtle(button); ToolbarControls.Label(button, label); return button;
+        NativeCardSurface.Action(button); ToolbarControls.Label(button, label); return button;
     }
     private static void AddActions(StackPanel content, UIElement actions)
     {
         var footer = new Border { Child = actions, Padding = new Thickness(0, 8, 0, 0), BorderThickness = new Thickness(0, 1, 0, 0) };
-        ControlAppearance.Separator(footer); content.Children.Add(footer);
+        NativeCardSurface.Divider(footer); content.Children.Add(footer);
     }
 }

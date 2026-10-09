@@ -90,10 +90,12 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
             catch { if (!disposed) feedback.Text = DesktopResources.Get("SkillPrefetchFailed"); }
         };
         body.Children.Add(toggle);
-        if (skill.Version is not null) body.Children.Add(new TextBlock { Text = skill.Version });
-        body.Children.Add(new TextBlock { Text = skill.Description, TextWrapping = TextWrapping.Wrap });
-        var card = new Border { Name = "ChatSkillCard", Child = body, Padding = new Thickness(16), CornerRadius = new CornerRadius(8) };
-        ControlAppearance.TokenBadge(card); cards.Children.Add(card);
+        if (skill.Version is not null)
+        { var version = new TextBlock { Text = skill.Version }; NativeCardSurface.Secondary(version, true); body.Children.Add(version); }
+        var description = new TextBlock { Text = skill.Description, TextWrapping = TextWrapping.Wrap };
+        NativeCardSurface.Secondary(description); body.Children.Add(description);
+        var card = new Border { Name = "ChatSkillCard", Child = body };
+        NativeCardSurface.Card(card, true); cards.Children.Add(card);
     }
     public void Dispose() { disposed = true; lifetime.Cancel(); }
 }

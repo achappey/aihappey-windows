@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace AIHappey.Desktop.Core;
@@ -71,8 +70,8 @@ public sealed partial class TranscriptionsPage : UserControl
     }
     private static Border Card(UIElement content)
     {
-        var card = new Border { Child = content, Name = "TranscriptionCard", Margin = new Thickness(6), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
-        ControlAppearance.Apply(card, (_, _) => { }, palette => { card.Background = new SolidColorBrush(palette.Panel); card.BorderBrush = new SolidColorBrush(palette.Stroke); }); return card;
+        var card = new Border { Child = content, Name = "TranscriptionCard", Margin = new Thickness(6) };
+        NativeCardSurface.Card(card); return card;
     }
     private FrameworkElement ResultCard(LibraryTranscription item)
     {
@@ -85,11 +84,11 @@ public sealed partial class TranscriptionsPage : UserControl
         var labels = new StackPanel { Spacing = 6 };
         var title = new TextBlock { Text = data.Filename, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, MaxLines = 2, TextTrimming = TextTrimming.CharacterEllipsis }; ToolTipService.SetToolTip(title, data.Filename); labels.Children.Add(title);
         Grid.SetColumn(labels, 1); header.Children.Add(labels);
-        var more = new Button { Content = new FontIcon { Glyph = "\uE712", FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0), Name = "TranscriptionActions", VerticalAlignment = VerticalAlignment.Top }; ToolbarControls.Subtle(more); ToolbarControls.Label(more, DesktopResources.Format("ActionForItem", DesktopResources.Get("TranscriptionActions"), data.Filename));
+        var more = new Button { Content = new FontIcon { Glyph = "\uE712", FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0), Name = "TranscriptionActions", VerticalAlignment = VerticalAlignment.Top }; NativeCardSurface.Action(more); ToolbarControls.Label(more, DesktopResources.Format("ActionForItem", DesktopResources.Get("TranscriptionActions"), data.Filename));
         var menu = new MenuFlyout(); var delete = new MenuFlyoutItem { Text = DesktopResources.Get("Delete"), Icon = new SymbolIcon(Symbol.Delete) }; ControlAppearance.Stock(delete);
         delete.Click += async (_, _) => { if (editable && DeleteRequested is not null) await DeleteRequested(item); }; menu.Items.Add(delete); more.Flyout = menu; Grid.SetColumn(more, 2); header.Children.Add(more); layout.Children.Add(header);
         var badges = new MessageFooterPanel();
-        void Badge(string text) { if (string.IsNullOrWhiteSpace(text)) return; var badge = new Border { Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), HorizontalAlignment = HorizontalAlignment.Left, Child = new TextBlock { Text = text, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 320 } }; ControlAppearance.TokenBadge(badge); ToolTipService.SetToolTip(badge, text); badges.Children.Add(badge); }
+        void Badge(string text) { if (string.IsNullOrWhiteSpace(text)) return; var badge = new Border { HorizontalAlignment = HorizontalAlignment.Left, Child = new TextBlock { Text = text, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 320 } }; NativeCardSurface.Badge(badge); ToolTipService.SetToolTip(badge, text); badges.Children.Add(badge); }
         Badge(OpenAIChatConfig.Text(response["response"]?["modelId"]) ?? data.Model);
         Badge(OpenAIChatConfig.Text(response["language"]) ?? "");
         if (response["providerMetadata"] is JsonObject metadata)
@@ -100,13 +99,13 @@ public sealed partial class TranscriptionsPage : UserControl
         if (Number(response["providerMetadata"]?["gateway"]?["cost"]) is { } cost) Badge(cost.ToString("C4", CultureInfo.GetCultureInfo("en-US")));
         labels.Children.Add(badges);
         var preview = new TextBlock { Text = OpenAIChatConfig.Text(response["text"]) ?? "", TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis, MaxLines = 3, IsTextSelectionEnabled = true, FontSize = 13, Margin = new Thickness(16, 18, 16, 16), MinHeight = 36 };
-        ControlAppearance.Apply(preview, (_, _) => { }, palette => preview.Foreground = new SolidColorBrush(palette.Disabled)); Grid.SetRow(preview, 1); layout.Children.Add(preview);
+        NativeCardSurface.Secondary(preview); Grid.SetRow(preview, 1); layout.Children.Add(preview);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         var view = new Button { Name = "TranscriptionView", Content = new FontIcon { Glyph = "\uE890", FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0) };
-        ToolbarControls.Subtle(view); ToolbarControls.Label(view, DesktopResources.Format("ActionForItem", DesktopResources.Get("TranscriptionView"), data.Filename)); AutomationProperties.SetAutomationId(view, data.Id + ":Details");
+        NativeCardSurface.Action(view); ToolbarControls.Label(view, DesktopResources.Format("ActionForItem", DesktopResources.Get("TranscriptionView"), data.Filename)); AutomationProperties.SetAutomationId(view, data.Id + ":Details");
         view.Click += async (_, _) => { if (editable && ViewRequested is not null) await ViewRequested(item); }; actions.Children.Add(view);
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
-        ControlAppearance.Separator(footer); Grid.SetRow(footer, 2); layout.Children.Add(footer);
+        NativeCardSurface.Divider(footer); Grid.SetRow(footer, 2); layout.Children.Add(footer);
         var result = Card(layout); AutomationProperties.SetName(result, data.Filename + " · " + data.Model); return result;
     }
     private static double? Number(JsonNode? node) => node is JsonValue value && value.TryGetValue<double>(out var result) && double.IsFinite(result) ? result : null;

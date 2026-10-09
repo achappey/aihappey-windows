@@ -153,14 +153,14 @@ internal sealed class OverviewPage : UserControl
         var badgeText = item.Kind == CatalogKind.Agent ? item.Model : item.Version;
         if (!string.IsNullOrWhiteSpace(badgeText))
         {
-            var badge = new Border { CornerRadius = new CornerRadius(16), Padding = new Thickness(10, 4, 10, 4), HorizontalAlignment = HorizontalAlignment.Left,
+            var badge = new Border { HorizontalAlignment = HorizontalAlignment.Left,
                 Child = new TextBlock { Text = badgeText, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis } };
-            ToolTipService.SetToolTip(badge, badgeText); ControlAppearance.TokenBadge(badge); labels.Children.Add(badge);
+            ToolTipService.SetToolTip(badge, badgeText); NativeCardSurface.Badge(badge); labels.Children.Add(badge);
         }
         Grid.SetColumn(labels, 1); header.Children.Add(labels); grid.Children.Add(header);
         var description = new TextBlock { Text = item.Description, TextWrapping = TextWrapping.Wrap, MaxLines = 3, TextTrimming = TextTrimming.CharacterEllipsis,
             FontSize = 13, Margin = new Thickness(16, 18, 16, 16), MinHeight = 36 };
-        ControlAppearance.Apply(description, (_, _) => { }, palette => description.Foreground = new SolidColorBrush(palette.Disabled));
+        NativeCardSurface.Secondary(description);
         Grid.SetRow(description, 1); grid.Children.Add(description);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         var view = ActionButton(item, "Details", "\uE890"); view.Click += (_, _) => DetailsRequested?.Invoke(item, view); actions.Children.Add(view);
@@ -172,16 +172,16 @@ internal sealed class OverviewPage : UserControl
         if (item.Kind == CatalogKind.Agent)
         { var chat = ActionButton(item, "StartChat", "\uE8F2"); chat.Name = "CatalogStartChat"; chat.Click += (_, _) => ChatRequested?.Invoke(item); actions.Children.Add(chat); }
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
-        ControlAppearance.Separator(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
-        var card = new Border { Name = "CatalogCard", Tag = item, Child = grid, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
-        ControlAppearance.Apply(card, (_, _) => { }, palette => { card.Background = new SolidColorBrush(palette.Panel); card.BorderBrush = new SolidColorBrush(palette.Stroke); });
+        NativeCardSurface.Divider(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
+        var card = new Border { Name = "CatalogCard", Tag = item, Child = grid };
+        NativeCardSurface.Card(card);
         AutomationProperties.SetName(card, item.Name); return card;
     }
 
     private static Button ActionButton(CatalogItem item, string action, string glyph)
     {
         var button = new Button { Name = "Catalog" + action.Replace(" ", ""), Content = new FontIcon { Glyph = glyph, FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0) };
-        ToolbarControls.Subtle(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", DesktopResources.Get(action), item.Name)); AutomationProperties.SetAutomationId(button, item.Key + ":" + action); return button;
+        NativeCardSurface.Action(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", DesktopResources.Get(action), item.Name)); AutomationProperties.SetAutomationId(button, item.Key + ":" + action); return button;
     }
 
     private UIElement CardIcon(CatalogItem item)

@@ -2,11 +2,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Media;
 
 namespace AIHappey.Desktop.Core;
 
-/// <summary>MCP-specific actions, using the same native card layout/palette as Agents and Skills.</summary>
+/// <summary>MCP-specific actions, using the same native card surfaces as Agents and Skills.</summary>
 internal sealed class McpOverviewPage : UserControl
 {
     private readonly StackPanel body = new() { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(24) };
@@ -111,11 +110,14 @@ internal sealed class McpOverviewPage : UserControl
         Grid.SetColumn(title, 1); header.Children.Add(title);
         content.Children.Add(header);
         var labels = new StackPanel { Spacing = 6, Margin = new Thickness(16, 0, 16, 0) };
-        if (item.Version is { Length: > 0 }) labels.Children.Add(new TextBlock { Text = item.Version, FontSize = 12 });
-        if (installedServer is not null) labels.Children.Add(new TextBlock { Text = DesktopResources.Get("McpState" + installedServer.State), FontSize = 12 });
+        if (item.Version is { Length: > 0 })
+        { var version = new TextBlock { Text = item.Version }; NativeCardSurface.Secondary(version, true); labels.Children.Add(version); }
+        if (installedServer is not null)
+        { var state = new TextBlock { Text = DesktopResources.Get("McpState" + installedServer.State) }; NativeCardSurface.Secondary(state, true); labels.Children.Add(state); }
         content.Children.Add(labels);
-        content.Children.Add(new TextBlock { Text = item.Description, TextWrapping = TextWrapping.Wrap, MaxLines = 3,
-            TextTrimming = TextTrimming.CharacterEllipsis, MinHeight = 36, FontSize = 13, Margin = new Thickness(16, 0, 16, 16) });
+        var description = new TextBlock { Text = item.Description, TextWrapping = TextWrapping.Wrap, MaxLines = 3,
+            TextTrimming = TextTrimming.CharacterEllipsis, MinHeight = 36, FontSize = 13, Margin = new Thickness(16, 0, 16, 16) };
+        NativeCardSurface.Secondary(description); content.Children.Add(description);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         var button = new Button { Name = installedServer is null ? "McpInstall" : "McpRemove", Content = DesktopResources.Get(installedServer is null ? "McpInstall" : "McpRemove") };
         ControlAppearance.Native(button); AutomationProperties.SetAutomationId(button, item.Id + ":" + button.Name);
@@ -125,9 +127,9 @@ internal sealed class McpOverviewPage : UserControl
         if (installedServer is not null)
         { var view = new Button { Content = DesktopResources.Get("McpManage") }; ControlAppearance.Native(view); view.Click += (_, _) => ManageRequested?.Invoke(); actions.Children.Add(view); }
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
-        ControlAppearance.Separator(footer); content.Children.Add(footer);
-        var card = new Border { Name = "McpServerCard", Child = content, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
-        ControlAppearance.Apply(card, (_, _) => { }, palette => { card.Background = new SolidColorBrush(palette.Panel); card.BorderBrush = new SolidColorBrush(palette.Stroke); });
+        NativeCardSurface.Divider(footer); content.Children.Add(footer);
+        var card = new Border { Name = "McpServerCard", Child = content };
+        NativeCardSurface.Card(card);
         AutomationProperties.SetName(card, item.Name); return card;
     }
 }
