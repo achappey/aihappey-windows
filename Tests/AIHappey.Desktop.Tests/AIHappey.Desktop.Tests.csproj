@@ -11,6 +11,10 @@
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/nl/Resources.resw" LogicalName="Desktop.Resources.nl" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RelativeTime.cs" Link="Core/RelativeTime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ModelContextPreferences.cs" Link="Core/ModelContextPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/Elicitation.cs" Link="Core/Elicitation.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/McpToolTimeout.cs" Link="Core/McpToolTimeout.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/McpRequestLifetime.cs" Link="Core/McpRequestLifetime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpCatalog.cs" Link="Core/McpCatalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpIcons.cs" Link="Core/McpIcons.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpStore.cs" Link="Core/McpStore.cs" />

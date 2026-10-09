@@ -22,6 +22,10 @@
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE723;" /></NavigationViewItem.Icon>
                     <TextBlock x:Uid="SettingsAttachments" />
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="ModelContextTab" Tag="modelContext" x:Uid="SettingsModelContextTab">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE774;" /></NavigationViewItem.Icon>
+                    <TextBlock x:Uid="SettingsModelContext" />
+                </NavigationViewItem>
             </NavigationView.MenuItems>
         <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled"
@@ -46,6 +50,44 @@
                     <ToggleSwitch x:Name="DocumentTextExtraction" x:Uid="SettingsExtraction" />
                     <TextBlock x:Uid="SettingsExtractionHint" TextWrapping="Wrap" />
                 </StackPanel>
+                <NavigationView x:Name="ModelContextPage" Visibility="Collapsed" PaneDisplayMode="Top"
+                                IsSettingsVisible="False" IsBackButtonVisible="Collapsed"
+                                IsPaneToggleButtonVisible="False" AlwaysShowHeader="False"
+                                SelectionChanged="ModelContextTabChanged">
+                    <NavigationView.MenuItems>
+                        <NavigationViewItem x:Name="McpClientTab" x:Uid="SettingsMcpClientTab" />
+                        <NavigationViewItem x:Name="McpExtensionsTab" x:Uid="SettingsMcpExtensionsTab" />
+                    </NavigationView.MenuItems>
+                    <Grid Padding="4,12,4,8">
+                        <StackPanel x:Name="McpClientPage" Spacing="16">
+                            <Border Padding="16" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                <StackPanel Spacing="12">
+                                    <TextBlock x:Uid="SettingsMcpElicitation" FontWeight="SemiBold" />
+                                    <ToggleSwitch x:Name="FormElicitation" x:Uid="SettingsMcpFormElicitation" />
+                                    <ToggleSwitch x:Name="UrlElicitation" x:Uid="SettingsMcpUrlElicitation" IsOn="False" IsEnabled="False" />
+                                    <TextBlock x:Uid="SettingsMcpUrlHint" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                            <Border Padding="16" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                <StackPanel Spacing="12">
+                                    <TextBlock x:Uid="SettingsMcpTools" FontWeight="SemiBold" />
+                                    <NumberBox x:Name="ToolTimeout" x:Uid="SettingsMcpTimeout" Minimum="1" Maximum="60"
+                                               SmallChange="1" LargeChange="5" SpinButtonPlacementMode="Inline" />
+                                    <ToggleSwitch x:Name="ResetTimeoutOnProgress" x:Uid="SettingsMcpResetProgress" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        <Border x:Name="McpExtensionsPage" Visibility="Collapsed" Padding="16" CornerRadius="8"
+                                VerticalAlignment="Top" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            <StackPanel Spacing="12">
+                                <TextBlock x:Uid="SettingsMcpOfficialExtensions" FontWeight="SemiBold" />
+                                <ToggleSwitch x:Name="EnableMcpApps" x:Uid="SettingsMcpApps" />
+                                <ToggleSwitch x:Name="EnableMcpSkills" x:Uid="SettingsMcpSkills" />
+                                <TextBlock x:Uid="SettingsMcpExtensionsHint" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </NavigationView>
             </Grid>
         </ScrollViewer>
         </NavigationView>

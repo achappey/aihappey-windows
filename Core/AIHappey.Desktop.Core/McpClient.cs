@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
@@ -31,6 +32,7 @@ public sealed record McpDiscovery(JsonElement ServerInfo, JsonElement Capabiliti
 
 public interface IDesktopMcpConnection : IAsyncDisposable
 {
+    bool ManagesToolTimeout => false;
     event Action? ToolsChanged;
     event Action? ResourcesChanged;
     Task<McpDiscovery> DiscoverAsync(CancellationToken ct);
@@ -47,6 +49,12 @@ public interface IDesktopMcpClientFactory
 public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentication = null) : IDesktopMcpClientFactory
 {
     private readonly IDesktopMcpAuthentication authentication = authentication ?? new DesktopMcpHeaderAuthentication();
+    private Func<ModelContextPreferences> preferences = () => new();
+    private DesktopElicitationHandler? elicitation;
+    public void Configure(Func<ModelContextPreferences> preferences, DesktopElicitationHandler elicitation)
+    {
+        this.preferences = preferences; this.elicitation = elicitation;
+    }
     public async Task<IDesktopMcpConnection> ConnectAsync(DesktopMcpServer server, CancellationToken ct)
     {
         server = server.Clone(); server.Validate();
@@ -54,28 +62,46 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
         var handler = await authentication.ConfigureAsync(server, options, ct);
         var http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan, MaxResponseContentBufferSize = 8 * 1024 * 1024 };
         var transport = new HttpClientTransport(options, http, ownsHttpClient: true);
+        var formEnabled = preferences().EnableFormElicitation && elicitation is not null;
+        var requests = new McpRequestLifetime();
         try
         {
             var client = await McpClient.CreateAsync(transport, new McpClientOptions
             {
                 ClientInfo = new Implementation { Name = "aihappey-desktop", Version = "1.0.0" },
-                Capabilities = new ClientCapabilities()
+                Capabilities = new ClientCapabilities { Elicitation = formEnabled ? new ElicitationCapability { Form = new() } : null },
+                Handlers = new McpClientHandlers
+                {
+                    ElicitationHandler = formEnabled ? async (request, token) =>
+                    {
+                        using var lifetime = requests.Link(token);
+                        lifetime.Token.ThrowIfCancellationRequested();
+                        if (!preferences().EnableFormElicitation || request is null || request.Mode is not (null or "form"))
+                            return new ElicitResult { Action = "decline" };
+                        return await elicitation!(server.Name + " · " + server.Url, request, lifetime.Token);
+                    } : null
+                }
             }, cancellationToken: ct);
-            return new SdkConnection(client);
+            return new SdkConnection(client, preferences, requests);
         }
-        catch { await transport.DisposeAsync(); throw; }
+        catch { requests.Dispose(); await transport.DisposeAsync(); throw; }
     }
 
     private sealed class SdkConnection : IDesktopMcpConnection
     {
         private readonly McpClient client;
+        private readonly Func<ModelContextPreferences> preferences;
+        private readonly McpRequestLifetime requests;
+        public bool ManagesToolTimeout => true;
         private readonly IAsyncDisposable subscription;
         private readonly IAsyncDisposable resourceSubscription;
         public event Action? ToolsChanged;
         public event Action? ResourcesChanged;
-        public SdkConnection(McpClient client)
+        public SdkConnection(McpClient client, Func<ModelContextPreferences> preferences, McpRequestLifetime requests)
         {
             this.client = client;
+            this.preferences = preferences;
+            this.requests = requests;
             subscription = client.RegisterNotificationHandler(NotificationMethods.ToolListChangedNotification, (_, _) =>
             { ToolsChanged?.Invoke(); return ValueTask.CompletedTask; });
             resourceSubscription = client.RegisterNotificationHandler(NotificationMethods.ResourceListChangedNotification, (_, _) =>
@@ -111,9 +137,14 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
             DesktopMcpResources.ValidateUri(uri);
             var meta = new JsonObject { ["limit"] = limit };
             if (cursor is not null) meta["cursor"] = cursor;
-            var result = await client.ReadResourceAsync(new ReadResourceRequestParams { Uri = uri, Meta = meta }, ct);
-            var json = JsonSerializer.SerializeToNode(result)!.AsObject(); json.Remove("_meta");
-            return DesktopMcpResources.ValidateResult(JsonSerializer.SerializeToElement(json));
+            await requests.Gate.WaitAsync(ct); requests.SetActive(ct);
+            try
+            {
+                var result = await client.ReadResourceAsync(new ReadResourceRequestParams { Uri = uri, Meta = meta }, ct);
+                var json = JsonSerializer.SerializeToNode(result)!.AsObject(); json.Remove("_meta");
+                return DesktopMcpResources.ValidateResult(JsonSerializer.SerializeToElement(json));
+            }
+            finally { requests.SetActive(default); requests.Gate.Release(); }
         }
         public async Task<IReadOnlyList<string>> CompleteAsync(string template, string name, string value,
             IReadOnlyDictionary<string, string> arguments, CancellationToken ct)
@@ -129,16 +160,29 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
         public async Task<JsonElement> CallAsync(string name, JsonElement input, string callId, string locale, CancellationToken ct)
         {
             if (input.ValueKind != JsonValueKind.Object) throw new InvalidOperationException(DesktopResources.Get("McpInvalidArguments"));
-            var result = await client.CallToolAsync(new CallToolRequestParams
+            var settings = preferences().Clone();
+            await requests.Gate.WaitAsync(ct);
+            try
             {
-                Name = name, Arguments = input.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.Clone()),
-                Meta = new JsonObject { ["progressToken"] = callId, ["chat/locale"] = locale }
-            }, ct);
-            // _meta is client-only and may contain credentials/UI data. Never forward it to the model.
-            var json = JsonSerializer.SerializeToNode(result)!.AsObject(); json.Remove("_meta");
-            return JsonSerializer.SerializeToElement(json);
+                using var timeout = new McpToolTimeout(TimeSpan.FromMinutes(settings.ToolTimeoutMinutes), settings.ResetTimeoutOnProgress, ct);
+                requests.SetActive(timeout.Token);
+                var result = await client.CallToolAsync(name,
+                    input.EnumerateObject().ToDictionary(p => p.Name, p => (object?)p.Value.Clone()), timeout, new RequestOptions
+                {
+                    ProgressToken = new ProgressToken(callId), Meta = new JsonObject { ["chat/locale"] = locale }
+                }, timeout.Token);
+                timeout.Token.ThrowIfCancellationRequested();
+                // _meta is client-only and may contain credentials/UI data. Never forward it to the model.
+                var json = JsonSerializer.SerializeToNode(result)!.AsObject(); json.Remove("_meta");
+                return JsonSerializer.SerializeToElement(json);
+            }
+            finally { requests.SetActive(default); requests.Gate.Release(); }
         }
-        public async ValueTask DisposeAsync() { await subscription.DisposeAsync(); await resourceSubscription.DisposeAsync(); await client.DisposeAsync(); }
+        public async ValueTask DisposeAsync()
+        {
+            requests.Dispose();
+            await subscription.DisposeAsync(); await resourceSubscription.DisposeAsync(); await client.DisposeAsync();
+        }
     }
 }
 
@@ -146,7 +190,8 @@ public enum McpConnectionState { Disabled, Connecting, Connected, Error }
 public sealed record McpConnectionView(DesktopMcpServer Server, McpConnectionState State, McpDiscovery? Discovery, string? Error);
 
 /// <summary>One manager per desktop session. Mutations are serialized; epochs reject stale discovery/turn snapshots.</summary>
-public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopMcpStore store) : IAsyncDisposable
+public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopMcpStore store,
+    Func<ModelContextPreferences>? preferences = null) : IAsyncDisposable
 {
     private sealed class Entry(DesktopMcpServer server)
     {
@@ -235,6 +280,22 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         finally { gate.Release(); }
     }
     private Entry[] Entries() { lock (sync) return entries.Values.ToArray(); }
+    public async Task ReconnectAsync(CancellationToken ct)
+    {
+        await gate.WaitAsync(ct);
+        try
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            foreach (var previous in Entries())
+            {
+                await DisconnectAsync(previous);
+                var next = new Entry(previous.Server.Clone());
+                lock (sync) entries[next.Server.Id] = next;
+                if (next.Server.Enabled) await ConnectAsync(next, ct);
+            }
+        }
+        finally { gate.Release(); Changed?.Invoke(); }
+    }
     public async Task ResetAsync(CancellationToken ct)
     {
         foreach (var entry in Entries()) entry.Lifetime.Cancel();
@@ -298,9 +359,9 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
                     (connection, token) => connection.CompleteAsync(template, name, value, arguments, token), ct))));
     }
     private Task<JsonElement> CallAsync(Entry entry, string name, JsonElement input, string callId, string locale, CancellationToken ct) =>
-        RequestAsync(entry, (connection, token) => connection.CallAsync(name, input, callId, locale, token), ct);
+        RequestAsync(entry, (connection, token) => connection.CallAsync(name, input, callId, locale, token), ct, toolCall: true);
 
-    private async Task<T> RequestAsync<T>(Entry entry, Func<IDesktopMcpConnection, CancellationToken, Task<T>> request, CancellationToken ct)
+    private async Task<T> RequestAsync<T>(Entry entry, Func<IDesktopMcpConnection, CancellationToken, Task<T>> request, CancellationToken ct, bool toolCall = false)
     {
         IDesktopMcpConnection connection;
         lock (sync)
@@ -311,7 +372,9 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
             connection = entry.Connection;
         }
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct, entry.Lifetime.Token);
-        timeout.CancelAfter(TimeSpan.FromMinutes(5));
+        // SDK tool calls own the resettable timer. Resources retain their independent request budget.
+        if (!toolCall || !connection.ManagesToolTimeout)
+            timeout.CancelAfter(TimeSpan.FromMinutes(toolCall ? preferences?.Invoke().ToolTimeoutMinutes ?? 5 : 5));
         try
         {
             var result = await request(connection, timeout.Token);
@@ -326,10 +389,11 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         {
             if (e is HttpRequestException or IOException)
             { lock (sync) { entry.State = McpConnectionState.Error; entry.Discovery = null; entry.Error = SafeError(e); } Changed?.Invoke(); }
-            throw new InvalidOperationException(SafeError(e));
+            throw new InvalidOperationException(SafeError(e), e);
         }
     }
-    public static string SafeError(Exception error) => DesktopResources.Get(error switch
+    public static string SafeError(Exception error) => error is InvalidOperationException { InnerException: { } inner }
+        ? SafeError(inner) : DesktopResources.Get(error switch
     {
         HttpRequestException { StatusCode: HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden } => "McpAuthRequired",
         OperationCanceledException => "McpTimedOut", _ => "McpConnectionFailed"

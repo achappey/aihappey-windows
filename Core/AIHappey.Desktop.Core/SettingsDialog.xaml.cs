@@ -30,6 +30,12 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             location.SelectionChanged += (_, _) => ToggleUrl();
         }
         DocumentTextExtraction.IsOn = settings.ConvertAttachmentsToText;
+        FormElicitation.IsOn = settings.ModelContext.EnableFormElicitation;
+        ToolTimeout.Value = settings.ModelContext.ToolTimeoutMinutes;
+        ResetTimeoutOnProgress.IsOn = settings.ModelContext.ResetTimeoutOnProgress;
+        EnableMcpApps.IsOn = settings.ModelContext.EnableApps;
+        EnableMcpSkills.IsOn = settings.ModelContext.EnableSkills;
+        ModelContextPage.SelectedItem = McpClientTab;
         Tabs.SelectedItem = GeneralTab;
         PrimaryButtonClick += ValidateAndSave;
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; };
@@ -39,12 +45,21 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private void TabChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         // Selection can fire while InitializeComponent is still creating the page controls.
-        if (GeneralPage is null || EndpointsPage is null || AttachmentsPage is null) return;
-        GeneralPage.Visibility = Tabs.SelectedItem == GeneralTab ? Visibility.Visible : Visibility.Collapsed;
-        EndpointsPage.Visibility = Tabs.SelectedItem == EndpointsTab ? Visibility.Visible : Visibility.Collapsed;
-        AttachmentsPage.Visibility = Tabs.SelectedItem == AttachmentsTab ? Visibility.Visible : Visibility.Collapsed;
+        if (GeneralPage is null || EndpointsPage is null || AttachmentsPage is null || ModelContextPage is null) return;
+        GeneralPage.Visibility = ReferenceEquals(Tabs.SelectedItem, GeneralTab) ? Visibility.Visible : Visibility.Collapsed;
+        EndpointsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, EndpointsTab) ? Visibility.Visible : Visibility.Collapsed;
+        AttachmentsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, AttachmentsTab) ? Visibility.Visible : Visibility.Collapsed;
+        ModelContextPage.Visibility = ReferenceEquals(Tabs.SelectedItem, ModelContextTab) ? Visibility.Visible : Visibility.Collapsed;
         if (Layout.Width < 600) Tabs.IsPaneOpen = false;
         PageScroll.ChangeView(null, 0, null, true);
+    }
+
+    private void ModelContextTabChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+        if (McpClientPage is null || McpExtensionsPage is null) return;
+        McpClientPage.Visibility = ReferenceEquals(sender.SelectedItem, McpClientTab) ? Visibility.Visible : Visibility.Collapsed;
+        McpExtensionsPage.Visibility = ReferenceEquals(sender.SelectedItem, McpExtensionsTab) ? Visibility.Visible : Visibility.Collapsed;
+        PageScroll?.ChangeView(null, 0, null, true);
     }
 
     private void ValidateAndSave(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -56,6 +71,14 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             Ai = new() { Location = allowLocal && AiLocation.SelectedIndex == 0 ? RuntimeLocation.Local : RuntimeLocation.Remote, RemoteUrl = AiUrl.Text.Trim() },
             Agents = new() { Location = allowLocal && AgentsLocation.SelectedIndex == 0 ? RuntimeLocation.Local : RuntimeLocation.Remote, RemoteUrl = AgentsUrl.Text.Trim() },
             ConvertAttachmentsToText = DocumentTextExtraction.IsOn,
+            ModelContext = new()
+            {
+                EnableFormElicitation = FormElicitation.IsOn,
+                ToolTimeoutMinutes = double.IsFinite(ToolTimeout.Value) ? (int)Math.Round(ToolTimeout.Value) : 5,
+                ResetTimeoutOnProgress = ResetTimeoutOnProgress.IsOn,
+                EnableApps = EnableMcpApps.IsOn,
+                EnableSkills = EnableMcpSkills.IsOn
+            },
             Chat = chatPreferences.Clone(),
             AllowedToolList = allowedTools.ToList()
         };

@@ -33,13 +33,14 @@ public sealed class McpTurnSnapshot
         var used = candidates.Select(c => c.Name).ToHashSet(StringComparer.Ordinal);
         var hasResources = servers.Any(s => s.Discovery.Resources.Count > 0 || s.Discovery.ResourceTemplates.Count > 0);
         used.Add(DesktopMcpResources.ToolName);
+        used.Add(DesktopMcpToolExecution.ElicitationToolName);
         foreach (var server in servers)
         {
             var serverTools = new JsonArray();
             foreach (var candidate in candidates.Where(c => c.Server.Id == server.Server.Id))
             {
                 var name = candidate.Name;
-                if (name == DesktopMcpResources.ToolName || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
+                if (name is DesktopMcpResources.ToolName or DesktopMcpToolExecution.ElicitationToolName || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
                 {
                     var stem = Regex.Replace(name, "[^a-zA-Z0-9_-]", "_");
                     stem = stem[..Math.Min(stem.Length, 40)];
@@ -102,11 +103,12 @@ public sealed class McpTurnSnapshot
 /// <summary>Runs only parts assembled for this active turn. History is context, never an execution queue.</summary>
 public static class DesktopMcpToolExecution
 {
+    public const string ElicitationToolName = "ai_input_required";
     public const int MaxRounds = 8;
     public const int MaxCalls = 32;
 
     public static async Task<int> ExecutePendingAsync(ConversationMessage output, McpTurnSnapshot snapshot,
-        HashSet<string> executed, string locale, CancellationToken ct)
+        HashSet<string> executed, string locale, CancellationToken ct, DesktopElicitationHandler? elicit = null, bool executeMcp = true)
     {
         var count = 0;
         for (var index = 0; index < output.Message.Parts.Count; index++)
@@ -115,11 +117,14 @@ public static class DesktopMcpToolExecution
             if (!PortableConversations.IsTool(part)) continue;
             var raw = PortableConversations.Element(part);
             var state = PortableConversations.String(raw, "state");
+            var name = DesktopToolApprovals.CanonicalName(part);
+            var providerElicitation = name == ElicitationToolName;
+            if (!providerElicitation && !executeMcp) continue;
             // The UI reviews results, not permission to execute. Tool-side elicitation is a separate protocol.
             var reviewAfterExecution = state == "approval-requested"
-                && snapshot.Contains(DesktopToolApprovals.CanonicalName(part));
+                && (providerElicitation || snapshot.Contains(name));
             var approvedClientCall = state == "approval-responded" && DesktopToolApprovals.Approved(raw) == true
-                && snapshot.Contains(DesktopToolApprovals.CanonicalName(part));
+                && (providerElicitation || snapshot.Contains(name));
             if (state != "input-available" && !approvedClientCall && !reviewAfterExecution
                 || DesktopToolApprovals.HasOutput(raw) || DesktopToolApprovals.Approved(raw) == false
                 || raw.TryGetProperty("providerExecuted", out var provider) && provider.ValueKind == JsonValueKind.True) continue;
@@ -131,7 +136,15 @@ public static class DesktopMcpToolExecution
             {
                 if (!raw.TryGetProperty("input", out var input) || input.ValueKind != JsonValueKind.Object)
                     throw new InvalidOperationException(DesktopResources.Get("McpInvalidArguments"));
-                var result = await snapshot.CallAsync(DesktopToolApprovals.CanonicalName(part), input, id, locale, ct);
+                JsonElement result;
+                if (providerElicitation)
+                {
+                    var request = DesktopElicitationForm.ParseProviderRequest(input);
+                    var response = elicit is null ? new ModelContextProtocol.Protocol.ElicitResult { Action = "decline" }
+                        : await elicit(DesktopResources.Get("ElicitationProviderOrigin"), request, ct);
+                    result = JsonSerializer.SerializeToElement(new { content = Array.Empty<object>(), structuredContent = response });
+                }
+                else result = await snapshot.CallAsync(name, input, id, locale, ct);
                 if (result.GetRawText().Length > 2_000_000) throw new InvalidOperationException(DesktopResources.Get("McpResultTooLarge"));
                 var modelResult = JsonNode.Parse(result.GetRawText()) as JsonObject ?? throw new JsonException("Invalid MCP result.");
                 modelResult.Remove("_meta");
@@ -149,7 +162,7 @@ public static class DesktopMcpToolExecution
             {
                 node["state"] = reviewAfterExecution ? "approval-requested" : "output-error";
                 // Do not persist arbitrary server/SDK exception messages (headers/URLs may be embedded).
-                var error = snapshot.Contains(DesktopToolApprovals.CanonicalName(part))
+                var error = providerElicitation ? DesktopResources.Get("ElicitationFailed") : snapshot.Contains(name)
                     ? DesktopMcpManager.SafeError(e) : DesktopResources.Get("McpUnknownTool");
                 node["errorText"] = error;
                 if (reviewAfterExecution) node["output"] = new JsonObject { ["isError"] = true,

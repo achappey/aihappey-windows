@@ -10,7 +10,8 @@ public static class DesktopChatTurn
     public static async Task RunAsync(Conversation conversation, ConversationMessage output,
         Func<List<UIMessage>, CancellationToken, IAsyncEnumerable<StreamEvent>> stream,
         Func<PendingToolApproval, CancellationToken, Task<ToolApprovalDecision>> approve,
-        Func<bool, CancellationToken, Task> changed, McpTurnSnapshot mcp, string locale, CancellationToken ct)
+        Func<bool, CancellationToken, Task> changed, McpTurnSnapshot mcp, string locale, CancellationToken ct,
+        DesktopElicitationHandler? elicit = null)
     {
         var assembler = new MessageAssembler(output);
         var executed = new HashSet<string>(StringComparer.Ordinal);
@@ -36,8 +37,8 @@ public static class DesktopChatTurn
                 if (output.Status is not "complete" and not "approval required") break;
                 // Execute captured client routes first. Keep approval-requested with the result so the refreshed
                 // pending part passed to the dialog contains both input and output, just like Agents results.
-                var calls = conversation.Service == ServiceKind.Ai
-                    ? await DesktopMcpToolExecution.ExecutePendingAsync(output, mcp, executed, locale, ct) : 0;
+                var calls = await DesktopMcpToolExecution.ExecutePendingAsync(output,
+                    mcp, executed, locale, ct, elicit, executeMcp: conversation.Service == ServiceKind.Ai);
                 if (calls > 0)
                 {
                     await changed(true, ct); // Save the executed result before displaying its review.

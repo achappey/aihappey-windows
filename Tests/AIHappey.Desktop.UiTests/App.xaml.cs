@@ -37,6 +37,12 @@ public partial class App : Application
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
             Check(DesktopBranding.ResolveName(null) == "aihappey" && DesktopBranding.ResolveName(" ") == "aihappey" && DesktopBranding.ResolveName(" chathappey ") == "chathappey", "build branding fallback and custom name");
+            if (Environment.GetCommandLineArgs().Contains("--elicitation-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckElicitationAsync(theme);
+                results.Add("All Model context and elicitation UI checks passed.");
+                File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--mcp-presentation-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckMcpPresentationAsync(theme);
@@ -50,7 +56,8 @@ public partial class App : Application
                     if (!Environment.GetCommandLineArgs().Contains("--transcript-only")) await CheckShellAsync(local, theme);
                 }
             if (!Environment.GetCommandLineArgs().Contains("--transcript-only"))
-                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckMcpPresentationAsync(theme);
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
+                { await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); }
             results.Add("All native UI checks passed.");
             File.WriteAllLines(report, results);
             window.Close();

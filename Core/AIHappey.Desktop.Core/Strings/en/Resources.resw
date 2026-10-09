@@ -617,4 +617,41 @@
   <data name="McpWebsite" xml:space="preserve"><value>Website</value></data>
   <data name="McpRepository" xml:space="preserve"><value>Repository</value></data>
   <data name="McpServerProperties" xml:space="preserve"><value>Server properties</value></data>
+  <data name="SettingsModelContext.Text" xml:space="preserve"><value>Model context</value></data>
+  <data name="SettingsModelContextTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Model context</value></data>
+  <data name="SettingsMcpClientTab.Content" xml:space="preserve"><value>Client</value></data>
+  <data name="SettingsMcpExtensionsTab.Content" xml:space="preserve"><value>Extensions</value></data>
+  <data name="SettingsMcpElicitation.Text" xml:space="preserve"><value>Elicitation</value></data>
+  <data name="SettingsMcpFormElicitation.Header" xml:space="preserve"><value>Form elicitation</value></data>
+  <data name="SettingsMcpUrlElicitation.Header" xml:space="preserve"><value>URL elicitation</value></data>
+  <data name="SettingsMcpUrlHint.Text" xml:space="preserve"><value>URL elicitation is not available in this client.</value></data>
+  <data name="SettingsMcpTools.Text" xml:space="preserve"><value>Tools</value></data>
+  <data name="SettingsMcpTimeout.Header" xml:space="preserve"><value>Tool timeout (minutes)</value></data>
+  <data name="SettingsMcpResetProgress.Header" xml:space="preserve"><value>Reset timeout on progress</value></data>
+  <data name="SettingsMcpOfficialExtensions.Text" xml:space="preserve"><value>Official extensions</value></data>
+  <data name="SettingsMcpApps.Header" xml:space="preserve"><value>Apps</value></data>
+  <data name="SettingsMcpSkills.Header" xml:space="preserve"><value>Skills</value></data>
+  <data name="SettingsMcpExtensionsHint.Text" xml:space="preserve"><value>These preferences are saved for future support. Apps and Skills are not implemented in this client yet.</value></data>
+  <data name="ElicitationTitle" xml:space="preserve"><value>Additional information requested</value></data>
+  <data name="ElicitationProviderOrigin" xml:space="preserve"><value>Model / agent input request</value></data>
+  <data name="ElicitationAccept" xml:space="preserve"><value>Accept</value></data>
+  <data name="ElicitationDecline" xml:space="preserve"><value>Decline</value></data>
+  <data name="ElicitationChoose" xml:space="preserve"><value>Not selected</value></data>
+  <data name="ElicitationBoolean" xml:space="preserve"><value>Yes / No (indeterminate means not provided)</value></data>
+  <data name="ElicitationIntegerHint" xml:space="preserve"><value>Whole number</value></data>
+  <data name="ElicitationNumberHint" xml:space="preserve"><value>Number (use a decimal point)</value></data>
+  <data name="ElicitationNumberRange" xml:space="preserve"><value>Minimum: {0} · Maximum: {1}</value></data>
+  <data name="ElicitationLengthRange" xml:space="preserve"><value>Text length — minimum: {0} · maximum: {1}</value></data>
+  <data name="ElicitationChoiceRange" xml:space="preserve"><value>Selected choices — minimum: {0} · maximum: {1}</value></data>
+  <data name="ElicitationRequired" xml:space="preserve"><value>This field is required.</value></data>
+  <data name="ElicitationInvalidValue" xml:space="preserve"><value>Enter a value of the requested type.</value></data>
+  <data name="ElicitationInvalidNumber" xml:space="preserve"><value>Enter a valid number; integer fields require a whole number.</value></data>
+  <data name="ElicitationNumberBounds" xml:space="preserve"><value>The number is outside the requested minimum or maximum.</value></data>
+  <data name="ElicitationStringLength" xml:space="preserve"><value>The text is outside the requested minimum or maximum length.</value></data>
+  <data name="ElicitationInvalidFormat" xml:space="preserve"><value>Use the requested email, URI, date, or date-time format. Date-times must include a time zone.</value></data>
+  <data name="ElicitationInvalidChoice" xml:space="preserve"><value>Select only the available choices, without duplicates.</value></data>
+  <data name="ElicitationSelectionBounds" xml:space="preserve"><value>The number of selected choices is outside the requested minimum or maximum.</value></data>
+  <data name="ElicitationCheckFields" xml:space="preserve"><value>Check the highlighted fields before accepting.</value></data>
+  <data name="ElicitationInvalidSchema" xml:space="preserve"><value>This request does not contain a supported MCP form schema.</value></data>
+  <data name="ElicitationFailed" xml:space="preserve"><value>The input request could not be completed. Only MCP form elicitation is supported.</value></data>
 </root>

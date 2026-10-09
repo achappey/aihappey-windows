@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly)
+param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -18,9 +18,11 @@ try {
     $arguments = @('"' + $report + '"')
     if ($TranscriptOnly) { $arguments += '--transcript-only' }
     if ($McpPresentationOnly) { $arguments += '--mcp-presentation-only' }
+    if ($ElicitationOnly) { $arguments += '--elicitation-only' }
     $process = Start-Process (Join-Path $output 'AIHappey.Desktop.UiTests.exe') -ArgumentList $arguments -PassThru
     if (-not $process.WaitForExit(60000)) {
         $process.Kill()
+        if (Test-Path $report) { Get-Content $report }
         throw 'Native UI test process timed out after 60 seconds.'
     }
     if (Test-Path $report) { Get-Content $report }

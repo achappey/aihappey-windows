@@ -16,6 +16,8 @@ public sealed class DesktopSettings
     public bool ConvertAttachmentsToText { get; set; } = true;
     public string? Language { get; set; }
     public ChatPreferences Chat { get; set; } = new();
+    private ModelContextPreferences modelContext = new();
+    public ModelContextPreferences ModelContext { get => modelContext; set => modelContext = value ?? new(); }
     private List<string> allowedToolList = [];
     public List<string> AllowedToolList
     {
@@ -86,8 +88,22 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     public IDesktopMcpClientFactory McpClientFactory { get; set; } = new DesktopMcpClientFactory();
     public DesktopToolApprovalPolicy ToolApprovals { get; } = new();
     public DesktopMcpManager? Mcp { get; private set; }
+    public DesktopElicitationHandler? ElicitationHandler { get; set; }
+    public Task<ModelContextProtocol.Protocol.ElicitResult> ElicitAsync(string origin,
+        ModelContextProtocol.Protocol.ElicitRequestParams request, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        return Settings.ModelContext.EnableFormElicitation && ElicitationHandler is { } handler
+            ? handler(origin, request, ct)
+            : Task.FromResult(new ModelContextProtocol.Protocol.ElicitResult { Action = "decline" });
+    }
     public string McpPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
-    public DesktopMcpManager InitializeMcp() => Mcp ??= new(McpClientFactory, new DesktopMcpStore(Path.Combine(DataDirectory, "mcp")));
+    public DesktopMcpManager InitializeMcp()
+    {
+        if (Mcp is not null) return Mcp;
+        if (McpClientFactory is DesktopMcpClientFactory sdk) sdk.Configure(() => Settings.ModelContext, ElicitAsync);
+        return Mcp = new(McpClientFactory, new DesktopMcpStore(Path.Combine(DataDirectory, "mcp")), () => Settings.ModelContext);
+    }
     public Func<DateTimeOffset, System.Text.Json.Nodes.JsonObject> SystemInformationProvider { get; set; } = DesktopSystemContext.SystemInformation;
     public AIHappey.Vercel.Models.UIMessage CaptureSystemContext(bool darkMode = false,
         System.Text.Json.Nodes.JsonObject? systemInformation = null, ChatPreferences? preferences = null, McpTurnSnapshot? mcp = null)

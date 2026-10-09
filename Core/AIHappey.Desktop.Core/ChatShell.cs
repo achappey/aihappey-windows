@@ -67,6 +67,7 @@ public sealed partial class ChatShell : UserControl
         catalogClient = new(client, http);
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
         PrepareContext();
+        session.ElicitationHandler = ShowElicitationAsync;
         PrepareMcp();
         PrepareToolApprovals();
         PrepareChatSettings();
@@ -387,7 +388,7 @@ public sealed partial class ChatShell : UserControl
                     { RenderTranscript(); renderAt = watch.Elapsed; }
                     if (force || watch.Elapsed - saveAt > TimeSpan.FromSeconds(1))
                     { await history.SaveAsync(partition, current, token); saveAt = watch.Elapsed; }
-                }, mcpTurn, session.ActiveLanguage, ct);
+                }, mcpTurn, session.ActiveLanguage, ct, session.ElicitAsync);
                 if (output.Status is "interrupted" or "approval required") Show(DesktopResources.Get("StreamInterrupted"), InfoBarSeverity.Warning);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { /* The turn runner retains pending approvals on stop. */ }
@@ -668,8 +669,10 @@ public sealed partial class ChatShell : UserControl
         {
             var connectionsChanged = new[] { ServiceKind.Ai, ServiceKind.Agents }.Any(kind =>
                 session.Settings.For(kind).Location != next.For(kind).Location || session.Settings.For(kind).RemoteUrl != next.For(kind).RemoteUrl);
+            var elicitationChanged = session.Settings.ModelContext.EnableFormElicitation != next.ModelContext.EnableFormElicitation;
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
+            if (elicitationChanged) await Mcp.ReconnectAsync(ct);
             if (next.Language != session.ActiveLanguage) Show(DesktopResources.Get("RestartRequired"), InfoBarSeverity.Informational);
             // Language and composer preferences do not change the runtime, account, history partition, or current draft.
             if (!connectionsChanged) return;
@@ -731,6 +734,7 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        elicitationLifetime.Cancel(); elicitationDialog?.Hide(); session.ElicitationHandler = null;
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();

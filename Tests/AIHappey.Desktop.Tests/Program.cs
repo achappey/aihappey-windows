@@ -19,9 +19,16 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--elicitation-only"))
+    {
+        await ElicitationRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} elicitation checks passed.");
+        return;
+    }
     TranscriptRegressionTests.Run(Check);
     await ToolApprovalRegressionTests.RunAsync(Check, root);
     await McpPresentationRegressionTests.RunAsync(Check, root);
+    await ElicitationRegressionTests.RunAsync(Check, root);
     var defaults = new DesktopSettings();
     Check(defaults.Ai.Location == RuntimeLocation.Local && defaults.Agents.Location == RuntimeLocation.Local, "public defaults are local");
     Reject(() => defaults.Validate(false), "enterprise rejects local");

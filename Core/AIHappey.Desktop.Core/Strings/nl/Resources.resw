@@ -613,4 +613,41 @@
   <data name="McpWebsite" xml:space="preserve"><value>Website</value></data>
   <data name="McpRepository" xml:space="preserve"><value>Repository</value></data>
   <data name="McpServerProperties" xml:space="preserve"><value>Servereigenschappen</value></data>
+  <data name="SettingsModelContext.Text" xml:space="preserve"><value>Modelcontext</value></data>
+  <data name="SettingsModelContextTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Modelcontext</value></data>
+  <data name="SettingsMcpClientTab.Content" xml:space="preserve"><value>Client</value></data>
+  <data name="SettingsMcpExtensionsTab.Content" xml:space="preserve"><value>Extensies</value></data>
+  <data name="SettingsMcpElicitation.Text" xml:space="preserve"><value>Invoer opvragen</value></data>
+  <data name="SettingsMcpFormElicitation.Header" xml:space="preserve"><value>Formulierinvoer</value></data>
+  <data name="SettingsMcpUrlElicitation.Header" xml:space="preserve"><value>URL-invoer</value></data>
+  <data name="SettingsMcpUrlHint.Text" xml:space="preserve"><value>URL-invoer is niet beschikbaar in deze client.</value></data>
+  <data name="SettingsMcpTools.Text" xml:space="preserve"><value>Tools</value></data>
+  <data name="SettingsMcpTimeout.Header" xml:space="preserve"><value>Tool-time-out (minuten)</value></data>
+  <data name="SettingsMcpResetProgress.Header" xml:space="preserve"><value>Time-out opnieuw starten bij voortgang</value></data>
+  <data name="SettingsMcpOfficialExtensions.Text" xml:space="preserve"><value>Officiële extensies</value></data>
+  <data name="SettingsMcpApps.Header" xml:space="preserve"><value>Apps</value></data>
+  <data name="SettingsMcpSkills.Header" xml:space="preserve"><value>Vaardigheden</value></data>
+  <data name="SettingsMcpExtensionsHint.Text" xml:space="preserve"><value>Deze voorkeuren worden opgeslagen voor toekomstige ondersteuning. Apps en Vaardigheden zijn nog niet geïmplementeerd in deze client.</value></data>
+  <data name="ElicitationTitle" xml:space="preserve"><value>Aanvullende informatie gevraagd</value></data>
+  <data name="ElicitationProviderOrigin" xml:space="preserve"><value>Invoerverzoek van model / agent</value></data>
+  <data name="ElicitationAccept" xml:space="preserve"><value>Accepteren</value></data>
+  <data name="ElicitationDecline" xml:space="preserve"><value>Weigeren</value></data>
+  <data name="ElicitationChoose" xml:space="preserve"><value>Niet geselecteerd</value></data>
+  <data name="ElicitationBoolean" xml:space="preserve"><value>Ja / Nee (onbepaald betekent niet opgegeven)</value></data>
+  <data name="ElicitationIntegerHint" xml:space="preserve"><value>Geheel getal</value></data>
+  <data name="ElicitationNumberHint" xml:space="preserve"><value>Getal (gebruik een decimale punt)</value></data>
+  <data name="ElicitationNumberRange" xml:space="preserve"><value>Minimum: {0} · Maximum: {1}</value></data>
+  <data name="ElicitationLengthRange" xml:space="preserve"><value>Tekstlengte — minimum: {0} · maximum: {1}</value></data>
+  <data name="ElicitationChoiceRange" xml:space="preserve"><value>Geselecteerde opties — minimum: {0} · maximum: {1}</value></data>
+  <data name="ElicitationRequired" xml:space="preserve"><value>Dit veld is verplicht.</value></data>
+  <data name="ElicitationInvalidValue" xml:space="preserve"><value>Voer een waarde van het gevraagde type in.</value></data>
+  <data name="ElicitationInvalidNumber" xml:space="preserve"><value>Voer een geldig getal in; een geheel getal mag geen decimalen bevatten.</value></data>
+  <data name="ElicitationNumberBounds" xml:space="preserve"><value>Het getal valt buiten het gevraagde minimum of maximum.</value></data>
+  <data name="ElicitationStringLength" xml:space="preserve"><value>De tekst valt buiten de gevraagde minimale of maximale lengte.</value></data>
+  <data name="ElicitationInvalidFormat" xml:space="preserve"><value>Gebruik de gevraagde e-mail-, URI-, datum- of datumtijdnotatie. Datumtijden moeten een tijdzone bevatten.</value></data>
+  <data name="ElicitationInvalidChoice" xml:space="preserve"><value>Selecteer alleen de beschikbare opties, zonder duplicaten.</value></data>
+  <data name="ElicitationSelectionBounds" xml:space="preserve"><value>Het aantal geselecteerde opties valt buiten het gevraagde minimum of maximum.</value></data>
+  <data name="ElicitationCheckFields" xml:space="preserve"><value>Controleer de gemarkeerde velden voordat u accepteert.</value></data>
+  <data name="ElicitationInvalidSchema" xml:space="preserve"><value>Dit verzoek bevat geen ondersteund MCP-formulierschema.</value></data>
+  <data name="ElicitationFailed" xml:space="preserve"><value>Het invoerverzoek kon niet worden voltooid. Alleen MCP-formulierinvoer wordt ondersteund.</value></data>
 </root>
