@@ -70,12 +70,19 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
         }
     }
 
-    internal async Task<HttpRequestMessage> RequestAsync(ServiceKind service, HttpMethod method, string path, CancellationToken ct)
+    internal async Task<HttpRequestMessage> RequestAsync(ServiceKind service, HttpMethod method, string path, CancellationToken ct, string? expectedAiPartition = null)
     {
+        void CheckPartition()
+        {
+            if (expectedAiPartition is not null && expectedAiPartition != ImageLibraryStore.Partition(session))
+                throw new OperationCanceledException("The video account or endpoint changed.", ct);
+        }
+        CheckPartition();
         session.Settings.Validate(session.Host.AllowLocal);
         var endpoint = await session.Runtime.ResolveAsync(service, session.Settings, ct);
+        CheckPartition();
         var request = new HttpRequestMessage(method, new Uri(endpoint, path));
-        try { await session.Host.AuthenticateAsync(request, service, ct); return request; }
+        try { await session.Host.AuthenticateAsync(request, service, ct); CheckPartition(); return request; }
         catch { request.Dispose(); throw; }
     }
 

@@ -84,6 +84,7 @@ public sealed partial class ChatShell
     private Task LoadActiveOverviewAsync(CancellationToken ct, bool useCache = false) => activePage switch
     {
         DesktopPage.Images => LoadImagesAsync(ct, useCache),
+        DesktopPage.Videos => LoadVideosAsync(ct, useCache),
         DesktopPage.Transcriptions => LoadTranscriptionsAsync(ct, useCache),
         DesktopPage.Mcp => LoadMcpOverviewAsync(ct, useCache),
         DesktopPage.Models => LoadModelsOverviewAsync(ct, useCache),

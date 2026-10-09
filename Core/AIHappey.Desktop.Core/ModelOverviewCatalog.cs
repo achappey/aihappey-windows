@@ -26,7 +26,7 @@ public sealed class ModelOverviewCatalog
         ? model.ProviderKey.Trim().ToLowerInvariant() : model.Id.Split('/')[0].Trim().ToLowerInvariant();
     // A serialized tuple cannot collide when either the type or ID contains delimiters.
     public static string FavoriteKey(ChatTarget model) => JsonSerializer.Serialize(new[] { model.ModelType ?? "language", model.Id });
-    public static bool CanLaunch(ChatTarget model) => model.ModelType is "language" or "image" or "transcription";
+    public static bool CanLaunch(ChatTarget model) => model.ModelType is "language" or "image" or "video" or "transcription";
     public static bool IsNew(ChatTarget model, DateTimeOffset now) => model.Created is { } created
         && now.ToUnixTimeSeconds() - (double)created <= TimeSpan.FromDays(30).TotalSeconds;
 

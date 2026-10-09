@@ -106,6 +106,13 @@ public sealed partial class ChatShell
                 imageTarget.Text = selected.Id; imagesPage.SetModelAvailable(SelectedImageModel is not null);
                 ShowPage(DesktopPage.Images); imagesPage.FocusPrompt();
             }
+            else if (selected.ModelType == "video")
+            {
+                await LoadVideosAsync(ct, useCache: true);
+                ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != partition) return;
+                videoTarget.Text = selected.Id; videosPage.SetModelAvailable(SelectedVideoModel is not null);
+                ShowPage(DesktopPage.Videos); videosPage.FocusPrompt();
+            }
             else if (selected.ModelType == "transcription")
             {
                 await LoadTranscriptionsAsync(ct, useCache: true);

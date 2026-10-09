@@ -36,6 +36,11 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--videos-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckVideosAsync(theme);
+                results.Add("All videos UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--overview-tabs-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckOverviewTabsAsync(theme);
@@ -80,7 +85,7 @@ public partial class App : Application
                 }
             if (!Environment.GetCommandLineArgs().Contains("--transcript-only"))
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
-                { await CheckOverviewTabsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckImagesAsync(theme); }
+                { await CheckOverviewTabsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckImagesAsync(theme); await CheckVideosAsync(theme); }
             results.Add("All native UI checks passed.");
             File.WriteAllLines(report, results);
             window.Close();
@@ -219,7 +224,7 @@ public partial class App : Application
             var navigation = Field<StackPanel>(shell, "pageNavigation");
             Check(navigation.Children.OfType<TextBlock>().Select(text => text.Text).SequenceEqual(new[] { "Agents", "Chats" })
                 && navigation.Children.OfType<Border>().Select(border => border.Name).SequenceEqual(new[] { "AgentsSeparator", "ArtificialIntelligenceSeparator", "ChatsSeparator" })
-                && navigation.Children.OfType<ToggleButton>().Select(button => button.Name).SequenceEqual(new[] { "NavigateImages", "NavigateTranscriptions", "NavigateAgents", "NavigateMcp", "NavigateSkills" })
+                && navigation.Children.OfType<ToggleButton>().Select(button => button.Name).SequenceEqual(new[] { "NavigateImages", "NavigateVideos", "NavigateTranscriptions", "NavigateAgents", "NavigateMcp", "NavigateSkills" })
                 && !Descendants(pane).OfType<TextBox>().Any(), context + ": browser-style categories and no extra Chat button or inline history search");
             Check(navigation.Children.OfType<ToggleButton>().Skip(2).Select(button => AutomationProperties.GetName(button))
                 .SequenceEqual(new[] { "Agents", DesktopResources.Get("McpTitle"), "Skills" }), context + ": Agents → More context → Skills navigation order");

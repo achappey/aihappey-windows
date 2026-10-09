@@ -79,7 +79,10 @@ internal static class ComposerAttachmentRegressionTests
         {
             await foreach (var _ in client.StreamAsync(service, "fixture", "conversation", [prepared.Message], CancellationToken.None)) { }
             using var body = JsonDocument.Parse(handler.Body!);
-            var parts = body.RootElement.GetProperty("messages")[0].GetProperty("parts");
+            // AI chat prepends the system context. Assert the attachment-bearing user message,
+            // not its position in the request envelope; agents may have no system message.
+            var parts = body.RootElement.GetProperty("messages").EnumerateArray()
+                .Single(message => message.GetProperty("role").GetString() == "user").GetProperty("parts");
             check(parts.GetArrayLength() == 3 && parts[0].GetProperty("type").GetString() == "file"
                 && parts[0].GetProperty("filename").GetString() == "last.png"
                 && parts[0].GetProperty("mediaType").GetString() == "image/png"

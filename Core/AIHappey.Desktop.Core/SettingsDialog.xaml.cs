@@ -12,6 +12,8 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private readonly ImagePreferences imagePreferences;
     private readonly TranscriptionPreferences transcriptionPreferences;
     private readonly ImageStorageSettingsView imageStorage;
+    private readonly VideoPreferences videoPreferences;
+    private readonly VideoStorageSettingsView videoStorage;
     private readonly CancellationTokenSource catalogLifetime = new();
     public AiModelSettingsView AiModelView { get; }
     public DesktopSettings? Result { get; private set; }
@@ -24,10 +26,12 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         allowedTools = settings.AllowedToolList.ToList();
         aiModelPreferences = settings.AiModels.Clone();
         imagePreferences = settings.Images.Clone();
+        videoPreferences = settings.Videos.Clone();
         transcriptionPreferences = settings.Transcriptions.Clone();
         InitializeComponent();
         imageStorage = new(imagePreferences, catalogLifetime.Token);
-        AiModelView = new(aiModelPreferences, aiModels, imageStorage);
+        videoStorage = new(videoPreferences, catalogLifetime.Token);
+        AiModelView = new(aiModelPreferences, aiModels, imageStorage, videoStorage);
         ArtificialIntelligencePage.Children.Add(AiModelView);
         Name = "SettingsDialog";
         Resources["ContentDialogMaxWidth"] = 840d;
@@ -94,7 +98,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private void ValidateAndSave(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         Result = null;
-        if (imageStorage.PickerOpen) { args.Cancel = true; return; }
+        if (imageStorage.PickerOpen || videoStorage.PickerOpen) { args.Cancel = true; return; }
         var next = new DesktopSettings
         {
             Language = (string)((ComboBoxItem)LanguageChoice.SelectedItem).Tag,
@@ -111,6 +115,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             },
             Chat = chatPreferences.Clone(),
             Images = imagePreferences.Clone(),
+            Videos = videoPreferences.Clone(),
             Transcriptions = transcriptionPreferences.Clone(),
             AiModels = aiModelPreferences.Clone(),
             AllowedToolList = allowedTools.ToList()
@@ -124,15 +129,15 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             PageScroll.ChangeView(null, PageScroll.ScrollableHeight, null, true);
             return;
         }
-        try { imageStorage.ValidateAndPrepare(); Result = next; }
+        var checkingVideo = false;
+        try { imageStorage.ValidateAndPrepare(); checkingVideo = true; videoStorage.ValidateAndPrepare(); Result = next; }
         catch (Exception error)
         {
             args.Cancel = true;
             Tabs.SelectedItem = ArtificialIntelligenceTab;
-            AiModelView.SelectedItem = AiModelView.MenuItems.OfType<NavigationViewItem>().Single(item => (string)item.Tag == "image");
-            imageStorage.ShowError(error is InvalidOperationException ? error.Message : DesktopResources.Get("ImageFolderFailed"));
-            imageStorage.UpdateLayout();
-            imageStorage.StartBringIntoView();
+            AiModelView.SelectedItem = AiModelView.MenuItems.OfType<NavigationViewItem>().Single(item => (string)item.Tag == (checkingVideo ? "video" : "image"));
+            if (checkingVideo) { videoStorage.ShowError(error is InvalidOperationException ? error.Message : DesktopResources.Get("VideoFolderFailed")); videoStorage.UpdateLayout(); videoStorage.StartBringIntoView(); }
+            else { imageStorage.ShowError(error is InvalidOperationException ? error.Message : DesktopResources.Get("ImageFolderFailed")); imageStorage.UpdateLayout(); imageStorage.StartBringIntoView(); }
         }
     }
 

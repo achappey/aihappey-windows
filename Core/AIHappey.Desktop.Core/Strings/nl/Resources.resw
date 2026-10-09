@@ -792,4 +792,46 @@
   <data name="ModelsProviderWebsite" xml:space="preserve"><value>Website van {0} openen</value></data>
   <data name="ModelsWebsiteFailed" xml:space="preserve"><value>De website van de provider kon niet worden geopend.</value></data>
   <data name="ModelsUnavailable" xml:space="preserve"><value>Dit model is niet meer beschikbaar bij de huidige AI-service. Vernieuw het modellenoverzicht.</value></data>
+  <data name="Videos" xml:space="preserve"><value>Video’s</value></data>
+  <data name="MyVideos" xml:space="preserve"><value>Mijn video’s</value></data>
+  <data name="VideoSettings" xml:space="preserve"><value>Video-instellingen</value></data>
+  <data name="VideoSettingsInvalid" xml:space="preserve"><value>Voer geldige video-instellingen en een absoluut opslagpad in.</value></data>
+  <data name="VideoPromptRequired" xml:space="preserve"><value>Selecteer een videomodel en voer een prompt in.</value></data>
+  <data name="VideoAttachmentRequired" xml:space="preserve"><value>Kies een ondersteunde afbeelding of video.</value></data>
+  <data name="VideoResponseInvalid" xml:space="preserve"><value>Het videoantwoord is ongeldig of overschrijdt de groottelimiet.</value></data>
+  <data name="VideoStartUncertain" xml:space="preserve"><value>Het indienen is onderbroken. De provider heeft het verzoek mogelijk geaccepteerd; het wordt niet automatisch opnieuw ingediend.</value></data>
+  <data name="VideoStorageRetry" xml:space="preserve"><value>Video-opslag is niet beschikbaar. Opgeslagen opdrachten blijven bewaard en worden opnieuw geprobeerd.</value></data>
+  <data name="VideoPollingRetry" xml:space="preserve"><value>De videostatus of opslag kon niet worden bijgewerkt. De opgeslagen opdracht wordt opnieuw geprobeerd.</value></data>
+  <data name="VideoGenerationFailed" xml:space="preserve"><value>Video genereren is mislukt.</value></data>
+  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Beschrijf de video die je wilt maken…</value></data>
+  <data name="VideoNoModels" xml:space="preserve"><value>Er zijn geen videomodellen beschikbaar. Je opgeslagen video’s blijven beschikbaar.</value></data>
+  <data name="VideoEmptyLibrary" xml:space="preserve"><value>Je gegenereerde video’s verschijnen hier.</value></data>
+  <data name="VideoOpenFolder" xml:space="preserve"><value>Videomap openen</value></data>
+  <data name="VideoGenerate" xml:space="preserve"><value>Video’s genereren</value></data>
+  <data name="VideoAttachFiles" xml:space="preserve"><value>Een afbeelding of video bijvoegen</value></data>
+  <data name="VideoProcessing" xml:space="preserve"><value>Video in wachtrij of wordt verwerkt…</value></data>
+  <data name="VideoSize" xml:space="preserve"><value>Videoformaat</value></data>
+  <data name="VideoResolution" xml:space="preserve"><value>Resolutie</value></data>
+  <data name="VideoCount" xml:space="preserve"><value>Aantal video’s</value></data>
+  <data name="VideoBatchLimit" xml:space="preserve"><value>Maximaal aantal video’s per verzoek</value></data>
+  <data name="VideoProperties" xml:space="preserve"><value>Eigenschappen</value></data>
+  <data name="VideoDuration" xml:space="preserve"><value>Duur in seconden (standaard van provider indien leeg)</value></data>
+  <data name="VideoFps" xml:space="preserve"><value>Frames per seconde (standaard van provider indien leeg)</value></data>
+  <data name="VideoGenerateAudio" xml:space="preserve"><value>Audio genereren</value></data>
+  <data name="VideoInputReferences" xml:space="preserve"><value>Referentieafbeeldingen</value></data>
+  <data name="VideoAddReferences" xml:space="preserve"><value>Referentieafbeeldingen toevoegen</value></data>
+  <data name="VideoFirstFrame" xml:space="preserve"><value>Eerste frame</value></data>
+  <data name="VideoLastFrame" xml:space="preserve"><value>Laatste frame</value></data>
+  <data name="VideoImageDropHint" xml:space="preserve"><value>Kies afbeeldingsbestanden of sleep ze hierheen.</value></data>
+  <data name="VideoProviderOptions" xml:space="preserve"><value>Provideropties (JSON)</value></data>
+  <data name="VideoStorage" xml:space="preserve"><value>Video-opslag</value></data>
+  <data name="VideoFolderHint" xml:space="preserve"><value>Nieuwe video’s worden in deze map opgeslagen, gescheiden per account en AI-endpoint. Een andere map verplaatst geen opgeslagen video’s en wijzigt de bestemming van bestaande opdrachten niet.</value></data>
+  <data name="VideoChooseFolder" xml:space="preserve"><value>Map kiezen</value></data>
+  <data name="VideoDefaultFolder" xml:space="preserve"><value>Standaardmap gebruiken</value></data>
+  <data name="VideoFolderFailed" xml:space="preserve"><value>De videomap kon niet worden geopend of voorbereid.</value></data>
+  <data name="VideoPollingInterval" xml:space="preserve"><value>Video-opvraaginterval (seconden)</value></data>
+  <data name="VideoPlaybackFailed" xml:space="preserve"><value>Windows kan deze video niet afspelen. Sla hem op en open hem in een speler die dit formaat ondersteunt.</value></data>
+  <data name="VideoDeleteTitle" xml:space="preserve"><value>Video verwijderen?</value></data>
+  <data name="VideoDeleteHint" xml:space="preserve"><value>Deze video wordt uit je opgeslagen bibliotheek verwijderd. Andere resultaten van hetzelfde verzoek blijven bewaard.</value></data>
+  <data name="VideoRefresh" xml:space="preserve"><value>Videomodellen en opgeslagen video’s vernieuwen</value></data>
 </root>

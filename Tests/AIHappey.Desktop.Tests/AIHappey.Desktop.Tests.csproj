@@ -52,6 +52,10 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/ImagePreferences.cs" Link="Core/ImagePreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ImageClient.cs" Link="Core/ImageClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ImageLibrary.cs" Link="Core/ImageLibrary.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/VideoPreferences.cs" Link="Core/VideoPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/VideoClient.cs" Link="Core/VideoClient.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/VideoLibrary.cs" Link="Core/VideoLibrary.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/VideoJobs.cs" Link="Core/VideoJobs.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionPreferences.cs" Link="Core/TranscriptionPreferences.cs" />
     <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/ManagedLocalRuntime.cs" Link="Host/ManagedLocalRuntime.cs" />
     <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/OwnedProcessJob.cs" Link="Host/OwnedProcessJob.cs" />

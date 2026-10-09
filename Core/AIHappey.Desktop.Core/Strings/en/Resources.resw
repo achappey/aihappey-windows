@@ -796,4 +796,46 @@
   <data name="ModelsProviderWebsite" xml:space="preserve"><value>Open {0} website</value></data>
   <data name="ModelsWebsiteFailed" xml:space="preserve"><value>The provider website could not be opened.</value></data>
   <data name="ModelsUnavailable" xml:space="preserve"><value>This model is no longer available from the current AI service. Refresh the model overview.</value></data>
+  <data name="Videos" xml:space="preserve"><value>Videos</value></data>
+  <data name="MyVideos" xml:space="preserve"><value>My videos</value></data>
+  <data name="VideoSettings" xml:space="preserve"><value>Video settings</value></data>
+  <data name="VideoSettingsInvalid" xml:space="preserve"><value>Enter valid video settings and an absolute storage folder.</value></data>
+  <data name="VideoPromptRequired" xml:space="preserve"><value>Select a video model and enter a prompt.</value></data>
+  <data name="VideoAttachmentRequired" xml:space="preserve"><value>Choose a supported image or video attachment.</value></data>
+  <data name="VideoResponseInvalid" xml:space="preserve"><value>The video response is invalid or exceeds the size limit.</value></data>
+  <data name="VideoStartUncertain" xml:space="preserve"><value>Submission was interrupted. The provider may have accepted it; this request will not be submitted again automatically.</value></data>
+  <data name="VideoStorageRetry" xml:space="preserve"><value>Video storage is unavailable. Saved jobs are retained and will be retried.</value></data>
+  <data name="VideoPollingRetry" xml:space="preserve"><value>The video status or storage could not be updated. The saved operation will be retried.</value></data>
+  <data name="VideoGenerationFailed" xml:space="preserve"><value>Video generation failed.</value></data>
+  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Describe the video you want to create…</value></data>
+  <data name="VideoNoModels" xml:space="preserve"><value>No video models are available. Your stored videos remain available.</value></data>
+  <data name="VideoEmptyLibrary" xml:space="preserve"><value>Your generated videos will appear here.</value></data>
+  <data name="VideoOpenFolder" xml:space="preserve"><value>Open videos folder</value></data>
+  <data name="VideoGenerate" xml:space="preserve"><value>Generate videos</value></data>
+  <data name="VideoAttachFiles" xml:space="preserve"><value>Attach an image or video</value></data>
+  <data name="VideoProcessing" xml:space="preserve"><value>Video queued or processing…</value></data>
+  <data name="VideoSize" xml:space="preserve"><value>Video size</value></data>
+  <data name="VideoResolution" xml:space="preserve"><value>Resolution</value></data>
+  <data name="VideoCount" xml:space="preserve"><value>Number of videos</value></data>
+  <data name="VideoBatchLimit" xml:space="preserve"><value>Maximum videos per request</value></data>
+  <data name="VideoProperties" xml:space="preserve"><value>Properties</value></data>
+  <data name="VideoDuration" xml:space="preserve"><value>Duration in seconds (provider default if empty)</value></data>
+  <data name="VideoFps" xml:space="preserve"><value>Frames per second (provider default if empty)</value></data>
+  <data name="VideoGenerateAudio" xml:space="preserve"><value>Generate audio</value></data>
+  <data name="VideoInputReferences" xml:space="preserve"><value>Reference images</value></data>
+  <data name="VideoAddReferences" xml:space="preserve"><value>Add reference images</value></data>
+  <data name="VideoFirstFrame" xml:space="preserve"><value>First frame</value></data>
+  <data name="VideoLastFrame" xml:space="preserve"><value>Last frame</value></data>
+  <data name="VideoImageDropHint" xml:space="preserve"><value>Choose or drop image files here.</value></data>
+  <data name="VideoProviderOptions" xml:space="preserve"><value>Provider options (JSON)</value></data>
+  <data name="VideoStorage" xml:space="preserve"><value>Video storage</value></data>
+  <data name="VideoFolderHint" xml:space="preserve"><value>New videos are saved in this folder, separated by account and AI endpoint. Changing the folder does not move stored videos or redirect existing jobs.</value></data>
+  <data name="VideoChooseFolder" xml:space="preserve"><value>Choose folder</value></data>
+  <data name="VideoDefaultFolder" xml:space="preserve"><value>Use default folder</value></data>
+  <data name="VideoFolderFailed" xml:space="preserve"><value>The videos folder could not be opened or prepared.</value></data>
+  <data name="VideoPollingInterval" xml:space="preserve"><value>Video polling interval (seconds)</value></data>
+  <data name="VideoPlaybackFailed" xml:space="preserve"><value>Windows cannot play this video. Save it and open it in a player that supports this format.</value></data>
+  <data name="VideoDeleteTitle" xml:space="preserve"><value>Delete video?</value></data>
+  <data name="VideoDeleteHint" xml:space="preserve"><value>This removes this video from your stored library. Other outputs from the same request are kept.</value></data>
+  <data name="VideoRefresh" xml:space="preserve"><value>Refresh video models and stored videos</value></data>
 </root>

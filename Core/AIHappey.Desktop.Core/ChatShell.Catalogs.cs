@@ -9,7 +9,7 @@ using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
 
-internal enum DesktopPage { Chat, Images, Transcriptions, Agents, Skills, Mcp, Models }
+internal enum DesktopPage { Chat, Images, Videos, Transcriptions, Agents, Skills, Mcp, Models }
 
 public sealed partial class ChatShell
 {
@@ -34,6 +34,7 @@ public sealed partial class ChatShell
         foreach (var (page, label, icon) in new[]
         {
             (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)new FontIcon { Glyph = "\uEB9F" }),
+            (DesktopPage.Videos, DesktopResources.Get("Videos"), (IconElement)new FontIcon { Glyph = "\uE714" }),
             (DesktopPage.Transcriptions, DesktopResources.Get("Transcriptions"), (IconElement)new FontIcon { Glyph = "\uE720" }),
             (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)ToolbarControls.BotIcon()),
             (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)new FontIcon { Glyph = "\uE774" }),
@@ -77,6 +78,7 @@ public sealed partial class ChatShell
         pageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Chats")));
         overviewHost.Children.Add(imagesPage); overviewHost.Children.Add(agentsOverview); overviewHost.Children.Add(skillsOverview); overviewHost.Children.Add(mcpOverview);
         overviewHost.Children.Add(transcriptionsPage);
+        overviewHost.Children.Add(videosPage);
         overviewHost.Children.Add(modelsOverview);
         foreach (var page in new[] { agentsOverview, skillsOverview })
         {
@@ -118,10 +120,12 @@ public sealed partial class ChatShell
         }
         mcpOverview.Visibility = page == DesktopPage.Mcp ? Visibility.Visible : Visibility.Collapsed;
         imagesPage.Visibility = imageTarget.Visibility = page == DesktopPage.Images ? Visibility.Visible : Visibility.Collapsed;
+        videosPage.Visibility = videoModelToolbar.Visibility = page == DesktopPage.Videos ? Visibility.Visible : Visibility.Collapsed;
+        videosPage.RefreshShimmers();
         transcriptionsPage.Visibility = transcriptionTarget.Visibility = page == DesktopPage.Transcriptions ? Visibility.Visible : Visibility.Collapsed;
         UpdatePageButtons();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
-        { DesktopPage.Images => "ImageRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", _ => "RefreshSkills" }));
+        { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", _ => "RefreshSkills" }));
     }
 
     private void UpdatePageButtons()
@@ -153,6 +157,7 @@ public sealed partial class ChatShell
     {
         catalogs.Clear(); favorites.Clear(); catalogPartition = null;
         InvalidateImages();
+        InvalidateVideos();
         InvalidateTranscriptions();
         InvalidateModelsOverview();
         runtimeSkillCatalog = []; runtimeSkillPartition = null;

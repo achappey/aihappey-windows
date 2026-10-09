@@ -73,6 +73,7 @@ public sealed partial class ChatShell : UserControl
         PrepareToolApprovals();
         PrepareChatSettings();
         PrepareImages();
+        PrepareVideos();
         PrepareTranscriptions();
         PrepareModelsOverview();
         PrepareSystemContext();
@@ -108,6 +109,7 @@ public sealed partial class ChatShell : UserControl
             {
                 session.Settings.Validate(session.Host.AllowLocal);
                 await session.Host.InitializeAsync(ct);
+                await StartVideoJobsAsync(ct);
                 UpdateAccountMenu();
                 await LoadHistoryAsync(ct);
                 if (session.Host.AllowLocal && session.Settings.Agents.Location == RuntimeLocation.Local)
@@ -123,7 +125,9 @@ public sealed partial class ChatShell : UserControl
         manageAccount.Click += async (_, _) => await RunAsync(async ct =>
         {
             await Mcp.ResetAsync(ct);
+            await StopVideoJobsAsync();
             await session.Host.ManageAccountAsync(XamlRoot, ct);
+            await StartVideoJobsAsync(ct);
             UpdateAccountMenu();
             current = new() { Service = Service };
             input.Text = ""; ResetContext();
@@ -251,6 +255,7 @@ public sealed partial class ChatShell : UserControl
         ToolbarControls.Outline(target);
         Grid.SetColumn(target, 1); top.Children.Add(target);
         Grid.SetColumn(imageTarget, 1); top.Children.Add(imageTarget);
+        Grid.SetColumn(videoModelToolbar, 1); top.Children.Add(videoModelToolbar);
         Grid.SetColumn(transcriptionTarget, 1); top.Children.Add(transcriptionTarget);
         Grid.SetColumn(progress, 3); top.Children.Add(progress);
         var profileMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
@@ -702,6 +707,8 @@ public sealed partial class ChatShell : UserControl
             var elicitationChanged = session.Settings.ModelContext.EnableFormElicitation != next.ModelContext.EnableFormElicitation;
             var mcpSkillsChanged = session.Settings.ModelContext.EnableSkills != next.ModelContext.EnableSkills;
             var imageStorageChanged = !string.Equals(session.Settings.Images.EffectiveRoot, next.Images.EffectiveRoot, StringComparison.OrdinalIgnoreCase);
+            var videoStorageChanged = !string.Equals(session.Settings.Videos.EffectiveRoot, next.Videos.EffectiveRoot, StringComparison.OrdinalIgnoreCase);
+            if (connectionsChanged) await StopVideoJobsAsync();
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
             UpdateTargetSuggestions();
@@ -712,9 +719,11 @@ public sealed partial class ChatShell : UserControl
             if (!connectionsChanged)
             {
                 if (imageStorageChanged && activePage == DesktopPage.Images) await ReloadImageLibraryAsync(ct);
+                if (videoStorageChanged && activePage == DesktopPage.Videos) await ReloadVideoLibraryAsync(ct);
                 return;
             }
             await session.Runtime.DisposeAsync();
+            await StartVideoJobsAsync(ct);
             current = new() { Service = Service }; targets = []; target.Text = "";
             aiModelTargets = null;
             input.Text = ""; ResetContext();
@@ -754,6 +763,7 @@ public sealed partial class ChatShell : UserControl
         SetOverviewBusy(value);
         imageTarget.IsEnabled = !value;
         imagesPage.SetBusy(value, inference && activePage == DesktopPage.Images);
+        videoTarget.IsEnabled = !value; videosPage.SetBusy(value); UpdateVideoFavorite();
         transcriptionTarget.IsEnabled = !value;
         transcriptionsPage.SetBusy(value, inference && activePage == DesktopPage.Transcriptions);
         progress.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
@@ -765,6 +775,7 @@ public sealed partial class ChatShell : UserControl
     private void Show(string message, InfoBarSeverity severity)
     {
         if (activePage == DesktopPage.Images) { imagesPage.Notice(message, severity); return; }
+        if (activePage == DesktopPage.Videos) { videosPage.Notice(message, severity); return; }
         if (activePage == DesktopPage.Transcriptions) { transcriptionsPage.Notice(message, severity); return; }
         var label = severity switch
         {
@@ -780,6 +791,10 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        videoWorkLifetime.Cancel();
+        videoLinkDialog?.Hide(); videoDeleteDialog?.Hide(); videoPreviewDialog?.ReleasePlayer(); videoPreviewDialog?.Hide();
+        if (videoSettingsDialog is not null) { videoSettingsDialog.DiscardOnShutdown = true; videoSettingsDialog.Hide(); }
+        await StopVideoJobsAsync(); await videoSubmission;
         elicitationLifetime.Cancel(); elicitationDialog?.Hide(); session.ElicitationHandler = null;
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();

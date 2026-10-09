@@ -68,7 +68,7 @@ internal static class ModelsOverviewRegressionTests
         filter.Search = "";
         check(many.Filter(filter).Models.Take(50).Count() == 50 && many.Filter(filter).Models.First().Id == "p/153058", "card batches preserve global newest-first order");
         foreach (var type in AiModelCatalog.Types)
-            check(ModelOverviewCatalog.CanLaunch(first with { ModelType = type }) == (type is "language" or "image" or "transcription"), "native launch availability: " + type);
+            check(ModelOverviewCatalog.CanLaunch(first with { ModelType = type }) == (type is "language" or "image" or "video" or "transcription"), "native launch availability: " + type);
         var now = DateTimeOffset.FromUnixTimeSeconds(4_000_000);
         check(ModelOverviewCatalog.IsNew(first with { Created = now.AddDays(-30).ToUnixTimeSeconds() }, now)
             && !ModelOverviewCatalog.IsNew(first with { Created = now.AddDays(-31).ToUnixTimeSeconds() }, now)

@@ -42,7 +42,7 @@ public sealed partial class ChatShell
 
     private void ChatFileDragOver(object sender, DragEventArgs args)
     {
-        if (activePage is DesktopPage.Images or DesktopPage.Transcriptions) return; // Primitive pages own their routed drop events.
+        if (activePage is DesktopPage.Images or DesktopPage.Videos or DesktopPage.Transcriptions) return; // Primitive pages own their routed drop events.
         args.Handled = true;
         var accepts = CanAddContext && args.DataView.Contains(StandardDataFormats.StorageItems)
             && args.AllowedOperations.HasFlag(DataPackageOperation.Copy);
@@ -62,7 +62,7 @@ public sealed partial class ChatShell
 
     private async void ChatFileDrop(object sender, DragEventArgs args)
     {
-        if (activePage is DesktopPage.Images or DesktopPage.Transcriptions) return;
+        if (activePage is DesktopPage.Images or DesktopPage.Videos or DesktopPage.Transcriptions) return;
         args.Handled = true;
         ResetFileDrop();
         args.AcceptedOperation = DataPackageOperation.None;
