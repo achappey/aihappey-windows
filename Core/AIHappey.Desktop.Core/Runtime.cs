@@ -16,6 +16,8 @@ public sealed class DesktopSettings
     public bool ConvertAttachmentsToText { get; set; } = true;
     public string? Language { get; set; }
     public ChatPreferences Chat { get; set; } = new();
+    private AiModelPreferences aiModels = new();
+    public AiModelPreferences AiModels { get => aiModels; set => aiModels = value ?? new(); }
     private ModelContextPreferences modelContext = new();
     public ModelContextPreferences ModelContext { get => modelContext; set => modelContext = value ?? new(); }
     private List<string> allowedToolList = [];
@@ -25,6 +27,15 @@ public sealed class DesktopSettings
         set => allowedToolList = value?.Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).ToList() ?? [];
     }
     public ServiceSettings For(ServiceKind kind) => kind == ServiceKind.Ai ? Ai : Agents;
+
+    public DesktopSettings Clone() => new()
+    {
+        Ai = new() { Location = Ai.Location, RemoteUrl = Ai.RemoteUrl },
+        Agents = new() { Location = Agents.Location, RemoteUrl = Agents.RemoteUrl },
+        Language = Language, ConvertAttachmentsToText = ConvertAttachmentsToText,
+        Chat = Chat.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
+        AllowedToolList = AllowedToolList.ToList()
+    };
 
     public void Validate(bool allowLocal)
     {

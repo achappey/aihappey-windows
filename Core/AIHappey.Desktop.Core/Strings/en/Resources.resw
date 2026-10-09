@@ -617,8 +617,8 @@
   <data name="McpWebsite" xml:space="preserve"><value>Website</value></data>
   <data name="McpRepository" xml:space="preserve"><value>Repository</value></data>
   <data name="McpServerProperties" xml:space="preserve"><value>Server properties</value></data>
-  <data name="SettingsModelContext.Text" xml:space="preserve"><value>Model context</value></data>
-  <data name="SettingsModelContextTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Model context</value></data>
+  <data name="SettingsModelContext.Text" xml:space="preserve"><value>Model Context</value></data>
+  <data name="SettingsModelContextTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Model Context</value></data>
   <data name="SettingsMcpClientTab.Content" xml:space="preserve"><value>Client</value></data>
   <data name="SettingsMcpExtensionsTab.Content" xml:space="preserve"><value>Extensions</value></data>
   <data name="SettingsMcpElicitation.Text" xml:space="preserve"><value>Elicitation</value></data>
@@ -654,4 +654,25 @@
   <data name="ElicitationCheckFields" xml:space="preserve"><value>Check the highlighted fields before accepting.</value></data>
   <data name="ElicitationInvalidSchema" xml:space="preserve"><value>This request does not contain a supported MCP form schema.</value></data>
   <data name="ElicitationFailed" xml:space="preserve"><value>The input request could not be completed. Only MCP form elicitation is supported.</value></data>
+  <data name="SettingsArtificialIntelligenceTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Artificial intelligence</value></data>
+  <data name="SettingsArtificialIntelligence.Text" xml:space="preserve"><value>Artificial intelligence</value></data>
+  <data name="AiDefaultModel" xml:space="preserve"><value>Default model</value></data>
+  <data name="AiClearDefault" xml:space="preserve"><value>Clear default</value></data>
+  <data name="AiModelType_language" xml:space="preserve"><value>Language</value></data>
+  <data name="AiModelType_embedding" xml:space="preserve"><value>Search</value></data>
+  <data name="AiModelType_image" xml:space="preserve"><value>Image</value></data>
+  <data name="AiModelType_audio" xml:space="preserve"><value>Realtime</value></data>
+  <data name="AiModelType_transcription" xml:space="preserve"><value>Transcription</value></data>
+  <data name="AiModelType_speech" xml:space="preserve"><value>Speech</value></data>
+  <data name="AiModelType_decision" xml:space="preserve"><value>Decision</value></data>
+  <data name="AiModelType_reranking" xml:space="preserve"><value>Reranking</value></data>
+  <data name="AiModelType_video" xml:space="preserve"><value>Video</value></data>
+  <data name="AiChatWith_image" xml:space="preserve"><value>Chat with image models</value></data>
+  <data name="AiChatWith_video" xml:space="preserve"><value>Chat with video models</value></data>
+  <data name="AiChatWith_speech" xml:space="preserve"><value>Chat with speech models</value></data>
+  <data name="AiChatWith_transcription" xml:space="preserve"><value>Chat with transcription models</value></data>
+  <data name="AiModelsLoading" xml:space="preserve"><value>Loading models…</value></data>
+  <data name="AiModelsLoadFailed" xml:space="preserve"><value>Models could not be loaded. Reopen settings to try again. Saved defaults have been retained.</value></data>
+  <data name="AiNoModels" xml:space="preserve"><value>No models of this type are available.</value></data>
+  <data name="AiDefaultUnavailable" xml:space="preserve"><value>The saved default is not currently available for this model type. It has been retained. New language chats use the newest available language model.</value></data>
 </root>

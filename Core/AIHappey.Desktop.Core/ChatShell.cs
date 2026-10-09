@@ -124,6 +124,7 @@ public sealed partial class ChatShell : UserControl
             current = new() { Service = Service };
             input.Text = ""; ResetContext();
             targets = []; target.Text = "";
+            aiModelTargets = null;
             InvalidateCatalogs();
             RenderTranscript();
             await LoadHistoryAsync(ct);
@@ -140,16 +141,17 @@ public sealed partial class ChatShell : UserControl
             if (args.ChosenSuggestion is ChatTarget selected) target.Text = selected.Id;
             else
             {
-                target.ItemsSource = targets.Take(100).ToArray();
+                UpdateTargetSuggestions();
                 target.IsSuggestionListOpen = true;
             }
         };
         target.TextChanged += (_, args) =>
         {
             if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
-            target.ItemsSource = targets.Where(x => x.Label.Contains(target.Text, StringComparison.OrdinalIgnoreCase) || x.Id.Contains(target.Text, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
+            UpdateTargetSuggestions(target.Text);
         };
         target.SuggestionChosen += (_, args) => target.Text = ((ChatTarget)args.SelectedItem).Id;
+        target.GotFocus += (_, _) => { UpdateTargetSuggestions(); target.IsSuggestionListOpen = true; };
         chats.SelectionChanged += async (_, _) =>
         {
             if (suppress || busy || chats.SelectedItem is not Conversation selected) return;
@@ -336,10 +338,16 @@ public sealed partial class ChatShell : UserControl
     {
         var selected = target.Text;
         targets = await client.ListAsync(Service, ct);
+        if (Service == ServiceKind.Ai) aiModelTargets = targets;
         UpdateAccountMenu();
-        target.ItemsSource = targets.Take(100).ToArray();
-        if (string.IsNullOrWhiteSpace(selected)) target.Text = targets.FirstOrDefault()?.Id ?? "";
-        if (targets.Count == 0) Show(DesktopResources.Get("NoTargets"), InfoBarSeverity.Warning);
+        UpdateTargetSuggestions();
+        if (string.IsNullOrWhiteSpace(selected))
+        {
+            if (Service == ServiceKind.Ai) SelectNewChatModel();
+            else target.Text = targets.FirstOrDefault()?.Id ?? "";
+        }
+        if (targets.Count == 0 || Service == ServiceKind.Ai && AiModelCatalog.ChatSuggestions(targets, session.Settings.AiModels).Count == 0)
+            Show(DesktopResources.Get("NoTargets"), InfoBarSeverity.Warning);
     }
 
     private async Task SendAsync()
@@ -556,6 +564,7 @@ public sealed partial class ChatShell : UserControl
         if (busy && operation is not null || closing || historyDialogOpen) return;
         ShowPage(DesktopPage.Chat);
         current = new() { Service = Service };
+        SelectNewChatModel();
         input.Text = ""; ResetContext();
         suppress = true; chats.SelectedItem = null; suppress = false;
         RenderTranscript();
@@ -646,6 +655,7 @@ public sealed partial class ChatShell : UserControl
                 if (current.Id == selected.Id)
                 {
                     current = new() { Service = Service };
+                    SelectNewChatModel();
                     input.Text = ""; ResetContext();
                     RenderTranscript();
                 }
@@ -659,7 +669,8 @@ public sealed partial class ChatShell : UserControl
     {
         if (busy || closing || catalogDialog is not null || historyDialogOpen) return;
         historyDialogOpen = true;
-        var dialog = new SettingsDialog(session.Settings, session.Host.AllowLocal, session.ActiveLanguage) { XamlRoot = XamlRoot };
+        var dialog = new SettingsDialog(session.Settings, session.Host.AllowLocal, session.ActiveLanguage, aiModelTargets,
+            ct => client.ListAsync(ServiceKind.Ai, ct)) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog);
         ContentDialogResult result;
         try { result = await dialog.ShowAsync(); }
@@ -672,12 +683,14 @@ public sealed partial class ChatShell : UserControl
             var elicitationChanged = session.Settings.ModelContext.EnableFormElicitation != next.ModelContext.EnableFormElicitation;
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
+            UpdateTargetSuggestions();
             if (elicitationChanged) await Mcp.ReconnectAsync(ct);
             if (next.Language != session.ActiveLanguage) Show(DesktopResources.Get("RestartRequired"), InfoBarSeverity.Informational);
             // Language and composer preferences do not change the runtime, account, history partition, or current draft.
             if (!connectionsChanged) return;
             await session.Runtime.DisposeAsync();
             current = new() { Service = Service }; targets = []; target.Text = "";
+            aiModelTargets = null;
             input.Text = ""; ResetContext();
             InvalidateCatalogs();
             RenderTranscript(); await LoadHistoryAsync(ct); await DiscoverAsync(ct);

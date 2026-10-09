@@ -8,14 +8,21 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private readonly bool allowLocal;
     private readonly ChatPreferences chatPreferences;
     private readonly List<string> allowedTools;
+    private readonly AiModelPreferences aiModelPreferences;
+    private readonly CancellationTokenSource catalogLifetime = new();
+    public AiModelSettingsView AiModelView { get; }
     public DesktopSettings? Result { get; private set; }
 
-    public SettingsDialog(DesktopSettings settings, bool allowLocal, string activeLanguage)
+    public SettingsDialog(DesktopSettings settings, bool allowLocal, string activeLanguage,
+        IReadOnlyList<ChatTarget>? aiModels = null, Func<CancellationToken, Task<IReadOnlyList<ChatTarget>>>? loadAiModels = null)
     {
         this.allowLocal = allowLocal;
         chatPreferences = settings.Chat.Clone();
         allowedTools = settings.AllowedToolList.ToList();
+        aiModelPreferences = settings.AiModels.Clone();
         InitializeComponent();
+        AiModelView = new(aiModelPreferences, aiModels);
+        ArtificialIntelligencePage.Children.Add(AiModelView);
         Name = "SettingsDialog";
         Resources["ContentDialogMaxWidth"] = 840d;
         Resources["ContentDialogMinWidth"] = 0d;
@@ -39,14 +46,30 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         Tabs.SelectedItem = GeneralTab;
         PrimaryButtonClick += ValidateAndSave;
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; };
-        Closed += (_, _) => XamlRoot.Changed -= RootChanged;
+        Opened += async (_, _) =>
+        {
+            if (aiModels is not null) return;
+            if (loadAiModels is null) { AiModelView.SetCatalogStatus(DesktopResources.Get("AiModelsLoadFailed")); return; }
+            try
+            {
+                var catalog = await loadAiModels(catalogLifetime.Token);
+                if (!catalogLifetime.IsCancellationRequested) AiModelView.SetCatalog(catalog);
+            }
+            catch (OperationCanceledException) when (catalogLifetime.IsCancellationRequested) { }
+            catch (Exception)
+            {
+                if (!catalogLifetime.IsCancellationRequested) AiModelView.SetCatalogStatus(DesktopResources.Get("AiModelsLoadFailed"));
+            }
+        };
+        Closed += (_, _) => { catalogLifetime.Cancel(); XamlRoot.Changed -= RootChanged; };
     }
 
     private void TabChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         // Selection can fire while InitializeComponent is still creating the page controls.
-        if (GeneralPage is null || EndpointsPage is null || AttachmentsPage is null || ModelContextPage is null) return;
+        if (GeneralPage is null || EndpointsPage is null || AttachmentsPage is null || ModelContextPage is null || ArtificialIntelligencePage is null) return;
         GeneralPage.Visibility = ReferenceEquals(Tabs.SelectedItem, GeneralTab) ? Visibility.Visible : Visibility.Collapsed;
+        ArtificialIntelligencePage.Visibility = ReferenceEquals(Tabs.SelectedItem, ArtificialIntelligenceTab) ? Visibility.Visible : Visibility.Collapsed;
         EndpointsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, EndpointsTab) ? Visibility.Visible : Visibility.Collapsed;
         AttachmentsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, AttachmentsTab) ? Visibility.Visible : Visibility.Collapsed;
         ModelContextPage.Visibility = ReferenceEquals(Tabs.SelectedItem, ModelContextTab) ? Visibility.Visible : Visibility.Collapsed;
@@ -80,6 +103,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
                 EnableSkills = EnableMcpSkills.IsOn
             },
             Chat = chatPreferences.Clone(),
+            AiModels = aiModelPreferences.Clone(),
             AllowedToolList = allowedTools.ToList()
         };
         try { next.Validate(allowLocal); Result = next; }

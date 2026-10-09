@@ -14,6 +14,10 @@
                 <NavigationViewItem x:Name="GeneralTab" Tag="general" x:Uid="SettingsGeneralTab" Icon="Setting">
                     <TextBlock x:Uid="SettingsGeneral" />
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="ArtificialIntelligenceTab" Tag="artificialIntelligence" x:Uid="SettingsArtificialIntelligenceTab">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE99A;" /></NavigationViewItem.Icon>
+                    <TextBlock x:Uid="SettingsArtificialIntelligence" />
+                </NavigationViewItem>
                 <NavigationViewItem x:Name="EndpointsTab" Tag="endpoints" x:Uid="SettingsEndpointsTab">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE95A;" /></NavigationViewItem.Icon>
                     <TextBlock x:Uid="SettingsEndpoints" />
@@ -38,6 +42,7 @@
                     </ComboBox>
                     <TextBlock x:Uid="SettingsRestartHint" TextWrapping="Wrap" />
                 </StackPanel>
+                <Grid x:Name="ArtificialIntelligencePage" Visibility="Collapsed" />
                 <StackPanel x:Name="EndpointsPage" Spacing="16" Visibility="Collapsed">
                     <ComboBox x:Name="AiLocation" x:Uid="SettingsAiLocation" HorizontalAlignment="Stretch" />
                     <TextBox x:Name="AiUrl" x:Uid="SettingsAiUrl" PlaceholderText="https://gateway.example.com/" />

@@ -11,6 +11,8 @@ namespace AIHappey.Desktop.Core;
 public sealed record ChatTarget(string Id, string Label)
 {
     public string? ProviderKey { get; init; }
+    public string? ModelType { get; init; }
+    public long? Created { get; init; }
     public override string ToString() => Label;
 }
 
@@ -26,12 +28,11 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
         using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         if (!doc.RootElement.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Array)
             throw new GatewayException(DesktopResources.Get("InvalidModelCatalog"));
-        return data.EnumerateArray().Where(x => x.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String)
-            .Select(x => new ChatTarget(x.GetProperty("id").GetString()!,
-                x.TryGetProperty("name", out var name) && name.ValueKind == JsonValueKind.String ? name.GetString()! : x.GetProperty("id").GetString()!)
-                { ProviderKey = ChatPreferences.ResolveProvider(service, x.GetProperty("id").GetString()!,
-                    CatalogProjection.Text(x, "sourceProviderKey") ?? CatalogProjection.Text(x, "providerKey")) })
-            .OrderBy(x => x.Label, StringComparer.OrdinalIgnoreCase).ToArray();
+        var items = data.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object
+                && x.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(id.GetString()))
+            .Select(x => AiModelCatalog.Project(x, service)).ToArray();
+        return service == ServiceKind.Ai ? AiModelCatalog.NewestFirst(items)
+            : items.OrderBy(x => x.Label, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
     public async IAsyncEnumerable<StreamEvent> StreamAsync(ServiceKind service, string target, string conversationId,

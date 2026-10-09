@@ -24,11 +24,8 @@ public sealed partial class ChatShell
         dialog.SaveAsync = async preferences =>
         {
             // Save first so a disk error retains both the open draft and previous live preferences.
-            var next = new DesktopSettings
-            {
-                Ai = session.Settings.Ai, Agents = session.Settings.Agents, Language = session.Settings.Language,
-                ConvertAttachmentsToText = session.Settings.ConvertAttachmentsToText, Chat = preferences
-            };
+            var next = session.Settings.Clone();
+            next.Chat = preferences.Clone();
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
         };
