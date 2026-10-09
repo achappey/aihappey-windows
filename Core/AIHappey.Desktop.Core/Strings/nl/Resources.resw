@@ -651,7 +651,7 @@
   <data name="ElicitationInvalidSchema" xml:space="preserve"><value>Dit verzoek bevat geen ondersteund MCP-formulierschema.</value></data>
   <data name="ElicitationFailed" xml:space="preserve"><value>Het invoerverzoek kon niet worden voltooid. Alleen MCP-formulierinvoer wordt ondersteund.</value></data>
   <data name="SettingsArtificialIntelligenceTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Artificial Intelligence</value></data>
-  <data name="SettingsArtificialIntelligence.Text" xml:space="preserve"><value>Kunstmatige intelligentie</value></data>
+  <data name="SettingsArtificialIntelligence.Text" xml:space="preserve"><value>Artificial Intelligence</value></data>
   <data name="AiDefaultModel" xml:space="preserve"><value>Standaardmodel</value></data>
   <data name="AiClearDefault" xml:space="preserve"><value>Standaard wissen</value></data>
   <data name="AiModelType_language" xml:space="preserve"><value>Taal</value></data>
