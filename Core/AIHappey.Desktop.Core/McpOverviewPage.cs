@@ -10,7 +10,10 @@ internal sealed class McpOverviewPage : UserControl
 {
     private readonly StackPanel body = new() { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(24) };
     private readonly TextBox search = new() { Name = "McpSearch", PlaceholderText = DesktopResources.Get("SearchPlaceholder"), MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly StackPanel filters = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
+    private readonly NavigationView filters = new() { Name = "McpFilters", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
+    private readonly Dictionary<string, NavigationViewItem> filterItems = [];
     private readonly OverviewCardsPanel cards = new() { Name = "McpCards" };
     private readonly TextBlock status = new() { Name = "McpCatalogStatus", TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
     private readonly Button retry = new() { Content = DesktopResources.Get("Retry") };
@@ -23,6 +26,7 @@ internal sealed class McpOverviewPage : UserControl
     private string filter = "all";
     private string[] sources = [];
     private bool loading, enabled = true;
+    private bool updatingFilters;
     private int visible = 50;
     public Action? RetryRequested { get; set; }
     public Action? AddRequested { get; set; }
@@ -40,8 +44,7 @@ internal sealed class McpOverviewPage : UserControl
         body.Children.Add(new TextBlock { Text = DesktopResources.Get("McpDescription"), FontSize = 16, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center });
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Center };
         actions.Children.Add(add); actions.Children.Add(manage); body.Children.Add(actions); body.Children.Add(search);
-        body.Children.Add(new ScrollViewer { Content = filters, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollMode = ScrollMode.Enabled, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, MaxHeight = 64 });
+        body.Children.Add(filters);
         body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cards); body.Children.Add(more);
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -51,6 +54,11 @@ internal sealed class McpOverviewPage : UserControl
         ToolbarControls.Label(search, DesktopResources.Get("McpSearch"));
         AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         search.TextChanged += (_, _) => { visible = 50; Render(); };
+        filters.SelectionChanged += (_, args) =>
+        {
+            if (updatingFilters || args.SelectedItem is not NavigationViewItem { Tag: string key } || filter == key) return;
+            filter = key; visible = 50; Render();
+        };
         add.Click += (_, _) => AddRequested?.Invoke(); manage.Click += (_, _) => ManageRequested?.Invoke();
         retry.Click += (_, _) => RetryRequested?.Invoke(); more.Click += (_, _) => { visible += 50; Render(); };
         viewer.SizeChanged += (_, _) => SizeBody(); Loaded += (_, _) => SizeBody(); Render();
@@ -68,15 +76,29 @@ internal sealed class McpOverviewPage : UserControl
     {
         enabled = value;
         foreach (var control in ControlAppearance.Descendants(this).OfType<ButtonBase>()) control.IsEnabled = value;
-        search.IsEnabled = value && !loading;
+        search.IsEnabled = filters.IsEnabled = value && !loading;
     }
     private void Render()
     {
         var focusedId = XamlRoot is null ? null : (Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(XamlRoot) is Button b ? AutomationProperties.GetAutomationId(b) : null);
-        cards.Children.Clear(); filters.Children.Clear();
+        cards.Children.Clear();
+        updatingFilters = true;
+        if (filter != "all" && filter != "installed" && !sources.Contains(filter)) { filter = "all"; visible = 50; }
+        foreach (var key in filterItems.Keys.Where(key => key != "all" && key != "installed" && !sources.Contains(key)).ToArray())
+        { filters.MenuItems.Remove(filterItems[key]); filterItems.Remove(key); }
         AddFilter("all", DesktopResources.Get("All")); AddFilter("installed", DesktopResources.Get("McpInstalledServers"));
         foreach (var url in sources)
         { var label = Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.Host : DesktopResources.Get("McpRegistry"); AddFilter(url, label); }
+        // Reconcile source order without replacing items that retain their identity.
+        var order = new[] { "all", "installed" }.Concat(sources).ToArray();
+        for (var index = 0; index < order.Length; index++)
+        {
+            var item = filterItems[order[index]];
+            if (ReferenceEquals(filters.MenuItems[index], item)) continue;
+            filters.MenuItems.Remove(item); filters.MenuItems.Insert(index, item);
+        }
+        filters.SelectedItem = filterItems[filter];
+        updatingFilters = false;
         var items = filter == "installed" ? installed.Select(s => s.Server.CatalogItem)
             : catalog.Items.Where(i => filter == "all" || i.RegistryUrl == filter);
         var query = search.Text.Trim();
@@ -94,8 +116,13 @@ internal sealed class McpOverviewPage : UserControl
     }
     private void AddFilter(string id, string label)
     {
-        var button = new ToggleButton { Content = label, IsChecked = filter == id, Padding = new Thickness(12, 6, 12, 6), CornerRadius = new CornerRadius(6) };
-        ControlAppearance.Native(button); button.Click += (_, _) => { filter = id; visible = 50; Render(); }; filters.Children.Add(button);
+        if (!filterItems.TryGetValue(id, out var item))
+        {
+            item = new NavigationViewItem { Name = "McpFilter", Tag = id };
+            AutomationProperties.SetAutomationId(item, "McpFilter_" + id);
+            filterItems.Add(id, item); filters.MenuItems.Add(item);
+        }
+        item.Content = label; ToolbarControls.Label(item, label);
     }
     private Border Card(McpCatalogItem item)
     {

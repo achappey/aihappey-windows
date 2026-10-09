@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -14,7 +13,10 @@ internal sealed class OverviewPage : UserControl
     internal readonly TextBox SearchBox = new() { Name = "CatalogSearch", PlaceholderText = DesktopResources.Get("SearchPlaceholder"), MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Height = 40, CornerRadius = new CornerRadius(8) };
     internal readonly OverviewCardsPanel Cards = new() { Name = "CatalogCards" };
     private readonly StackPanel body = new() { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(24, 24, 24, 24) };
-    private readonly StackPanel filters = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
+    private readonly NavigationView filters = new() { Name = "CatalogFilters", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
+    private readonly Dictionary<string, NavigationViewItem> filterItems = [];
     private readonly TextBlock status = new() { Name = "CatalogStatus", TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
     private readonly Button retry = new() { Content = DesktopResources.Get("Retry"), HorizontalAlignment = HorizontalAlignment.Center };
     private readonly Button cancel = new() { Content = DesktopResources.Get("Cancel"), HorizontalAlignment = HorizontalAlignment.Center };
@@ -26,6 +28,9 @@ internal sealed class OverviewPage : UserControl
     private string source = "Backend";
     private int visible = 50;
     private bool working;
+    private bool failed;
+    private bool updatingFilters;
+    private bool actionsEnabled = true;
     public CatalogKind Kind { get; }
     public Action? RetryRequested { get; set; }
     public Action? CancelRequested { get; set; }
@@ -48,10 +53,8 @@ internal sealed class OverviewPage : UserControl
         var searchRow = new Grid { ColumnSpacing = 8, MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 0, 0) };
         SearchBox.HorizontalAlignment = HorizontalAlignment.Stretch;
         searchRow.Children.Add(SearchBox); body.Children.Add(searchRow);
-        var filterBorder = new Border { Child = filters, CornerRadius = new CornerRadius(8), Padding = new Thickness(4), HorizontalAlignment = HorizontalAlignment.Left };
-        ControlAppearance.Apply(filterBorder, (_, _) => { }, palette => filterBorder.Background = new SolidColorBrush(palette.Selected));
-        body.Children.Add(new ScrollViewer { Content = filterBorder, HorizontalScrollMode = ScrollMode.Enabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-            VerticalScrollMode = ScrollMode.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalAlignment = HorizontalAlignment.Center, MaxHeight = 64 });
+        // Stock top navigation supplies the animated indicator, keyboard behavior and overflow.
+        body.Children.Add(filters);
         body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cancel); body.Children.Add(Cards); body.Children.Add(more);
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };
@@ -63,6 +66,11 @@ internal sealed class OverviewPage : UserControl
         ControlAppearance.Apply(status, (_, _) => { }, palette => status.Foreground = new SolidColorBrush(palette.Text));
         AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         SearchBox.TextChanged += (_, _) => { visible = 50; Render(); };
+        filters.SelectionChanged += (_, args) =>
+        {
+            if (updatingFilters || args.SelectedItem is not NavigationViewItem { Tag: string key } || activeFilter == key) return;
+            activeFilter = key; visible = 50; Render();
+        };
         retry.Click += (_, _) => RetryRequested?.Invoke();
         cancel.Click += (_, _) => CancelRequested?.Invoke();
         more.Click += (_, _) => { visible += 50; Render(); };
@@ -84,36 +92,51 @@ internal sealed class OverviewPage : UserControl
 
     public void Loading(string? message = null)
     {
-        working = true; Cards.Children.Clear(); filters.Children.Clear(); status.Text = message ?? DesktopResources.Get("Loading");
+        working = true; Cards.Children.Clear(); status.Text = message ?? DesktopResources.Get("Loading");
         status.Visibility = cancel.Visibility = Visibility.Visible; retry.Visibility = more.Visibility = Visibility.Collapsed;
-        SearchBox.IsEnabled = false;
+        SearchBox.IsEnabled = filters.IsEnabled = false;
     }
 
     public void Error(string message)
     {
-        working = false; Cards.Children.Clear(); filters.Children.Clear(); status.Text = message;
-        status.Visibility = retry.Visibility = Visibility.Visible; cancel.Visibility = more.Visibility = Visibility.Collapsed; SearchBox.IsEnabled = true;
+        working = false; Cards.Children.Clear(); status.Text = message;
+        failed = true;
+        status.Visibility = retry.Visibility = Visibility.Visible; cancel.Visibility = more.Visibility = Visibility.Collapsed;
+        SearchBox.IsEnabled = actionsEnabled; filters.IsEnabled = false;
     }
 
     public void SetActionsEnabled(bool enabled)
     {
+        actionsEnabled = enabled;
         foreach (var button in ControlAppearance.Descendants(Cards).OfType<Button>()) button.IsEnabled = enabled;
         retry.IsEnabled = more.IsEnabled = enabled;
+        SearchBox.IsEnabled = enabled && !working;
+        filters.IsEnabled = enabled && !working && !failed;
     }
 
     private void Render()
     {
         if (working) return;
+        failed = false;
         var focused = XamlRoot is null ? null : FocusManager.GetFocusedElement(XamlRoot) as Button;
         var focusId = focused is null ? null : AutomationProperties.GetAutomationId(focused);
         SearchBox.IsEnabled = true; retry.Visibility = cancel.Visibility = Visibility.Collapsed;
         var searched = CatalogProjection.Search(items, SearchBox.Text);
-        filters.Children.Clear();
+        // Keep unchanged items alive so result/count refreshes do not reset focus or the indicator.
+        updatingFilters = true;
+        if (!items.Any(item => item.Origin == CatalogOrigin.Local) && filterItems.Remove("local", out var local))
+        {
+            if (activeFilter == "local") { activeFilter = "all"; visible = 50; }
+            filters.MenuItems.Remove(local);
+        }
         AddFilter("all", DesktopResources.Format("AllCount", searched.Count), "\uE8FD");
         AddFilter("favorites", DesktopResources.Format("FavoritesCount", searched.Count(item => favorites.Contains(item.Key))), "\uE735");
         AddFilter("backend", $"{source} ({searched.Count(item => item.Origin == CatalogOrigin.Backend)})");
         // Local filter and creation actions are capability-driven. No local provider is installed yet.
         if (items.Any(item => item.Origin == CatalogOrigin.Local)) AddFilter("local", DesktopResources.Format("LocalCount", searched.Count(item => item.Origin == CatalogOrigin.Local)));
+        filters.SelectedItem = filterItems[activeFilter];
+        filters.IsEnabled = true;
+        updatingFilters = false;
         var selected = searched.Where(item => activeFilter switch
         {
             "favorites" => favorites.Contains(item.Key), "backend" => item.Origin == CatalogOrigin.Backend,
@@ -125,20 +148,21 @@ internal sealed class OverviewPage : UserControl
             : selected.Length == 0 ? DesktopResources.Get("CatalogNoResults") : "";
         status.Visibility = selected.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         more.Visibility = selected.Length > visible ? Visibility.Visible : Visibility.Collapsed;
+        SetActionsEnabled(actionsEnabled);
         if (!string.IsNullOrEmpty(focusId) && focused is not null && !focused.IsLoaded)
             DispatcherQueue.TryEnqueue(() => (ControlAppearance.Descendants(Cards).OfType<Button>().FirstOrDefault(button => AutomationProperties.GetAutomationId(button) == focusId) as Control ?? SearchBox).Focus(FocusState.Programmatic));
     }
 
     private void AddFilter(string key, string label, string? glyph = null)
     {
-        var button = new ToggleButton { Name = "CatalogFilter", Tag = key, Content = label, IsChecked = activeFilter == key, MinHeight = 36,
-            Padding = new Thickness(12, 6, 12, 6), BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(6) };
-        ControlAppearance.Native(button);
-        ControlAppearance.Apply(button, ControlAppearance.NativeResources, palette =>
-        { button.Background = new SolidColorBrush(activeFilter == key ? palette.Surface : palette.Background); button.Foreground = new SolidColorBrush(palette.Text); });
-        ToolbarControls.Label(button, label);
-        button.Click += (_, _) => { activeFilter = key; visible = 50; Render(); };
-        filters.Children.Add(button);
+        if (!filterItems.TryGetValue(key, out var item))
+        {
+            item = new NavigationViewItem { Name = "CatalogFilter", Tag = key };
+            if (glyph is not null) item.Icon = new FontIcon { Glyph = glyph };
+            AutomationProperties.SetAutomationId(item, "CatalogFilter_" + key);
+            filterItems.Add(key, item); filters.MenuItems.Add(item);
+        }
+        item.Content = label; ToolbarControls.Label(item, label);
     }
 
     private Border BuildCard(CatalogItem item)

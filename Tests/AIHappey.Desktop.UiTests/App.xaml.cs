@@ -36,6 +36,12 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--overview-tabs-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckOverviewTabsAsync(theme);
+                results.Add("All overview and catalog details native tab checks passed.");
+                File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--images-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckImagesAsync(theme);
@@ -74,7 +80,7 @@ public partial class App : Application
                 }
             if (!Environment.GetCommandLineArgs().Contains("--transcript-only"))
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
-                { await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckImagesAsync(theme); }
+                { await CheckOverviewTabsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckImagesAsync(theme); }
             results.Add("All native UI checks passed.");
             File.WriteAllLines(report, results);
             window.Close();
@@ -757,13 +763,15 @@ public partial class App : Application
         var view = Descendants(cards[0]).OfType<Button>().Single(button => button.Name == "CatalogDetails");
         var detailsTask = (Task)Call(shell, "OpenCatalogDetailsAsync", agent, view)!;
         dialog = await OpenDialogAsync(shell); await Task.Delay(80); dialog.UpdateLayout();
+        var detailTabs = Descendants(dialog).OfType<NavigationView>().Single(tabs => tabs.Name == "CatalogDetailsTabs");
         Check(dialog.Title.ToString() == "Agent fixture" && !Field<SplitView>(shell, "details").IsPaneOpen
-            && Descendants(dialog).OfType<ToggleButton>().Select(button => button.Content.ToString()).SequenceEqual(new[] { "General", "Instructions", "Definition" }),
+            && detailTabs.MenuItems.OfType<NavigationViewItem>().Select(tab => tab.Content.ToString()).SequenceEqual(new[] { "General", "Instructions", "Definition" })
+            && detailTabs.PaneDisplayMode == NavigationViewPaneDisplayMode.Top,
             context + ": agent details use a centered read-only tabbed modal, not the chat sidebar");
         Check(Readable(dialog.Foreground, dialog.Background, theme), context + ": catalog modal follows host theme");
-        Toggle(Descendants(dialog).OfType<ToggleButton>().Single(button => button.Name == "CatalogTabInstructions"));
+        SelectNativeTab(detailTabs, "instructions");
         Check(Descendants(dialog).OfType<TextBlock>().Any(text => text.Text == "Read-only instructions"), context + ": agent instructions tab displays backend content without editing");
-        Toggle(Descendants(dialog).OfType<ToggleButton>().Single(button => button.Name == "CatalogTabDefinition"));
+        SelectNativeTab(detailTabs, "definition");
         Check(Descendants(dialog).OfType<TextBlock>().Any(text => text.Text.Contains("\"future\"")), context + ": full backend definition remains visible read-only");
         window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(600, 720));
         await Task.Delay(100); dialog.UpdateLayout();
@@ -780,8 +788,9 @@ public partial class App : Application
         var skill = new CatalogItem(CatalogKind.Skill, "provider/skill", "Skill fixture", "Skill description") { Version = "1", LatestVersion = "2" };
         detailsTask = (Task)Call(shell, "OpenCatalogDetailsAsync", skill, view)!;
         dialog = await OpenDialogAsync(shell); await Task.Delay(80);
-        Check(Descendants(dialog).OfType<ToggleButton>().Select(button => button.Content.ToString()).SequenceEqual(new[] { "General", "Versions" }), context + ": skill modal General/Versions tabs");
-        Toggle(Descendants(dialog).OfType<ToggleButton>().Single(button => button.Name == "CatalogTabVersions"));
+        detailTabs = Descendants(dialog).OfType<NavigationView>().Single(tabs => tabs.Name == "CatalogDetailsTabs");
+        Check(detailTabs.MenuItems.OfType<NavigationViewItem>().Select(tab => tab.Content.ToString()).SequenceEqual(new[] { "General", "Versions" }), context + ": skill modal General/Versions tabs");
+        SelectNativeTab(detailTabs, "versions");
         Check(Descendants(dialog).OfType<TextBlock>().Any(text => text.Text.Contains("could not be loaded")), context + ": unavailable skill versions are contained inside the modal");
         dialog.GetType().GetMethod("SetVersions")!.Invoke(dialog, new object?[] { new[] { new CatalogVersion("v1", "1", null, null, "Version description") }, false, null });
         Check(Descendants(dialog).OfType<TextBlock>().Any(text => text.Text == "Default") && Descendants(dialog).OfType<Button>().Any(button => AutomationProperties.GetName(button) == "Download version 1"),
@@ -839,7 +848,7 @@ public partial class App : Application
     }
 
     private static void InvokeButton(Button button) => ((IInvokeProvider)new ButtonAutomationPeer(button).GetPattern(PatternInterface.Invoke)).Invoke();
-    private static T Field<T>(ChatShell shell, string name) => (T)typeof(ChatShell).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(shell)!;
+    private static T Field<T>(object target, string name) => (T)target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(target)!;
     private static bool Readable(Brush foreground, Brush background, ElementTheme theme)
     {
         if (foreground is not SolidColorBrush text || background is not SolidColorBrush fill) return false;

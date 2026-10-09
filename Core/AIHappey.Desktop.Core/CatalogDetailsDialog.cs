@@ -2,7 +2,6 @@ using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AIHappey.Desktop.Core;
 
@@ -11,10 +10,11 @@ internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
 {
     private readonly CatalogItem item;
     private readonly Grid layout = new() { RowSpacing = 16 };
-    private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
+    private readonly NavigationView tabs = new() { Name = "CatalogDetailsTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly StackPanel body = new() { Name = "CatalogDialogBody", Spacing = 12 };
     private readonly ScrollViewer viewer;
-    private readonly Dictionary<string, ToggleButton> tabButtons = [];
     private IReadOnlyList<CatalogVersion> versions = [];
     private bool loadingVersions;
     private bool actionsEnabled = true;
@@ -37,17 +37,21 @@ internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
         Resources["ContentDialogMinWidth"] = 0d;
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
-        layout.Children.Add(new ScrollViewer { Content = tabs, HorizontalScrollMode = ScrollMode.Enabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-            VerticalScrollMode = ScrollMode.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled });
+        layout.Children.Add(tabs);
         AddTab("general", DesktopResources.Get("General"));
         if (item.Kind == CatalogKind.Agent) { AddTab("instructions", DesktopResources.Get("Instructions")); AddTab("definition", DesktopResources.Get("Definition")); }
         else AddTab("versions", DesktopResources.Get("Versions"));
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };
         Grid.SetRow(viewer, 1); layout.Children.Add(viewer); Content = layout;
+        tabs.SelectedItem = tabs.MenuItems[0];
+        tabs.SelectionChanged += (_, args) =>
+        {
+            if (args.SelectedItem is not NavigationViewItem { Tag: string key } || selectedTab == key) return;
+            selectedTab = key; Render(); viewer.ChangeView(null, 0, null, true);
+        };
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; };
         Closed += (_, _) => XamlRoot.Changed -= RootChanged;
-        ActualThemeChanged += (_, _) => RefreshTabs();
         Render();
     }
 
@@ -61,19 +65,9 @@ internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
 
     private void AddTab(string key, string label)
     {
-        var button = new ToggleButton { Name = "CatalogTab" + char.ToUpperInvariant(key[0]) + key[1..], Content = label, Padding = new Thickness(12, 8, 12, 8), MinHeight = 36 };
-        ToolbarControls.Label(button, label);
-        ControlAppearance.Stock(button);
-        button.Click += (_, _) => { selectedTab = key; Render(); viewer.ChangeView(null, 0, null, true); };
-        tabButtons.Add(key, button); tabs.Children.Add(button);
-    }
-
-    private void RefreshTabs()
-    {
-        foreach (var (key, button) in tabButtons)
-        {
-            button.IsChecked = key == selectedTab;
-        }
+        var tab = new NavigationViewItem { Name = "CatalogTab" + char.ToUpperInvariant(key[0]) + key[1..], Tag = key, Content = label };
+        ToolbarControls.Label(tab, label); AutomationProperties.SetAutomationId(tab, tab.Name);
+        tabs.MenuItems.Add(tab);
     }
 
     public void SetVersions(IReadOnlyList<CatalogVersion> value, bool loading, string? error = null)
@@ -88,7 +82,7 @@ internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
 
     private void Render()
     {
-        RefreshTabs(); body.Children.Clear();
+        body.Children.Clear();
         switch (selectedTab)
         {
             case "general": RenderGeneral(); break;
