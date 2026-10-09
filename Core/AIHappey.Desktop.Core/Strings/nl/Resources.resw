@@ -617,9 +617,9 @@
   <data name="SettingsModelContextTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Model Context</value></data>
   <data name="SettingsMcpClientTab.Content" xml:space="preserve"><value>Client</value></data>
   <data name="SettingsMcpExtensionsTab.Content" xml:space="preserve"><value>Extensies</value></data>
-  <data name="SettingsMcpElicitation.Text" xml:space="preserve"><value>Invoer opvragen</value></data>
-  <data name="SettingsMcpFormElicitation.Header" xml:space="preserve"><value>Formulierinvoer</value></data>
-  <data name="SettingsMcpUrlElicitation.Header" xml:space="preserve"><value>URL-invoer</value></data>
+  <data name="SettingsMcpElicitation.Text" xml:space="preserve"><value>Uitvragen</value></data>
+  <data name="SettingsMcpFormElicitation.Header" xml:space="preserve"><value>Formulier</value></data>
+  <data name="SettingsMcpUrlElicitation.Header" xml:space="preserve"><value>URL</value></data>
   <data name="SettingsMcpUrlHint.Text" xml:space="preserve"><value>URL-invoer is niet beschikbaar in deze client.</value></data>
   <data name="SettingsMcpTools.Text" xml:space="preserve"><value>Tools</value></data>
   <data name="SettingsMcpTimeout.Header" xml:space="preserve"><value>Tool-time-out (minuten)</value></data>
