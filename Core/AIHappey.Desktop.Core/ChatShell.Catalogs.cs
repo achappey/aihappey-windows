@@ -161,6 +161,7 @@ public sealed partial class ChatShell
         InvalidateTranscriptions();
         InvalidateModelsOverview();
         runtimeSkillCatalog = []; runtimeSkillPartition = null;
+        localAgents = []; localAgentPartition = null; agentEditor?.Hide();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide();
         details.IsPaneOpen = false;
@@ -179,7 +180,12 @@ public sealed partial class ChatShell
                 favorites = await catalogFavorites.LoadAsync(partition, ct);
                 catalogPartition = partition;
             }
-            var items = useCache && catalogs.TryGetValue(page.Kind, out var cached) ? cached : await catalogClient.ListAsync(page.Kind, ct);
+            var items = useCache && catalogs.TryGetValue(page.Kind, out var cached) ? cached : await LoadCatalogItemsAsync(page.Kind, ct);
+            if (page.Kind == CatalogKind.Agent)
+            {
+                await LoadLocalAgentsAsync(ct);
+                items = items.Where(i => i.Origin != CatalogOrigin.Local).Concat(localAgents.Select(a => a.CatalogItem())).ToArray();
+            }
             ct.ThrowIfCancellationRequested();
             if (closing || session.HistoryPartition != partition) return;
             catalogs[page.Kind] = items;
@@ -193,7 +199,7 @@ public sealed partial class ChatShell
             page.SetItems(items, favorites, source);
             if (page.Kind == CatalogKind.Agent && Service == ServiceKind.Agents)
             {
-                targets = items.Select(item => new ChatTarget(item.Id, item.Name)).ToArray();
+                targets = ProjectAgentTargets(items);
                 target.ItemsSource = targets.Take(100).ToArray();
             }
         }
@@ -219,14 +225,15 @@ public sealed partial class ChatShell
 
     private async Task StartAgentChatAsync(CatalogItem item)
     {
-        if (item.Kind != CatalogKind.Agent || item.Origin != CatalogOrigin.Backend) return;
+        if (item.Kind != CatalogKind.Agent) return;
         await RunAsync(async ct =>
         {
             // Confirm eligibility against the current service, not the display name/underlying model.
-            var available = await client.ListAsync(ServiceKind.Agents, ct);
-            if (!available.Any(candidate => candidate.Id == item.Id)) throw new GatewayException(DesktopResources.Get("AgentUnavailable"));
-            UpdateMode(ServiceKind.Agents); targets = available; target.ItemsSource = available.Take(100).ToArray(); target.Text = item.Id;
-            current = new() { Service = ServiceKind.Agents, Target = item.Id }; input.Text = "";
+            var available = await AgentTargetsAsync(ct);
+            var key = item.Origin == CatalogOrigin.Local ? "local:" + item.Id : "remote:" + item.Id;
+            if (!available.Any(candidate => candidate.Id == key)) throw new GatewayException(DesktopResources.Get("AgentUnavailable"));
+            UpdateMode(ServiceKind.Agents); targets = available; target.ItemsSource = available.Take(100).ToArray(); target.Text = key;
+            current = new() { Service = ServiceKind.Agents, Target = key }; input.Text = "";
             suppress = true; chats.SelectedItem = null; suppress = false;
             ShowPage(DesktopPage.Chat); RenderTranscript();
             input.Focus(FocusState.Programmatic);

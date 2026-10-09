@@ -19,6 +19,14 @@ internal static class NativeSettingsSurface
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
         ControlAppearance.Stock(card); AutomationProperties.SetName(card, title);
+        var content = body;
+        card.SizeChanged += (_, _) =>
+        {
+            // SettingsCard measures vertical Content independently of its header. A panel
+            // containing star-column rows must use the card's arranged width, not a stale
+            // unconstrained desired width from a previously wider dialog viewport.
+            if (card.ActualWidth > 0) content.Width = Math.Max(0, card.ActualWidth - 32);
+        };
         parent.Children.Add(card); return card;
     }
 
@@ -36,9 +44,13 @@ internal static class NativeSettingsSurface
         {
             Name = name, Header = Title(title), Content = headerContent, ItemsHeader = body,
             IsExpanded = false, HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch
+            // Content belongs to the header's trailing action slot, not the expanded form.
+            // Stretch makes that slot demand the entire card width in addition to its title.
+            HorizontalContentAlignment = HorizontalAlignment.Right
         };
         ControlAppearance.Stock(expander); AutomationProperties.SetName(expander, title);
+        var content = body;
+        expander.SizeChanged += (_, _) => { if (expander.ActualWidth > 0) content.Width = Math.Max(0, expander.ActualWidth - 2); };
         parent.Children.Add(expander); return expander;
     }
 

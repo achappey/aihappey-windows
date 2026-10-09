@@ -26,6 +26,7 @@ public partial class App : Application
             var session = new DesktopSession(host, new ManagedLocalRuntime(Path.Combine(AppContext.BaseDirectory, "runtimes"), directory), new DesktopSettings());
             session.ContextOptions = DesktopContextOptions.Load(Path.Combine(AppContext.BaseDirectory, "chat-context.json"));
             session.ContextOptions.AppName ??= DesktopBranding.AppName;
+            session.DefaultAgents = AIHappey.Desktop.Samples.SampleAgents.Load();
             await DesktopStartup.InitializeAsync(session);
             window = new MainWindow(session);
         }

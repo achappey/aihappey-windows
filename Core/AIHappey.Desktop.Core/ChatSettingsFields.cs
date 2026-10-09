@@ -25,6 +25,7 @@ internal sealed class ChatSettingsFields
     }
     public void Changed(Action change) { if (syncing) return; change(); Refresh(); }
     public void Watch(Action update) { refresh.Add(update); update(); }
+    public void Forget(Panel view) => invalid.RemoveWhere(control => NativeSettingsSurface.Contains(view, control));
     private void Enabled(Control control, Func<bool>? enabled)
     {
         if (enabled is null) return;
@@ -70,14 +71,14 @@ internal sealed class ChatSettingsFields
         return box;
     }
 
-    public ToggleSwitch Switch(Panel parent, string key, Func<bool> read, Action<bool> write, Func<bool>? enabled = null)
+    public ToggleSwitch Switch(Panel parent, string key, Func<bool> read, Action<bool> write, Func<bool>? enabled = null, string? label = null)
     {
         var row = new Grid { ColumnSpacing = 12, MinHeight = 32 };
         row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        row.Children.Add(new TextBlock { Text = L(key), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
+        row.Children.Add(new TextBlock { Text = label ?? L(key), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
         var control = new ToggleSwitch { IsOn = read(), OnContent = "", OffContent = "", MinWidth = 0, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
-        ControlAppearance.Stock(control); AutomationProperties.SetName(control, L(key)); Grid.SetColumn(control, 1); row.Children.Add(control); parent.Children.Add(row);
+        ControlAppearance.Stock(control); AutomationProperties.SetName(control, label ?? L(key)); Grid.SetColumn(control, 1); row.Children.Add(control); parent.Children.Add(row);
         Enabled(control, enabled); refresh.Add(() => control.IsOn = read());
         control.Toggled += (_, _) => Changed(() => write(control.IsOn));
         return control;

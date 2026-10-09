@@ -1,9 +1,11 @@
-param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly)
+param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
 & node (Join-Path $PSScriptRoot 'check-video-resources.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Video resource key audit failed.' }
+& node (Join-Path $PSScriptRoot 'check-agent-resources.cjs')
+if ($LASTEXITCODE -ne 0) { throw 'Agent resource key audit failed.' }
 
 # Guard against reintroducing the resource-lookup patterns behind the startup/rendering crashes.
 $unsafe = Get-ChildItem (Join-Path $repo 'Core\AIHappey.Desktop.Core') -Filter '*.cs' |
@@ -25,6 +27,7 @@ try {
     if ($ImagesOnly) { $arguments += '--images-only' }
     if ($VideosOnly) { $arguments += '--videos-only' }
     if ($OverviewTabsOnly) { $arguments += '--overview-tabs-only' }
+    if ($AgentsOnly) { $arguments += '--agents-only' }
     $process = Start-Process (Join-Path $output 'AIHappey.Desktop.UiTests.exe') -ArgumentList $arguments -PassThru
     if (-not $process.WaitForExit(60000)) {
         $process.Kill()

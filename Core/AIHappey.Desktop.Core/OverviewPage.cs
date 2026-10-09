@@ -31,6 +31,8 @@ internal sealed class OverviewPage : UserControl
     private bool failed;
     private bool updatingFilters;
     private bool actionsEnabled = true;
+    internal readonly Button AddAgent = new() { Name = "AddAgent", Content = new SymbolIcon(Symbol.Add), Width = 40, Height = 40,
+        HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Visibility = Visibility.Collapsed };
     public CatalogKind Kind { get; }
     public Action? RetryRequested { get; set; }
     public Action? CancelRequested { get; set; }
@@ -38,6 +40,8 @@ internal sealed class OverviewPage : UserControl
     public Action<CatalogItem>? FavoriteRequested { get; set; }
     public Action<CatalogItem>? DownloadRequested { get; set; }
     public Action<CatalogItem>? ChatRequested { get; set; }
+    public Action<CatalogItem, Button>? EditRequested { get; set; }
+    public Action<CatalogItem>? DeleteRequested { get; set; }
 
     public OverviewPage(CatalogKind kind)
     {
@@ -49,7 +53,8 @@ internal sealed class OverviewPage : UserControl
             Text = kind == CatalogKind.Agent
                 ? DesktopResources.Get("AgentsDescription")
                 : DesktopResources.Get("SkillsDescription") };
-        body.Children.Add(title); body.Children.Add(description);
+        var heading = new Grid(); heading.Children.Add(title); heading.Children.Add(AddAgent); body.Children.Add(heading); body.Children.Add(description);
+        if (kind == CatalogKind.Agent) { AddAgent.Visibility = Visibility.Visible; ControlAppearance.Stock(AddAgent); ToolbarControls.Label(AddAgent, DesktopResources.Get("Add")); }
         var searchRow = new Grid { ColumnSpacing = 8, MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 0, 0) };
         SearchBox.HorizontalAlignment = HorizontalAlignment.Stretch;
         searchRow.Children.Add(SearchBox); body.Children.Add(searchRow);
@@ -110,6 +115,7 @@ internal sealed class OverviewPage : UserControl
         actionsEnabled = enabled;
         foreach (var button in ControlAppearance.Descendants(Cards).OfType<Button>()) button.IsEnabled = enabled;
         retry.IsEnabled = more.IsEnabled = enabled;
+        AddAgent.IsEnabled = enabled;
         SearchBox.IsEnabled = enabled && !working;
         filters.IsEnabled = enabled && !working && !failed;
     }
@@ -124,7 +130,7 @@ internal sealed class OverviewPage : UserControl
         var searched = CatalogProjection.Search(items, SearchBox.Text);
         // Keep unchanged items alive so result/count refreshes do not reset focus or the indicator.
         updatingFilters = true;
-        if (!items.Any(item => item.Origin == CatalogOrigin.Local) && filterItems.Remove("local", out var local))
+        if (Kind != CatalogKind.Agent && !items.Any(item => item.Origin == CatalogOrigin.Local) && filterItems.Remove("local", out var local))
         {
             if (activeFilter == "local") { activeFilter = "all"; visible = 50; }
             filters.MenuItems.Remove(local);
@@ -132,8 +138,7 @@ internal sealed class OverviewPage : UserControl
         AddFilter("all", DesktopResources.Format("AllCount", searched.Count), "\uE8FD");
         AddFilter("favorites", DesktopResources.Format("FavoritesCount", searched.Count(item => favorites.Contains(item.Key))), "\uE735");
         AddFilter("backend", $"{source} ({searched.Count(item => item.Origin == CatalogOrigin.Backend)})");
-        // Local filter and creation actions are capability-driven. No local provider is installed yet.
-        if (items.Any(item => item.Origin == CatalogOrigin.Local)) AddFilter("local", DesktopResources.Format("LocalCount", searched.Count(item => item.Origin == CatalogOrigin.Local)));
+        if (Kind == CatalogKind.Agent || items.Any(item => item.Origin == CatalogOrigin.Local)) AddFilter("local", DesktopResources.Format("LocalCount", searched.Count(item => item.Origin == CatalogOrigin.Local)));
         filters.SelectedItem = filterItems[activeFilter];
         filters.IsEnabled = true;
         updatingFilters = false;
@@ -187,7 +192,13 @@ internal sealed class OverviewPage : UserControl
         NativeCardSurface.Secondary(description);
         Grid.SetRow(description, 1); grid.Children.Add(description);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        var view = ActionButton(item, "Details", "\uE890"); view.Click += (_, _) => DetailsRequested?.Invoke(item, view); actions.Children.Add(view);
+        if (item.Kind == CatalogKind.Skill)
+        { var view = ActionButton(item, "Details", "\uE890"); view.Click += (_, _) => DetailsRequested?.Invoke(item, view); actions.Children.Add(view); }
+        if (item.Kind == CatalogKind.Agent && item.Origin == CatalogOrigin.Local)
+        {
+            var edit = ActionButton(item, "AgentEdit", "\uE70F"); edit.Click += (_, _) => EditRequested?.Invoke(item, edit); actions.Children.Add(edit);
+            var delete = ActionButton(item, "Delete", "\uE74D"); delete.Click += (_, _) => DeleteRequested?.Invoke(item); actions.Children.Add(delete);
+        }
         if (item.CanDownload)
         { var download = ActionButton(item, "Download", "\uE896"); download.Click += (_, _) => DownloadRequested?.Invoke(item); actions.Children.Add(download); }
         var favorite = ActionButton(item, favorites.Contains(item.Key) ? "RemoveFavorite" : "AddFavorite", favorites.Contains(item.Key) ? "\uE735" : "\uE734");

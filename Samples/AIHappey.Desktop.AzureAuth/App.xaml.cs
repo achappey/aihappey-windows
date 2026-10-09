@@ -25,6 +25,7 @@ public partial class App : Application
             var session = new DesktopSession(new EntraAuthentication(config), new RemoteRuntimeResolver(), config.Settings);
             session.ContextOptions = DesktopContextOptions.Load(Path.Combine(AppContext.BaseDirectory, "chat-context.json"));
             session.ContextOptions.AppName ??= DesktopBranding.AppName;
+            session.DefaultAgents = AIHappey.Desktop.Samples.SampleAgents.Load();
             if (config.ChatbotInstructions is not null) session.ContextOptions.ChatbotInstructions = config.ChatbotInstructions;
             await DesktopStartup.InitializeAsync(session);
             window = new MainWindow(session);

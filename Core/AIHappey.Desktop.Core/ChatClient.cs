@@ -17,6 +17,8 @@ public sealed record ChatTarget(string Id, string Label)
     public string? ProviderModelId { get; init; }
     public string? Description { get; init; }
     public string? OwnedBy { get; init; }
+    public string? LocalAgentName { get; init; }
+    public string? RemoteAgentId { get; init; }
     public IReadOnlyList<string> Tags { get; init; } = [];
     public double? ContextWindow { get; init; }
     public double? MaxTokens { get; init; }
@@ -46,7 +48,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
 
     public async IAsyncEnumerable<StreamEvent> StreamAsync(ServiceKind service, string target, string conversationId,
         List<UIMessage> messages, [EnumeratorCancellation] CancellationToken ct, ChatPreferences? preferences = null, string? providerKey = null,
-        UIMessage? systemContext = null, McpTurnSnapshot? mcp = null)
+        UIMessage? systemContext = null, McpTurnSnapshot? mcp = null, DesktopAgent? localAgent = null)
     {
         var snapshot = (preferences ?? session.Settings.Chat).Clone();
         providerKey = ChatPreferences.ResolveProvider(service, target, providerKey);
@@ -56,6 +58,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
         request.Headers.Accept.ParseAdd("text/event-stream");
         request.Content = service == ServiceKind.Ai
             ? JsonContent.Create(snapshot.RequestBody(target, conversationId, requestMessages, providerKey, mcp ?? session.Mcp?.Capture()), options: PortableConversations.Json)
+            : localAgent is not null ? JsonContent.Create(LocalAgentRequest(localAgent, conversationId, requestMessages), options: PortableConversations.Json)
             : JsonContent.Create(new AgentRequest { Id = conversationId, Model = target, Messages = requestMessages }, options: PortableConversations.Json);
         if (service == ServiceKind.Ai) snapshot.ApplyHeaders(request, providerKey);
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
@@ -68,6 +71,13 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
             if (payload == "[DONE]") yield break;
             yield return StreamEvent.Parse(payload);
         }
+    }
+
+    public static object LocalAgentRequest(DesktopAgent agent, string conversationId, List<UIMessage> messages)
+    {
+        agent.Validate();
+        // No SDK reserialization: preserve portable fields, including newer plugin/tool/schema options.
+        return new { id = conversationId, agents = new[] { agent.Definition.DeepClone() }, messages };
     }
 
     internal async Task<HttpRequestMessage> RequestAsync(ServiceKind service, HttpMethod method, string path, CancellationToken ct, string? expectedAiPartition = null)

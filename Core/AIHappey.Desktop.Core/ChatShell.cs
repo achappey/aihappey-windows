@@ -66,6 +66,7 @@ public sealed partial class ChatShell : UserControl
         history = new(Path.Combine(session.DataDirectory, "conversations"));
         catalogClient = new(client, http);
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
+        agentStore = new(Path.Combine(session.DataDirectory, "agents"));
         skillStore = new(Path.Combine(session.DataDirectory, "skills"), (item, version, ct) => catalogClient.DownloadSkillAsync(item.Id, version, ct));
         PrepareContext();
         session.ElicitationHandler = ShowElicitationAsync;
@@ -79,6 +80,7 @@ public sealed partial class ChatShell : UserControl
         PrepareSystemContext();
         PrepareTranscript();
         Content = BuildLayout();
+        PrepareAgentActions();
         PrepareFileDrop();
         ControlAppearance.Apply(this, (_, _) => { }, palette =>
         {
@@ -109,6 +111,7 @@ public sealed partial class ChatShell : UserControl
             {
                 session.Settings.Validate(session.Host.AllowLocal);
                 await session.Host.InitializeAsync(ct);
+                await LoadLocalAgentsAsync(ct);
                 await StartVideoJobsAsync(ct);
                 UpdateAccountMenu();
                 await LoadHistoryAsync(ct);
@@ -351,7 +354,8 @@ public sealed partial class ChatShell : UserControl
     private async Task DiscoverAsync(CancellationToken ct)
     {
         var selected = target.Text;
-        targets = await client.ListAsync(Service, ct);
+        targets = Service == ServiceKind.Agents ? await AgentTargetsAsync(ct) : await client.ListAsync(Service, ct);
+        if (Service == ServiceKind.Agents && !string.IsNullOrWhiteSpace(selected)) target.Text = DesktopAgentTargets.Restore(selected, targets);
         if (Service == ServiceKind.Ai) aiModelTargets = targets;
         UpdateAccountMenu();
         UpdateTargetSuggestions();
@@ -384,6 +388,15 @@ public sealed partial class ChatShell : UserControl
                 throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
             var prepared = await ComposerAttachments.PrepareAsync(prompt, snapshot, Service, extractDocuments, documentExtractor, ct,
                 resourceSnapshot, selectedPrompt?.Parts);
+            var agentTarget = targets.First(t => t.Id == selected);
+            DesktopAgent? localAgent = null;
+            if (Service == ServiceKind.Agents && agentTarget.LocalAgentName is { } agentName)
+            {
+                await LoadLocalAgentsAsync(ct);
+                localAgent = localAgents.FirstOrDefault(a => a.Name == agentName)?.Clone()
+                    ?? throw new InvalidOperationException(DesktopResources.Get("AgentUnavailable"));
+            }
+            var wireTarget = Service == ServiceKind.Agents ? agentTarget.RemoteAgentId ?? selected : selected;
             if (Service == ServiceKind.Ai && inferencePreferences.EnabledSkillIds.Any(id => !id.StartsWith("mcp:", StringComparison.Ordinal)))
                 await LoadRuntimeSkillsAsync(ct);
             var mcpTurn = Service == ServiceKind.Ai ? CaptureSkillRuntime(inferencePreferences) : McpTurnSnapshot.Empty;
@@ -412,8 +425,8 @@ public sealed partial class ChatShell : UserControl
             try
             {
                 await DesktopChatTurn.RunAsync(current, output,
-                    (messages, token) => client.StreamAsync(current.Service, selected, current.Id, messages, token,
-                        inferencePreferences, selectedProvider, systemContext, mcpTurn), ApproveToolAsync,
+                    (messages, token) => client.StreamAsync(current.Service, wireTarget, current.Id, messages, token,
+                        inferencePreferences, selectedProvider, systemContext, mcpTurn, localAgent), ApproveToolAsync,
                     async (force, token) =>
                 {
                     if (force || watch.Elapsed - renderAt > TimeSpan.FromMilliseconds(100))
@@ -798,6 +811,7 @@ public sealed partial class ChatShell : UserControl
         elicitationLifetime.Cancel(); elicitationDialog?.Hide(); session.ElicitationHandler = null;
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
+        agentEditor?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
         imageLinkDialog?.Hide(); imagePreviewDialog?.Hide();
         transcriptionDetailsDialog?.Hide(); transcriptionDeleteDialog?.Hide();

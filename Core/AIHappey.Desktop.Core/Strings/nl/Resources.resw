@@ -834,4 +834,76 @@
   <data name="VideoDeleteTitle" xml:space="preserve"><value>Video verwijderen?</value></data>
   <data name="VideoDeleteHint" xml:space="preserve"><value>Deze video wordt uit je opgeslagen bibliotheek verwijderd. Andere resultaten van hetzelfde verzoek blijven bewaard.</value></data>
   <data name="VideoRefresh" xml:space="preserve"><value>Videomodellen en opgeslagen video’s vernieuwen</value></data>
+  <data name="AgentFieldsRequired" xml:space="preserve"><value>Naam, beschrijving, model en instructies zijn verplicht.</value></data>
+  <data name="AgentNameInvalid" xml:space="preserve"><value>Voer een geldige naam of identificatie in.</value></data>
+  <data name="AgentDuplicateName" xml:space="preserve"><value>Er bestaat al een item met deze naam. Bestaande items zijn niet overschreven.</value></data>
+  <data name="AgentNameImmutable" xml:space="preserve"><value>De naam van een agent kan na het aanmaken niet worden gewijzigd.</value></data>
+  <data name="AgentEdit" xml:space="preserve"><value>Agent bewerken</value></data>
+  <data name="AgentCreate" xml:space="preserve"><value>Nieuwe agent maken</value></data>
+  <data name="AgentImport" xml:space="preserve"><value>Agent importeren</value></data>
+  <data name="AgentChecks" xml:space="preserve"><value>Controles</value></data>
+  <data name="AgentProvider" xml:space="preserve"><value>Providerinstellingen</value></data>
+  <data name="AgentProviderDeferred" xml:space="preserve"><value>Er is nog geen native formulier voor deze provider. Bestaande providerinstellingen blijven behouden.</value></data>
+  <data name="AgentToolsNotConnected" xml:space="preserve"><value>Verbind deze MCP-server in Modelcontext om tools te vinden. Bestaande toolselecties blijven behouden.</value></data>
+  <data name="AgentSkillVersionHint" xml:space="preserve"><value>Laat leeg voor de standaardversie, voer latest in voor de nieuwste versie of kies een exacte versie.</value></data>
+  <data name="AgentSkillDefault" xml:space="preserve"><value>Standaardversie</value></data>
+  <data name="AgentSkillLatest" xml:space="preserve"><value>Nieuwste versie</value></data>
+  <data name="AgentSkillEmbed" xml:space="preserve"><value>Deze versie insluiten als inline momentopname</value></data>
+  <data name="AgentSkillInline" xml:space="preserve"><value>Inline momentopname</value></data>
+  <data name="AgentSkillReference" xml:space="preserve"><value>Catalogusverwijzing</value></data>
+  <data name="AgentSkillImport" xml:space="preserve"><value>Skill-ZIP importeren</value></data>
+  <data name="AgentBackendUnavailable" xml:space="preserve"><value>De agentcatalogus van de backend is niet beschikbaar. Je lokale agents zijn wel beschikbaar.</value></data>
+  <data name="AgentImportedCount" xml:space="preserve"><value>{0} agents geïmporteerd.</value></data>
+  <data name="AgentDeleteConfirm" xml:space="preserve"><value>De lokaal opgeslagen agent “{0}” verwijderen? Exporteer de agent eerst als je een kopie wilt bewaren.</value></data>
+  <data name="ChatForm_agent_general" xml:space="preserve"><value>Algemeen</value></data>
+  <data name="ChatForm_agent_name" xml:space="preserve"><value>Naam</value></data>
+  <data name="ChatForm_agent_description" xml:space="preserve"><value>Beschrijving</value></data>
+  <data name="ChatForm_agent_instructions" xml:space="preserve"><value>Instructies</value></data>
+  <data name="ChatForm_agent_argumentHint" xml:space="preserve"><value>Argumenthint</value></data>
+  <data name="ChatForm_agent_policy" xml:space="preserve"><value>Toolbeleid</value></data>
+  <data name="ChatForm_agent_readOnlyHint" xml:space="preserve"><value>Alleen-lezen-tools</value></data>
+  <data name="ChatForm_agent_destructiveHint" xml:space="preserve"><value>Destructieve tools</value></data>
+  <data name="ChatForm_agent_openWorldHint" xml:space="preserve"><value>Openwereld-tools</value></data>
+  <data name="ChatForm_agent_idempotentHint" xml:space="preserve"><value>Idempotente tools</value></data>
+  <data name="ChatForm_agent_elicitation" xml:space="preserve"><value>Informatie opvragen</value></data>
+  <data name="ChatForm_agent_enabled" xml:space="preserve"><value>Ingeschakeld</value></data>
+  <data name="ChatForm_agent_elicitationForm" xml:space="preserve"><value>Formulieren</value></data>
+  <data name="ChatForm_agent_elicitationUrl" xml:space="preserve"><value>URL-verzoeken</value></data>
+  <data name="ChatForm_agent_url" xml:space="preserve"><value>Server-URL</value></data>
+  <data name="ChatForm_agent_required" xml:space="preserve"><value>Verplicht</value></data>
+  <data name="ChatForm_agent_deferLoading" xml:space="preserve"><value>Laden uitstellen</value></data>
+  <data name="ChatForm_agent_namespace" xml:space="preserve"><value>Naamruimte</value></data>
+  <data name="ChatForm_agent_caller_direct" xml:space="preserve"><value>Directe aanroepen toestaan</value></data>
+  <data name="ChatForm_agent_caller_programmatic" xml:space="preserve"><value>Programmatische aanroepen toestaan</value></data>
+  <data name="ChatForm_agent_allowedTools" xml:space="preserve"><value>Toegestane tools</value></data>
+  <data name="ChatForm_agent_tools_all" xml:space="preserve"><value>Alle tools</value></data>
+  <data name="ChatForm_agent_tools_none" xml:space="preserve"><value>Geen tools</value></data>
+  <data name="ChatForm_agent_tools_selected" xml:space="preserve"><value>Geselecteerde tools</value></data>
+  <data name="ChatForm_agent_addServer" xml:space="preserve"><value>MCP-server toevoegen</value></data>
+  <data name="ChatForm_agent_serverName" xml:space="preserve"><value>Servernaam</value></data>
+  <data name="ChatForm_agent_headerName" xml:space="preserve"><value>Headernaam</value></data>
+  <data name="ChatForm_agent_headerValue" xml:space="preserve"><value>Headerwaarde</value></data>
+  <data name="ChatForm_agent_addHeader" xml:space="preserve"><value>Header toevoegen</value></data>
+  <data name="ChatForm_agent_localTools" xml:space="preserve"><value>Lokale tools</value></data>
+  <data name="ChatForm_agent_tool_search" xml:space="preserve"><value>Tools zoeken</value></data>
+  <data name="ChatForm_agent_resource_search" xml:space="preserve"><value>Resources zoeken</value></data>
+  <data name="ChatForm_agent_nonEmpty" xml:space="preserve"><value>Niet-leeg antwoord</value></data>
+  <data name="ChatForm_agent_minLength" xml:space="preserve"><value>Minimumlengte</value></data>
+  <data name="ChatForm_agent_keywordCheck" xml:space="preserve"><value>Trefwoorden</value></data>
+  <data name="ChatForm_agent_keywords" xml:space="preserve"><value>Trefwoorden (één per regel)</value></data>
+  <data name="ChatForm_agent_caseSensitive" xml:space="preserve"><value>Hoofdlettergevoelig</value></data>
+  <data name="ChatForm_agent_toolCallsPresent" xml:space="preserve"><value>Toolaanroepen aanwezig</value></data>
+  <data name="ChatForm_agent_toolCalledCheck" xml:space="preserve"><value>Benoemde tools aangeroepen</value></data>
+  <data name="ChatForm_agent_toolNames" xml:space="preserve"><value>Toolnamen (één per regel)</value></data>
+  <data name="ChatForm_agent_availableTools" xml:space="preserve"><value>Beschikbare tool toevoegen</value></data>
+  <data name="ChatForm_agent_mode" xml:space="preserve"><value>Overeenkomstmodus</value></data>
+  <data name="ChatForm_agent_hasImageContent" xml:space="preserve"><value>Afbeelding aanwezig</value></data>
+  <data name="ChatForm_agent_addSkill" xml:space="preserve"><value>Skill toevoegen</value></data>
+  <data name="ChatForm_agent_skillId" xml:space="preserve"><value>Skill-identificatie</value></data>
+  <data name="ChatForm_agent_skillVersion" xml:space="preserve"><value>Versie</value></data>
+  <data name="ChatForm_agent_skillMode" xml:space="preserve"><value>Skillmodus</value></data>
+  <data name="AgentDiscoverTools" xml:space="preserve"><value>Tools ontdekken</value></data>
+  <data name="Tools" xml:space="preserve"><value>Tools</value></data>
+  <data name="McpCatalog" xml:space="preserve"><value>Catalogus</value></data>
+  <data name="Local" xml:space="preserve"><value>Lokaal</value></data>
 </root>

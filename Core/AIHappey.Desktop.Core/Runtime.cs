@@ -101,6 +101,9 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     public DesktopSettings Settings { get; set; } = settings;
     public string ActiveLanguage { get; set; } = "en";
     public DesktopContextOptions ContextOptions { get; set; } = new();
+    /// <summary>Sample-owned initial definitions, copied into editable storage only on first use.</summary>
+    public IReadOnlyList<DesktopAgent> DefaultAgents { get; set; } = [];
+    public string AgentPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
     public ISystemContextComposer ContextComposer { get; set; } = new DesktopSystemContextComposer();
     public IDesktopMcpClientFactory McpClientFactory { get; set; } = new DesktopMcpClientFactory();
     public DesktopToolApprovalPolicy ToolApprovals { get; } = new();

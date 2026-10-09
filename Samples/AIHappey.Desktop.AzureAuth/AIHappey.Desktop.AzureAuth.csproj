@@ -24,6 +24,8 @@
     <DefaultLanguage>en</DefaultLanguage>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Shared/SampleAgents.cs" Link="SampleAgents.cs" />
+    <EmbeddedResource Include="../Shared/default-agents.json" LogicalName="Desktop.SampleAgents" />
     <PRIResource Include="..\..\Core\AIHappey.Desktop.Core\Strings\**\*.resw" Link="Strings\%(RecursiveDir)%(Filename)%(Extension)" />
     <AssemblyMetadata Include="DesktopAppName" Value="$(DesktopAppName)" />
     <Content Include="chat-context.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

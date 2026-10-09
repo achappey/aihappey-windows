@@ -19,6 +19,11 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--agents-only"))
+    {
+        await AgentRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} agent checks passed."); return;
+    }
     if (args.Contains("--videos-only"))
     {
         await VideoRegressionTests.RunAsync(Check, root);
@@ -36,6 +41,7 @@ try
         Console.WriteLine($"All {tests} model overview and preference checks passed."); return;
     }
     await ModelsOverviewRegressionTests.RunAsync(Check, root);
+    await AgentRegressionTests.RunAsync(Check, root);
     if (args.Contains("--skills-only"))
     {
         await SkillRegressionTests.RunAsync(Check, root);

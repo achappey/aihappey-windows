@@ -838,4 +838,76 @@
   <data name="VideoDeleteTitle" xml:space="preserve"><value>Delete video?</value></data>
   <data name="VideoDeleteHint" xml:space="preserve"><value>This removes this video from your stored library. Other outputs from the same request are kept.</value></data>
   <data name="VideoRefresh" xml:space="preserve"><value>Refresh video models and stored videos</value></data>
+  <data name="AgentFieldsRequired" xml:space="preserve"><value>Name, description, model, and instructions are required.</value></data>
+  <data name="AgentNameInvalid" xml:space="preserve"><value>Enter a valid name or identifier.</value></data>
+  <data name="AgentDuplicateName" xml:space="preserve"><value>An item with this name already exists. Existing items were not overwritten.</value></data>
+  <data name="AgentNameImmutable" xml:space="preserve"><value>The agent name cannot be changed after creation.</value></data>
+  <data name="AgentEdit" xml:space="preserve"><value>Edit agent</value></data>
+  <data name="AgentCreate" xml:space="preserve"><value>Create new agent</value></data>
+  <data name="AgentImport" xml:space="preserve"><value>Import agent</value></data>
+  <data name="AgentChecks" xml:space="preserve"><value>Checks</value></data>
+  <data name="AgentProvider" xml:space="preserve"><value>Provider settings</value></data>
+  <data name="AgentProviderDeferred" xml:space="preserve"><value>A native form is not available for this provider yet. Existing provider settings are preserved.</value></data>
+  <data name="AgentToolsNotConnected" xml:space="preserve"><value>Connect this MCP server in Model Context to discover its tools. Existing allowed-tool selections are preserved.</value></data>
+  <data name="AgentSkillVersionHint" xml:space="preserve"><value>Leave empty for the default version, enter latest to track the latest version, or choose an exact version.</value></data>
+  <data name="AgentSkillDefault" xml:space="preserve"><value>Default version</value></data>
+  <data name="AgentSkillLatest" xml:space="preserve"><value>Latest version</value></data>
+  <data name="AgentSkillEmbed" xml:space="preserve"><value>Embed this version as an inline snapshot</value></data>
+  <data name="AgentSkillInline" xml:space="preserve"><value>Inline snapshot</value></data>
+  <data name="AgentSkillReference" xml:space="preserve"><value>Catalog reference</value></data>
+  <data name="AgentSkillImport" xml:space="preserve"><value>Import skill ZIP</value></data>
+  <data name="AgentBackendUnavailable" xml:space="preserve"><value>The agent backend catalog is unavailable. Your local agents are still available.</value></data>
+  <data name="AgentImportedCount" xml:space="preserve"><value>Imported {0} agents.</value></data>
+  <data name="AgentDeleteConfirm" xml:space="preserve"><value>Delete the locally stored agent “{0}”? Export it first if you want to keep a copy.</value></data>
+  <data name="ChatForm_agent_general" xml:space="preserve"><value>General</value></data>
+  <data name="ChatForm_agent_name" xml:space="preserve"><value>Name</value></data>
+  <data name="ChatForm_agent_description" xml:space="preserve"><value>Description</value></data>
+  <data name="ChatForm_agent_instructions" xml:space="preserve"><value>Instructions</value></data>
+  <data name="ChatForm_agent_argumentHint" xml:space="preserve"><value>Argument hint</value></data>
+  <data name="ChatForm_agent_policy" xml:space="preserve"><value>Tool policy</value></data>
+  <data name="ChatForm_agent_readOnlyHint" xml:space="preserve"><value>Read-only tools</value></data>
+  <data name="ChatForm_agent_destructiveHint" xml:space="preserve"><value>Destructive tools</value></data>
+  <data name="ChatForm_agent_openWorldHint" xml:space="preserve"><value>Open-world tools</value></data>
+  <data name="ChatForm_agent_idempotentHint" xml:space="preserve"><value>Idempotent tools</value></data>
+  <data name="ChatForm_agent_elicitation" xml:space="preserve"><value>Elicitation</value></data>
+  <data name="ChatForm_agent_enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="ChatForm_agent_elicitationForm" xml:space="preserve"><value>Forms</value></data>
+  <data name="ChatForm_agent_elicitationUrl" xml:space="preserve"><value>URL requests</value></data>
+  <data name="ChatForm_agent_url" xml:space="preserve"><value>Server URL</value></data>
+  <data name="ChatForm_agent_required" xml:space="preserve"><value>Required</value></data>
+  <data name="ChatForm_agent_deferLoading" xml:space="preserve"><value>Defer loading</value></data>
+  <data name="ChatForm_agent_namespace" xml:space="preserve"><value>Namespace</value></data>
+  <data name="ChatForm_agent_caller_direct" xml:space="preserve"><value>Allow direct calls</value></data>
+  <data name="ChatForm_agent_caller_programmatic" xml:space="preserve"><value>Allow programmatic calls</value></data>
+  <data name="ChatForm_agent_allowedTools" xml:space="preserve"><value>Allowed tools</value></data>
+  <data name="ChatForm_agent_tools_all" xml:space="preserve"><value>All tools</value></data>
+  <data name="ChatForm_agent_tools_none" xml:space="preserve"><value>No tools</value></data>
+  <data name="ChatForm_agent_tools_selected" xml:space="preserve"><value>Selected tools</value></data>
+  <data name="ChatForm_agent_addServer" xml:space="preserve"><value>Add MCP server</value></data>
+  <data name="ChatForm_agent_serverName" xml:space="preserve"><value>Server name</value></data>
+  <data name="ChatForm_agent_headerName" xml:space="preserve"><value>Header name</value></data>
+  <data name="ChatForm_agent_headerValue" xml:space="preserve"><value>Header value</value></data>
+  <data name="ChatForm_agent_addHeader" xml:space="preserve"><value>Add header</value></data>
+  <data name="ChatForm_agent_localTools" xml:space="preserve"><value>Local tools</value></data>
+  <data name="ChatForm_agent_tool_search" xml:space="preserve"><value>Tool search</value></data>
+  <data name="ChatForm_agent_resource_search" xml:space="preserve"><value>Resource search</value></data>
+  <data name="ChatForm_agent_nonEmpty" xml:space="preserve"><value>Non-empty response</value></data>
+  <data name="ChatForm_agent_minLength" xml:space="preserve"><value>Minimum length</value></data>
+  <data name="ChatForm_agent_keywordCheck" xml:space="preserve"><value>Keywords</value></data>
+  <data name="ChatForm_agent_keywords" xml:space="preserve"><value>Keywords (one per line)</value></data>
+  <data name="ChatForm_agent_caseSensitive" xml:space="preserve"><value>Case sensitive</value></data>
+  <data name="ChatForm_agent_toolCallsPresent" xml:space="preserve"><value>Tool calls present</value></data>
+  <data name="ChatForm_agent_toolCalledCheck" xml:space="preserve"><value>Named tools called</value></data>
+  <data name="ChatForm_agent_toolNames" xml:space="preserve"><value>Tool names (one per line)</value></data>
+  <data name="ChatForm_agent_availableTools" xml:space="preserve"><value>Add available tool</value></data>
+  <data name="ChatForm_agent_mode" xml:space="preserve"><value>Match mode</value></data>
+  <data name="ChatForm_agent_hasImageContent" xml:space="preserve"><value>Image content present</value></data>
+  <data name="ChatForm_agent_addSkill" xml:space="preserve"><value>Add skill</value></data>
+  <data name="ChatForm_agent_skillId" xml:space="preserve"><value>Skill identifier</value></data>
+  <data name="ChatForm_agent_skillVersion" xml:space="preserve"><value>Version</value></data>
+  <data name="ChatForm_agent_skillMode" xml:space="preserve"><value>Skill mode</value></data>
+  <data name="AgentDiscoverTools" xml:space="preserve"><value>Discover tools</value></data>
+  <data name="Tools" xml:space="preserve"><value>Tools</value></data>
+  <data name="McpCatalog" xml:space="preserve"><value>Catalog</value></data>
+  <data name="Local" xml:space="preserve"><value>Local</value></data>
 </root>
