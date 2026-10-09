@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Media;
 
 namespace AIHappey.Desktop.Core;
 
@@ -32,8 +31,7 @@ public sealed class OpenAITranscriptionSettingsForm : ITranscriptionProviderForm
     {
         config = TranscriptionPreferences.CleanOpenAI(source);
         var panel = new StackPanel { Name = "OpenAITranscriptionForm", Spacing = 16 };
-        var general = new StackPanel { Spacing = 12 };
-        general.Children.Add(new TextBlock { Text = DesktopResources.Get("General"), FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+        NativeSettingsSurface.Card(panel, "TranscriptionGeneralCard", DesktopResources.Get("General"), out var general);
         TextBox Field(string name, string label, string placeholder, string value, bool multiline = false)
         {
             var field = new TextBox { Name = name, Header = DesktopResources.Get(label), PlaceholderText = DesktopResources.Get(placeholder), Text = value,
@@ -50,9 +48,7 @@ public sealed class OpenAITranscriptionSettingsForm : ITranscriptionProviderForm
         format.SelectedItem = format.Items.Cast<ComboBoxItem>().First(i => (string)i.Tag == selected);
         ControlAppearance.Stock(format); ToolbarControls.Label(format, DesktopResources.Get("TranscriptionResponseFormat")); general.Children.Add(format);
         general.Children.Add(new TextBlock { Text = DesktopResources.Get("TranscriptionFormatHint"), TextWrapping = TextWrapping.Wrap });
-        var card = new Border { Child = general, Padding = new Thickness(16), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
-        ControlAppearance.Apply(card, (_, _) => { }, palette => { card.Background = new SolidColorBrush(palette.Panel); card.BorderBrush = new SolidColorBrush(palette.Stroke); });
-        panel.Children.Add(card); View = panel;
+        View = panel;
     }
     private static string Join(JsonNode? node, string separator) => node is JsonArray array ? string.Join(separator, array.Select(OpenAIChatConfig.Text).Where(s => !string.IsNullOrWhiteSpace(s))) : "";
     public void Commit(TranscriptionPreferences preferences)
@@ -76,7 +72,7 @@ public sealed class TranscriptionSettingsDialog : ContentDialog, IResponsiveDial
     private readonly string[] providers;
     private readonly Grid layout = new() { RowSpacing = 12 };
     private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
-    private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+    private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock validation = new() { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private readonly List<ITranscriptionProviderForm> forms = [];
     public Func<TranscriptionPreferences, Task>? SaveAsync { get; set; }

@@ -10,7 +10,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private readonly string? provider;
     private readonly Grid layout = new() { RowSpacing = 16 };
     private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
-    private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled };
+    private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock validation = new() { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private TextBox tokens = null!;
     private TextBox instructions = null!;
@@ -20,6 +20,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private readonly Func<CancellationToken, Task<DesktopSkillSelection>>? loadSkills;
     private readonly Func<string, CancellationToken, Task>? prefetchSkill;
     private Action? selectSkillsTab;
+    private Action? selectGeneralTab, selectProviderTab;
     public ChatPreferences? Result { get; private set; }
     public Func<ChatPreferences, Task>? SaveAsync { get; set; }
     public bool DiscardOnShutdown { get; set; }
@@ -57,7 +58,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     {
         skillsView?.Dispose(); skillsView = new(draft, loadSkills, prefetchSkill);
         tabs.Children.Clear(); general = new StackPanel { Spacing = 16 };
-        ChatSettingsFields.Card(general, "GeneralChatCard", "artificialIntelligence", out var body, out _);
+        NativeSettingsSurface.Card(general, "GeneralChatCard", ChatSettingsFields.L("artificialIntelligence"), out var body);
         tokens = new TextBox { Name = "MaxOutputTokens", Header = DesktopResources.Get("ChatMaxOutputTokens"), PlaceholderText = DesktopResources.Get("ChatOptional"), Text = draft.MaxOutputTokens?.ToString() ?? "" };
         ControlAppearance.Stock(tokens); AutomationProperties.SetName(tokens, DesktopResources.Get("ChatMaxOutputTokens")); body.Children.Add(tokens);
         var tokenError = new TextBlock { Text = DesktopResources.Get("ChatTokensInvalid"), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed }; body.Children.Add(tokenError);
@@ -72,13 +73,16 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         var skillsTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatSkillsTab", Content = DesktopResources.Get("Skills") };
         ControlAppearance.Stock(skillsTab); tabs.Children.Add(skillsTab);
         Microsoft.UI.Xaml.Controls.Primitives.ToggleButton? providerTab = null;
+        selectProviderTab = null;
         if (providerForm is not null)
         {
             providerTab = new() { Name = "ChatProviderTab", Content = provider == "openai" ? "OpenAI" : provider };
             ControlAppearance.Stock(providerTab); tabs.Children.Add(providerTab);
-            providerTab.Click += (_, _) => { generalTab.IsChecked = skillsTab.IsChecked = false; providerTab.IsChecked = true; page.Content = providerForm.View; page.ChangeView(null, 0, null, true); };
+            selectProviderTab = () => { generalTab.IsChecked = skillsTab.IsChecked = false; providerTab.IsChecked = true; page.Content = providerForm.View; page.ChangeView(null, 0, null, true); };
+            providerTab.Click += (_, _) => selectProviderTab();
         }
-        generalTab.Click += (_, _) => { generalTab.IsChecked = true; skillsTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false; page.Content = general; page.ChangeView(null, 0, null, true); };
+        selectGeneralTab = () => { generalTab.IsChecked = true; skillsTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false; page.Content = general; page.ChangeView(null, 0, null, true); };
+        generalTab.Click += (_, _) => selectGeneralTab();
         selectSkillsTab = () => { skillsTab.IsChecked = true; generalTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false;
             page.Content = skillsView; page.ChangeView(null, 0, null, true); };
         skillsTab.Click += (_, _) => ShowSkillsTab();
@@ -90,7 +94,13 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         if (DiscardOnShutdown) return;
         if (!ChatPreferences.TryTokenLimit(tokens.Text, out var limit) || providerForm?.IsValid == false)
         {
-            args.Cancel = true; validation.Text = DesktopResources.Get("ChatSettingsInvalid"); validation.Visibility = Visibility.Visible; return;
+            args.Cancel = true; validation.Text = DesktopResources.Get("ChatSettingsInvalid"); validation.Visibility = Visibility.Visible;
+            if (!ChatPreferences.TryTokenLimit(tokens.Text, out _))
+            {
+                selectGeneralTab?.Invoke(); layout.UpdateLayout(); tokens.Focus(FocusState.Programmatic); tokens.StartBringIntoView();
+            }
+            else { selectProviderTab?.Invoke(); layout.UpdateLayout(); providerForm?.FocusInvalid(); }
+            return;
         }
         var deferral = args.GetDeferral();
         try

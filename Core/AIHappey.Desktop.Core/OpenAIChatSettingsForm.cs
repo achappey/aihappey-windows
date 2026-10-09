@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
+using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using static AIHappey.Desktop.Core.ChatSettingsFields;
@@ -14,6 +15,7 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
     private readonly ChatSettingsFields fields = new();
     private readonly StackPanel cards = new() { Spacing = 18 };
     private readonly Dictionary<string, ChatSettingsFields> childFields = [];
+    private readonly List<(SettingsExpander Expander, StackPanel Body)> sections = [];
     public FrameworkElement View => cards;
     public bool IsValid => fields.IsValid && childFields.Values.All(f => f.IsValid);
     public OpenAIChatSettingsForm(ChatPreferences preferences)
@@ -29,10 +31,28 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
         if (model.Headers.Count == 0) preferences.ProviderHeaders.Remove("openai");
         else preferences.ProviderHeaders["openai"] = new(model.Headers, StringComparer.OrdinalIgnoreCase);
     }
-    private StackPanel Section(string name, string label, bool toggle = true)
+    public void FocusInvalid()
     {
-        Card(cards, "OpenAI_" + name, label, out var body, out var heading);
+        var control = fields.FirstInvalid ?? childFields.Values.Select(f => f.FirstInvalid).FirstOrDefault(c => c is not null);
+        if (control is null) return;
+        foreach (var (expander, body) in sections)
+            if (NativeSettingsSurface.Contains(body, control)) expander.IsExpanded = true;
+        cards.DispatcherQueue.TryEnqueue(() =>
+        {
+            cards.UpdateLayout(); control.Focus(FocusState.Programmatic); control.StartBringIntoView();
+        });
+    }
+    private StackPanel Section(string name, string label, bool toggle = true, bool expandable = true)
+    {
+        var heading = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
         if (toggle) fields.HeaderSwitch(heading, label, () => model.Enabled(name), on => model.Toggle(name, on));
+        if (!expandable)
+        {
+            NativeSettingsSurface.ToggleCard(cards, "OpenAI_" + name, L(label), heading);
+            return new StackPanel(); // Toggle-only feature has no detail controls or empty expander.
+        }
+        var expander = NativeSettingsSurface.Expander(cards, "OpenAI_" + name, L(label), toggle ? heading : null, out var body);
+        sections.Add((expander, body));
         return body;
     }
     private Func<bool> On(string section) => () => model.Enabled(section);
@@ -154,7 +174,7 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
     }
     private void Programmatic()
     {
-        Section("programmatic_tool_calling", "openai.programmaticToolCalling.title");
+        Section("programmatic_tool_calling", "openai.programmaticToolCalling.title", expandable: false);
         fields.Watch(() => { if (model.Enabled("programmatic_tool_calling")) model.Set("programmatic_tool_calling/type", JsonValue.Create("programmatic_tool_calling")); });
     }
     private void AllowedCallers(Panel body, string section)

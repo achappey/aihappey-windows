@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Media;
 
 namespace AIHappey.Desktop.Core;
 
@@ -158,11 +157,8 @@ internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
 
     private StackPanel Card(string title)
     {
-        var content = new StackPanel { Spacing = 12 };
-        content.Children.Add(new TextBlock { Text = title, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
-        var border = new Border { Name = "CatalogDialogCard", Child = content, CornerRadius = new CornerRadius(8), Padding = new Thickness(16), BorderThickness = new Thickness(1) };
-        ControlAppearance.Apply(border, (_, _) => { }, palette => { border.Background = new SolidColorBrush(palette.Panel); border.BorderBrush = new SolidColorBrush(palette.Stroke); });
-        body.Children.Add(border); return content;
+        NativeSettingsSurface.Card(body, "CatalogDialogCard", title, out var content);
+        return content;
     }
 
     private static TextBlock Text(string text) => new() { Text = text, IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap, FontSize = 14 };

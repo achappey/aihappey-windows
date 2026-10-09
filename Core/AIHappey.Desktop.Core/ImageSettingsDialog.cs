@@ -63,7 +63,7 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
     private readonly string? provider;
     private readonly Grid layout = new() { RowSpacing = 16 };
     private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
-    private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+    private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock validation = new() { Name = "ImageSettingsValidation", TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private readonly string maskDirectory;
     private readonly CancellationTokenSource lifetime = new();
@@ -101,11 +101,8 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
     { Name = name, Header = DesktopResources.Get(label), Text = value ?? "", HorizontalAlignment = HorizontalAlignment.Stretch };
     private static StackPanel Card(StackPanel parent, string title)
     {
-        var panel = new StackPanel { Spacing = 12 };
-        panel.Children.Add(new TextBlock { Text = DesktopResources.Get(title), FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-        var border = new Border { Child = panel, Padding = new Thickness(16), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
-        ControlAppearance.Apply(border, (_, _) => { }, palette => { border.Background = new SolidColorBrush(palette.Panel); border.BorderBrush = new SolidColorBrush(palette.Stroke); });
-        parent.Children.Add(border); return panel;
+        NativeSettingsSurface.Card(parent, title + "Card", DesktopResources.Get(title), out var panel);
+        return panel;
     }
     private static TextBox Dimensions(StackPanel panel, string name, string label, string? value, string[] presets)
     {

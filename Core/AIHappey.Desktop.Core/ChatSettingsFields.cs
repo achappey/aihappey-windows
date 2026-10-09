@@ -4,7 +4,6 @@ using System.Text.Json.Nodes;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
 
 namespace AIHappey.Desktop.Core;
 
@@ -15,6 +14,7 @@ internal sealed class ChatSettingsFields
     private readonly HashSet<Control> invalid = [];
     private bool syncing;
     public bool IsValid => invalid.Count == 0;
+    public Control? FirstInvalid => invalid.FirstOrDefault(control => control.IsEnabled);
     public static string L(string key) => DesktopResources.Get("ChatForm_" + key.Replace(':', '_').Replace('.', '_'));
     public void Refresh()
     {
@@ -140,20 +140,6 @@ internal sealed class ChatSettingsFields
         };
         return (left, right);
     }
-    public static Border Card(Panel parent, string name, string titleKey, out StackPanel body, out StackPanel heading)
-    {
-        var content = new StackPanel { Spacing = 16 };
-        var header = new Grid { Name = "CardHeader", ColumnSpacing = 16, MinHeight = 32 };
-        header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        header.Children.Add(new TextBlock { Name = "CardTitle", Text = L(titleKey), FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
-        heading = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
-        Grid.SetColumn(heading, 1); header.Children.Add(heading);
-        content.Children.Add(header); body = new StackPanel { Spacing = 12 }; content.Children.Add(body);
-        var card = new Border { Name = name, Child = content, Padding = new Thickness(16), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
-        ControlAppearance.Apply(card, (_, _) => { }, palette => { card.Background = new SolidColorBrush(palette.Panel); card.BorderBrush = new SolidColorBrush(palette.Stroke); });
-        parent.Children.Add(card); return card;
-    }
     public static Button Button(Panel parent, string key, Action action)
     {
         var button = new Button { Content = L(key) }; ControlAppearance.Stock(button); AutomationProperties.SetName(button, L(key));
@@ -165,6 +151,7 @@ internal interface IChatProviderForm
 {
     FrameworkElement View { get; }
     bool IsValid { get; }
+    void FocusInvalid();
     void Commit(ChatPreferences preferences);
 }
 
