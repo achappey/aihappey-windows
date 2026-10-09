@@ -28,7 +28,7 @@
     <Content Include="chat-context.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Manifest Include="$(ApplicationManifest)" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.29648.1000-preview" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
     <ProjectReference Include="..\..\Core\AIHappey.Desktop.Core\AIHappey.Desktop.Core.csproj" />
