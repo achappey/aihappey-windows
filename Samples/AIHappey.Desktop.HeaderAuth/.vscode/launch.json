@@ -7,7 +7,7 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "desktop-build-header",
-      "program": "${workspaceFolder}/../../artifacts/Debug/HeaderAuth/AIHappey.Desktop.HeaderAuth.exe",
+      "program": "${workspaceFolder}/../../artifacts/Debug/HeaderAuth/aihappey.exe",
       "cwd": "${workspaceFolder}/../../artifacts/Debug/HeaderAuth",
       "console": "internalConsole",
       "justMyCode": true
