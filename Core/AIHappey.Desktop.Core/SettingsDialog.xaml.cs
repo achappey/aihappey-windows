@@ -9,6 +9,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private readonly ChatPreferences chatPreferences;
     private readonly List<string> allowedTools;
     private readonly AiModelPreferences aiModelPreferences;
+    private readonly AppAgentPreferences appAgentPreferences;
     private readonly ImagePreferences imagePreferences;
     private readonly TranscriptionPreferences transcriptionPreferences;
     private readonly ImageStorageSettingsView imageStorage;
@@ -16,15 +17,18 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private readonly VideoStorageSettingsView videoStorage;
     private readonly CancellationTokenSource catalogLifetime = new();
     public AiModelSettingsView AiModelView { get; }
+    public AppAgentsSettingsView AppAgentsView { get; }
     public DesktopSettings? Result { get; private set; }
 
     public SettingsDialog(DesktopSettings settings, bool allowLocal, string activeLanguage,
-        IReadOnlyList<ChatTarget>? aiModels = null, Func<CancellationToken, Task<IReadOnlyList<ChatTarget>>>? loadAiModels = null)
+        IReadOnlyList<ChatTarget>? aiModels = null, Func<CancellationToken, Task<IReadOnlyList<ChatTarget>>>? loadAiModels = null,
+        IReadOnlyList<DesktopAgent>? appAgents = null)
     {
         this.allowLocal = allowLocal;
         chatPreferences = settings.Chat.Clone();
         allowedTools = settings.AllowedToolList.ToList();
         aiModelPreferences = settings.AiModels.Clone();
+        appAgentPreferences = settings.SideInferenceAgentNames.Clone();
         imagePreferences = settings.Images.Clone();
         videoPreferences = settings.Videos.Clone();
         transcriptionPreferences = settings.Transcriptions.Clone();
@@ -33,6 +37,8 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         videoStorage = new(videoPreferences, catalogLifetime.Token);
         AiModelView = new(aiModelPreferences, aiModels, imageStorage, videoStorage);
         ArtificialIntelligencePage.Children.Add(AiModelView);
+        AppAgentsView = new(appAgentPreferences, appAgents);
+        AppAgentsPage.Children.Add(AppAgentsView);
         Name = "SettingsDialog";
         Resources["ContentDialogMaxWidth"] = 840d;
         Resources["ContentDialogMinWidth"] = 0d;
@@ -77,9 +83,10 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private void TabChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         // Selection can fire while InitializeComponent is still creating the page controls.
-        if (GeneralPage is null || EndpointsPage is null || AttachmentsPage is null || ModelContextPage is null || ArtificialIntelligencePage is null) return;
+        if (GeneralPage is null || EndpointsPage is null || AttachmentsPage is null || ModelContextPage is null || ArtificialIntelligencePage is null || AppAgentsPage is null) return;
         GeneralPage.Visibility = ReferenceEquals(Tabs.SelectedItem, GeneralTab) ? Visibility.Visible : Visibility.Collapsed;
         ArtificialIntelligencePage.Visibility = ReferenceEquals(Tabs.SelectedItem, ArtificialIntelligenceTab) ? Visibility.Visible : Visibility.Collapsed;
+        AppAgentsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, AppAgentsTab) ? Visibility.Visible : Visibility.Collapsed;
         EndpointsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, EndpointsTab) ? Visibility.Visible : Visibility.Collapsed;
         AttachmentsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, AttachmentsTab) ? Visibility.Visible : Visibility.Collapsed;
         ModelContextPage.Visibility = ReferenceEquals(Tabs.SelectedItem, ModelContextTab) ? Visibility.Visible : Visibility.Collapsed;
@@ -118,6 +125,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             Videos = videoPreferences.Clone(),
             Transcriptions = transcriptionPreferences.Clone(),
             AiModels = aiModelPreferences.Clone(),
+            SideInferenceAgentNames = appAgentPreferences.Clone(),
             AllowedToolList = allowedTools.ToList()
         };
         try { next.Validate(allowLocal); }

@@ -30,6 +30,7 @@ public sealed partial class ChatShell
         var items = await agentStore.ListAsync(partition, session.DefaultAgents, ct);
         ct.ThrowIfCancellationRequested(); if (session.AgentPartition != partition || closing) return;
         localAgents = items; localAgentPartition = partition;
+        RefreshWelcome();
     }
     private static IReadOnlyList<ChatTarget> ProjectAgentTargets(IEnumerable<CatalogItem> items) => DesktopAgentTargets.Project(items);
     private async Task<IReadOnlyList<CatalogItem>> LoadCatalogItemsAsync(CatalogKind kind, CancellationToken ct)

@@ -64,6 +64,7 @@ public sealed partial class ChatShell : UserControl
     {
         this.session = session;
         client = new(session, http);
+        appAgentClient = new DesktopAppAgentClient(session, client, http);
         history = new(Path.Combine(session.DataDirectory, "conversations"));
         catalogClient = new(client, http);
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
@@ -125,6 +126,8 @@ public sealed partial class ChatShell : UserControl
                     await session.Runtime.ResolveAsync(ServiceKind.Agents, session.Settings, ct);
                 await DiscoverAsync(ct);
             });
+            appAgentsReady = true;
+            RefreshWelcome();
         };
         newChat.Click += (_, _) => NewConversation();
         refresh.Click += async (_, _) => await RunAsync(RefreshActivePageAsync);
@@ -383,6 +386,7 @@ public sealed partial class ChatShell : UserControl
         }
         if (targets.Count == 0 || Service == ServiceKind.Ai && AiModelCatalog.ChatSuggestions(targets, session.Settings.AiModels).Count == 0)
             Show(DesktopResources.Get("NoTargets"), InfoBarSeverity.Warning);
+        RefreshWelcome();
     }
 
     private async Task SendAsync(McpSelectedPrompt? selectedPrompt = null)
@@ -424,12 +428,8 @@ public sealed partial class ChatShell : UserControl
             if (selectedPrompt is not null && !selectedPrompt.Entry.IsCurrent())
                 throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
             current.Service = Service; current.Target = selected;
-            if (current.Messages.Count == 0)
-            {
-                var title = selectedPrompt?.Entry.Title ?? (string.IsNullOrWhiteSpace(prompt)
-                    ? string.Join(", ", snapshot.Select(file => file.Name).Concat(resourceSnapshot.Select(r => r.Name))) : prompt);
-                current.Title = title.Length > 60 ? title[..60] + "…" : title;
-            }
+            var nameConversation = current.Messages.Count == 0 && current.Title == DesktopResources.Get("NewChat");
+            var initialTitle = current.Title;
             current.Messages.Add(new() { Message = prepared.Message });
             var output = new ConversationMessage { Message = new UIMessage { Id = Guid.NewGuid().ToString("N"), Role = Role.assistant,
                 Metadata = new Dictionary<string, object> { ["model"] = selected, ["timestamp"] = DateTimeOffset.UtcNow.ToString("O") } }, Status = "streaming" };
@@ -466,6 +466,7 @@ public sealed partial class ChatShell : UserControl
                 var wasDeleted = activeConversationTools?.IsDeleted(current.Id) == true;
                 activeConversationTools = null;
                 if (wasDeleted) { current = new() { Service = Service }; SelectNewChatModel(); }
+                else if (nameConversation) StartConversationNaming(current, partition, prepared.Message, initialTitle);
                 RenderTranscript();
             }
         }, inference: true);
@@ -474,6 +475,7 @@ public sealed partial class ChatShell : UserControl
     private void RenderTranscript()
     {
         var empty = current.Messages.Count == 0;
+        RefreshWelcome();
         welcome.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
         scroll.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         Grid.SetRow(composer, empty ? 1 : 2);
@@ -735,8 +737,10 @@ public sealed partial class ChatShell : UserControl
     {
         if (busy || closing || catalogDialog is not null || historyDialogOpen) return;
         historyDialogOpen = true;
+        try { await LoadLocalAgentsAsync(downloadLifetime.Token); }
+        catch (Exception) { historyDialogOpen = false; Show(DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error); return; }
         var dialog = new SettingsDialog(session.Settings, session.Host.AllowLocal, session.ActiveLanguage, aiModelTargets,
-            ct => client.ListAsync(ServiceKind.Ai, ct)) { XamlRoot = XamlRoot };
+            ct => client.ListAsync(ServiceKind.Ai, ct), localAgents) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog);
         ContentDialogResult result;
         try { result = await dialog.ShowAsync(); }
@@ -753,6 +757,7 @@ public sealed partial class ChatShell : UserControl
             if (connectionsChanged) await StopVideoJobsAsync();
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
+            RefreshWelcome();
             UpdateTargetSuggestions();
             if (elicitationChanged || mcpSkillsChanged) await Mcp.ReconnectAsync(ct);
             RenderContextTags();
@@ -838,6 +843,7 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        appAgentLifetime.Cancel(); welcomeRequest?.Cancel();
         videoWorkLifetime.Cancel();
         videoLinkDialog?.Hide(); videoDeleteDialog?.Hide(); videoPreviewDialog?.ReleasePlayer(); videoPreviewDialog?.Hide();
         if (videoSettingsDialog is not null) { videoSettingsDialog.DiscardOnShutdown = true; videoSettingsDialog.Hide(); }
@@ -862,6 +868,8 @@ public sealed partial class ChatShell : UserControl
         mcpDialog?.Shutdown(); Mcp.Changed -= McpChanged;
         if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.CancelSkillLoading(); chatSettingsDialog.Hide(); }
         while (busy) await Task.Delay(20);
+        await Task.WhenAll(appAgentTasks.ToArray());
+        appAgentLifetime.Dispose();
         activeSharedFileTools?.Dispose(); activeSharedFileTools = null;
         await approvalSettingsWrite.WaitAsync(); approvalSettingsWrite.Release();
         // A save picker may remain open until dismissed; no download continues after shutdown.

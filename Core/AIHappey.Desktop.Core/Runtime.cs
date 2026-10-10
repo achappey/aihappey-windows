@@ -26,6 +26,8 @@ public sealed class DesktopSettings
     public AiModelPreferences AiModels { get => aiModels; set => aiModels = value ?? new(); }
     private ModelContextPreferences modelContext = new();
     public ModelContextPreferences ModelContext { get => modelContext; set => modelContext = value ?? new(); }
+    private AppAgentPreferences sideInferenceAgentNames = new();
+    public AppAgentPreferences SideInferenceAgentNames { get => sideInferenceAgentNames; set => sideInferenceAgentNames = value ?? new(); }
     private List<string> allowedToolList = [];
     public List<string> AllowedToolList
     {
@@ -40,6 +42,7 @@ public sealed class DesktopSettings
         Agents = new() { Location = Agents.Location, RemoteUrl = Agents.RemoteUrl },
         Language = Language, ConvertAttachmentsToText = ConvertAttachmentsToText,
         Chat = Chat.Clone(), Images = Images.Clone(), Videos = Videos.Clone(), Transcriptions = Transcriptions.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
+        SideInferenceAgentNames = SideInferenceAgentNames.Clone(),
         AllowedToolList = AllowedToolList.ToList()
     };
 

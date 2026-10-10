@@ -13,6 +13,8 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/MessageUsage.cs" Link="Core/MessageUsage.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Agents.cs" Link="Core/Agents.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/AppAgentPreferences.cs" Link="Core/AppAgentPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/AppAgentClient.cs" Link="Core/AppAgentClient.cs" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/AgentProviderDefaults.json" LogicalName="Desktop.AgentProviderDefaults" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/DesktopBranding.cs" Link="Core/DesktopBranding.cs" />
     <AssemblyMetadata Include="DesktopAppName" Value="Image regression app" />

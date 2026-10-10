@@ -84,7 +84,22 @@
   <data name="Stop" xml:space="preserve"><value>Stoppen</value></data>
   <data name="Retry" xml:space="preserve"><value>Opnieuw proberen</value></data>
   <data name="ShowMore" xml:space="preserve"><value>Meer tonen</value></data>
-  <data name="Welcome" xml:space="preserve"><value>Je behulpzame vervanger is er</value></data>
+  <data name="Welcome" xml:space="preserve"><value>Welkom</value></data>
+  <data name="SettingsAppAgents.Text" xml:space="preserve"><value>Agents</value></data>
+  <data name="SettingsAppAgentsTab.AutomationProperties.Name" xml:space="preserve"><value>Agents</value></data>
+  <data name="AppAgentWelcomeMessage" xml:space="preserve"><value>Agent voor welkomstberichten</value></data>
+  <data name="AppAgentWelcomeMessageHint" xml:space="preserve"><value>Kies de agent voor welkomstberichten.</value></data>
+  <data name="AppAgentConversationName" xml:space="preserve"><value>Agent voor gespreksnamen</value></data>
+  <data name="AppAgentConversationNameHint" xml:space="preserve"><value>Kies de agent voor gespreksnamen.</value></data>
+  <data name="AppAgentExplainToolCall" xml:space="preserve"><value>Agent voor tooluitleg</value></data>
+  <data name="AppAgentExplainToolCallHint" xml:space="preserve"><value>Kies de agent voor tooluitleg.</value></data>
+  <data name="AppAgentToolSearch" xml:space="preserve"><value>Agent voor toolzoeken</value></data>
+  <data name="AppAgentToolSearchHint" xml:space="preserve"><value>Kies de agent voor het zoeken naar tools.</value></data>
+  <data name="AppAgentResourceSearch" xml:space="preserve"><value>Agent voor resourcezoeken</value></data>
+  <data name="AppAgentResourceSearchHint" xml:space="preserve"><value>Kies de agent voor het zoeken naar resources.</value></data>
+  <data name="AppAgentNone" xml:space="preserve"><value>Geen</value></data>
+  <data name="AppAgentUnavailable" xml:space="preserve"><value>Deze agent is niet beschikbaar. De app gebruikt de standaardtekst.</value></data>
+  <data name="AppAgentNotActive" xml:space="preserve"><value>Deze instelling wordt bewaard voor een volgende stap; deze helper is nog niet actief in Windows.</value></data>
   <data name="Disclaimer" xml:space="preserve"><value>AI kan fouten maken. Controleer belangrijke informatie.</value></data>
   <data name="GeneratedByAi" xml:space="preserve"><value>Door AI gegenereerd</value></data>
   <data name="GeneratedByAiWarning" xml:space="preserve"><value>Door AI gegenereerde inhoud is mogelijk onjuist</value></data>
