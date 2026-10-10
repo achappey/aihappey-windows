@@ -40,10 +40,16 @@ public partial class App
         var buttons = new ButtonBase[] { newChat, search }.Concat(pages).ToArray();
         Check(buttons.Select(AutomationProperties.GetName).SequenceEqual(new[] { "New chat", "Search chats", "Images", "Videos", "Transcriptions" }),
             context + ": compact actions match primary navigation order");
+        var header = (Grid)toggle.Parent;
         split.IsPaneOpen = false;
         await Task.Delay(250); shell.UpdateLayout();
         void CheckCompactBounds(string state)
         {
+            Check(header.Margin == new Thickness(0) && navigation.Spacing == 8,
+                context + $": {state}, compact header has no expanded bottom margin and page icons use 8px spacing");
+            var togglePoint = toggle.TransformToVisual(shell).TransformPoint(new());
+            Check(Math.Abs(togglePoint.X + toggle.ActualWidth / 2 - split.CompactPaneLength / 2) < 1,
+                context + $": {state}, menu button is centered in the compact rail");
             var previousBottom = toggle.TransformToVisual(shell).TransformPoint(new()).Y + toggle.ActualHeight;
             foreach (var button in buttons)
             {
@@ -55,6 +61,13 @@ public partial class App
                     && content.Children.OfType<TextBlock>().Single().Visibility == Visibility.Collapsed
                     && button.Padding == new Thickness(0) && button.HorizontalContentAlignment == HorizontalAlignment.Center,
                     context + $": {state}, visible icon-only {AutomationProperties.GetName(button)} stays inside compact pane");
+                var icon = content.Children.OfType<IconElement>().Single();
+                var iconPoint = icon.TransformToVisual(shell).TransformPoint(new());
+                Check(Math.Abs(point.Y - previousBottom - 8) < 1
+                    && Math.Abs(point.X + button.ActualWidth / 2 - split.CompactPaneLength / 2) < 1
+                    && Math.Abs(iconPoint.X + icon.ActualWidth / 2 - point.X - button.ActualWidth / 2) < 1
+                    && Math.Abs(iconPoint.Y + icon.ActualHeight / 2 - point.Y - button.ActualHeight / 2) < 1,
+                    context + $": {state}, {AutomationProperties.GetName(button)} has an 8px gap and a centered icon");
                 Check(button.IsTabStop && button.Focus(FocusState.Keyboard)
                     && ToolTipService.GetToolTip(button) is ToolTip tooltip && tooltip.Content.ToString() == AutomationProperties.GetName(button)
                     && Readable(button.Foreground, button.Background, shell.ActualTheme),
@@ -104,10 +117,14 @@ public partial class App
         await Task.Delay(100);
         InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();
         Check(split.IsPaneOpen && expanded.Visibility == Visibility.Visible && Field<ListView>(shell, "chats").Visibility == Visibility.Visible
+            && header.Margin == new Thickness(0, 0, 0, 12) && navigation.Spacing == 4
             && buttons.All(button => double.IsNaN(button.Width) && double.IsNaN(button.Height)
                 && button.Padding == new Thickness(12, 10, 12, 10) && button.HorizontalContentAlignment == HorizontalAlignment.Left
                 && ((StackPanel)button.Content).Spacing == 12 && ((StackPanel)button.Content).Children.OfType<TextBlock>().Single().Visibility == Visibility.Visible),
             context + ": menu toggle restores expanded labels, dimensions, categories, and history");
+        InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();
+        CheckCompactBounds("repeated collapse");
+        InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();
         window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(600, 900));
         await Task.Delay(250); shell.UpdateLayout();
         Check(!split.IsPaneOpen, context + ": narrow window automatically uses the compact sidebar");

@@ -9,7 +9,7 @@ public sealed partial class ChatShell
     private readonly MessageFooterPanel mcpTags = new() { Name = "McpConnectedServers" };
     private readonly ScrollViewer mcpTagScroll = new() { MaxHeight = 128, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
         HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Visibility = Visibility.Collapsed };
-    private readonly MenuFlyoutItem manageMcp = new() { Name = "ManageMcpServers", Text = DesktopResources.Get("McpTitle"), Icon = new FontIcon { Glyph = "\uE774" } };
+    private readonly MenuFlyoutItem manageMcp = new() { Name = "ManageMcpServers", Text = DesktopResources.Get("McpTitle"), Icon = ToolbarControls.ConnectorIcon() };
     private readonly HttpClient mcpCatalogHttp = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }) { Timeout = TimeSpan.FromSeconds(30) };
     private DesktopMcpManager Mcp => session.InitializeMcp();
     private McpServersDialog? mcpDialog;

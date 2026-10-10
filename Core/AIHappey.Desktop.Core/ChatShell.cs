@@ -240,6 +240,8 @@ public sealed partial class ChatShell : UserControl
             sidebar.Width = open ? split.OpenPaneLength : split.CompactPaneLength;
             sidebarHeader.ColumnDefinitions[0].Width = open ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
             sidebarHeader.ColumnSpacing = open ? 8 : 0;
+            sidebarHeader.Margin = open ? new Thickness(0, 0, 0, 12) : new Thickness(0);
+            pageNavigation.Spacing = open ? 4 : 8;
             appTitle.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
             chats.Visibility = expandedPageNavigation.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
             foreach (var button in new ButtonBase[] { newChat, searchChats, pageButtons[DesktopPage.Images], pageButtons[DesktopPage.Videos], pageButtons[DesktopPage.Transcriptions] })
@@ -538,7 +540,7 @@ public sealed partial class ChatShell : UserControl
             if (price is not null)
             {
                 var pricing = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
-                pricing.Children.Add(new FontIcon { Glyph = "\uE8D4", FontSize = 14 });
+                pricing.Children.Add(new FontIcon { Glyph = "$", FontFamily = new FontFamily("Segoe UI"), FontSize = 14 });
                 pricing.Children.Add(new TextBlock { Text = price, VerticalAlignment = VerticalAlignment.Center });
                 var badge = new Border { Name = "MessagePrice", Child = pricing, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), VerticalAlignment = VerticalAlignment.Center };
                 ToolbarControls.Label(badge, DesktopResources.Format("MessagePrice", price));

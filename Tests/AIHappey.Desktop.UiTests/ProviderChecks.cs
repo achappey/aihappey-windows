@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 
 namespace AIHappey.Desktop.UiTests;
 
@@ -83,11 +84,26 @@ public partial class App
         Check(logo.Children.OfType<Image>().Single().Visibility == Visibility.Visible, context + ": bundled PNG logo decodes natively while offline");
         root.Children.Clear();
 
-        var session = new DesktopSession(new UiHost(true), new UiRuntime(), new()); var shell = new ChatShell(session);
+        var session = new DesktopSession(new UiHost(true), new UiRuntime(), new()); var shell = new ChatShell(session) { RequestedTheme = theme };
         try
         {
             var ai = Field<StackPanel>(shell, "aiNavigation");
             Check(ai.Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Select(b => b.Name).SequenceEqual(["NavigateModels", "NavigateProviders"]), context + ": Providers is beside Models in the AI navigation group");
+            var providersButton = ai.Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Single(b => b.Name == "NavigateProviders");
+            var mcpButton = Field<StackPanel>(shell, "expandedPageNavigation").Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Single(b => b.Name == "NavigateMcp");
+            var providerIcon = ((StackPanel)providersButton.Content).Children.OfType<PathIcon>().Single();
+            var mcpIcon = ((StackPanel)mcpButton.Content).Children.OfType<PathIcon>().Single();
+            Check(providerIcon.Data is PathGeometry { Figures.Count: 2 } && mcpIcon.Data is PathGeometry { Figures.Count: 4 }
+                && providerIcon.Width == 20 && providerIcon.Height == 20 && mcpIcon.Width == 20 && mcpIcon.Height == 20
+                && providerIcon.Foreground is SolidColorBrush providerFill && providersButton.Foreground is SolidColorBrush providerText && providerFill.Color == providerText.Color
+                && mcpIcon.Foreground is SolidColorBrush mcpFill && mcpButton.Foreground is SolidColorBrush mcpText && mcpFill.Color == mcpText.Color,
+                context + ": Providers cloud and MCP connector are distinct theme-colored native vector icons");
+            Check(Field<MenuFlyoutItem>(shell, "manageMcp").Icon is PathIcon menuIcon
+                && menuIcon.Data is PathGeometry { Figures.Count: 4 } && !ReferenceEquals(menuIcon, mcpIcon)
+                && AutomationProperties.GetName(providersButton) == DesktopResources.Get("Providers")
+                && AutomationProperties.GetName(mcpButton) == DesktopResources.Get("McpTitle")
+                && ToolTipService.GetToolTip(providersButton) is ToolTip && ToolTipService.GetToolTip(mcpButton) is ToolTip,
+                context + ": MCP menu uses the matching connector while navigation keeps accessible labels and tooltips");
             var pageEnum = assembly.GetType("AIHappey.Desktop.Core.DesktopPage")!;
             typeof(ChatShell).GetMethod("ShowPage", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(shell, [Enum.Parse(pageEnum, "Providers")]);
             Check(Field<UserControl>(shell, "providersOverview").Visibility == Visibility.Visible && Field<UserControl>(shell, "modelsOverview").Visibility == Visibility.Collapsed

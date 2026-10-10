@@ -37,16 +37,17 @@ public sealed partial class ChatShell
             (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)new FontIcon { Glyph = "\uEB9F" }),
             (DesktopPage.Videos, DesktopResources.Get("Videos"), (IconElement)new FontIcon { Glyph = "\uE714" }),
             (DesktopPage.Transcriptions, DesktopResources.Get("Transcriptions"), (IconElement)new FontIcon { Glyph = "\uE720" }),
-            (DesktopPage.Files, DesktopResources.Get("Files"), (IconElement)new FontIcon { Glyph = "\uE8B7" }),
             (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)ToolbarControls.BotIcon()),
-            (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)new FontIcon { Glyph = "\uE774" }),
+            (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)ToolbarControls.ConnectorIcon()),
             (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)new FontIcon { Glyph = "\uE734" }),
+            (DesktopPage.Files, DesktopResources.Get("Files"), (IconElement)new FontIcon { Glyph = "\uE8B7" }),
             (DesktopPage.Models, DesktopResources.Get("Models"), (IconElement)ToolbarControls.BrainIcon()),
-            (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)new FontIcon { Glyph = "\uE774" })
+            (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)ToolbarControls.CloudIcon())
         })
         {
             if (page == DesktopPage.Agents)
             { expandedPageNavigation.Children.Add(SidebarSeparator("AgentsSeparator")); expandedPageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Agents"))); }
+            if (page == DesktopPage.Files) expandedPageNavigation.Children.Add(SidebarSeparator("FilesSeparator"));
             if (page == DesktopPage.Models)
             {
                 expandedPageNavigation.Children.Add(SidebarSeparator("ArtificialIntelligenceSeparator"));

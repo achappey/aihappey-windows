@@ -196,7 +196,8 @@ public partial class App : Application
                 var priceBadges = Descendants(body).OfType<Border>().Where(b => b.Name == "MessagePrice").ToArray();
                 Check(tokenBadges.Length == (tokens > 0 ? 1 : 0), context + $": token badge/icon omitted for zero, assistant answer only ({tokens})");
                 Check(priceBadges.Length == 1 && ((StackPanel)priceBadges[0].Child).Children.OfType<TextBlock>().Single().Text == expected
-                    && Descendants(priceBadges[0]).OfType<FontIcon>().Any() && AutomationProperties.GetName(priceBadges[0]) == "Message price: " + expected,
+                    && Descendants(priceBadges[0]).OfType<FontIcon>().Single() is { Glyph: "$", FontSize: 14 } costIcon
+                    && costIcon.FontFamily.Source == "Segoe UI" && AutomationProperties.GetName(priceBadges[0]) == "Message price: " + expected,
                     context + ": accessible themed assistant-only price badge: " + expected);
             }
             SetMetadata(1, new() { ["providerMetadata"] = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("""{"gateway":{"cost":"invalid"}}""") });
@@ -278,11 +279,26 @@ public partial class App : Application
             var navigation = Field<StackPanel>(shell, "pageNavigation");
             var expandedNavigation = Field<StackPanel>(shell, "expandedPageNavigation");
             Check(expandedNavigation.Children.OfType<TextBlock>().Select(text => text.Text).SequenceEqual(new[] { "Agents", "Chats" })
-                && expandedNavigation.Children.OfType<Border>().Select(border => border.Name).SequenceEqual(new[] { "AgentsSeparator", "ArtificialIntelligenceSeparator", "ChatsSeparator" })
+                && expandedNavigation.Children.OfType<Border>().Select(border => border.Name).SequenceEqual(new[] { "AgentsSeparator", "FilesSeparator", "ArtificialIntelligenceSeparator", "ChatsSeparator" })
                 && navigation.Children.OfType<ToggleButton>().Select(button => button.Name).SequenceEqual(new[] { "NavigateImages", "NavigateVideos", "NavigateTranscriptions" })
                 && !Descendants(pane).OfType<TextBox>().Any(), context + ": browser-style categories and no extra Chat button or inline history search");
             Check(expandedNavigation.Children.OfType<ToggleButton>().Where(button => button.Name is "NavigateAgents" or "NavigateMcp" or "NavigateSkills").Select(button => AutomationProperties.GetName(button))
                 .SequenceEqual(new[] { "Agents", DesktopResources.Get("McpTitle"), "Skills" }), context + ": Agents → More context → Skills navigation order");
+            var expandedItems = expandedNavigation.Children.Cast<FrameworkElement>().ToArray();
+            var filesIndex = Array.FindIndex(expandedItems, element => element.Name == "FilesSeparator");
+            Check(filesIndex > 0 && expandedItems[filesIndex - 1].Name == "NavigateSkills"
+                && expandedItems[filesIndex + 1] is ToggleButton { Name: "NavigateFiles" } filesButton
+                && AutomationProperties.GetName(filesButton) == DesktopResources.Get("Files")
+                && expandedItems[filesIndex + 2].Name == "ArtificialIntelligenceSeparator",
+                context + ": Files is alone in an unlabeled group after Agents/MCP/Skills and before Artificial Intelligence");
+            var pageType = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.DesktopPage")!;
+            await (Task)Call(shell, "NavigateAsync", Enum.Parse(pageType, "Files"))!;
+            Check(Field<object>(shell, "activePage").ToString() == "Files"
+                && Field<UserControl>(shell, "filesOverview").Visibility == Visibility.Visible
+                && Field<Button>(shell, "addFiles").Visibility == Visibility.Visible
+                && ((ToggleButton)expandedItems[filesIndex + 1]).IsChecked == true,
+                context + ": relocated Files retains its overview, toolbar, and selected navigation state");
+            Call(shell, "ShowPage", Enum.Parse(pageType, "Chat"));
             foreach (var state in new[] { "Normal", "PointerOver", "Pressed" })
             {
                 VisualStateManager.GoToState(newChat, state, false);
