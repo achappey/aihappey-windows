@@ -26,7 +26,6 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
     {
         this.draft = draft; this.load = load; this.prefetch = prefetch;
         Name = "ChatSkillsView"; Spacing = 16;
-        Children.Add(new TextBlock { Text = DesktopResources.Get("SkillsContextHint"), TextWrapping = TextWrapping.Wrap });
         ControlAppearance.Stock(search); ToolbarControls.Label(search, DesktopResources.Get("SearchSkills")); Children.Add(search);
         AutomationProperties.SetLiveSetting(feedback, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         Children.Add(feedback); ControlAppearance.Stock(retry); Children.Add(retry); Children.Add(cards);

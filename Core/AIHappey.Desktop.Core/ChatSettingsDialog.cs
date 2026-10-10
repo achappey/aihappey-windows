@@ -67,11 +67,11 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         providerForm = ChatProviderForms.Create(provider, draft);
         var generalTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatGeneralTab", Content = DesktopResources.Get("General"), IsChecked = true };
         ControlAppearance.Stock(generalTab); tabs.Children.Add(generalTab);
-        var skillsTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatSkillsTab", Content = DesktopResources.Get("Skills") };
-        ControlAppearance.Stock(skillsTab); tabs.Children.Add(skillsTab);
         var toolsView = new LocalToolsSettingsView(draft);
         var toolsTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatToolsTab", Content = DesktopResources.Get("Tools") };
         ControlAppearance.Stock(toolsTab); tabs.Children.Add(toolsTab);
+        var skillsTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatSkillsTab", Content = DesktopResources.Get("Skills") };
+        ControlAppearance.Stock(skillsTab); tabs.Children.Add(skillsTab);
         Microsoft.UI.Xaml.Controls.Primitives.ToggleButton? providerTab = null;
         selectProviderTab = null;
         if (providerForm is not null)

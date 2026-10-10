@@ -1,3 +1,5 @@
+using Flags.Icons;
+using Flags.Icons.WinUi;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -149,7 +151,17 @@ internal sealed class ProvidersOverviewPage : UserControl
         if (provider.Experimental) metadata.Children.Add(Badge(DesktopResources.Get("ProviderExperimental")));
         foreach (var type in catalog.Types(provider.Id)) metadata.Children.Add(Badge(FacetLabel("modelType", type)));
         labels.Children.Add(metadata);
-        if (provider.ProviderCountry is { } country) { var origin = new TextBlock { Text = FacetLabel("country", country), FontSize = 12 }; NativeCardSurface.Secondary(origin); labels.Children.Add(origin); }
+        var country = provider.ProviderCountry?.Trim().ToUpperInvariant();
+        if (country is { Length: 2 } && country.All(c => c is >= 'A' and <= 'Z')
+            && Enum.TryParse<LipisFlag>(country, out var flag) && Enum.IsDefined(flag) && flag != LipisFlag.None)
+        {
+            header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+            var origin = new FlagIcon { Name = "ProviderCountryFlag", Lipis = flag, Width = 24, Height = 18,
+                HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top };
+            var label = $"{DesktopResources.Get("ProviderCountry")}: {FacetLabel("country", country)}";
+            ToolTipService.SetToolTip(origin, label); AutomationProperties.SetName(origin, label);
+            Grid.SetColumn(origin, 2); header.Children.Add(origin);
+        }
         Grid.SetColumn(labels, 1); header.Children.Add(labels); grid.Children.Add(header);
         var text = new TextBlock { Name = "ProviderDescription", Text = provider.Description ?? provider.Id, FontSize = 13, TextWrapping = TextWrapping.Wrap, MaxLines = 3,
             TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(16, 18, 16, 16), MinHeight = 40 };

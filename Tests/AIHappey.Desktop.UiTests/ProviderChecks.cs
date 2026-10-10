@@ -1,5 +1,7 @@
 using System.Reflection;
 using AIHappey.Desktop.Core;
+using Flags.Icons;
+using Flags.Icons.WinUi;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -28,6 +30,7 @@ public partial class App
         Check(CardCount(page, "ProviderCard") == 100, context + ": Show more extends the complete sorted catalog");
         search.Text = "https://openai.com"; await Task.Delay(80); page.UpdateLayout();
         var card = Descendants(page).OfType<Border>().Single(c => c.Name == "ProviderCard" && ((CatalogProvider)c.Tag).Id == "openai");
+        CheckProviderFlag(card, LipisFlag.US, context);
         var actions = Descendants(card).OfType<Button>().ToArray();
         Check(actions.Length == 8 && actions.All(b => AutomationProperties.GetName(b).Contains("OpenAI")), context + ": View, six links and Favorite are accessible native actions");
         Uri? requested = null;
@@ -49,6 +52,7 @@ public partial class App
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(420, 850)); await Task.Delay(100); page.UpdateLayout();
         page.GetType().GetProperty("FiltersOpen")!.SetValue(page, false); await Task.Delay(50);
         Check(Descendants(page).OfType<Border>().Where(c => c.Name == "ProviderCard").All(c => c.ActualWidth <= root.ActualWidth), context + ": narrow cards and wrapped footer fit the viewport");
+        CheckProviderFlag(Descendants(page).OfType<Border>().Single(c => c.Name == "ProviderCard"), LipisFlag.US, context + " / narrow");
         var nativeLogo = Descendants(page).OfType<Grid>().Single(g => g.GetType().Name == "ProviderLogo");
         Check(nativeLogo.Children.OfType<Image>().Single().Visibility == Visibility.Collapsed && nativeLogo.Children.OfType<IconElement>().Single().Visibility == Visibility.Visible,
             context + ": offline remote-image switch keeps native placeholder visible");
@@ -61,6 +65,15 @@ public partial class App
         Check(!Descendants(dialog).OfType<PasswordBox>().Any(), context + ": provider configuration is intentionally absent");
         dialog.Hide(); await shown;
         InvokeOverview(page, "Reset"); Check(CardCount(page, "ProviderCard") == 0 && filter.Countries.Count == 0 && filter.ModelTypes.Count == 0, context + ": account invalidation clears favorites and filters");
+        string?[] countryCodes = [" nl ", null, "", " ", "ZZ", "12", "None", "US,NL"];
+        var fixtures = countryCodes.Select((country, index) => new CatalogProvider { Id = "flag-fixture-" + index,
+            Name = "Country flag fixture " + index, ProviderCountry = country }).ToArray();
+        InvokeOverview(page, "SetItems", fixtures, new HashSet<string>(), Array.Empty<ChatTarget>()); await Task.Delay(100); page.UpdateLayout();
+        var fixtureCards = Descendants(page).OfType<Border>().Where(c => c.Name == "ProviderCard").ToArray();
+        CheckProviderFlag(fixtureCards.Single(c => ((CatalogProvider)c.Tag).Id == fixtures[0].Id), LipisFlag.NL, context + " / normalized");
+        Check(fixtureCards.Where(c => ((CatalogProvider)c.Tag).Id != fixtures[0].Id).All(c => !Descendants(c).OfType<FlagIcon>().Any()),
+            context + ": missing, empty, unsupported, numeric and multiple country codes do not create flags");
+        InvokeOverview(page, "Reset");
         root.Children.Clear();
 
         // Embedded images are still permitted with all remote requests disabled.
@@ -97,5 +110,26 @@ public partial class App
             root.Children.Clear();
         }
         finally { await shell.ShutdownAsync(); }
+    }
+
+    private void CheckProviderFlag(Border card, LipisFlag expected, string context)
+    {
+        var flag = Descendants(card).OfType<FlagIcon>().Single(f => f.Name == "ProviderCountryFlag");
+        var header = (Grid)flag.Parent;
+        var labels = header.Children.OfType<StackPanel>().Single();
+        var flagPoint = flag.TransformToVisual(header).TransformPoint(new());
+        var labelsPoint = labels.TransformToVisual(header).TransformPoint(new());
+        Check(flag.Lipis == expected && flag.ActualWidth == 24 && flag.ActualHeight == 18
+            && Descendants(flag).OfType<Image>().Any(i => i.Source is Microsoft.UI.Xaml.Media.Imaging.SvgImageSource),
+            context + ": country uses the compact embedded rectangular SVG flag");
+        Check(Grid.GetColumn(flag) == 2 && flag.VerticalAlignment == VerticalAlignment.Top
+            && Math.Abs(flagPoint.Y) < 1 && Math.Abs(flagPoint.X + flag.ActualWidth - header.ActualWidth) < 1
+            && labelsPoint.X + labels.ActualWidth <= flagPoint.X && Within(flag, card),
+            context + ": flag fits the top-right header corner without overlapping provider labels");
+        Check(labels.Children.Count == 2 && labels.Children[0] is TextBlock { Name: "ProviderName" },
+            context + ": provider header retains name and badges without a third country text row");
+        Check(!string.IsNullOrWhiteSpace(AutomationProperties.GetName(flag))
+            && ToolTipService.GetToolTip(flag) as string == AutomationProperties.GetName(flag),
+            context + ": flag retains the country in its accessible label and native tooltip");
     }
 }

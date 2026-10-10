@@ -27,9 +27,20 @@ public partial class App
         SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(120);
         Check(Descendants(dialog).OfType<TextBox>().Any(t => t.Name == "MaxOutputTokens")
             && !Descendants(dialog).OfType<TextBox>().Any(t => t.Name == "SystemInstructions"), context + ": General retains token limit but has no custom-instructions field");
+        var tabs = Descendants(dialog).OfType<ToggleButton>().Where(t => t.Name.StartsWith("Chat") && t.Name.EndsWith("Tab")).ToArray();
+        Check(tabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab", "ChatProviderTab"])
+            && tabs[0].IsChecked == true && tabs.Count(t => t.IsChecked == true) == 1,
+            context + ": chat tabs are General, Tools, Skills, provider with General selected by default");
+        dialog.ShowToolsTab(); await Task.Delay(80);
+        Check(tabs.Single(t => t.Name == "ChatToolsTab").IsChecked == true && tabs.Count(t => t.IsChecked == true) == 1,
+            context + ": reordered Tools tab retains exclusive native navigation");
         dialog.ShowSkillsTab(); await Task.Delay(120); dialog.UpdateLayout();
         Check(Descendants(dialog).OfType<ToggleButton>().Single(t => t.Name == "ChatSkillsTab").IsChecked == true,
             context + ": native Skills tab selected alongside General and provider");
+        var skillsView = Descendants(dialog).OfType<SkillsSettingsView>().Single();
+        Check(skillsView.Children[0] is TextBox { Name: "ChatSkillSearch" }
+            && skillsView.Children.OfType<TextBlock>().All(t => t.Name == "ChatSkillFeedback"),
+            context + ": Skills starts with search and has no introductory text above it");
         var toggles = Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatSkillToggle").ToArray();
         Check(toggles.Length == 3 && toggles.All(t => !string.IsNullOrWhiteSpace(AutomationProperties.GetName(t))), context + ": remote and MCP toggles have accessible labels");
         var rows = Descendants(dialog).OfType<SettingsExpander>().Where(e => e.Name == "ChatSkillCard").ToArray();
@@ -73,6 +84,10 @@ public partial class App
         var reset = new ChatSettingsDialog(saved!, null, _ => Task.FromResult(new DesktopSkillSelection(items, new HashSet<string>(), "api.example")))
             { XamlRoot = root.XamlRoot, RequestedTheme = theme };
         shown = reset.ShowAsync(); await Task.Delay(100); InvokeButton(Descendants(reset).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80);
+        var resetTabs = Descendants(reset).OfType<ToggleButton>().Where(t => t.Name.StartsWith("Chat") && t.Name.EndsWith("Tab")).ToArray();
+        Check(resetTabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab"])
+            && resetTabs[0].IsChecked == true && resetTabs.Count(t => t.IsChecked == true) == 1,
+            context + ": restore defaults preserves General, Tools, Skills order without a provider form");
         InvokeButton(Descendants(reset).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
         Check(reset.Result?.EnabledSkillIds.Count == 0, context + ": restore defaults clears enabled skills");
         var failedSave = new ChatSettingsDialog(saved!, null) { XamlRoot = root.XamlRoot, RequestedTheme = theme, SaveAsync = _ => throw new IOException("disk") };
