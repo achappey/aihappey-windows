@@ -25,7 +25,7 @@
     <AssemblyMetadata Include="DesktopAppName" Value="UI image app" />
     <Manifest Include="$(ApplicationManifest)" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.29648.1000-preview" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.4-experimental" />
     <ProjectReference Include="../../Core/AIHappey.Desktop.Core/AIHappey.Desktop.Core.csproj" />
   </ItemGroup>
 </Project>

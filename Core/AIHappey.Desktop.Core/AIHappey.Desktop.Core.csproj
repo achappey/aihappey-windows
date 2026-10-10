@@ -18,7 +18,7 @@
     <EmbeddedResource Include="DesktopToolDefinitions.json" LogicalName="Desktop.DesktopToolDefinitions" />
     <!-- x:Uid in this library resolves through the library's native resource scope. -->
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.3.260402-preview2" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.4-experimental" />
     <PackageReference Include="CommunityToolkit.Labs.WinUI.Controls.MarkdownTextBlock" Version="0.1.260915-build.2673" />
     <PackageReference Include="PdfPig" Version="0.1.17-alpha-202610100039-91ddd" />
     <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
