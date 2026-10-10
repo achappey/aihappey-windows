@@ -865,14 +865,14 @@
   <data name="ChatForm_agent_instructions" xml:space="preserve"><value>Instructions</value></data>
   <data name="ChatForm_agent_argumentHint" xml:space="preserve"><value>Argument hint</value></data>
   <data name="ChatForm_agent_policy" xml:space="preserve"><value>Tool policy</value></data>
-  <data name="ChatForm_agent_readOnlyHint" xml:space="preserve"><value>Read-only tools</value></data>
-  <data name="ChatForm_agent_destructiveHint" xml:space="preserve"><value>Destructive tools</value></data>
-  <data name="ChatForm_agent_openWorldHint" xml:space="preserve"><value>Open-world tools</value></data>
-  <data name="ChatForm_agent_idempotentHint" xml:space="preserve"><value>Idempotent tools</value></data>
+  <data name="ChatForm_agent_readOnlyHint" xml:space="preserve"><value>Read-only</value></data>
+  <data name="ChatForm_agent_destructiveHint" xml:space="preserve"><value>Destructive</value></data>
+  <data name="ChatForm_agent_openWorldHint" xml:space="preserve"><value>Open-world</value></data>
+  <data name="ChatForm_agent_idempotentHint" xml:space="preserve"><value>Idempotent</value></data>
   <data name="ChatForm_agent_elicitation" xml:space="preserve"><value>Elicitation</value></data>
   <data name="ChatForm_agent_enabled" xml:space="preserve"><value>Enabled</value></data>
   <data name="ChatForm_agent_elicitationForm" xml:space="preserve"><value>Forms</value></data>
-  <data name="ChatForm_agent_elicitationUrl" xml:space="preserve"><value>URL requests</value></data>
+  <data name="ChatForm_agent_elicitationUrl" xml:space="preserve"><value>URL</value></data>
   <data name="ChatForm_agent_url" xml:space="preserve"><value>Server URL</value></data>
   <data name="ChatForm_agent_required" xml:space="preserve"><value>Required</value></data>
   <data name="ChatForm_agent_deferLoading" xml:space="preserve"><value>Defer loading</value></data>

@@ -861,14 +861,14 @@
   <data name="ChatForm_agent_instructions" xml:space="preserve"><value>Instructies</value></data>
   <data name="ChatForm_agent_argumentHint" xml:space="preserve"><value>Argumenthint</value></data>
   <data name="ChatForm_agent_policy" xml:space="preserve"><value>Toolbeleid</value></data>
-  <data name="ChatForm_agent_readOnlyHint" xml:space="preserve"><value>Alleen-lezen-tools</value></data>
-  <data name="ChatForm_agent_destructiveHint" xml:space="preserve"><value>Destructieve tools</value></data>
-  <data name="ChatForm_agent_openWorldHint" xml:space="preserve"><value>Openwereld-tools</value></data>
-  <data name="ChatForm_agent_idempotentHint" xml:space="preserve"><value>Idempotente tools</value></data>
-  <data name="ChatForm_agent_elicitation" xml:space="preserve"><value>Informatie opvragen</value></data>
+  <data name="ChatForm_agent_readOnlyHint" xml:space="preserve"><value>Alleen-lezen</value></data>
+  <data name="ChatForm_agent_destructiveHint" xml:space="preserve"><value>Destructief</value></data>
+  <data name="ChatForm_agent_openWorldHint" xml:space="preserve"><value>Open wereld</value></data>
+  <data name="ChatForm_agent_idempotentHint" xml:space="preserve"><value>Herhaalbaar zonder effect</value></data>
+  <data name="ChatForm_agent_elicitation" xml:space="preserve"><value>Uitvragen</value></data>
   <data name="ChatForm_agent_enabled" xml:space="preserve"><value>Ingeschakeld</value></data>
-  <data name="ChatForm_agent_elicitationForm" xml:space="preserve"><value>Formulieren</value></data>
-  <data name="ChatForm_agent_elicitationUrl" xml:space="preserve"><value>URL-verzoeken</value></data>
+  <data name="ChatForm_agent_elicitationForm" xml:space="preserve"><value>Formulier</value></data>
+  <data name="ChatForm_agent_elicitationUrl" xml:space="preserve"><value>URL</value></data>
   <data name="ChatForm_agent_url" xml:space="preserve"><value>Server-URL</value></data>
   <data name="ChatForm_agent_required" xml:space="preserve"><value>Verplicht</value></data>
   <data name="ChatForm_agent_deferLoading" xml:space="preserve"><value>Laden uitstellen</value></data>
