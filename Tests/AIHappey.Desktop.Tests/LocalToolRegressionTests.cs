@@ -20,8 +20,8 @@ internal static class LocalToolRegressionTests
         check(defaults.ActivePlugins.Count == 2 && clone.ActivePlugins.Count == 3, "local tools: normalized selections and isolated clone");
         var directory = Path.Combine(root, "local-settings"); await SettingsStore.SaveAsync(directory, new() { Chat = clone });
         check((await SettingsStore.LoadAsync(directory, new())).Chat.ActivePlugins.SequenceEqual(clone.ActivePlugins), "local tools: selections persist");
-        check(DesktopLocalTools.Plugins.Count == 5 && DesktopLocalTools.Plugins.SelectMany(p => p.Tools).Count() == 15 && DesktopLocalTools.Plugins.SelectMany(p => p.Tools)
-            .Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 15, "local tools: 13 unchanged browser and two desktop-only unique contracts");
+        check(DesktopLocalTools.Plugins.Count == 5 && DesktopLocalTools.Plugins.SelectMany(p => p.Tools).Count() == 19 && DesktopLocalTools.Plugins.SelectMany(p => p.Tools)
+            .Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 19, "local tools: 13 unchanged browser and six desktop-only unique contracts");
         check(DesktopLocalTools.Definition("local_conversations_delete_conversation").GetProperty("annotations").GetProperty("destructiveHint").GetBoolean(),
             "local tools: destructive delete annotation preserved");
         check(McpTurnSnapshot.Empty.Tools.Count == 0, "local tools: disabled plugins expose no tools");
@@ -92,6 +92,7 @@ internal static class LocalToolRegressionTests
         await CheckAiAsync(check);
         await CheckSkillsAsync(check);
         await CheckMixedAsync(check, store, partition, extraction);
+        await SharedFileCursorRegressionTests.RunAsync(check, root);
         await LocalFileToolRegressionTests.RunAsync(check, root, Pdf());
     }
     private static async Task CheckAiAsync(Action<bool, string> check)

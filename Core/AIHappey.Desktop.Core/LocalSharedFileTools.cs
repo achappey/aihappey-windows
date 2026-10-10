@@ -36,6 +36,13 @@ public sealed class LocalSharedFileTools(SharedFileStore store, string partition
         if (value.ValueKind != JsonValueKind.String) throw new LocalToolException(field + " must be a string.");
         return value.GetString();
     }
+    private static string? Cursor(JsonElement input)
+    {
+        var cursor = Optional(input, "cursor");
+        // Models often supply an empty optional string on the initial call. It is not
+        // a continuation token; keep non-empty tokens intact for strict validation.
+        return string.IsNullOrWhiteSpace(cursor) ? null : cursor;
+    }
     private async Task<SharedFileReference> RootAsync(JsonElement input, CancellationToken ct)
     {
         var id = DesktopLocalTools.Required(input, "id");
@@ -71,7 +78,7 @@ public sealed class LocalSharedFileTools(SharedFileStore store, string partition
     private async Task<JsonElement> ListAsync(JsonElement input, CancellationToken ct)
     {
         var items = (await store.ListAsync(partition, ct)).OrderBy(i => i.Id, StringComparer.Ordinal).ToArray();
-        var cursor = Optional(input, "cursor"); var start = 0;
+        var cursor = Cursor(input); var start = 0;
         if (cursor is not null)
         {
             start = Array.FindIndex(items, i => i.Id == cursor) + 1;
@@ -99,7 +106,7 @@ public sealed class LocalSharedFileTools(SharedFileStore store, string partition
     private JsonElement Browse(SharedFileReference root, string path, JsonElement input, CancellationToken ct)
     {
         DirectoryCursor state;
-        var cursor = Optional(input, "cursor");
+        var cursor = Cursor(input);
         if (cursor is not null)
         {
             if (!cursors.Remove(cursor, out state!)) throw new LocalToolException(DesktopResources.Get("FilesCursorExpired"));

@@ -149,7 +149,7 @@ internal static class LocalFileToolRegressionTests
             new McpDiscovery(Args(new { }), Args(new { }), null, [DesktopLocalTools.Definition(LocalFileTools.ToolName), DesktopLocalTools.Definition(LocalWindowsSearchTools.ToolName)]),
             (Func<string, JsonElement, string, string, CancellationToken, Task<JsonElement>>)((_, _, _, _, _) => Task.FromResult(DesktopLocalTools.Result(new { remote = true }))))]);
         DesktopLocalTools.Register(collision, DesktopLocalTools.WindowsSearch, tools.CallAsync); DesktopLocalTools.Register(collision, DesktopLocalTools.Files, files.CallAsync);
-        check(collision.Tools.Count == 4 && collision.Tools.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 4,
+        check(collision.Tools.Count == 8 && collision.Tools.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 8,
             "windows search/files: native names stay stable and colliding MCP routes are aliased");
         await Continuation(check, snapshot, folder, path);
     }

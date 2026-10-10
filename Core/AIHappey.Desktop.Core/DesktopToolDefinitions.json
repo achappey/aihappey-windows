@@ -23,7 +23,7 @@
       "title": "List shared files and folders",
       "description": "List references explicitly shared through the Windows Files page, including AI-created files. References contain stable IDs, paths, kind, and availability; the app does not copy file contents. Use IDs with the shared directory/read/create tools. Names may not be unique. Sharing a folder includes its descendants and permits creation of new files there. This list does not restrict the separate local_files_read absolute-path reader. Use nextCursor to continue; roots may change between calls.",
       "inputSchema": { "type": "object", "properties": {
-        "cursor": { "type": "string", "description": "nextCursor returned by the previous shared-item listing." },
+        "cursor": { "type": "string", "description": "Omit or use an empty string for the first page. For continuation, pass nextCursor returned by the previous shared-item listing unchanged." },
         "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 }
       }, "additionalProperties": false },
       "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false }
@@ -35,7 +35,7 @@
       "inputSchema": { "type": "object", "properties": {
         "id": { "type": "string", "description": "Shared folder ID returned by local_files_list." },
         "relativePath": { "type": "string", "description": "Subfolder path relative to the shared root; omitted or empty for the root. No absolute paths or dot/dot-dot segments." },
-        "cursor": { "type": "string", "description": "Single-use nextCursor returned by the previous directory page." },
+        "cursor": { "type": "string", "description": "Omit or use an empty string for the first page. For continuation, pass the single-use nextCursor returned by the previous directory page unchanged." },
         "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 }
       }, "required": ["id"], "additionalProperties": false },
       "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
