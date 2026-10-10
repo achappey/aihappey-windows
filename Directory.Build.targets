@@ -1,4 +1,32 @@
 <Project>
+  <PropertyGroup>
+    <DesktopProviderCatalogSource Condition="'$(DesktopProviderCatalogSource)' == ''">$(MSBuildThisFileDirectory)..\aihappey-chat\packages\aihappey-core\src\runtime\providers\catalog</DesktopProviderCatalogSource>
+    <DesktopProviderCatalogSnapshot>$(MSBuildThisFileDirectory)Core\AIHappey.Desktop.Core\ProviderCatalog</DesktopProviderCatalogSnapshot>
+    <!-- The upstream checkout is external to the project; Visual Studio must
+         invoke MSBuild even when it thinks the desktop sources are unchanged. -->
+    <DisableFastUpToDateCheck Condition="'$(UseWinUI)' == 'true'">true</DisableFastUpToDateCheck>
+  </PropertyGroup>
+  <!-- Run before resource discovery, not after compilation: newly added providers
+       must be embedded by the very same build. No npm/esbuild dependency. -->
+  <Target Name="SyncDesktopProviderCatalog" BeforeTargets="PrepareForBuild"
+          Condition="'$(DesignTimeBuild)' != 'true' and ('$(MSBuildProjectName)' == 'AIHappey.Desktop.Core' or '$(MSBuildProjectName)' == 'AIHappey.Desktop.Tests')">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Tests\sync-provider-catalog.ps1&quot; -Source &quot;$(DesktopProviderCatalogSource)&quot; -Destination &quot;$(DesktopProviderCatalogSnapshot)&quot;" />
+  </Target>
+  <Target Name="EmbedDesktopProviderCatalog" BeforeTargets="AssignTargetPaths" DependsOnTargets="SyncDesktopProviderCatalog"
+          Condition="'$(MSBuildProjectName)' == 'AIHappey.Desktop.Core' or '$(MSBuildProjectName)' == 'AIHappey.Desktop.Tests'">
+    <ItemGroup>
+      <_DesktopProviderJson Include="$(DesktopProviderCatalogSnapshot)\*.json" />
+      <EmbeddedResource Include="@(_DesktopProviderJson)">
+        <LogicalName>Desktop.ProviderCatalog.%(_DesktopProviderJson.Filename)%(_DesktopProviderJson.Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+  <!-- Also protects direct dotnet/Visual Studio publish and publishing without a build.
+       A stale snapshot cannot be copied after embedding and called up to date. -->
+  <Target Name="VerifyPublishedProviderCatalog" BeforeTargets="ComputeFilesToPublish"
+          Condition="'$(UseWinUI)' == 'true' and '$(OutputType)' == 'WinExe'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Tests\sync-provider-catalog.ps1&quot; -Source &quot;$(DesktopProviderCatalogSource)&quot; -Destination &quot;$(DesktopProviderCatalogSnapshot)&quot; -RequireSource -Check -BuildStamp &quot;$(TargetDir)ProviderCatalog.sha256&quot;" />
+  </Target>
   <!-- The WinUI SDK generates an assembly-named PRI, but .NET publish does not
        include that generated output for unpackaged executables. Native MRT Core's
        default ResourceLoader and x:Uid need resources.pri beside the executable. -->

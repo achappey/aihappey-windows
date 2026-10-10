@@ -2,6 +2,7 @@
 **/obj/
 artifacts/
 Releases/
+ProviderCatalog/
 *.log
 *.user
 *.bin

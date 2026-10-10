@@ -7,6 +7,7 @@ A native Windows AI client built with WinUI 3. Chat with AI models and agents, c
 - Native WinUI 3 interface with Windows light, dark and high-contrast themes
 - Streaming chat with AI models and agents
 - Multi-provider model discovery, switching and default preferences
+- Offline provider catalog with native cards, favorites, filters, details and provider links
 - MCP server discovery, installation and management
 - MCP Tools and Resources, including resource templates
 - Native MCP form elicitation and human-in-the-loop tool approval

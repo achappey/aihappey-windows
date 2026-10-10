@@ -305,16 +305,7 @@ internal sealed class ModelsOverviewPage : UserControl
     private UIElement ProviderIcon(ChatTarget model)
     {
         var provider = ModelProviders.Get(ModelOverviewCatalog.ProviderKey(model));
-        var icon = new Grid { Width = 32, Height = 32, VerticalAlignment = VerticalAlignment.Top };
-        var fallback = ToolbarControls.BrainIcon(); icon.Children.Add(fallback);
-        if ((!AppContext.TryGetSwitch("AIHappey.Desktop.DisableRemoteImages", out var disabled) || !disabled)
-            && ModelProviders.IconUri(provider, ActualTheme == ElementTheme.Dark) is { } source)
-        {
-            var image = new Image { Width = 32, Height = 32 };
-            image.ImageOpened += (_, _) => fallback.Visibility = Visibility.Collapsed;
-            image.ImageFailed += (_, _) => { image.Visibility = Visibility.Collapsed; fallback.Visibility = Visibility.Visible; };
-            icon.Children.Add(image); image.Source = new BitmapImage(source);
-        }
+        var icon = new ProviderLogo(ProviderCatalog.Get(ModelOverviewCatalog.ProviderKey(model)), 32) { VerticalAlignment = VerticalAlignment.Top };
         if (ModelProviders.SafeWebUri(provider.Homepage) is not { } homepage) { ToolTipService.SetToolTip(icon, provider.Name); return icon; }
         var button = new Button { Name = "ModelProviderWebsite", Content = icon, Width = 36, Height = 36, Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Top, IsEnabled = actionsEnabled };
         NativeCardSurface.Action(button); ToolbarControls.Label(button, DesktopResources.Format("ModelsProviderWebsite", provider.Name));

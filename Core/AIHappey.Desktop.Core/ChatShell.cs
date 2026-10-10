@@ -78,6 +78,7 @@ public sealed partial class ChatShell : UserControl
         PrepareVideos();
         PrepareTranscriptions();
         PrepareModelsOverview();
+        PrepareProvidersOverview();
         PrepareSystemContext();
         PrepareTranscript();
         Content = BuildLayout();
@@ -285,6 +286,7 @@ public sealed partial class ChatShell : UserControl
         };
         account.Flyout = profileMenu;
         Grid.SetColumn(modelFilters, 4); top.Children.Add(modelFilters);
+        Grid.SetColumn(providerFilters, 4); top.Children.Add(providerFilters);
         Grid.SetColumn(addAgent, 4); top.Children.Add(addAgent);
         Grid.SetColumn(addSkill, 4); top.Children.Add(addSkill);
         Grid.SetColumn(account, 5); top.Children.Add(account);
@@ -781,6 +783,7 @@ public sealed partial class ChatShell : UserControl
         chatSettings.IsEnabled = !value;
         manageMcp.IsEnabled = !value; RenderMcpTags();
         modelFilters.IsEnabled = !value;
+        providerFilters.IsEnabled = !value;
         RenderContextTags();
         RenderApprovalBadges();
         SetOverviewBusy(value);
@@ -821,6 +824,7 @@ public sealed partial class ChatShell : UserControl
         elicitationLifetime.Cancel(); elicitationDialog?.Hide(); session.ElicitationHandler = null;
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
+        providerDialog?.Hide();
         agentEditor?.Hide();
         skillEditor?.CancelAndHide();
         skillDeleteDialog?.Hide();

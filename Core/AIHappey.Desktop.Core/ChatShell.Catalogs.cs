@@ -9,7 +9,7 @@ using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
 
-internal enum DesktopPage { Chat, Images, Videos, Transcriptions, Agents, Skills, Mcp, Models }
+internal enum DesktopPage { Chat, Images, Videos, Transcriptions, Agents, Skills, Mcp, Models, Providers }
 
 public sealed partial class ChatShell
 {
@@ -39,7 +39,8 @@ public sealed partial class ChatShell
             (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)ToolbarControls.BotIcon()),
             (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)new FontIcon { Glyph = "\uE774" }),
             (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)new FontIcon { Glyph = "\uE734" }),
-            (DesktopPage.Models, DesktopResources.Get("Models"), (IconElement)ToolbarControls.BrainIcon())
+            (DesktopPage.Models, DesktopResources.Get("Models"), (IconElement)ToolbarControls.BrainIcon()),
+            (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)new FontIcon { Glyph = "\uE774" })
         })
         {
             if (page == DesktopPage.Agents)
@@ -71,7 +72,7 @@ public sealed partial class ChatShell
             ToolbarControls.Label(button, label);
             button.Click += async (_, _) => await NavigateAsync(page);
             pageButtons.Add(page, button);
-            if (page == DesktopPage.Models) { button.Margin = new Thickness(24, 0, 0, 0); aiNavigation.Children.Add(button); }
+            if (page is DesktopPage.Models or DesktopPage.Providers) { button.Margin = new Thickness(24, 0, 0, 0); aiNavigation.Children.Add(button); }
             else pageNavigation.Children.Add(button);
         }
         pageNavigation.Children.Add(SidebarSeparator("ChatsSeparator"));
@@ -80,6 +81,7 @@ public sealed partial class ChatShell
         overviewHost.Children.Add(transcriptionsPage);
         overviewHost.Children.Add(videosPage);
         overviewHost.Children.Add(modelsOverview);
+        overviewHost.Children.Add(providersOverview);
         foreach (var page in new[] { agentsOverview, skillsOverview })
         {
             page.RetryRequested = async () => await RunAsync(ct => LoadOverviewAsync(page, ct));
@@ -113,9 +115,11 @@ public sealed partial class ChatShell
         skillsOverview.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
         modelsOverview.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
         modelFilters.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
+        providersOverview.Visibility = page == DesktopPage.Providers ? Visibility.Visible : Visibility.Collapsed;
+        providerFilters.Visibility = page == DesktopPage.Providers ? Visibility.Visible : Visibility.Collapsed;
         addAgent.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         addSkill.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
-        if (page == DesktopPage.Models && aiCategory is not null)
+        if (page is DesktopPage.Models or DesktopPage.Providers && aiCategory is not null)
         {
             aiCategoryExpanded = true; aiNavigation.Visibility = Visibility.Visible;
             if (aiCategory.Content is Grid categoryHeader && categoryHeader.Children.OfType<FontIcon>().FirstOrDefault() is { } chevron) chevron.Glyph = "\uE70E";
@@ -127,7 +131,7 @@ public sealed partial class ChatShell
         transcriptionsPage.Visibility = transcriptionTarget.Visibility = page == DesktopPage.Transcriptions ? Visibility.Visible : Visibility.Collapsed;
         UpdatePageButtons();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
-        { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", _ => "RefreshSkills" }));
+        { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", _ => "RefreshSkills" }));
     }
 
     private void UpdatePageButtons()
@@ -148,6 +152,7 @@ public sealed partial class ChatShell
         agentsOverview.SetActionsEnabled(!value); skillsOverview.SetActionsEnabled(!value);
         mcpOverview.SetActionsEnabled(!value);
         modelsOverview.SetActionsEnabled(!value);
+        providersOverview.SetActionsEnabled(!value);
         catalogDialog?.SetActionsEnabled(!value);
     }
 
@@ -164,6 +169,7 @@ public sealed partial class ChatShell
         InvalidateVideos();
         InvalidateTranscriptions();
         InvalidateModelsOverview();
+        InvalidateProvidersOverview();
         runtimeSkillCatalog = []; runtimeSkillPartition = null;
         localAgents = []; localAgentPartition = null; agentEditor?.Hide();
         localSkills = []; localSkillPartition = null; skillEditor?.CancelAndHide();

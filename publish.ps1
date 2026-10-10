@@ -11,6 +11,9 @@ $workspace = Split-Path $repo -Parent
 $hosts = if ($HostName -eq 'All') { @('HeaderAuth', 'AzureAuth') } else { @($HostName) }
 $timestamp = Get-Date -Format 'yyMMdd.HHmm'
 
+# Publishing must never silently fall back to an old snapshot.
+& (Join-Path $repo 'Tests/sync-provider-catalog.ps1') -RequireSource
+
 function Invoke-Publish([string]$Project, [string]$Output, [string]$Config, [switch]$Desktop) {
     $arguments = @(
         'publish', $Project,

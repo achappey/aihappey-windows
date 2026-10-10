@@ -19,7 +19,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/AiModelPreferences.cs" Link="Core/AiModelPreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ModelOverviewCatalog.cs" Link="Core/ModelOverviewCatalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ModelProviders.cs" Link="Core/ModelProviders.cs" />
-    <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/ModelProviders.json" LogicalName="Desktop.ModelProviders" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ProviderCatalog.cs" Link="Core/ProviderCatalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ModelContextPreferences.cs" Link="Core/ModelContextPreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Elicitation.cs" Link="Core/Elicitation.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpToolTimeout.cs" Link="Core/McpToolTimeout.cs" />

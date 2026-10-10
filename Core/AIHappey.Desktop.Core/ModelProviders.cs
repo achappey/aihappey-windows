@@ -1,20 +1,17 @@
-using System.Text.Json;
-
 namespace AIHappey.Desktop.Core;
 
 public sealed record ModelProviderIcon(string Src, string? Theme);
 public sealed record ModelProvider(string Name, string? Homepage, IReadOnlyList<ModelProviderIcon> Icons);
 
-/// <summary>Display-only metadata generated from the browser catalog. No credentials, endpoints or runtime policy.</summary>
+/// <summary>Compatibility projection of the shared provider catalog. No independent metadata snapshot.</summary>
 public static class ModelProviders
 {
-    private static readonly Lazy<IReadOnlyDictionary<string, ModelProvider>> catalog = new(() =>
+    public static ModelProvider Get(string key)
     {
-        using var stream = typeof(ModelProviders).Assembly.GetManifestResourceStream("Desktop.ModelProviders")
-            ?? throw new InvalidOperationException("Missing provider display metadata.");
-        return JsonSerializer.Deserialize<Dictionary<string, ModelProvider>>(stream, JsonSerializerOptions.Web)!;
-    });
-    public static ModelProvider Get(string key) => catalog.Value.TryGetValue(key, out var provider) ? provider : new(key, null, []);
+        var provider = ProviderCatalog.Get(key);
+        return new(provider.Name, provider.Urls.Homepage, provider.Icons.Count > 0 ? provider.Icons
+            : ProviderCatalog.FaviconUri(provider.Urls.Homepage) is { } favicon ? [new(favicon.AbsoluteUri, null)] : []);
+    }
     public static Uri? SafeWebUri(string? source) => Uri.TryCreate(source, UriKind.Absolute, out var uri)
         && uri.Scheme == Uri.UriSchemeHttps && string.IsNullOrEmpty(uri.UserInfo) && !uri.IsLoopback ? uri : null;
     public static Uri? IconUri(ModelProvider provider, bool dark) => SafeWebUri(

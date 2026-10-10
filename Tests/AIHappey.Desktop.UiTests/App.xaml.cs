@@ -64,6 +64,11 @@ public partial class App : Application
                 results.Add("All skills UI checks passed.");
                 File.WriteAllLines(report, results); window.Close(); Exit(); return;
             }
+            if (Environment.GetCommandLineArgs().Contains("--providers-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckProvidersAsync(theme);
+                results.Add("All provider UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--ai-models-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckAiModelsAsync(theme);
@@ -90,7 +95,7 @@ public partial class App : Application
                 }
             if (!Environment.GetCommandLineArgs().Contains("--transcript-only"))
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
-                { await CheckOverviewTabsAsync(theme); await CheckAgentsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckImagesAsync(theme); await CheckVideosAsync(theme); }
+                { await CheckOverviewTabsAsync(theme); await CheckProvidersAsync(theme); await CheckAgentsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckImagesAsync(theme); await CheckVideosAsync(theme); }
             results.Add("All native UI checks passed.");
             File.WriteAllLines(report, results);
             window.Close();
@@ -254,7 +259,7 @@ public partial class App : Application
                 && navigation.Children.OfType<Border>().Select(border => border.Name).SequenceEqual(new[] { "AgentsSeparator", "ArtificialIntelligenceSeparator", "ChatsSeparator" })
                 && navigation.Children.OfType<ToggleButton>().Select(button => button.Name).SequenceEqual(new[] { "NavigateImages", "NavigateVideos", "NavigateTranscriptions", "NavigateAgents", "NavigateMcp", "NavigateSkills" })
                 && !Descendants(pane).OfType<TextBox>().Any(), context + ": browser-style categories and no extra Chat button or inline history search");
-            Check(navigation.Children.OfType<ToggleButton>().Skip(2).Select(button => AutomationProperties.GetName(button))
+            Check(navigation.Children.OfType<ToggleButton>().Skip(3).Select(button => AutomationProperties.GetName(button))
                 .SequenceEqual(new[] { "Agents", DesktopResources.Get("McpTitle"), "Skills" }), context + ": Agents → More context → Skills navigation order");
             foreach (var state in new[] { "Normal", "PointerOver", "Pressed" })
             {

@@ -40,6 +40,8 @@ try
         await AiModelRegressionTests.RunAsync(Check, root, new DesktopSession(new TestHost(), new TestRuntime(), new()));
         Console.WriteLine($"All {tests} model overview and preference checks passed."); return;
     }
+    await ProviderRegressionTests.RunAsync(Check, root);
+    if (args.Contains("--providers-only")) { Console.WriteLine($"All {tests} provider checks passed."); return; }
     await ModelsOverviewRegressionTests.RunAsync(Check, root);
     await AgentRegressionTests.RunAsync(Check, root);
     if (args.Contains("--skills-only"))

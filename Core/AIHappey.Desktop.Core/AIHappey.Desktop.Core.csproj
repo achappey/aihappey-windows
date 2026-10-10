@@ -11,7 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="ModelProviders.json" LogicalName="Desktop.ModelProviders" />
+    <None Remove="ProviderCatalog\ProviderCatalog.sha256" />
+    <None Include="ProviderCatalog\ProviderCatalog.sha256" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" TargetPath="ProviderCatalog.sha256" />
     <EmbeddedResource Include="AgentProviderDefaults.json" LogicalName="Desktop.AgentProviderDefaults" />
     <!-- x:Uid in this library resolves through the library's native resource scope. -->
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.3.260402-preview2" />

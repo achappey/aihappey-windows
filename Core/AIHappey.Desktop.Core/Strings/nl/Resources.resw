@@ -940,4 +940,95 @@
   <data name="Tools" xml:space="preserve"><value>Tools</value></data>
   <data name="McpCatalog" xml:space="preserve"><value>Catalogus</value></data>
   <data name="Local" xml:space="preserve"><value>Lokaal</value></data>
+  <data name="ProvidersDescription" xml:space="preserve"><value>Bekijk {0} AI-providers.</value></data>
+  <data name="SearchProviders" xml:space="preserve"><value>Providers zoeken</value></data>
+  <data name="RefreshProviders" xml:space="preserve"><value>Providers vernieuwen</value></data>
+  <data name="ProviderCategory" xml:space="preserve"><value>Categorie</value></data>
+  <data name="ProviderCountry" xml:space="preserve"><value>Land van herkomst</value></data>
+  <data name="ProviderInferenceRegions" xml:space="preserve"><value>Inferentieregio’s</value></data>
+  <data name="ProviderAvailableModelTypes" xml:space="preserve"><value>Beschikbare modeltypen</value></data>
+  <data name="ProviderNoDiscoveredModels" xml:space="preserve"><value>Geen modellen gevonden voor deze provider.</value></data>
+  <data name="ProviderDiscoveryUnavailable" xml:space="preserve"><value>De providercatalogus is offline beschikbaar. Modeldetectie is niet beschikbaar; informatie over modeltypen kan onvolledig zijn.</value></data>
+  <data name="ProvidersNoFavorites" xml:space="preserve"><value>Nog geen favoriete providers. Gebruik de ster op een providerkaart om deze op te slaan.</value></data>
+  <data name="ProviderLogoLabel" xml:space="preserve"><value>Logo van {0}</value></data>
+  <data name="ProviderLinkFailed" xml:space="preserve"><value>Windows kon de providerlink niet openen.</value></data>
+  <data name="ProviderExperimental" xml:space="preserve"><value>Experimenteel</value></data>
+  <data name="ProviderPricing" xml:space="preserve"><value>Prijzen</value></data>
+  <data name="ProviderConsole" xml:space="preserve"><value>Console</value></data>
+  <data name="ProviderDocumentation" xml:space="preserve"><value>Documentatie</value></data>
+  <data name="ProviderTerms" xml:space="preserve"><value>Voorwaarden</value></data>
+  <data name="ProviderPrivacy" xml:space="preserve"><value>Privacy</value></data>
+  <data name="Website" xml:space="preserve"><value>Website</value></data>
+  <data name="Favorites" xml:space="preserve"><value>Favorieten</value></data>
+  <data name="ProviderCategory_model_provider" xml:space="preserve"><value>Modelbouwer</value></data>
+  <data name="ProviderCategory_gateway_router" xml:space="preserve"><value>Gateway</value></data>
+  <data name="ProviderCategory_inference_compute" xml:space="preserve"><value>Rekenkracht</value></data>
+  <data name="ProviderCategory_media_voice" xml:space="preserve"><value>Media</value></data>
+  <data name="ProviderCategory_search_data" xml:space="preserve"><value>Zoeken</value></data>
+  <data name="ProviderCategory_app_tools" xml:space="preserve"><value>Apps/tools</value></data>
+  <data name="ProviderCountry_CA" xml:space="preserve"><value>Canada</value></data>
+  <data name="ProviderCountry_CN" xml:space="preserve"><value>China</value></data>
+  <data name="ProviderCountry_CY" xml:space="preserve"><value>Cyprus</value></data>
+  <data name="ProviderCountry_DE" xml:space="preserve"><value>Duitsland</value></data>
+  <data name="ProviderCountry_EE" xml:space="preserve"><value>Estland</value></data>
+  <data name="ProviderCountry_ES" xml:space="preserve"><value>Spanje</value></data>
+  <data name="ProviderCountry_FI" xml:space="preserve"><value>Finland</value></data>
+  <data name="ProviderCountry_ID" xml:space="preserve"><value>Indonesië</value></data>
+  <data name="ProviderCountry_AT" xml:space="preserve"><value>Oostenrijk</value></data>
+  <data name="ProviderCountry_AU" xml:space="preserve"><value>Australië</value></data>
+  <data name="ProviderCountry_HR" xml:space="preserve"><value>Kroatië</value></data>
+  <data name="ProviderCountry_RO" xml:space="preserve"><value>Roemenië</value></data>
+  <data name="ProviderCountry_HU" xml:space="preserve"><value>Hongarije</value></data>
+  <data name="ProviderCountry_SK" xml:space="preserve"><value>Slowakije</value></data>
+  <data name="ProviderCountry_CM" xml:space="preserve"><value>Kameroen</value></data>
+  <data name="ProviderCountry_MA" xml:space="preserve"><value>Marokko</value></data>
+  <data name="ProviderCountry_MY" xml:space="preserve"><value>Maleisië</value></data>
+  <data name="ProviderCountry_TR" xml:space="preserve"><value>Turkije</value></data>
+  <data name="ProviderCountry_SI" xml:space="preserve"><value>Slovenië</value></data>
+  <data name="ProviderCountry_ZA" xml:space="preserve"><value>Zuid-Afrika</value></data>
+  <data name="ProviderCountry_AE" xml:space="preserve"><value>Verenigde Arabische Emiraten</value></data>
+  <data name="ProviderCountry_FR" xml:space="preserve"><value>Frankrijk</value></data>
+  <data name="ProviderCountry_KE" xml:space="preserve"><value>Kenia</value></data>
+  <data name="ProviderCountry_AR" xml:space="preserve"><value>Argentinië</value></data>
+  <data name="ProviderCountry_LU" xml:space="preserve"><value>Luxemburg</value></data>
+  <data name="ProviderCountry_IE" xml:space="preserve"><value>Ierland</value></data>
+  <data name="ProviderCountry_GB" xml:space="preserve"><value>Verenigd Koninkrijk</value></data>
+  <data name="ProviderCountry_EG" xml:space="preserve"><value>Egypte</value></data>
+  <data name="ProviderCountry_UA" xml:space="preserve"><value>Oekraïne</value></data>
+  <data name="ProviderCountry_DK" xml:space="preserve"><value>Denemarken</value></data>
+  <data name="ProviderCountry_LT" xml:space="preserve"><value>Litouwen</value></data>
+  <data name="ProviderCountry_CZ" xml:space="preserve"><value>Tsjechië</value></data>
+  <data name="ProviderCountry_HK" xml:space="preserve"><value>Hongkong</value></data>
+  <data name="ProviderCountry_IL" xml:space="preserve"><value>Israël</value></data>
+  <data name="ProviderCountry_CH" xml:space="preserve"><value>Zwitserland</value></data>
+  <data name="ProviderCountry_IN" xml:space="preserve"><value>India</value></data>
+  <data name="ProviderCountry_IT" xml:space="preserve"><value>Italië</value></data>
+  <data name="ProviderCountry_NO" xml:space="preserve"><value>Noorwegen</value></data>
+  <data name="ProviderCountry_KR" xml:space="preserve"><value>Zuid-Korea</value></data>
+  <data name="ProviderCountry_BR" xml:space="preserve"><value>Brazilië</value></data>
+  <data name="ProviderCountry_NL" xml:space="preserve"><value>Nederland</value></data>
+  <data name="ProviderCountry_PL" xml:space="preserve"><value>Polen</value></data>
+  <data name="ProviderCountry_SE" xml:space="preserve"><value>Zweden</value></data>
+  <data name="ProviderCountry_SG" xml:space="preserve"><value>Singapore</value></data>
+  <data name="ProviderCountry_US" xml:space="preserve"><value>Verenigde Staten</value></data>
+  <data name="ProviderCountry_PK" xml:space="preserve"><value>Pakistan</value></data>
+  <data name="ProviderRegion_Africa" xml:space="preserve"><value>Afrika</value></data>
+  <data name="ProviderRegion_Americas" xml:space="preserve"><value>Amerika</value></data>
+  <data name="ProviderRegion_Asia" xml:space="preserve"><value>Azië</value></data>
+  <data name="ProviderRegion_Europe" xml:space="preserve"><value>Europa</value></data>
+  <data name="ProviderRegion_Oceania" xml:space="preserve"><value>Oceanië</value></data>
+  <data name="ProviderRegion_World" xml:space="preserve"><value>Wereld</value></data>
+  <data name="ProviderCountry_NZ" xml:space="preserve"><value>Nieuw-Zeeland</value></data>
+  <data name="ProviderCountry_VN" xml:space="preserve"><value>Vietnam</value></data>
+  <data name="ProviderCountry_KN" xml:space="preserve"><value>Saint Kitts en Nevis</value></data>
+  <data name="ProviderCountry_UG" xml:space="preserve"><value>Oeganda</value></data>
+  <data name="ProviderCountry_PA" xml:space="preserve"><value>Panama</value></data>
+  <data name="ProviderCountry_TZ" xml:space="preserve"><value>Tanzania</value></data>
+  <data name="ProviderCountry_MM" xml:space="preserve"><value>Myanmar (Birma)</value></data>
+  <data name="ProviderCountry_TH" xml:space="preserve"><value>Thailand</value></data>
+  <data name="ProviderCountry_TW" xml:space="preserve"><value>Taiwan</value></data>
+  <data name="ProviderCountry_MT" xml:space="preserve"><value>Malta</value></data>
+  <data name="ProviderCountry_JP" xml:space="preserve"><value>Japan</value></data>
+  <data name="ProviderCountry_NG" xml:space="preserve"><value>Nigeria</value></data>
+  <data name="ProviderCountry_RW" xml:space="preserve"><value>Rwanda</value></data>
 </root>
