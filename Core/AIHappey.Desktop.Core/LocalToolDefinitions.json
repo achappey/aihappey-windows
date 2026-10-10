@@ -1,0 +1,367 @@
+{
+  "local-conversations": [
+    {
+      "name": "local_conversations_list_all",
+      "title": "List local conversations",
+      "description": "List all local conversations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_conversations_get_conversation",
+      "title": "Get local conversation by id",
+      "description": "Get local conversation by id.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "description": "Id of the conversation"
+          }
+        },
+        "required": [
+          "conversationId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_conversations_read_attachment",
+      "title": "Read a local conversation attachment",
+      "description": "Extract text from an inline attachment in a local conversation. Use the conversation id, message id, and filename shown by the conversation tool. HTTP attachments are not supported.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "description": "Id of the conversation"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "Id of the message containing the attachment"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Exact attachment filename"
+          }
+        },
+        "required": [
+          "conversationId",
+          "messageId",
+          "filename"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_conversations_delete_conversation",
+      "title": "Delete local conversation by id",
+      "description": "Delete a local conversation by id.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "description": "Id of the conversation"
+          }
+        },
+        "required": [
+          "conversationId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_conversations_search_text",
+      "title": "Search local conversations (text only)",
+      "description": "Plain text search across local conversations. Searches only text parts. Multi-word queries match when all words occur in the same text part, regardless of order or distance.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query. Single words use substring match; multi-word queries require every word in the same text part."
+          },
+          "limit": {
+            "type": "number",
+            "description": "Max results (default 20, max 50)"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "skill-search": [
+    {
+      "name": "search_skills",
+      "title": "Search skills",
+      "description": "Searches the available Agent Skills catalog by skill id, name, description, origin, and version. Use this only when the user-enabled Skill search plugin is available and you need to discover a skill for the current task. Send concise keyword queries only, not natural-language requests or prompts. Good queries look like 'excel spreadsheet csv formulas' or 'pdf extract summarize'. Activate a returned skill with activate_skill using its exact id/skill_id before following its instructions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Keyword-only search terms for the needed capability, separated by spaces. Do not send full prompt-style questions such as 'find a skill that can help me with spreadsheets'; send 'spreadsheet excel csv' instead. Multiple keywords are ranked by coverage and relevance. If omitted, returns the first catalog entries."
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of matching skills to return. Defaults to 10 and is capped at 50."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "activate_skill",
+      "title": "Activate an enabled skill",
+      "description": "Loads the body instructions for an enabled agent skill. Use this when one of the available skills matches the current task. After activation, use read_skill_resource to load referenced bundled files by relative path.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "description": "Exact enabled skill ID string to activate. Use the id/skill_id shown in the system context or returned by search_skills; do not invent IDs."
+          }
+        },
+        "required": [
+          "skill_id"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "read_skill_resource",
+      "title": "Read a bundled skill resource",
+      "description": "Reads a bundled file from an enabled skill by relative path. Use this after activate_skill when the skill instructions reference scripts, references, or assets. Paths are relative to the skill root.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "description": "Exact enabled skill ID string that owns the resource. Reuse the same id/skill_id passed to activate_skill."
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative path within the skill directory, for example references/REFERENCE.md or scripts/run.py."
+          }
+        },
+        "required": [
+          "skill_id",
+          "path"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "local-artificial-intelligence": [
+    {
+      "name": "local_ai_providers_list",
+      "title": "List local AI providers",
+      "description": "List providers from the local runtime provider catalog.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "description": "Optional provider country filter (exact ISO country code match, case-insensitive), e.g. NL."
+          },
+          "inferenceRegion": {
+            "type": "string",
+            "enum": [
+              "World",
+              "Europe",
+              "Americas",
+              "Asia",
+              "Africa",
+              "Oceania"
+            ],
+            "description": "Optional inference region filter (exact token match, case-insensitive). Allowed values: World, Europe, Americas, Asia, Africa, Oceania."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Optional max number of providers to return."
+          }
+        },
+        "required": []
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_ai_provider_countries_list",
+      "title": "List local AI provider countries",
+      "description": "List the unique ISO country codes represented in the local runtime provider catalog, including the number of providers for each country.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_ai_providers_search",
+      "title": "Search local AI providers",
+      "description": "Search providers in the local runtime provider catalog by key or display name.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search text matched case-insensitively against provider key and name."
+          },
+          "country": {
+            "type": "string",
+            "description": "Optional provider country filter (exact ISO country code match, case-insensitive), e.g. NL."
+          },
+          "inferenceRegion": {
+            "type": "string",
+            "enum": [
+              "World",
+              "Europe",
+              "Americas",
+              "Asia",
+              "Africa",
+              "Oceania"
+            ],
+            "description": "Optional inference region filter (exact token match, case-insensitive). Allowed values: World, Europe, Americas, Asia, Africa, Oceania."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Optional max number of providers to return."
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_ai_models_search",
+      "title": "Search local AI models",
+      "description": "Search models from local app state by id, name, type, owner, tags, provider id, and provider name.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search text for local models."
+          },
+          "provider": {
+            "type": "string",
+            "description": "Optional provider filter by provider key or display name."
+          },
+          "type": {
+            "type": "string",
+            "description": "Optional model type filter (e.g. language, image, speech)."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Max number of models to return."
+          }
+        },
+        "required": [
+          "query",
+          "limit"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_ai_models_list_by_provider",
+      "title": "List local AI models by provider",
+      "description": "List local app-state models by provider, with optional model type filter.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider key or display name."
+          },
+          "type": {
+            "type": "string",
+            "description": "Optional model type filter."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Optional max number of models to return."
+          }
+        },
+        "required": [
+          "provider"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

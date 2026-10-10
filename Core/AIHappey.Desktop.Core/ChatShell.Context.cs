@@ -13,7 +13,7 @@ public sealed partial class ChatShell
     private readonly MessageFooterPanel contextTags = new() { Name = "ContextTags" };
     private readonly ScrollViewer contextTagScroll = new() { Name = "ContextTagScroll", MaxHeight = 128, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, Visibility = Visibility.Collapsed };
     private readonly List<ComposerAttachment> contextAttachments = [];
-    private readonly IDocumentTextExtractor documentExtractor = new PdfDocumentTextExtractor();
+    private readonly DocumentTextExtraction documentExtractor = new();
     // Never share this client with the authenticated gateway client, including cookies or redirects.
     private readonly HttpClient contextHttp = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }) { Timeout = Timeout.InfiniteTimeSpan };
     private UrlAttachmentDialog? linkDialog;

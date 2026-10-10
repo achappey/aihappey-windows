@@ -35,6 +35,11 @@ for (const lang of ['en', 'nl']) {
   const general = read(path.join(browser, `${lang}.json`));
   const providers = flatten(read(path.join(browser, 'providers.json')).openai, 'openai');
   const labels = { ...custom[lang] };
+  labels.BuiltInLocalTools = general.builtInLocalTools ?? (lang === 'nl' ? 'Ingebouwde lokale tools' : 'Built-in local tools');
+  labels.LocalPluginConversations = general.plugins['local-conversations'];
+  labels.LocalPluginSkills = general.plugins['skill-search'];
+  labels.LocalPluginAi = general.plugins['local-artificial-intelligence'] ?? custom[lang].ChatForm_artificialIntelligence;
+  labels.LocalToolFailed = lang === 'nl' ? 'De lokale tool kon niet worden uitgevoerd.' : 'The local tool could not be completed.';
   for (const key of common) {
     if (typeof general[key] !== 'string') throw new Error(`Missing browser label: ${lang}/${key}`);
     labels[`ChatForm_${key}`] = general[key].replace(/\s*\(\{\{reasoningEffort\}\}\)/g, '');

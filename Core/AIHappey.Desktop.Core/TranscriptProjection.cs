@@ -29,7 +29,10 @@ public static class TranscriptProjection
             Flush(); blocks.Add(new(message.Message.Id + ":part:" + index, false, new[] { part }));
         }
         Flush();
-        if (blocks.Count == 0 && message.Status != "complete") blocks.Add(new(message.Message.Id + ":pending", false, []));
+        // Errors are shown only by the top notification bar. Preserve partial answer/activity
+        // blocks, but do not render an empty failed assistant card or a misleading Busy label.
+        if (blocks.Count == 0 && message.Status is not "complete" and not "failed" && message.ErrorMessage is null)
+            blocks.Add(new(message.Message.Id + ":pending", false, []));
         return blocks;
     }
 }

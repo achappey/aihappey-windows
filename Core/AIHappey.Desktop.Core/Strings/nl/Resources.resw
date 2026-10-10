@@ -1031,4 +1031,14 @@
   <data name="ProviderCountry_JP" xml:space="preserve"><value>Japan</value></data>
   <data name="ProviderCountry_NG" xml:space="preserve"><value>Nigeria</value></data>
   <data name="ProviderCountry_RW" xml:space="preserve"><value>Rwanda</value></data>
+  <data name="BuiltInLocalTools" xml:space="preserve"><value>Lokale tools</value></data>
+  <data name="LocalPluginConversations" xml:space="preserve"><value>Chat geschiedenis</value></data>
+  <data name="LocalPluginSkills" xml:space="preserve"><value>Skill discovery</value></data>
+  <data name="LocalPluginAi" xml:space="preserve"><value>Artificial Intelligence</value></data>
+  <data name="LocalToolFailed" xml:space="preserve"><value>De lokale tool kon niet worden uitgevoerd.</value></data>
+  <data name="ChatForm_openai_transcriptionLanguages" xml:space="preserve"><value>Mogelijke talen</value></data>
+  <data name="ChatForm_openai_transcriptionLanguagesPlaceholder" xml:space="preserve"><value>ISO-639-1-codes gescheiden door komma's, bijvoorbeeld nl, en</value></data>
+  <data name="ChatForm_openai_transcriptionKeywords" xml:space="preserve"><value>Trefwoorden</value></data>
+  <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>Eén woord of uitdrukking per regel om de transcriptie te sturen</value></data>
+  <data name="ChatForm_openai_transcriptionResponseFormat" xml:space="preserve"><value>Antwoordformaat</value></data>
 </root>

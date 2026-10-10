@@ -102,9 +102,11 @@ internal sealed class PortableMessageConverter : JsonConverter<UIMessage>
         var root = doc.RootElement;
         var id = PortableConversations.String(root, "id");
         var role = PortableConversations.String(root, "role");
-        if (string.IsNullOrWhiteSpace(id) || !Enum.TryParse<Role>(role, out var parsedRole) || !Enum.IsDefined(parsedRole)
-            || !root.TryGetProperty("parts", out var parts) || parts.ValueKind != JsonValueKind.Array)
-            throw new JsonException("Invalid UI message.");
+        if (string.IsNullOrWhiteSpace(id)) throw new JsonException("Invalid UI message: missing or empty string id.");
+        if (!Enum.TryParse<Role>(role, out var parsedRole) || !Enum.IsDefined(parsedRole))
+            throw new JsonException("Invalid UI message: role must be user, assistant, or system.");
+        if (!root.TryGetProperty("parts", out var parts) || parts.ValueKind != JsonValueKind.Array)
+            throw new JsonException("Invalid UI message: parts must be an array.");
         return new PortableUIMessage
         {
             Id = id, Role = parsedRole, Parts = parts.Deserialize<List<UIMessagePart>>(options)!,
@@ -159,7 +161,8 @@ public sealed class ConversationConverter : JsonConverter<Conversation>
                 Message = message,
                 Timestamp = DateTimeOffset.TryParse(PortableConversations.MetadataString(message.Metadata, "timestamp"), out var timestamp) ? timestamp : DateTimeOffset.UnixEpoch,
                 Status = state ?? (partStates.Any(s => s == "approval-requested") ? "approval required"
-                    : partStates.Any(s => s is "streaming" or "input-streaming" or "input-available") ? "interrupted" : "complete")
+                    : partStates.Any(s => s is "streaming" or "input-streaming" or "input-available") ? "interrupted" : "complete"),
+                ErrorMessage = GatewayErrors.Display(messageHints["errorMessage"]?.ToString())
             });
         }
         if (string.IsNullOrEmpty(result.Target)) result.Target = result.Messages.AsEnumerable().Reverse()
@@ -184,6 +187,8 @@ public sealed class ConversationConverter : JsonConverter<Conversation>
             if (!messageMetadata.ContainsKey("timestamp") && item.Timestamp != DateTimeOffset.UnixEpoch) messageMetadata["timestamp"] = item.Timestamp.ToString("O");
             var messageHints = messageMetadata.TryGetValue(PortableConversations.DesktopMetadata, out var hint) ? PortableConversations.Object(hint) : new();
             messageHints["status"] = item.Status; messageMetadata[PortableConversations.DesktopMetadata] = messageHints;
+            if (item.ErrorMessage is { } errorMessage) messageHints["errorMessage"] = errorMessage;
+            else messageHints.Remove("errorMessage");
             JsonSerializer.Serialize(writer, PortableConversations.WithMetadata(item.Message, messageMetadata), PortableConversations.Json);
         }
         writer.WriteEndArray(); writer.WritePropertyName("metadata"); JsonSerializer.Serialize(writer, metadata, PortableConversations.Json);

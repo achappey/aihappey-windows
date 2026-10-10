@@ -24,6 +24,7 @@ public sealed record ChatTarget(string Id, string Label)
     public double? MaxTokens { get; init; }
     public double? InputPrice { get; init; }
     public double? OutputPrice { get; init; }
+    public JsonElement? ModelMetadata { get; init; }
     public override string ToString() => Label;
 }
 
@@ -35,7 +36,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
     {
         using var request = await RequestAsync(service, HttpMethod.Get, "v1/models", ct);
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-        CheckResponse(response);
+        await GatewayErrors.CheckResponseAsync(response, ct);
         using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         if (!doc.RootElement.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Array)
             throw new GatewayException(DesktopResources.Get("InvalidModelCatalog"));
@@ -62,7 +63,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
             : JsonContent.Create(new AgentRequest { Id = conversationId, Model = target, Messages = requestMessages }, options: PortableConversations.Json);
         if (service == ServiceKind.Ai) snapshot.ApplyHeaders(request, providerKey);
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-        CheckResponse(response);
+        await GatewayErrors.CheckResponseAsync(response, ct);
         if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")
             throw new GatewayException(DesktopResources.Get("ChatStreamRequired"));
         await using var stream = await response.Content.ReadAsStreamAsync(ct);

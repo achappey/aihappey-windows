@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly)
+param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -29,6 +29,7 @@ try {
     if ($OverviewTabsOnly) { $arguments += '--overview-tabs-only' }
     if ($AgentsOnly) { $arguments += '--agents-only' }
     if ($ProvidersOnly) { $arguments += '--providers-only' }
+    if ($LocalToolsOnly) { $arguments += '--local-tools-only' }
     $process = Start-Process (Join-Path $output 'AIHappey.Desktop.UiTests.exe') -ArgumentList $arguments -PassThru
     if (-not $process.WaitForExit(60000)) {
         $process.Kill()

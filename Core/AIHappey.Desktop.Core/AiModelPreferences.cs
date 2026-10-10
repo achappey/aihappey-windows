@@ -95,7 +95,7 @@ public static class AiModelCatalog
                 ? tags.EnumerateArray().Where(t => t.ValueKind == JsonValueKind.String).Select(t => t.GetString()!.Trim())
                     .Where(t => t.Length > 0).Distinct(StringComparer.Ordinal).ToArray() : [],
             ContextWindow = Number(value, "context_window"), MaxTokens = Number(value, "max_tokens"),
-            InputPrice = Price(value, "input"), OutputPrice = Price(value, "output")
+            InputPrice = Price(value, "input"), OutputPrice = Price(value, "output"), ModelMetadata = value.Clone()
         };
     }
 

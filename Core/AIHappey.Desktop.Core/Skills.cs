@@ -13,6 +13,9 @@ public sealed record DesktopSkill(string Id, string Name, string Description, st
     string? Server = null, string? Uri = null)
 {
     public string Label => Server is null ? Name : $"{Name} ({Server})";
+    public string? DefaultVersion { get; init; }
+    public string? LatestVersion { get; init; }
+    public bool? IsDownloaded { get; init; }
 }
 
 public sealed record DesktopSkillFile(string Path, byte[] Data)

@@ -41,7 +41,8 @@ public sealed partial class ChatShell : UserControl
     private readonly Button newChat = new() { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(6) };
     private readonly ListView chats = new() { SelectionMode = ListViewSelectionMode.Single };
     private readonly ConditionalWeakTable<ListViewItem, ConversationRow> conversationRows = new();
-    private readonly Grid notice = new() { ColumnSpacing = 8, Padding = new Thickness(16, 8, 16, 8), Visibility = Visibility.Collapsed };
+    private readonly InfoBar notice = new() { Name = "ChatNotice", IsOpen = false, IsClosable = true,
+        HorizontalAlignment = HorizontalAlignment.Stretch, Visibility = Visibility.Collapsed };
     private readonly TextBlock noticeMessage = new() { TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, VerticalAlignment = VerticalAlignment.Center };
     private readonly TextBlock progress = new() { Text = DesktopResources.Get("Working"), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private IReadOnlyList<ChatTarget> targets = [];
@@ -194,13 +195,9 @@ public sealed partial class ChatShell : UserControl
         var root = new Grid();
         root.RowDefinitions.Add(new() { Height = GridLength.Auto });
         root.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
-        notice.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        notice.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        notice.Children.Add(noticeMessage);
-        var dismiss = new Button { Content = DesktopResources.Get("Dismiss") };
-        ControlAppearance.Native(dismiss);
-        dismiss.Click += (_, _) => notice.Visibility = Visibility.Collapsed;
-        Grid.SetColumn(dismiss, 1); notice.Children.Add(dismiss);
+        notice.Content = noticeMessage;
+        ControlAppearance.Stock(notice);
+        notice.Closed += (_, _) => notice.Visibility = Visibility.Collapsed;
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(noticeMessage, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Assertive);
         root.Children.Add(notice);
         Grid.SetRow(split, 1); root.Children.Add(split);
@@ -403,9 +400,11 @@ public sealed partial class ChatShell : UserControl
                     ?? throw new InvalidOperationException(DesktopResources.Get("AgentUnavailable"));
             }
             var wireTarget = Service == ServiceKind.Agents ? agentTarget.RemoteAgentId ?? selected : selected;
-            if (Service == ServiceKind.Ai && inferencePreferences.EnabledSkillIds.Any(id => !id.StartsWith("mcp:", StringComparison.Ordinal)))
+            activeConversationTools = null;
+            if (Service == ServiceKind.Ai && NeedsSkillCatalog(inferencePreferences))
                 await LoadRuntimeSkillsAsync(ct);
             var mcpTurn = Service == ServiceKind.Ai ? CaptureSkillRuntime(inferencePreferences) : McpTurnSnapshot.Empty;
+            activeConversationTools = mcpTurn.ConversationTools;
             activeMcpTurn = mcpTurn;
             var systemContext = Service == ServiceKind.Ai ? CaptureSystemContext(inferencePreferences, mcpTurn) : null;
             if (selectedPrompt is not null && !selectedPrompt.Entry.IsCurrent())
@@ -427,7 +426,7 @@ public sealed partial class ChatShell : UserControl
             var watch = Stopwatch.StartNew();
             var saveAt = TimeSpan.Zero;
             var renderAt = TimeSpan.Zero;
-            await history.SaveAsync(partition, current, ct);
+            await SaveTurnHistoryAsync(partition, current, ct);
             try
             {
                 await DesktopChatTurn.RunAsync(current, output,
@@ -438,7 +437,7 @@ public sealed partial class ChatShell : UserControl
                     if (force || watch.Elapsed - renderAt > TimeSpan.FromMilliseconds(100))
                     { RenderTranscript(); renderAt = watch.Elapsed; }
                     if (force || watch.Elapsed - saveAt > TimeSpan.FromSeconds(1))
-                    { await history.SaveAsync(partition, current, token); saveAt = watch.Elapsed; }
+                    { await SaveTurnHistoryAsync(partition, current, token); saveAt = watch.Elapsed; }
                 }, mcpTurn, session.ActiveLanguage, ct, session.ElicitAsync);
                 if (output.Status is "interrupted" or "approval required") Show(DesktopResources.Get("StreamInterrupted"), InfoBarSeverity.Warning);
             }
@@ -447,8 +446,11 @@ public sealed partial class ChatShell : UserControl
             {
                 activeMcpTurn = null;
                 if (output.Status == "streaming") output.Status = "interrupted";
-                try { await history.SaveAsync(partition, current); await LoadHistoryAsync(CancellationToken.None); }
+                try { await SaveTurnHistoryAsync(partition, current); await LoadHistoryAsync(CancellationToken.None); }
                 catch { Show(DesktopResources.Get("HistorySaveFailed"), InfoBarSeverity.Error); }
+                var wasDeleted = activeConversationTools?.IsDeleted(current.Id) == true;
+                activeConversationTools = null;
+                if (wasDeleted) { current = new() { Service = Service }; SelectNewChatModel(); }
                 RenderTranscript();
             }
         }, inference: true);
@@ -763,13 +765,14 @@ public sealed partial class ChatShell : UserControl
         if (busy || closing) return;
         busy = true; operation = new CancellationTokenSource();
         if (!inference) operation.CancelAfter(TimeSpan.FromMinutes(2));
-        notice.Visibility = Visibility.Collapsed;
+        notice.IsOpen = false; notice.Visibility = Visibility.Collapsed;
         SetBusy(true, inference);
         try { await action(operation.Token); }
         catch (OperationCanceledException) { Show(DesktopResources.Get("OperationCanceled"), InfoBarSeverity.Warning); }
         catch (Exception e)
         {
-            Show(e is GatewayException or InvalidOperationException ? e.Message : DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error);
+            Show(e is GatewayException or InvalidOperationException or JsonException ? GatewayErrors.Display(e.Message) ?? DesktopResources.Get("OperationFailed")
+                : DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error);
         }
         finally { operation.Dispose(); operation = null; busy = false; SetBusy(false, false); }
     }
@@ -810,8 +813,11 @@ public sealed partial class ChatShell : UserControl
             InfoBarSeverity.Success => DesktopResources.Get("Success"),
             _ => DesktopResources.Get("Information")
         };
-        noticeMessage.Text = $"{label}: {message}";
+        notice.Title = label;
+        notice.Severity = severity;
+        noticeMessage.Text = message;
         notice.Visibility = Visibility.Visible;
+        notice.IsOpen = true;
     }
 
     public async Task ShutdownAsync()

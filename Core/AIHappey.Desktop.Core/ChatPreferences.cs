@@ -14,6 +14,14 @@ public sealed class ChatPreferences
     public int? MaxOutputTokens { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? SystemInstructions { get; set; }
+    private List<string> activePlugins = [];
+    public List<string> ActivePlugins
+    {
+        get => activePlugins;
+        set => activePlugins = value?.Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id.Trim())
+            .Distinct(StringComparer.Ordinal).ToList() ?? [];
+    }
+    public bool PluginEnabled(string id) => ActivePlugins.Contains(id, StringComparer.Ordinal);
     private List<string> enabledSkillIds = [];
     public List<string> EnabledSkillIds
     {
@@ -30,6 +38,7 @@ public sealed class ChatPreferences
     {
         MaxOutputTokens = MaxOutputTokens,
         SystemInstructions = SystemInstructions,
+        ActivePlugins = ActivePlugins.ToList(),
         EnabledSkillIds = EnabledSkillIds.ToList(),
         ProviderMetadata = ProviderMetadata.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone()),
         ProviderHeaders = ProviderHeaders.ToDictionary(p => p.Key, p => new Dictionary<string, string>(p.Value, StringComparer.OrdinalIgnoreCase))

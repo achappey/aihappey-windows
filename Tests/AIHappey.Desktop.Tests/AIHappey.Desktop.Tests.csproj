@@ -32,11 +32,17 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/Skills.cs" Link="Core/Skills.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalSkills.cs" Link="Core/LocalSkills.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SkillTools.cs" Link="Core/SkillTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/SkillSearch.cs" Link="Core/SkillSearch.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalTools.cs" Link="Core/LocalTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalConversationTools.cs" Link="Core/LocalConversationTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalArtificialIntelligenceTools.cs" Link="Core/LocalArtificialIntelligenceTools.cs" />
+    <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/LocalToolDefinitions.json" LogicalName="Desktop.LocalToolDefinitions" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpSkills.cs" Link="Core/McpSkills.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpResources.cs" Link="Core/McpResources.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpPrompts.cs" Link="Core/McpPrompts.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SystemContext.cs" Link="Core/SystemContext.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatClient.cs" Link="Core/ChatClient.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/GatewayErrors.cs" Link="Core/GatewayErrors.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatPreferences.cs" Link="Core/ChatPreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Catalog.cs" Link="Core/Catalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/CatalogClient.cs" Link="Core/CatalogClient.cs" />

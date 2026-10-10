@@ -69,9 +69,11 @@ public static class DesktopChatTurn
             output.Status = assembler.ApprovalRequired ? "approval required" : "stopped";
             throw;
         }
-        catch
+        catch (Exception error)
         {
             output.Status = assembler.ApprovalRequired ? "approval required" : "failed";
+            output.ErrorMessage ??= error is GatewayException or InvalidOperationException or System.Text.Json.JsonException
+                ? GatewayErrors.Display(error.Message) : DesktopResources.Get("OperationFailed");
             throw;
         }
     }

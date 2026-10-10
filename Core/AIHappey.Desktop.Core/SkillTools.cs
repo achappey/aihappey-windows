@@ -6,45 +6,39 @@ using System.Text.Json.Nodes;
 namespace AIHappey.Desktop.Core;
 
 /// <summary>Immutable enabled catalog and lazy readers for one inference turn.</summary>
-public sealed class DesktopSkillTurn(IEnumerable<(DesktopSkill Skill, Func<CancellationToken, Task<DesktopSkillContent>> Load)> selected)
+public sealed class DesktopSkillTurn(IEnumerable<(DesktopSkill Skill, Func<CancellationToken, Task<DesktopSkillContent>> Load)> selected,
+    bool searchEnabled = false, IReadOnlySet<string>? explicitlyEnabled = null, Func<DesktopSkill, bool>? available = null)
 {
     public const string ActivateTool = "activate_skill";
     public const string ResourceTool = "read_skill_resource";
     private readonly Dictionary<string, (DesktopSkill Skill, Func<CancellationToken, Task<DesktopSkillContent>> Load)> skills = selected
         .DistinctBy(s => s.Skill.Id).ToDictionary(s => s.Skill.Id, StringComparer.Ordinal);
     public IReadOnlyList<DesktopSkill> Skills => skills.Values.Select(s => s.Skill).ToArray();
-    public static bool Reserved(string name) => name is ActivateTool or ResourceTool;
-    public static readonly JsonElement ActivationDefinition = Definition(ActivateTool, "Activate an enabled skill",
-        "Loads the body instructions for an enabled agent skill. Use this when one of the available skills matches the current task. After activation, use read_skill_resource to load referenced bundled files by relative path.", false);
-    public static readonly JsonElement ResourceDefinition = Definition(ResourceTool, "Read a bundled skill resource",
-        "Reads a bundled file from an enabled skill by relative path. Use this after activate_skill when the skill instructions reference scripts, references, or assets. Paths are relative to the skill root.", true);
-    private static JsonElement Definition(string name, string title, string description, bool resource)
-    {
-        var properties = new JsonObject { ["skill_id"] = new JsonObject { ["type"] = "string",
-            ["description"] = "Exact enabled skill ID string shown in the system context; do not invent IDs or substitute the skill name." } };
-        if (resource) properties["path"] = new JsonObject { ["type"] = "string", ["description"] = "Relative path within the skill directory, for example references/REFERENCE.md or scripts/run.py." };
-        return JsonSerializer.SerializeToElement(new JsonObject { ["name"] = name, ["title"] = title, ["description"] = description,
-            ["inputSchema"] = new JsonObject { ["type"] = "object", ["properties"] = properties,
-                ["required"] = resource ? OpenAIChatConfig.Strings(["skill_id", "path"]) : OpenAIChatConfig.Strings(["skill_id"]) },
-            ["annotations"] = new JsonObject { ["readOnlyHint"] = true, ["destructiveHint"] = false, ["idempotentHint"] = true, ["openWorldHint"] = false } });
-    }
-    public JsonElement? Context => skills.Count == 0 ? null : JsonSerializer.SerializeToElement(new
+    public static bool Reserved(string name) => name is ActivateTool or ResourceTool or "search_skills";
+    public static readonly JsonElement ActivationDefinition = DesktopLocalTools.Definition(ActivateTool);
+    public static readonly JsonElement ResourceDefinition = DesktopLocalTools.Definition(ResourceTool);
+    private IReadOnlyList<DesktopSkill> ContextSkills => Skills.Where(s => (!searchEnabled || explicitlyEnabled?.Contains(s.Id) == true)
+        && available?.Invoke(s) != false).ToArray();
+    public JsonElement? Context => ContextSkills.Count == 0 ? null : JsonSerializer.SerializeToElement(new
     {
         availableSkills = new
         {
             activationTool = ActivateTool, resourceTool = ResourceTool,
             instructions = "The following skills provide specialized instructions for specific tasks. When a task matches a skill description, call activate_skill with the exact skill_id shown below to load its instructions. Do not use the skill name as skill_id unless it exactly matches the listed skill_id. After activation, use read_skill_resource with the same skill_id and a relative path when the instructions reference bundled files.",
             skillIdRequired = true,
-            activationExamples = Skills.Select(s => $"- id={s.Id}; skill_id={s.Id}; name={s.Name}: Call activate_skill with skill_id \"{s.Id}\".").ToArray(),
-            skills = Skills.Select(s => new { id = s.Id, skill_id = s.Id, exact_skill_id_to_activate = s.Id, name = s.Name,
+            activationExamples = ContextSkills.Select(s => $"- id={s.Id}; skill_id={s.Id}; name={s.Name}: Call activate_skill with skill_id \"{s.Id}\".").ToArray(),
+            skills = ContextSkills.Select(s => new { id = s.Id, skill_id = s.Id, exact_skill_id_to_activate = s.Id, name = s.Name,
                 displayName = s.Label, description = s.Description, activation = $"Call activate_skill with skill_id \"{s.Id}\"." }).ToArray()
         }
     });
     public void Register(McpTurnSnapshot snapshot)
     {
-        if (skills.Count == 0) return;
-        snapshot.AddLocal(ActivationDefinition, (input, ct) => CallAsync(ActivateTool, input, ct));
-        snapshot.AddLocal(ResourceDefinition, (input, ct) => CallAsync(ResourceTool, input, ct));
+        if (searchEnabled) DesktopLocalTools.Register(snapshot, DesktopLocalTools.SkillSearch, CallAsync);
+        else if (skills.Count > 0)
+        {
+            snapshot.AddLocal(ActivationDefinition, (input, ct) => CallAsync(ActivateTool, input, ct));
+            snapshot.AddLocal(ResourceDefinition, (input, ct) => CallAsync(ResourceTool, input, ct));
+        }
         if (Context is { } context) snapshot.AddContext(context);
     }
     public async Task<JsonElement> CallAsync(string name, JsonElement input, CancellationToken ct)
@@ -52,9 +46,16 @@ public sealed class DesktopSkillTurn(IEnumerable<(DesktopSkill Skill, Func<Cance
         ct.ThrowIfCancellationRequested();
         try
         {
+            if (name == "search_skills")
+            {
+                if (!searchEnabled) return DesktopLocalTools.Error("Skill search is not enabled for this chat.");
+                return DesktopSkillSearch.Call(Skills.Where(s => available?.Invoke(s) != false), input);
+            }
             var id = CatalogProjection.Text(input, "skill_id");
             if (id is null || !skills.TryGetValue(id, out var selected)) throw new InvalidDataException("The exact skill_id must refer to an enabled skill.");
+            if (available?.Invoke(selected.Skill) == false) throw new InvalidDataException("Skill is disabled or disconnected.");
             var loaded = await selected.Load(ct); ct.ThrowIfCancellationRequested(); var skill = loaded.Skill;
+            if (available?.Invoke(selected.Skill) == false) throw new InvalidDataException("Skill is disabled or disconnected.");
             if (name == ActivateTool)
             {
                 var attributes = $"skill_id=\"{Escape(id)}\" name=\"{Escape(skill.Name)}\"";

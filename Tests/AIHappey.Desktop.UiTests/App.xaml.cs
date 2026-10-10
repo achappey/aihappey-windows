@@ -36,6 +36,11 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--local-tools-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckLocalToolsAsync(theme);
+                results.Add("All local tools UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--agents-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckAgentsAsync(theme);
@@ -95,7 +100,7 @@ public partial class App : Application
                 }
             if (!Environment.GetCommandLineArgs().Contains("--transcript-only"))
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
-                { await CheckOverviewTabsAsync(theme); await CheckProvidersAsync(theme); await CheckAgentsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckImagesAsync(theme); await CheckVideosAsync(theme); }
+                { await CheckOverviewTabsAsync(theme); await CheckProvidersAsync(theme); await CheckAgentsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckLocalToolsAsync(theme); await CheckImagesAsync(theme); await CheckVideosAsync(theme); }
             results.Add("All native UI checks passed.");
             File.WriteAllLines(report, results);
             window.Close();

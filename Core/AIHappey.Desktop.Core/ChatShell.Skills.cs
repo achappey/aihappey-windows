@@ -66,10 +66,12 @@ public sealed partial class ChatShell
     {
         var snapshot = Mcp.Capture(); var partition = session.HistoryPartition;
         var selected = preferences.EnabledSkillIds.ToHashSet(StringComparer.Ordinal);
+        var discover = preferences.PluginEnabled(DesktopLocalTools.SkillSearch);
         var readers = new List<(DesktopSkill Skill, Func<CancellationToken, Task<DesktopSkillContent>> Load)>();
         if (runtimeSkillPartition == partition)
-            foreach (var item in runtimeSkillCatalog.Where(i => selected.Contains(i.Id)))
-                readers.Add((new(item.Id, item.Name, item.Description, "remote", item.LatestVersion ?? item.Version), async ct =>
+            foreach (var item in runtimeSkillCatalog.Where(i => discover || selected.Contains(i.Id)))
+                readers.Add((new DesktopSkill(item.Id, item.Name, item.Description, "remote", item.LatestVersion ?? item.Version)
+                    { DefaultVersion = item.Version, LatestVersion = item.LatestVersion }, async ct =>
                 {
                     if (closing || session.HistoryPartition != partition) throw new OperationCanceledException(ct);
                     var content = await skillStore.ReadAsync(partition, item, ct);
@@ -77,7 +79,7 @@ public sealed partial class ChatShell
                     return content;
                 }));
         if (localSkillPartition == partition)
-            foreach (var skill in localSkills.Where(s => selected.Contains(s.Id)))
+            foreach (var skill in localSkills.Where(s => discover || selected.Contains(s.Id)))
                 readers.Add((skill, async ct =>
                 {
                     if (closing || session.HistoryPartition != partition) throw new OperationCanceledException(ct);
@@ -90,8 +92,11 @@ public sealed partial class ChatShell
                         return await content.Read(path, token);
                     } };
                 }));
-        foreach (var skill in Mcp.CaptureSkills().Where(s => selected.Contains(s.Descriptor.Id))) readers.Add((skill.Descriptor, skill.LoadAsync));
-        new DesktopSkillTurn(readers).Register(snapshot); return snapshot;
+        foreach (var skill in Mcp.CaptureSkills().Where(s => discover || selected.Contains(s.Descriptor.Id))) readers.Add((skill.Descriptor, skill.LoadAsync));
+        new DesktopSkillTurn(readers, discover, selected, skill => !closing && session.HistoryPartition == partition
+            && (skill.Origin != "mcp" || session.Settings.ModelContext.EnableSkills && Mcp.CaptureSkills().Any(s => s.Descriptor.Id == skill.Id)))
+            .Register(snapshot);
+        RegisterLocalPlugins(snapshot, preferences, partition); return snapshot;
     }
     private void RenderSkillTags()
     {

@@ -42,7 +42,7 @@ public sealed partial class ChatShell
     private async Task ShowSystemContextAsync()
     {
         if (closing || historyDialogOpen || catalogDialog is not null || systemContextDialog is not null) return;
-        if (!busy && Service == ServiceKind.Ai && session.Settings.Chat.EnabledSkillIds.Any(id => !id.StartsWith("mcp:", StringComparison.Ordinal)))
+        if (!busy && Service == ServiceKind.Ai && NeedsSkillCatalog(session.Settings.Chat))
             await RunAsync(ct => LoadRuntimeSkillsAsync(ct));
         if (closing) return;
         var dialog = new SystemContextDialog(CaptureSystemContext(), session.ContextOptions.AppName ?? DesktopBranding.AppName,

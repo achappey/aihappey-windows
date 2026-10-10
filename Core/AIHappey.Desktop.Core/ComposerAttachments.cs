@@ -88,6 +88,11 @@ public static class ComposerAttachments
     public static async Task<PreparedComposerMessage> PrepareAsync(string prompt, IReadOnlyList<ComposerAttachment> attachments,
         ServiceKind service, bool extractDocuments, IDocumentTextExtractor extractor, CancellationToken ct,
         IReadOnlyList<McpSelectedResource>? resources = null, IReadOnlyList<UIMessagePart>? promptParts = null)
+        => await PrepareAsync(prompt, attachments, service, extractDocuments, new DocumentTextExtraction([extractor]), ct, resources, promptParts);
+
+    public static async Task<PreparedComposerMessage> PrepareAsync(string prompt, IReadOnlyList<ComposerAttachment> attachments,
+        ServiceKind service, bool extractDocuments, DocumentTextExtraction extractor, CancellationToken ct,
+        IReadOnlyList<McpSelectedResource>? resources = null, IReadOnlyList<UIMessagePart>? promptParts = null)
     {
         // Snapshot both settings and attachments before any asynchronous extraction.
         var snapshot = attachments.ToArray();
@@ -104,7 +109,7 @@ public static class ComposerAttachments
                 ct.ThrowIfCancellationRequested();
                 try
                 {
-                    var text = await extractor.ExtractAsync(file.Content, ct);
+                    var text = await extractor.ExtractAsync(file.Name, file.MediaType, file.Content, ct);
                     if (!string.IsNullOrWhiteSpace(text))
                         // Same PDF/default-MIME wrapping as the web's toMarkdownLinkSmart.
                         parts.Add(new TextUIPart { Text = $"<details><summary>{file.Name}</summary>\n\n\n{text}\n\n\n</details>" });

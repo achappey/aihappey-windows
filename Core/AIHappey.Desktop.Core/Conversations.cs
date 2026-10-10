@@ -27,6 +27,7 @@ public sealed class ConversationMessage
     public UIMessage Message { get; set; } = new();
     public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
     public string Status { get; set; } = "complete";
+    public string? ErrorMessage { get; set; }
     public string Text => string.Join("\n", Message.Parts.Where(p => p.Type == "text").Select(PortableConversations.Text));
     public string Reasoning => string.Join("\n", Message.Parts.Where(p => p.Type == "reasoning").Select(PortableConversations.Text));
 }
@@ -72,7 +73,9 @@ public sealed class MessageAssembler(ConversationMessage output)
                     : ApprovalRequired ? "approval required" : "complete"; break;
             case "error":
                 output.Status = "failed";
-                throw new GatewayException(DesktopResources.Get("GenerationError"));
+                output.ErrorMessage = GatewayErrors.StreamMessage(item.Raw);
+                System.Diagnostics.Debug.WriteLine("AIHappey chat error: " + output.ErrorMessage);
+                throw new GatewayException(output.ErrorMessage);
             case "abort": output.Status = "stopped"; Finished = true; break;
             case "tool-input-start": case "tool-input-delta": case "tool-input-available": case "tool-call":
             case "tool-input-error": case "tool-output-available": case "tool-output-error": case "tool-output-denied":
@@ -201,6 +204,13 @@ public sealed class HistoryStore(string root)
             File.Move(temporary, path, true);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
+    }
+    public async Task<Conversation?> GetAsync(string partition, string id, CancellationToken ct = default)
+    {
+        var path = PathFor(partition, id); if (!File.Exists(path)) return null;
+        await using var stream = File.OpenRead(path);
+        var item = await JsonSerializer.DeserializeAsync<Conversation>(stream, PortableConversations.Json, ct);
+        return item?.Id == id ? item : null;
     }
     public void Delete(string partition, string id) => File.Delete(PathFor(partition, id));
     private string PathFor(string partition, string id)

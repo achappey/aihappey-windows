@@ -1036,4 +1036,14 @@
   <data name="ProviderRegion_Oceania" xml:space="preserve"><value>Oceania</value></data>
   <data name="ProviderRegion_World" xml:space="preserve"><value>World</value></data>
   <data name="ProviderCountry_NZ" xml:space="preserve"><value>New Zealand</value></data>
+  <data name="BuiltInLocalTools" xml:space="preserve"><value>Local tools</value></data>
+  <data name="LocalPluginConversations" xml:space="preserve"><value>Chat history</value></data>
+  <data name="LocalPluginSkills" xml:space="preserve"><value>Skill discovery</value></data>
+  <data name="LocalPluginAi" xml:space="preserve"><value>Artificial Intelligence</value></data>
+  <data name="LocalToolFailed" xml:space="preserve"><value>The local tool could not be completed.</value></data>
+  <data name="ChatForm_openai_transcriptionLanguages" xml:space="preserve"><value>Possible languages</value></data>
+  <data name="ChatForm_openai_transcriptionLanguagesPlaceholder" xml:space="preserve"><value>Comma-separated ISO-639-1 codes, e.g. en, nl</value></data>
+  <data name="ChatForm_openai_transcriptionKeywords" xml:space="preserve"><value>Keywords</value></data>
+  <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>One word or phrase per line to guide transcription</value></data>
+  <data name="ChatForm_openai_transcriptionResponseFormat" xml:space="preserve"><value>Response format</value></data>
 </root>
