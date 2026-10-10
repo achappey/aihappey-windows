@@ -116,14 +116,15 @@ public partial class App : Application
         {
             window!.Content = shell; window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); window.Activate();
             await Task.Delay(200);
+            await HistoryIdleAsync(shell);
             var timestamp = DateTimeOffset.UtcNow.AddMinutes(-2);
             var answer = new TextUIPart { Text = "# Answer\n\n**Important** and *emphasis* with `inline code`.\n\n- First item\n- Second item\n\n> Quote\n\n[Web link](https://example.com/)\n\n| Name | Value |\n| --- | --- |\n| Example | 42 |\n\n```csharp\nConsole.WriteLine(42);\n```\n\n![Untrusted image](https://ui-test.invalid/image.png)" };
             var conversation = new Conversation
             {
                 Target = "test-agent", Service = ServiceKind.Agents, Messages =
                 [
-                    new() { Timestamp = timestamp, Message = new UIMessage { Id = "user", Role = Role.user, Parts = [new TextUIPart { Text = "Please check." }] } },
-                    new() { Timestamp = timestamp, Status = "complete", Message = new UIMessage { Id = "mixed", Role = Role.assistant, Parts =
+                    new() { Timestamp = timestamp, Message = new UIMessage { Id = "user", Role = Role.user, Metadata = [], Parts = [new TextUIPart { Text = "Please check." }] } },
+                    new() { Timestamp = timestamp, Status = "complete", Message = new UIMessage { Id = "mixed", Role = Role.assistant, Metadata = [], Parts =
                     [
                         new ReasoningUIPart { Text = "## Thinking\n\n**Checking** the tools." },
                         PortableConversations.Part(System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("""{"type":"tool-search","toolCallId":"call","state":"output-available","input":{"query":"models"},"output":{}}""")),
@@ -155,6 +156,28 @@ public partial class App : Application
             conversation.Messages[1].Message.Parts[2] = new TextUIPart { Text = answer.Text + "\n\n**Partial streaming" };
             Call(shell, "RenderTranscript"); await Task.Delay(100);
             Check(RenderedRuns(body).Any(run => run.Text.Contains("Partial streaming")), context + ": incomplete streamed Markdown renders without crashing");
+            void SetMetadata(int index, Dictionary<string, object?> metadata)
+            {
+                var target = conversation.Messages[index].Message.Metadata!; target.Clear();
+                foreach (var entry in metadata) target[entry.Key] = entry.Value!;
+            }
+            foreach (var (tokens, cost, expected) in new[] { (0, 0d, "0.00"), (0, .001d, "0.00>"), (17, .0123d, "0.01") })
+            {
+                var metadata = FinishMessageMetadata.Create("test-agent", timestamp, totalTokens: tokens, gateway: new FinishGatewayMetadata { Cost = (decimal)cost }).ToDictionary();
+                SetMetadata(1, metadata); SetMetadata(0, metadata);
+                Call(shell, "RenderTranscript"); await Task.Delay(80); shell.UpdateLayout();
+                var tokenBadges = Descendants(body).OfType<Border>().Where(b => b.Name == "TokenUsage").ToArray();
+                var priceBadges = Descendants(body).OfType<Border>().Where(b => b.Name == "MessagePrice").ToArray();
+                Check(tokenBadges.Length == (tokens > 0 ? 1 : 0), context + $": token badge/icon omitted for zero, assistant answer only ({tokens})");
+                Check(priceBadges.Length == 1 && ((StackPanel)priceBadges[0].Child).Children.OfType<TextBlock>().Single().Text == expected
+                    && Descendants(priceBadges[0]).OfType<FontIcon>().Any() && AutomationProperties.GetName(priceBadges[0]) == "Message price: " + expected,
+                    context + ": accessible themed assistant-only price badge: " + expected);
+            }
+            SetMetadata(1, new() { ["providerMetadata"] = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("""{"gateway":{"cost":"invalid"}}""") });
+            Call(shell, "RenderTranscript"); await Task.Delay(80);
+            Check(!Descendants(body).OfType<Border>().Any(b => b.Name is "MessagePrice" or "TokenUsage"), context + ": malformed cost and missing tokens safely omit badges");
+            SetMetadata(1, FinishMessageMetadata.Create("test-agent", timestamp, totalTokens: 17, gateway: new FinishGatewayMetadata { Cost = .0123m }).ToDictionary());
+            Call(shell, "RenderTranscript"); await Task.Delay(80);
             foreach (var width in new[] { 720, 1280 })
             {
                 window.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(100); shell.UpdateLayout();

@@ -11,12 +11,15 @@ public sealed partial class ChatShell
     private IReadOnlyList<DesktopAgent> localAgents = [];
     private string? localAgentPartition;
     private AgentEditDialog? agentEditor;
+    private readonly Button addAgent = new() { Name = "AddAgent", Content = new SymbolIcon(Symbol.Add), Width = 40, Height = 40,
+        Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private void PrepareAgentActions()
     {
         var menu = new MenuFlyout(); var create = new MenuFlyoutItem { Text = DesktopResources.Get("AgentCreate"), Icon = new SymbolIcon(Symbol.Add) };
         var import = new MenuFlyoutItem { Text = DesktopResources.Get("AgentImport"), Icon = new SymbolIcon(Symbol.OpenFile) };
-        menu.Items.Add(create); menu.Items.Add(import); agentsOverview.AddAgent.Flyout = menu;
-        create.Click += async (_, _) => await EditAgentAsync(null, agentsOverview.AddAgent);
+        menu.Items.Add(create); menu.Items.Add(import); addAgent.Flyout = menu;
+        ControlAppearance.Stock(addAgent); ToolbarControls.Label(addAgent, DesktopResources.Get("Add"));
+        create.Click += async (_, _) => await EditAgentAsync(null, addAgent);
         import.Click += async (_, _) => await ImportAgentsAsync();
         agentsOverview.EditRequested = async (item, owner) => await EditAgentAsync(item, owner);
         agentsOverview.DeleteRequested = async item => await DeleteAgentAsync(item);

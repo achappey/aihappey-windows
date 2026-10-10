@@ -43,10 +43,22 @@ public partial class App
         model.Text = "openai/fixture"; model.Focus(FocusState.Programmatic);
         Descendants(dialog).OfType<TextBox>().Single(b => b.Name == "AgentDescription").Focus(FocusState.Programmatic); await Task.Delay(80);
         Check(dialog.Draft.ModelId == "openai/fixture", context + $": model can return to OpenAI without losing provider binding (draft={dialog.Draft.ModelId}; picker={model.Text})");
+        var contextBefore = dialog.Draft.Definition["mcpClient"]?.DeepClone();
         SelectNativeTab(tabs, "modelContext"); await Task.Delay(60); dialog.UpdateLayout();
-        var policy = Descendants(dialog).OfType<ToggleSwitch>().First(t => AutomationProperties.GetName(t) == "Read-only tools");
+        var policySection = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "AgentPolicy");
+        Check(!policySection.IsExpanded && JsonNode.DeepEquals(dialog.Draft.Definition["mcpClient"], contextBefore), context + ": policy is initially collapsed without changing draft values");
+        policySection.IsExpanded = true; await Task.Delay(80); dialog.UpdateLayout();
+        var policy = Descendants(policySection).OfType<ToggleSwitch>().First(t => AutomationProperties.GetName(t) == "Read-only");
         Check(Within(policy, dialog), context + $": policy switch is inside dialog bounds, not clipped beyond right edge (width={policy.ActualWidth}; x={policy.TransformToVisual(dialog).TransformPoint(new Windows.Foundation.Point(0, 0)).X}; dialog={dialog.ActualWidth}; content={((FrameworkElement)dialog.Content).ActualWidth})");
         policy.IsOn = true; Check(DesktopAgent.Boolean(dialog.Draft.Definition["mcpClient"]?["policy"]?["readOnlyHint"]), context + ": native policy switch changes draft");
+        foreach (var width in new[] { 500, 1100 })
+        {
+            window.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(100); dialog.UpdateLayout();
+            Check(Descendants(policySection).OfType<ToggleSwitch>().Count() == 4 && Descendants(policySection).OfType<ToggleSwitch>().All(t => Within(t, policySection)),
+                context + $": all four policy switches fit their section at {width}px");
+        }
+        policySection.IsExpanded = false; await Task.Delay(60); policySection.IsExpanded = true; await Task.Delay(60);
+        Check(policy.IsOn, context + ": collapse/reopen retains policy changes");
         var elicitation = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "AgentElicitation");
         elicitation.IsExpanded = true; await Task.Delay(60);
         var elicitToggle = Descendants(elicitation).OfType<ToggleSwitch>().Single(t => t.Name == "CardEnabledSwitch"); elicitToggle.IsOn = true;
@@ -90,6 +102,39 @@ public partial class App
         InvokeButton(Descendants(create).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
         Check(create.Result is null, context + ": Cancel never commits a draft");
         File.WriteAllLines(report, results); window.Content = null; await session.DisposeAsync();
+        await CheckAgentHeaderAsync(theme);
+    }
+    private async Task CheckAgentHeaderAsync(ElementTheme theme)
+    {
+        var session = new DesktopSession(new UiHost(true), new UiRuntime(), new());
+        var shell = new ChatShell(session) { RequestedTheme = theme };
+        try
+        {
+            window!.Content = shell; window.Activate(); await Task.Delay(180);
+            var add = Field<Button>(shell, "addAgent"); var account = Field<Button>(shell, "account");
+            var pageType = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.DesktopPage")!;
+            Call(shell, "ShowPage", Enum.Parse(pageType, "Agents"));
+            foreach (var width in new[] { 500, 1100 })
+            {
+                window.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(350); shell.UpdateLayout();
+                var plus = add.TransformToVisual(shell).TransformPoint(new Windows.Foundation.Point());
+                var profile = account.TransformToVisual(shell).TransformPoint(new Windows.Foundation.Point());
+                Check(add.Visibility == Visibility.Visible && VisualTreeHelper.GetParent(add) == VisualTreeHelper.GetParent(account)
+                    && plus.X + add.ActualWidth <= profile.X && Math.Abs(plus.Y - profile.Y) < 1 && Within(add, shell),
+                    $"Agents / {theme}: plus is in top header left of profile at {width}px" + (Within(add, shell) ? "" : AgentGeometry(add, shell)));
+            }
+            Check(((MenuFlyout)add.Flyout).Items.OfType<MenuFlyoutItem>().Select(i => i.Text).SequenceEqual(new[] { "Create new agent", "Import agent" }),
+                $"Agents / {theme}: header plus retains Create/Import menu");
+            Check(!Descendants(Field<UserControl>(shell, "agentsOverview")).OfType<Button>().Any(b => b.Name == "AddAgent"), $"Agents / {theme}: no duplicate plus in overview");
+            Call(shell, "SetOverviewBusy", true); Check(!add.IsEnabled, $"Agents / {theme}: header plus disabled while busy");
+            Call(shell, "SetOverviewBusy", false); Check(add.IsEnabled, $"Agents / {theme}: header plus enabled when idle");
+            foreach (var page in new[] { "Chat", "Skills", "Models", "Mcp", "Images", "Videos", "Transcriptions" })
+            {
+                Call(shell, "ShowPage", Enum.Parse(pageType, page));
+                Check(add.Visibility == Visibility.Collapsed, $"Agents / {theme}: header plus hidden on {page}");
+            }
+        }
+        finally { await shell.ShutdownAsync(); window!.Content = null; }
     }
     private static bool Within(FrameworkElement control, FrameworkElement surface)
     {

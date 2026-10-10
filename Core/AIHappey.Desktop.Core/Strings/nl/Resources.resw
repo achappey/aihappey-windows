@@ -237,6 +237,7 @@
   <data name="SameEnterpriseAccount" xml:space="preserve"><value>Gebruik hetzelfde bedrijfsaccount voor beide services.</value></data>
   <data name="EnterpriseSignInFailed" xml:space="preserve"><value>Het inloggen bij Entra is mislukt of geannuleerd. Controleer je desktopregistratie, toestemming en tenantbeleid.</value></data>
   <data name="TokenUsage" xml:space="preserve"><value>Tokengebruik: {0}</value></data>
+  <data name="MessagePrice" xml:space="preserve"><value>Berichtprijs: {0}</value></data>
   <data name="ChatActionsFor" xml:space="preserve"><value>Chatacties voor {0}</value></data>
   <data name="RemoveContext" xml:space="preserve"><value>{0} verwijderen</value></data>
   <data name="OpenConversation" xml:space="preserve"><value>Chat openen: {0}</value></data>

@@ -12,7 +12,8 @@ public sealed partial class AgentEditDialog
     private JsonObject Client() => DesktopAgent.Object(draft.Definition, "mcpClient");
     private StackPanel ModelContext(McpTurnSnapshot connected)
     {
-        var panel = Panel(); var policy = Card(panel, "agent.policy");
+        var panel = Panel();
+        NativeSettingsSurface.Expander(panel, "AgentPolicy", ChatSettingsFields.L("agent.policy"), null, out var policy);
         foreach (var key in new[] { "readOnlyHint", "destructiveHint", "openWorldHint", "idempotentHint" })
             fields.Switch(policy, "agent." + key, () => DesktopAgent.Boolean(draft.Definition["mcpClient"]?["policy"]?[key]),
                 on => DesktopAgent.Object(Client(), "policy")[key] = on);

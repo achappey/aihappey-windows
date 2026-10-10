@@ -237,6 +237,7 @@
   <data name="SameEnterpriseAccount" xml:space="preserve"><value>Use the same enterprise account for both services.</value></data>
   <data name="EnterpriseSignInFailed" xml:space="preserve"><value>Entra sign-in failed or was canceled. Check your desktop registration, consent, and tenant policy.</value></data>
   <data name="TokenUsage" xml:space="preserve"><value>Token usage: {0}</value></data>
+  <data name="MessagePrice" xml:space="preserve"><value>Message price: {0}</value></data>
   <data name="ChatActionsFor" xml:space="preserve"><value>Chat actions for {0}</value></data>
   <data name="RemoveContext" xml:space="preserve"><value>Remove {0}</value></data>
   <data name="OpenConversation" xml:space="preserve"><value>Open conversation: {0}</value></data>

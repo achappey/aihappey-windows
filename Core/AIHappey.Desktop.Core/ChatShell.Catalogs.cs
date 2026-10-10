@@ -113,6 +113,7 @@ public sealed partial class ChatShell
         skillsOverview.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
         modelsOverview.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
         modelFilters.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
+        addAgent.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         if (page == DesktopPage.Models && aiCategory is not null)
         {
             aiCategoryExpanded = true; aiNavigation.Visibility = Visibility.Visible;
@@ -141,6 +142,7 @@ public sealed partial class ChatShell
     private void SetOverviewBusy(bool value)
     {
         foreach (var button in pageButtons.Values) button.IsEnabled = !value;
+        addAgent.IsEnabled = !value;
         agentsOverview.SetActionsEnabled(!value); skillsOverview.SetActionsEnabled(!value);
         mcpOverview.SetActionsEnabled(!value);
         modelsOverview.SetActionsEnabled(!value);

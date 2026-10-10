@@ -283,6 +283,7 @@ public sealed partial class ChatShell : UserControl
         };
         account.Flyout = profileMenu;
         Grid.SetColumn(modelFilters, 4); top.Children.Add(modelFilters);
+        Grid.SetColumn(addAgent, 4); top.Children.Add(addAgent);
         Grid.SetColumn(account, 5); top.Children.Add(account);
         workspace.Children.Add(top);
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
@@ -473,14 +474,10 @@ public sealed partial class ChatShell : UserControl
             if (displayed is not null) RenderPart(content, displayed);
             else content.Children.Add(SelectableText(block.Key.EndsWith(":details", StringComparison.Ordinal) ? DesktopResources.Get("AttachmentsSources") : DesktopResources.Get("Working")));
             string? tokenCount = null;
+            string? price = null;
             if (!user && !block.Activity && message.Message.Metadata is not null)
             {
-                try
-                {
-                    var metadata = FinishMessageMetadata.FromDictionary(message.Message.Metadata, current.Target, message.Timestamp);
-                    tokenCount = metadata.Usage.TotalTokens?.ToString();
-                }
-                catch (JsonException) { /* Optional metadata must not break rendering. */ }
+                (tokenCount, price) = MessageUsage.Read(message.Message.Metadata, current.Target, message.Timestamp);
             }
             var copy = ToolbarControls.CopyButton();
             copy.Click += (_, _) =>
@@ -511,6 +508,16 @@ public sealed partial class ChatShell : UserControl
                 usage.Children.Add(new TextBlock { Text = tokenCount, VerticalAlignment = VerticalAlignment.Center });
                 var badge = new Border { Name = "TokenUsage", Child = usage, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), VerticalAlignment = VerticalAlignment.Center };
                 ToolbarControls.Label(badge, DesktopResources.Format("TokenUsage", tokenCount));
+                badge.Style = TranscriptStyle("TranscriptSurfaceStyle");
+                footerActions.Children.Add(badge);
+            }
+            if (price is not null)
+            {
+                var pricing = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
+                pricing.Children.Add(new FontIcon { Glyph = "\uE8D4", FontSize = 14 });
+                pricing.Children.Add(new TextBlock { Text = price, VerticalAlignment = VerticalAlignment.Center });
+                var badge = new Border { Name = "MessagePrice", Child = pricing, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), VerticalAlignment = VerticalAlignment.Center };
+                ToolbarControls.Label(badge, DesktopResources.Format("MessagePrice", price));
                 badge.Style = TranscriptStyle("TranscriptSurfaceStyle");
                 footerActions.Children.Add(badge);
             }

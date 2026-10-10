@@ -10,6 +10,7 @@
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/en/Resources.resw" LogicalName="Desktop.Resources.en" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/nl/Resources.resw" LogicalName="Desktop.Resources.nl" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RelativeTime.cs" Link="Core/RelativeTime.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/MessageUsage.cs" Link="Core/MessageUsage.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Agents.cs" Link="Core/Agents.cs" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/AgentProviderDefaults.json" LogicalName="Desktop.AgentProviderDefaults" />

@@ -31,8 +31,6 @@ internal sealed class OverviewPage : UserControl
     private bool failed;
     private bool updatingFilters;
     private bool actionsEnabled = true;
-    internal readonly Button AddAgent = new() { Name = "AddAgent", Content = new SymbolIcon(Symbol.Add), Width = 40, Height = 40,
-        HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top, Visibility = Visibility.Collapsed };
     public CatalogKind Kind { get; }
     public Action? RetryRequested { get; set; }
     public Action? CancelRequested { get; set; }
@@ -53,8 +51,7 @@ internal sealed class OverviewPage : UserControl
             Text = kind == CatalogKind.Agent
                 ? DesktopResources.Get("AgentsDescription")
                 : DesktopResources.Get("SkillsDescription") };
-        var heading = new Grid(); heading.Children.Add(title); heading.Children.Add(AddAgent); body.Children.Add(heading); body.Children.Add(description);
-        if (kind == CatalogKind.Agent) { AddAgent.Visibility = Visibility.Visible; ControlAppearance.Stock(AddAgent); ToolbarControls.Label(AddAgent, DesktopResources.Get("Add")); }
+        body.Children.Add(title); body.Children.Add(description);
         var searchRow = new Grid { ColumnSpacing = 8, MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 0, 0) };
         SearchBox.HorizontalAlignment = HorizontalAlignment.Stretch;
         searchRow.Children.Add(SearchBox); body.Children.Add(searchRow);
@@ -115,7 +112,6 @@ internal sealed class OverviewPage : UserControl
         actionsEnabled = enabled;
         foreach (var button in ControlAppearance.Descendants(Cards).OfType<Button>()) button.IsEnabled = enabled;
         retry.IsEnabled = more.IsEnabled = enabled;
-        AddAgent.IsEnabled = enabled;
         SearchBox.IsEnabled = enabled && !working;
         filters.IsEnabled = enabled && !working && !failed;
     }
