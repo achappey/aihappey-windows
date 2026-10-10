@@ -58,7 +58,7 @@ public partial class App
         var svg = new McpIcon("data:image/svg+xml," + Uri.EscapeDataString("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"32\"><rect width=\"32\" height=\"32\" fill=\"green\"/></svg>"));
         var icon = (UserControl)Activator.CreateInstance(iconType, new object[] { new McpIcon[] { svg }, 32d })!;
         root.Children.Add(icon); await Task.Delay(80);
-        Check(!Descendants(icon).OfType<Image>().Any() && Descendants(icon).OfType<FontIcon>().Single().Visibility == Visibility.Visible,
+        Check(!Descendants(icon).OfType<Image>().Any() && Descendants(icon).OfType<FluentIcons.WinUI.FluentIcon>().Single().Visibility == Visibility.Visible,
             context + ": disabled-image test switch keeps generic MCP artwork");
         AppContext.SetSwitch("AIHappey.Desktop.DisableRemoteImages", false);
         try
@@ -66,14 +66,14 @@ public partial class App
             root.Children.Clear(); root.Children.Add(icon); await Task.Delay(150);
             var image = Descendants(icon).OfType<Image>().Single();
             Check(image.Source is SvgImageSource && image.Visibility == Visibility.Visible && image.Stretch == Stretch.Uniform
-                && Descendants(icon).OfType<FontIcon>().Single().Visibility == Visibility.Collapsed, context + ": embedded SVG replaces fallback with aspect ratio preserved");
+                && Descendants(icon).OfType<FluentIcons.WinUI.FluentIcon>().Single().Visibility == Visibility.Collapsed, context + ": embedded SVG replaces fallback with aspect ratio preserved");
             root.RequestedTheme = theme == ElementTheme.Light ? ElementTheme.Dark : ElementTheme.Light;
             await Task.Delay(150);
             Check(Descendants(icon).OfType<Image>().Single().Visibility == Visibility.Visible, context + ": native image survives runtime theme switch");
             root.Children.Clear();
             var broken = (UserControl)Activator.CreateInstance(iconType, new object[] { new McpIcon[] { new("data:image/png;base64,not-base64") }, 16d })!;
             root.Children.Add(broken); await Task.Delay(100);
-            Check(Descendants(broken).OfType<FontIcon>().Single().Visibility == Visibility.Visible
+            Check(Descendants(broken).OfType<FluentIcons.WinUI.FluentIcon>().Single().Visibility == Visibility.Visible
                 && Descendants(broken).OfType<Image>().Single().Visibility == Visibility.Collapsed, context + ": invalid image retains generic artwork");
         }
         finally { AppContext.SetSwitch("AIHappey.Desktop.DisableRemoteImages", true); root.Children.Clear(); root.RequestedTheme = theme; }

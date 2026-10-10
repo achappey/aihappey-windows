@@ -1,3 +1,5 @@
+using FluentIcons.WinUI;
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -41,9 +43,9 @@ internal sealed class FilesOverviewPage : UserControl
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };
         Content = viewer;
-        foreach (var (key, resource, glyph) in new[] { ("all", "AllCount", "\uE8FD"), ("files", "FilesCount", "\uE8A5"), ("folders", "FoldersCount", "\uE8B7") })
+        foreach (var (key, resource, icon) in new[] { ("all", "AllCount", Icon.List), ("files", "FilesCount", Icon.Document), ("folders", "FoldersCount", Icon.Folder) })
         {
-            var tab = new NavigationViewItem { Name = "FilesFilter", Tag = key, Icon = new FontIcon { Glyph = glyph }, Content = DesktopResources.Format(resource, 0) };
+            var tab = new NavigationViewItem { Name = "FilesFilter", Tag = key, Icon = DesktopIcons.Create(icon), Content = DesktopResources.Format(resource, 0) };
             AutomationProperties.SetAutomationId(tab, "FilesFilter_" + key); filters.Add(key, tab); tabs.MenuItems.Add(tab);
         }
         ControlAppearance.Native(search); ToolbarControls.Label(search, DesktopResources.Get("FilesSearch"));
@@ -114,7 +116,7 @@ internal sealed class FilesOverviewPage : UserControl
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto }); grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) }); grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new Grid { Margin = new Thickness(16, 16, 16, 0), ColumnSpacing = 12 };
         header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        header.Children.Add(new FontIcon { Glyph = item.IsFolder ? "\uE8B7" : "\uE8A5", FontSize = 24, Width = 32, VerticalAlignment = VerticalAlignment.Top });
+        header.Children.Add(new FluentIcon { Icon = item.IsFolder ? Icon.Folder : Icon.Document, FontSize = 24, Width = 32, VerticalAlignment = VerticalAlignment.Top });
         var labels = new StackPanel { Spacing = 6 };
         labels.Children.Add(new TextBlock { Text = item.Name, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, MaxLines = 2, TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis });
         var badge = new Border { HorizontalAlignment = HorizontalAlignment.Left, Child = new TextBlock { Text = DesktopResources.Get(item.IsFolder ? "FilesFolder" : "FilesFile"), FontSize = 12 } };
@@ -127,9 +129,9 @@ internal sealed class FilesOverviewPage : UserControl
         if (view.Size is { } size) { var sizeText = new TextBlock { Text = DesktopResources.Format("FilesSize", size), FontSize = 12 }; NativeCardSurface.Secondary(sizeText); detail.Children.Add(sizeText); }
         Grid.SetRow(detail, 1); grid.Children.Add(detail);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        foreach (var (name, label, glyph) in new[] { ("FilesOpen", "FilesOpen", "\uE8A7"), ("FilesRemove", "FilesRemove", "\uE711") })
+        foreach (var (name, label, icon) in new[] { ("FilesOpen", "FilesOpen", Icon.Open), ("FilesRemove", "FilesRemove", Icon.Dismiss) })
         {
-            var button = new Button { Name = name, Tag = view, Content = new FontIcon { Glyph = glyph, FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0) };
+            var button = new Button { Name = name, Tag = view, Content = DesktopIcons.Create(icon, 18), Width = 36, Height = 36, Padding = new Thickness(0) };
             NativeCardSurface.Action(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", DesktopResources.Get(label), item.Name));
             AutomationProperties.SetAutomationId(button, item.Id + ":" + name);
             button.Click += (_, _) => { if (name == "FilesOpen") OpenRequested?.Invoke(item); else RemoveRequested?.Invoke(item); }; actions.Children.Add(button);

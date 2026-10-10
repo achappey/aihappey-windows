@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Storage.Pickers;
@@ -11,12 +12,12 @@ public sealed partial class ChatShell
     private string? localSkillPartition;
     private SkillEditDialog? skillEditor;
     private ContentDialog? skillDeleteDialog;
-    private readonly Button addSkill = new() { Name = "AddSkill", Content = new SymbolIcon(Symbol.Add), Width = 40, Height = 40,
+    private readonly Button addSkill = new() { Name = "AddSkill", Content = DesktopIcons.Create(Icon.Add), Width = 40, Height = 40,
         Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private void PrepareSkillActions()
     {
-        var menu = new MenuFlyout(); var create = new MenuFlyoutItem { Text = DesktopResources.Get("SkillCreate"), Icon = new SymbolIcon(Symbol.Add) };
-        var import = new MenuFlyoutItem { Text = DesktopResources.Get("SkillImport"), Icon = new SymbolIcon(Symbol.OpenFile) };
+        var menu = new MenuFlyout(); var create = new MenuFlyoutItem { Text = DesktopResources.Get("SkillCreate"), Icon = DesktopIcons.Create(Icon.Add) };
+        var import = new MenuFlyoutItem { Text = DesktopResources.Get("SkillImport"), Icon = DesktopIcons.Create(Icon.FolderOpen) };
         menu.Items.Add(create); menu.Items.Add(import); addSkill.Flyout = menu;
         ControlAppearance.Stock(addSkill); ToolbarControls.Label(addSkill, DesktopResources.Get("Add"));
         create.Click += async (_, _) => await EditSkillAsync(null, addSkill);

@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -13,8 +14,8 @@ internal sealed class ConversationRow
     private readonly ListViewItem container;
     private readonly Button more;
     private readonly MenuFlyout menu = new() { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
-    private readonly MenuFlyoutItem rename = new() { Text = DesktopResources.Get("Rename"), Icon = new SymbolIcon(Symbol.Edit) };
-    private readonly MenuFlyoutItem delete = new() { Text = DesktopResources.Get("Delete"), Icon = new SymbolIcon(Symbol.Delete) };
+    private readonly MenuFlyoutItem rename = new() { Text = DesktopResources.Get("Rename"), Icon = DesktopIcons.Create(Icon.Edit) };
+    private readonly MenuFlyoutItem delete = new() { Text = DesktopResources.Get("Delete"), Icon = DesktopIcons.Create(Icon.Delete) };
     private Conversation? conversation;
     private bool hovered;
 
@@ -22,7 +23,8 @@ internal sealed class ConversationRow
 
     public static DataTemplate Template() => (DataTemplate)XamlReader.Load("""
         <DataTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                      xmlns:ic="using:FluentIcons.WinUI">
             <Grid ColumnSpacing="8" Background="Transparent">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -32,7 +34,7 @@ internal sealed class ConversationRow
                            VerticalAlignment="Center" />
                 <Button x:Name="ConversationActions" Grid.Column="1" Width="32" Height="32"
                         Padding="0" CornerRadius="6" Opacity="0" IsHitTestVisible="False">
-                    <SymbolIcon Symbol="More" />
+                    <ic:FluentIcon Icon="MoreHorizontal" />
                 </Button>
             </Grid>
         </DataTemplate>

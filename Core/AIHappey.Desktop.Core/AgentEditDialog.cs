@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.UI.Xaml;
@@ -108,7 +109,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         var modelOptions = models.Where(m => m.ModelType is null or "language").ToArray();
         var model = new AutoSuggestBox { Name = "AgentModel", Header = ChatSettingsFields.L("model"), Text = draft.ModelId,
             ItemsSource = modelOptions.Take(100).ToArray(), DisplayMemberPath = "Label", TextMemberPath = "Id", PlaceholderText = DesktopResources.Get("SelectModel"),
-            QueryIcon = new FontIcon { Glyph = "\uE70D", FontSize = 12 }, HorizontalAlignment = HorizontalAlignment.Stretch };
+            QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12), HorizontalAlignment = HorizontalAlignment.Stretch };
         ControlAppearance.Stock(model); AutomationProperties.SetName(model, ChatSettingsFields.L("model")); body.Children.Add(model);
         void SetModel(string id)
         {

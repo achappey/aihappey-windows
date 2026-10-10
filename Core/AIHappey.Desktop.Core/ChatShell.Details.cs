@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -33,7 +34,7 @@ public sealed partial class ChatShell
         header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         header.Children.Add(detailsTitle);
-        var close = ActivityButton(DesktopResources.Get("CloseDetails"), "\uE711"); close.Name = "CloseDetails";
+        var close = ActivityButton(DesktopResources.Get("CloseDetails"), Icon.Dismiss); close.Name = "CloseDetails";
         close.Click += (_, _) => details.IsPaneOpen = false;
         Grid.SetColumn(close, 1); header.Children.Add(close); panel.Children.Add(header);
         var viewer = new ScrollViewer { Content = detailsBody, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
@@ -78,7 +79,7 @@ public sealed partial class ChatShell
             var icons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
             foreach (var group in domains.Take(5))
             {
-                var button = ActivityButton($"Sources from {group.Key} ({group.Count()})", "\uE774");
+                var button = ActivityButton($"Sources from {group.Key} ({group.Count()})", Icon.Globe);
                 button.Name = "SourceFavicon"; button.Width = 28;
                 var icon = new Grid { Width = 20, Height = 20 };
                 var hostLabel = group.Key.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? group.Key[4..] : group.Key;
@@ -103,15 +104,15 @@ public sealed partial class ChatShell
         }
         if (row.Attachments.Count > 0)
         {
-            var files = FooterButton("Show attachments", row.Attachments.Count.ToString(), "\uE723"); files.Name = "AttachmentsButton";
+            var files = FooterButton("Show attachments", row.Attachments.Count.ToString(), Icon.Attach); files.Name = "AttachmentsButton";
             files.Click += (_, _) => OpenDetails("attachments", row.Block.Key, files); footer.Children.Add(files);
         }
     }
 
-    private static Button FooterButton(string label, string text, string? glyph = null, bool nativeCard = false)
+    private static Button FooterButton(string label, string text, Icon? icon = null, bool nativeCard = false)
     {
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        if (glyph is not null) content.Children.Add(new FontIcon { Glyph = glyph, FontSize = 14 });
+        if (icon is not null) content.Children.Add(DesktopIcons.Create(icon.Value, 14));
         content.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
         var button = new Button { Content = content, Padding = new Thickness(8, 4, 8, 4), MinHeight = 32 };
         if (nativeCard) NativeCardSurface.Action(button); else ToolbarControls.Subtle(button);
@@ -161,12 +162,12 @@ public sealed partial class ChatShell
                 if (source.Url is not null) card.Children.Add(SelectableText(source.Url));
                 if (source.Filename is not null) card.Children.Add(SelectableText(source.Filename));
                 var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-                var copy = new Button { Content = new FontIcon { Glyph = "\uE8C8", FontSize = 14 }, Width = 32, Height = 32, Padding = new Thickness(0) };
+                var copy = new Button { Content = DesktopIcons.Create(Icon.Copy, 14), Width = 32, Height = 32, Padding = new Thickness(0) };
                 NativeCardSurface.Action(copy); ToolbarControls.Label(copy, DesktopResources.Get("CopySource"));
                 copy.Click += (_, _) => CopyDetails(source.Url ?? source.Title); actions.Children.Add(copy);
                 if (AttachmentDownloads.RemoteUri(source.Url) is { } uri)
                 {
-                    var open = new Button { Content = new FontIcon { Glyph = "\uE8A7", FontSize = 14 }, Width = 32, Height = 32, Padding = new Thickness(0) };
+                    var open = new Button { Content = DesktopIcons.Create(Icon.Open, 14), Width = 32, Height = 32, Padding = new Thickness(0) };
                     NativeCardSurface.Action(open); ToolbarControls.Label(open, DesktopResources.Get("OpenSource"));
                     open.Click += async (_, _) => { try { await Launcher.LaunchUriAsync(uri); } catch { Show(DesktopResources.Get("SourceOpenFailed"), InfoBarSeverity.Warning); } }; actions.Children.Add(open);
                 }
@@ -179,7 +180,7 @@ public sealed partial class ChatShell
         {
             var card = DetailsCard(file.Name); card.Children.Add(SelectableText(file.MediaType));
             if (file.ResourceUri is not null) card.Children.Add(SelectableText(file.ResourceUri));
-            var download = FooterButton(DesktopResources.Format("DownloadFile", file.Name), DesktopResources.Get("Download"), "\uE896", nativeCard: true); download.Name = "DownloadAttachment";
+            var download = FooterButton(DesktopResources.Format("DownloadFile", file.Name), DesktopResources.Get("Download"), Icon.ArrowDownload, nativeCard: true); download.Name = "DownloadAttachment";
             download.IsEnabled = !downloading && AttachmentDownloads.CanDownload(file);
             download.Click += async (_, _) => await DownloadAttachmentAsync(file); card.Children.Add(download);
             if (!AttachmentDownloads.CanDownload(file)) card.Children.Add(SelectableText(DesktopResources.Get("BrowserResourceHint")));

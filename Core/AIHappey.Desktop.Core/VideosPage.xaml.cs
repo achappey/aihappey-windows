@@ -1,3 +1,5 @@
+using FluentIcons.WinUI;
+using FluentIcons.Common;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Microsoft.UI.Xaml;
@@ -75,10 +77,10 @@ public sealed partial class VideosPage : UserControl
     private MenuFlyout AttachmentMenu()
     {
         var menu = new MenuFlyout();
-        foreach (var (label, icon, action) in new[] { ("Attachments", Symbol.Attach, PickRequested), ("Link", Symbol.Link, LinkRequested) })
+        foreach (var (label, icon, action) in new[] { ("Attachments", Icon.Attach, PickRequested), ("Link", Icon.Link, LinkRequested) })
         {
             // Resolve callbacks at click time; the shell wires them after page construction.
-            var item = new MenuFlyoutItem { Text = DesktopResources.Get(label), Icon = new SymbolIcon(icon) }; ControlAppearance.Stock(item);
+            var item = new MenuFlyoutItem { Text = DesktopResources.Get(label), Icon = DesktopIcons.Create(icon) }; ControlAppearance.Stock(item);
             item.Click += async (_, _) => { if (editable && !submitting && (label == "Link" ? LinkRequested : PickRequested) is { } callback) await callback(); }; menu.Items.Add(item);
         }
         return menu;
@@ -118,9 +120,9 @@ public sealed partial class VideosPage : UserControl
         foreach (var file in attachments)
         {
             var row = new Grid { ColumnSpacing = 8 }; row.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-            row.Children.Add(new FontIcon { Glyph = file.IsLink ? "\uE71B" : "\uE714", FontSize = 14 });
+            row.Children.Add(DesktopIcons.Create(file.IsLink ? Icon.Link : Icon.Video, 14));
             var text = new TextBlock { Text = file.Name, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center }; Grid.SetColumn(text, 1); row.Children.Add(text);
-            var remove = new Button { Name = "VideoRemoveAttachment", Content = new FontIcon { Glyph = "\uE711", FontSize = 10 }, Width = 28, Height = 28, Padding = new Thickness(0), IsEnabled = editable && !submitting };
+            var remove = new Button { Name = "VideoRemoveAttachment", Content = DesktopIcons.Create(Icon.Dismiss, 10), Width = 28, Height = 28, Padding = new Thickness(0), IsEnabled = editable && !submitting };
             ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("RemoveContext", file.Name)); remove.Click += (_, _) => { if (editable && !submitting) { attachments.Remove(file); RenderTags(); } };
             Grid.SetColumn(remove, 2); row.Children.Add(remove);
             var badge = new Border { Name = "VideoAttachmentTag", Child = row, CornerRadius = new CornerRadius(16), Padding = new Thickness(12, 2, 4, 2) }; ControlAppearance.TokenBadge(badge); Tags.Children.Add(badge); ToolTipService.SetToolTip(badge, file.RemoteUrl ?? file.Name);
@@ -164,7 +166,7 @@ public sealed partial class VideosPage : UserControl
     private Border ResultCard(LibraryVideo item)
     {
         var grid = new Grid(); var image = new Image { Stretch = Stretch.UniformToFill }; grid.Children.Add(image);
-        grid.Children.Add(new FontIcon { Glyph = "\uE768", FontSize = 36, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center });
+        grid.Children.Add(new FluentIcon { Icon = Icon.Play, FontSize = 36, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center });
         var labels = new StackPanel { Spacing = 2, Margin = new Thickness(12) };
         labels.Children.Add(new TextBlock { Text = item.Model, TextTrimming = TextTrimming.CharacterEllipsis });
         if (item.Cost is { } cost) labels.Children.Add(new TextBlock { Text = cost.ToString("C4", CultureInfo.GetCultureInfo("en-US")), FontSize = 12 });

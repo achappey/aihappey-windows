@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Text.Json.Nodes;
 using AIHappey.Vercel.Models;
 using Microsoft.UI.Windowing;
@@ -8,7 +9,7 @@ namespace AIHappey.Desktop.Core;
 
 public sealed partial class ChatShell
 {
-    private readonly Button viewSystemContext = new() { Name = "ViewSystemContext", Content = new FontIcon { Glyph = "\uE890" },
+    private readonly Button viewSystemContext = new() { Name = "ViewSystemContext", Content = DesktopIcons.Create(Icon.Info),
         Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6) };
     private SystemContextDialog? systemContextDialog;
 

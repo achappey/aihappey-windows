@@ -1,3 +1,5 @@
+using FluentIcons.WinUI;
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -11,7 +13,7 @@ internal sealed class McpServerIcon : UserControl
 {
     private readonly IReadOnlyList<McpIcon> icons;
     private readonly Grid slot = new();
-    private readonly FontIcon fallback;
+    private readonly FluentIcon fallback;
     private int version;
 
     public McpServerIcon(IReadOnlyList<McpIcon> icons, double size)
@@ -19,7 +21,7 @@ internal sealed class McpServerIcon : UserControl
         this.icons = icons;
         Name = "McpServerIcon"; Width = Height = size; IsTabStop = false;
         VerticalAlignment = VerticalAlignment.Center;
-        fallback = new FontIcon { Name = "McpGenericIcon", Glyph = "\uE774", FontSize = size <= 20 ? 14 : 24 };
+        fallback = new FluentIcon { Name = "McpGenericIcon", Icon = Icon.Globe, FontSize = size <= 20 ? 14 : 24 };
         slot.Children.Add(fallback); Content = slot;
         AutomationProperties.SetAccessibilityView(this, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
         Loaded += (_, _) => Refresh();

@@ -1,7 +1,9 @@
-param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly)
+param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
+& node (Join-Path $PSScriptRoot 'check-icons.cjs')
+if ($LASTEXITCODE -ne 0) { throw 'Fluent icon source audit failed.' }
 & node (Join-Path $PSScriptRoot 'check-video-resources.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Video resource key audit failed.' }
 & node (Join-Path $PSScriptRoot 'check-agent-resources.cjs')
@@ -17,6 +19,8 @@ if (-not $SkipBuild) {
         -c Debug -r win-x64 --self-contained true -p:Platform=x64 -v:quiet -clp:ErrorsOnly -o $output
     if ($LASTEXITCODE -ne 0) { throw "UI test build failed (exit $LASTEXITCODE)." }
 }
+& node (Join-Path $PSScriptRoot 'check-icons.cjs') $output
+if ($LASTEXITCODE -ne 0) { throw 'Published Fluent icon assets are missing.' }
 $report = Join-Path ([IO.Path]::GetTempPath()) ('AIHappey-ui-tests-' + [guid]::NewGuid().ToString('N') + '.txt')
 try {
     $arguments = @('"' + $report + '"')
@@ -32,6 +36,7 @@ try {
     if ($LocalToolsOnly) { $arguments += '--local-tools-only' }
     if ($ChatSettingsOnly) { $arguments += '--chat-settings-only' }
     if ($SidebarOnly) { $arguments += '--sidebar-only' }
+    if ($IconsOnly) { $arguments += '--icons-only' }
     $process = Start-Process (Join-Path $output 'AIHappey.Desktop.UiTests.exe') -ArgumentList $arguments -PassThru
     if (-not $process.WaitForExit(60000)) {
         $process.Kill()

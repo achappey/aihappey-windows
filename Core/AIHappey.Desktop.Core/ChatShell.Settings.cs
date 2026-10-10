@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -5,7 +6,7 @@ namespace AIHappey.Desktop.Core;
 
 public sealed partial class ChatShell
 {
-    private readonly Button chatSettings = new() { Name = "ChatSettingsButton", Content = new SymbolIcon(Symbol.Setting), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6) };
+    private readonly Button chatSettings = new() { Name = "ChatSettingsButton", Content = DesktopIcons.Create(Icon.Settings), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6) };
     private ChatSettingsDialog? chatSettingsDialog;
 
     private void PrepareChatSettings()

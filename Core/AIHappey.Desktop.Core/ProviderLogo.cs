@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -11,7 +12,7 @@ internal sealed class ProviderLogo : Grid
 {
     private readonly CatalogProvider provider;
     private readonly Image image = new() { Stretch = Stretch.Uniform, Visibility = Visibility.Collapsed };
-    private readonly IconElement placeholder = ToolbarControls.BrainIcon();
+    private readonly IconElement placeholder = DesktopIcons.Create(Icon.Brain);
     private CancellationTokenSource? lifetime;
     internal string? DisplayedSource { get; private set; }
     public ProviderLogo(CatalogProvider provider, double size = 48)

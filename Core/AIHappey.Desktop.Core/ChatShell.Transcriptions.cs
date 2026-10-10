@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
@@ -24,7 +25,7 @@ public sealed partial class ChatShell
     private ChatTarget? SelectedTranscriptionModel => transcriptionModels.FirstOrDefault(m => m.Id == transcriptionTarget.Text.Trim());
     private void PrepareTranscriptions()
     {
-        ToolbarControls.Outline(transcriptionTarget); ToolbarControls.Label(transcriptionTarget, DesktopResources.Get("SelectModel")); transcriptionTarget.QueryIcon = new FontIcon { Glyph = "\uE70D", FontSize = 12 };
+        ToolbarControls.Outline(transcriptionTarget); ToolbarControls.Label(transcriptionTarget, DesktopResources.Get("SelectModel")); transcriptionTarget.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
         transcriptionTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) TranscriptionModelSuggestions(transcriptionTarget.Text); transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null); };
         transcriptionTarget.GotFocus += (_, _) => { TranscriptionModelSuggestions(); transcriptionTarget.IsSuggestionListOpen = true; };
         transcriptionTarget.SuggestionChosen += (_, args) => transcriptionTarget.Text = ((ChatTarget)args.SelectedItem).Id;

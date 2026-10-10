@@ -1,5 +1,6 @@
 <UserControl x:Class="AIHappey.Desktop.Core.VideosPage"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ic="using:FluentIcons.WinUI">
     <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="ms-appx:///AIHappey.Desktop.Core/NativeCardStyles.xaml" />
     </ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
@@ -13,9 +14,9 @@
                     <ScrollViewer x:Name="TagScroll" MaxHeight="128" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel x:Name="Tags" Spacing="4" /></ScrollViewer>
                     <TextBox x:Name="Prompt" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="96" MaxHeight="240" />
                     <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                        <Button x:Name="AddAttachment" Width="40" Height="40" Padding="0"><SymbolIcon Symbol="Add" /></Button>
-                        <Button x:Name="Settings" Grid.Column="1" Width="40" Height="40" Padding="0"><SymbolIcon Symbol="Setting" /></Button>
-                        <Button x:Name="Send" Grid.Column="3" Width="40" Height="40" Padding="0"><SymbolIcon Symbol="Send" /></Button>
+                        <Button x:Name="AddAttachment" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Add" /></Button>
+                        <Button x:Name="Settings" Grid.Column="1" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Settings" /></Button>
+                        <Button x:Name="Send" Grid.Column="3" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Send" /></Button>
                     </Grid>
                     <TextBlock x:Name="NoModels" TextWrapping="Wrap" Visibility="Collapsed" />
                 </StackPanel>

@@ -1,3 +1,5 @@
+using FluentIcons.WinUI;
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -9,7 +11,7 @@ namespace AIHappey.Desktop.Core;
 
 public sealed partial class ChatShell
 {
-    private readonly Button addContext = new() { Name = "AddContext", Content = new SymbolIcon(Symbol.Add), Width = 40, Height = 40, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };
+    private readonly Button addContext = new() { Name = "AddContext", Content = DesktopIcons.Create(Icon.Add), Width = 40, Height = 40, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };
     private readonly MessageFooterPanel contextTags = new() { Name = "ContextTags" };
     private readonly ScrollViewer contextTagScroll = new() { Name = "ContextTagScroll", MaxHeight = 128, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, Visibility = Visibility.Collapsed };
     private readonly List<ComposerAttachment> contextAttachments = [];
@@ -24,8 +26,8 @@ public sealed partial class ChatShell
         ToolbarControls.Subtle(addContext); ToolbarControls.Label(addContext, DesktopResources.Get("AddContext"));
         contextTagScroll.Content = contextTags;
         var menu = new MenuFlyout { Placement = FlyoutPlacementMode.TopEdgeAlignedLeft };
-        var files = new MenuFlyoutItem { Text = DesktopResources.Get("Attachments"), Icon = new FontIcon { Glyph = "\uE723" } };
-        var link = new MenuFlyoutItem { Text = DesktopResources.Get("Link"), Icon = new FontIcon { Glyph = "\uE71B" } };
+        var files = new MenuFlyoutItem { Text = DesktopResources.Get("Attachments"), Icon = DesktopIcons.Create(Icon.Attach) };
+        var link = new MenuFlyoutItem { Text = DesktopResources.Get("Link"), Icon = DesktopIcons.Create(Icon.Link) };
         foreach (var item in new[] { files, link, selectResources, selectPrompts, manageMcp }) { ControlAppearance.Native(item); menu.Items.Add(item); }
         files.Click += async (_, _) => await PickAttachmentsAsync();
         link.Click += async (_, _) => await AddLinkAsync();
@@ -73,10 +75,10 @@ public sealed partial class ChatShell
             content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
             content.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
             content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-            content.Children.Add(new FontIcon { Glyph = file.IsLink ? "\uE71B" : "\uE723", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+            content.Children.Add(new FluentIcon { Icon = file.IsLink ? Icon.Link : Icon.Attach, FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
             var label = new TextBlock { Text = file.Name, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(label, 1); content.Children.Add(label);
-            var remove = new Button { Name = "RemoveContext", Content = new FontIcon { Glyph = "\uE711", FontSize = 10 }, Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
+            var remove = new Button { Name = "RemoveContext", Content = DesktopIcons.Create(Icon.Dismiss, 10), Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
             ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("RemoveContext", file.Name));
             remove.Click += (_, _) =>
             {

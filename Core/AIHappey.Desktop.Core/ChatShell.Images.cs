@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
@@ -29,7 +30,7 @@ public sealed partial class ChatShell
     private void PrepareImages()
     {
         ToolbarControls.Outline(imageTarget); ToolbarControls.Label(imageTarget, DesktopResources.Get("SelectModel"));
-        imageTarget.QueryIcon = new FontIcon { Glyph = "\uE70D", FontSize = 12 };
+        imageTarget.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
         imageTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) ImageModelSuggestions(imageTarget.Text); imagesPage.SetModelAvailable(SelectedImageModel is not null); };
         imageTarget.GotFocus += (_, _) => { ImageModelSuggestions(); imageTarget.IsSuggestionListOpen = true; };
         imageTarget.SuggestionChosen += (_, args) => { imageTarget.Text = ((ChatTarget)args.SelectedItem).Id; imagesPage.SetModelAvailable(SelectedImageModel is not null); };

@@ -91,15 +91,17 @@ public partial class App
             Check(ai.Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Select(b => b.Name).SequenceEqual(["NavigateModels", "NavigateProviders"]), context + ": Providers is beside Models in the AI navigation group");
             var providersButton = ai.Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Single(b => b.Name == "NavigateProviders");
             var mcpButton = Field<StackPanel>(shell, "expandedPageNavigation").Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Single(b => b.Name == "NavigateMcp");
-            var providerIcon = ((StackPanel)providersButton.Content).Children.OfType<PathIcon>().Single();
-            var mcpIcon = ((StackPanel)mcpButton.Content).Children.OfType<PathIcon>().Single();
-            Check(providerIcon.Data is PathGeometry { Figures.Count: 2 } && mcpIcon.Data is PathGeometry { Figures.Count: 4 }
-                && providerIcon.Width == 20 && providerIcon.Height == 20 && mcpIcon.Width == 20 && mcpIcon.Height == 20
+            var providerIcon = ((StackPanel)providersButton.Content).Children.OfType<FluentIcons.WinUI.FluentIcon>().Single();
+            var mcpIcon = ((StackPanel)mcpButton.Content).Children.OfType<FluentIcons.WinUI.FluentIcon>().Single();
+            Check(providerIcon.Icon == FluentIcons.Common.Icon.Cloud && mcpIcon.Icon == FluentIcons.Common.Icon.Connector
+                && providerIcon.FontSize == 20 && mcpIcon.FontSize == 20
+                && providerIcon.ReadLocalValue(IconElement.ForegroundProperty) == DependencyProperty.UnsetValue
+                && mcpIcon.ReadLocalValue(IconElement.ForegroundProperty) == DependencyProperty.UnsetValue
                 && providerIcon.Foreground is SolidColorBrush providerFill && providersButton.Foreground is SolidColorBrush providerText && providerFill.Color == providerText.Color
                 && mcpIcon.Foreground is SolidColorBrush mcpFill && mcpButton.Foreground is SolidColorBrush mcpText && mcpFill.Color == mcpText.Color,
-                context + ": Providers cloud and MCP connector are distinct theme-colored native vector icons");
-            Check(Field<MenuFlyoutItem>(shell, "manageMcp").Icon is PathIcon menuIcon
-                && menuIcon.Data is PathGeometry { Figures.Count: 4 } && !ReferenceEquals(menuIcon, mcpIcon)
+                context + ": Providers cloud and MCP connector are distinct inherited-theme Fluent icons");
+            Check(Field<MenuFlyoutItem>(shell, "manageMcp").Icon is FluentIcons.WinUI.FluentIcon menuIcon
+                && menuIcon.Icon == FluentIcons.Common.Icon.Connector && !ReferenceEquals(menuIcon, mcpIcon)
                 && AutomationProperties.GetName(providersButton) == DesktopResources.Get("Providers")
                 && AutomationProperties.GetName(mcpButton) == DesktopResources.Get("McpTitle")
                 && ToolTipService.GetToolTip(providersButton) is ToolTip && ToolTipService.GetToolTip(mcpButton) is ToolTip,

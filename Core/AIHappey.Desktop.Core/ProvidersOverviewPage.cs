@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Flags.Icons;
 using Flags.Icons.WinUi;
 using Microsoft.UI.Xaml;
@@ -16,7 +17,7 @@ internal sealed class ProvidersOverviewPage : UserControl
     internal readonly NavigationView Tabs = new() { Name = "ProviderTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top, IsSettingsVisible = false,
         IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed, IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly NavigationViewItem all = new() { Name = "ProvidersAll", Tag = false, Content = DesktopResources.Get("All") };
-    private readonly NavigationViewItem saved = new() { Name = "ProvidersFavorites", Tag = true, Content = DesktopResources.Get("Favorites"), Icon = new FontIcon { Glyph = "\uE734" } };
+    private readonly NavigationViewItem saved = new() { Name = "ProvidersFavorites", Tag = true, Content = DesktopResources.Get("Favorites"), Icon = DesktopIcons.Create(Icon.Star) };
     private readonly StackPanel body = new() { Spacing = 16, Margin = new Thickness(24), HorizontalAlignment = HorizontalAlignment.Center };
     private readonly TextBlock description = new() { Name = "ProvidersDescription", FontSize = 16, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
     private readonly TextBlock status = new() { Name = "ProvidersStatus", TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
@@ -48,7 +49,7 @@ internal sealed class ProvidersOverviewPage : UserControl
         var pane = new StackPanel { Spacing = 16, Padding = new Thickness(16) };
         var header = new Grid(); header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         header.Children.Add(new TextBlock { Text = DesktopResources.Get("Filters"), FontSize = 20, VerticalAlignment = VerticalAlignment.Center });
-        var close = new Button { Content = new SymbolIcon(Symbol.Cancel), Width = 32, Height = 32, Padding = new Thickness(0) };
+        var close = new Button { Content = DesktopIcons.Create(Icon.Dismiss), Width = 32, Height = 32, Padding = new Thickness(0) };
         ToolbarControls.Subtle(close); ToolbarControls.Label(close, DesktopResources.Get("CloseFilters")); close.Click += (_, _) => FiltersOpen = false;
         Grid.SetColumn(close, 1); header.Children.Add(close); pane.Children.Add(header); pane.Children.Add(facets);
         split.Pane = new ScrollViewer { Content = pane, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
@@ -167,10 +168,10 @@ internal sealed class ProvidersOverviewPage : UserControl
             TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(16, 18, 16, 16), MinHeight = 40 };
         ToolTipService.SetToolTip(text, provider.Description); NativeCardSurface.Secondary(text); Grid.SetRow(text, 1); grid.Children.Add(text);
         var actions = new NativeWrapPanel { Spacing = 4 };
-        var details = ActionButton(provider, "Details", "\uE890", "View"); details.Click += (_, _) => DetailsRequested?.Invoke(provider, details); actions.Children.Add(details);
-        foreach (var link in ProviderCatalog.Links(provider)) { var button = ActionButton(provider, link.ResourceKey, link.Glyph, link.Key); button.Click += (_, _) => LinkRequested?.Invoke(link.Uri); actions.Children.Add(button); }
+        var details = ActionButton(provider, "Details", Icon.Info, "View"); details.Click += (_, _) => DetailsRequested?.Invoke(provider, details); actions.Children.Add(details);
+        foreach (var link in ProviderCatalog.Links(provider)) { var button = ActionButton(provider, link.ResourceKey, DesktopIcons.ProviderLink(link.Key), link.Key); button.Click += (_, _) => LinkRequested?.Invoke(link.Uri); actions.Children.Add(button); }
         var isFavorite = favorites.Contains(provider.Id);
-        var favorite = ActionButton(provider, isFavorite ? "RemoveFavorite" : "AddFavorite", isFavorite ? "\uE735" : "\uE734", "Favorite");
+        var favorite = ActionButton(provider, isFavorite ? "RemoveFavorite" : "AddFavorite", Icon.Star, "Favorite", isFavorite ? IconVariant.Filled : IconVariant.Regular);
         favorite.Name = "ProviderFavorite"; favorite.Click += (_, _) => FavoriteRequested?.Invoke(provider); actions.Children.Add(favorite);
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) }; NativeCardSurface.Divider(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
         var card = new Border { Name = "ProviderCard", Tag = provider, Child = grid }; NativeCardSurface.Card(card); AutomationProperties.SetName(card, provider.Name); return card;
@@ -180,9 +181,9 @@ internal sealed class ProvidersOverviewPage : UserControl
         var badge = new Border { Child = new TextBlock { Text = text, FontSize = 12, TextWrapping = TextWrapping.Wrap }, VerticalAlignment = VerticalAlignment.Top };
         NativeCardSurface.Badge(badge); return badge;
     }
-    private static Button ActionButton(CatalogProvider provider, string resource, string glyph, string action)
+    private static Button ActionButton(CatalogProvider provider, string resource, Icon icon, string action, IconVariant variant = IconVariant.Regular)
     {
-        var button = new Button { Name = "ProviderAction", Content = new FontIcon { Glyph = glyph, FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0) };
+        var button = new Button { Name = "ProviderAction", Content = DesktopIcons.Create(icon, 18, variant), Width = 36, Height = 36, Padding = new Thickness(0) };
         NativeCardSurface.Action(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", DesktopResources.Get(resource), provider.Name));
         AutomationProperties.SetAutomationId(button, provider.Id + ":" + action); return button;
     }

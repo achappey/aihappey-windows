@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using AIHappey.Vercel.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -64,7 +65,7 @@ public sealed partial class ChatShell
         layout.Children.Add(items);
         if (activity is not null)
         {
-            IconElement icon = activity.Type == "reasoning" ? ToolbarControls.BrainIcon() : new FontIcon { Glyph = "\uE90F", FontSize = 20 };
+            IconElement icon = activity.Type == "reasoning" ? DesktopIcons.Create(Icon.Brain) : DesktopIcons.Create(Icon.Wrench, 20);
             icon.Name = activity.Type == "reasoning" ? "ReasoningActivityIcon" : "ToolActivityIcon";
             icon.VerticalAlignment = VerticalAlignment.Top;
             ToolbarControls.Label(icon, DesktopResources.Get(activity.Type == "reasoning" ? "Reasoning" : "ToolActivity"));

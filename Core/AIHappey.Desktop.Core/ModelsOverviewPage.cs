@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Globalization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -80,7 +81,7 @@ internal sealed class ModelsOverviewPage : UserControl
         var filterHeader = new Grid();
         filterHeader.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); filterHeader.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         filterHeader.Children.Add(new TextBlock { Text = DesktopResources.Get("Filters"), FontSize = 20, VerticalAlignment = VerticalAlignment.Center });
-        var close = new Button { Content = new SymbolIcon(Symbol.Cancel), Width = 32, Height = 32, Padding = new Thickness(0) };
+        var close = new Button { Content = DesktopIcons.Create(Icon.Dismiss), Width = 32, Height = 32, Padding = new Thickness(0) };
         ToolbarControls.Subtle(close); ToolbarControls.Label(close, DesktopResources.Get("CloseFilters"));
         close.Click += (_, _) => FiltersOpen = false;
         Grid.SetColumn(close, 1); filterHeader.Children.Add(close); filterBody.Children.Add(filterHeader);
@@ -185,7 +186,7 @@ internal sealed class ModelsOverviewPage : UserControl
         if (!types.Contains(Filter.Type)) Filter.Type = types.FirstOrDefault() ?? "";
         foreach (var type in types)
         {
-            var item = new NavigationViewItem { Name = "ModelsType_" + type, Tag = type, Content = TypeLabel(type), Icon = new FontIcon { Glyph = TypeGlyph(type) } };
+            var item = new NavigationViewItem { Name = "ModelsType_" + type, Tag = type, Content = TypeLabel(type), Icon = DesktopIcons.Create(TypeIcon(type)) };
             AutomationProperties.SetAutomationId(item, item.Name);
             typeItems.Add(type, item); ModelTypes.MenuItems.Add(item);
         }
@@ -193,8 +194,7 @@ internal sealed class ModelsOverviewPage : UserControl
         updating = false;
     }
     private static string TypeLabel(string type) => DesktopResources.Get("AiModelType_" + type);
-    internal static string TypeGlyph(string? type) => type switch
-    { "image" => "\uEB9F", "transcription" => "\uE720", "audio" => "\uE93E", "speech" => "\uE767", "video" => "\uE714", "decision" => "\uE8AB", "reranking" => "\uE8CB", "embedding" => "\uE8B7", _ => "\uE8F2" };
+    internal static Icon TypeIcon(string? type) => DesktopIcons.ModelType(type);
     private void KeepTags() => Filter.Tags.IntersectWith(catalog.Models.Where(m => m.ModelType == Filter.Type).SelectMany(m => m.Tags));
     private void Changed() { visible = 50; Render(); }
 
@@ -269,9 +269,9 @@ internal sealed class ModelsOverviewPage : UserControl
         ToolTipService.SetToolTip(name, model.Label); labels.Children.Add(name);
         // Wrap badges at narrow widths instead of introducing horizontal scrolling.
         var badges = new VariableSizedWrapGrid { Orientation = Orientation.Horizontal, MaximumRowsOrColumns = 3 };
-        if (model.ContextWindow is > 0) badges.Children.Add(Badge(ModelOverviewCatalog.CompactNumber(model.ContextWindow.Value), "\uE8B7", DesktopResources.Format("ModelsContextBadge", model.ContextWindow.Value.ToString("N0"))));
-        if (model.MaxTokens is > 0) badges.Children.Add(Badge(ModelOverviewCatalog.CompactNumber(model.MaxTokens.Value), "\uE896", DesktopResources.Format("ModelsOutputBadge", model.MaxTokens.Value.ToString("N0"))));
-        if (model.Tags.Contains("real-time")) badges.Children.Add(Badge(DesktopResources.Get("AiModelType_audio"), "\uE93E", DesktopResources.Get("AiModelType_audio")));
+        if (model.ContextWindow is > 0) badges.Children.Add(Badge(ModelOverviewCatalog.CompactNumber(model.ContextWindow.Value), Icon.Folder, DesktopResources.Format("ModelsContextBadge", model.ContextWindow.Value.ToString("N0"))));
+        if (model.MaxTokens is > 0) badges.Children.Add(Badge(ModelOverviewCatalog.CompactNumber(model.MaxTokens.Value), Icon.ArrowDownload, DesktopResources.Format("ModelsOutputBadge", model.MaxTokens.Value.ToString("N0"))));
+        if (model.Tags.Contains("real-time")) badges.Children.Add(Badge(DesktopResources.Get("AiModelType_audio"), Icon.Headphones, DesktopResources.Get("AiModelType_audio")));
         labels.Children.Add(badges); Grid.SetColumn(labels, 1); header.Children.Add(labels);
         if (ModelOverviewCatalog.IsNew(model, DateTimeOffset.UtcNow))
         { var badge = Badge(DesktopResources.Get("New"), null, DesktopResources.Get("New")); badge.Name = "ModelNew"; Grid.SetColumn(badge, 2); header.Children.Add(badge); }
@@ -279,25 +279,25 @@ internal sealed class ModelsOverviewPage : UserControl
         var text = new TextBlock { Name = "ModelDescription", Text = model.Description ?? "", FontSize = 13, TextWrapping = TextWrapping.Wrap, MaxLines = 3, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(16, 18, 16, 16), MinHeight = 36 };
         ToolTipService.SetToolTip(text, model.Description); NativeCardSurface.Secondary(text); Grid.SetRow(text, 1); grid.Children.Add(text);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        var copy = ActionButton(model, "Copy", "\uE8C8"); ToolTipService.SetToolTip(copy, ModelOverviewCatalog.DisplayId(model)); copy.Click += (_, _) => CopyRequested?.Invoke(model); actions.Children.Add(copy);
+        var copy = ActionButton(model, "Copy", Icon.Copy); ToolTipService.SetToolTip(copy, ModelOverviewCatalog.DisplayId(model)); copy.Click += (_, _) => CopyRequested?.Invoke(model); actions.Children.Add(copy);
         if (ModelOverviewCatalog.CanLaunch(model))
-        { var launch = ActionButton(model, "ModelsLaunch", TypeGlyph(model.ModelType)); launch.Name = "ModelLaunch"; launch.Click += (_, _) => LaunchRequested?.Invoke(model); actions.Children.Add(launch); }
+        { var launch = ActionButton(model, "ModelsLaunch", TypeIcon(model.ModelType)); launch.Name = "ModelLaunch"; launch.Click += (_, _) => LaunchRequested?.Invoke(model); actions.Children.Add(launch); }
         var saved = favorites.Contains(ModelOverviewCatalog.FavoriteKey(model));
-        var favorite = ActionButton(model, saved ? "RemoveFavorite" : "AddFavorite", saved ? "\uE735" : "\uE734"); favorite.Name = "ModelFavorite";
+        var favorite = ActionButton(model, saved ? "RemoveFavorite" : "AddFavorite", Icon.Star, saved ? IconVariant.Filled : IconVariant.Regular); favorite.Name = "ModelFavorite";
         AutomationProperties.SetAutomationId(favorite, ModelOverviewCatalog.FavoriteKey(model) + ":Favorite"); favorite.Click += (_, _) => FavoriteRequested?.Invoke(model); actions.Children.Add(favorite);
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) }; NativeCardSurface.Divider(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
         var card = new Border { Name = "ModelCard", Tag = model, Child = grid }; NativeCardSurface.Card(card); AutomationProperties.SetName(card, model.Label); return card;
     }
-    private Button ActionButton(ChatTarget model, string action, string glyph)
+    private Button ActionButton(ChatTarget model, string action, Icon icon, IconVariant variant = IconVariant.Regular)
     {
-        var button = new Button { Name = "Model" + action, Content = new FontIcon { Glyph = glyph, FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0), IsEnabled = actionsEnabled };
+        var button = new Button { Name = "Model" + action, Content = DesktopIcons.Create(icon, 18, variant), Width = 36, Height = 36, Padding = new Thickness(0), IsEnabled = actionsEnabled };
         NativeCardSurface.Action(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", DesktopResources.Get(action), model.Label));
         AutomationProperties.SetAutomationId(button, ModelOverviewCatalog.FavoriteKey(model) + ":" + action); return button;
     }
-    private static Border Badge(string text, string? glyph, string label)
+    private static Border Badge(string text, Icon? icon, string label)
     {
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        if (glyph is not null) content.Children.Add(new FontIcon { Glyph = glyph, FontSize = 12 });
+        if (icon is not null) content.Children.Add(DesktopIcons.Create(icon.Value, 12));
         content.Children.Add(new TextBlock { Text = text, FontSize = 12 });
         var badge = new Border { Child = content, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 0, 6, 4) };
         NativeCardSurface.Badge(badge); ToolbarControls.Label(badge, label); return badge;

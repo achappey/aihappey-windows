@@ -122,7 +122,6 @@ internal static class ControlAppearance
         if (stockControls.TryGetValue(control, out _)) return;
         foreach (var element in TemplateElements(control))
         {
-            if (element is IconElement icon) icon.Foreground = new SolidColorBrush(palette.Text);
             if (element is TextBlock label) label.Foreground = new SolidColorBrush(palette.Text);
             foreach (var group in VisualStateManager.GetVisualStateGroups(element))
                 foreach (var state in group.States)
@@ -189,7 +188,9 @@ internal static class ControlAppearance
             var child = VisualTreeHelper.GetChild(parent, index);
             if (child is FrameworkElement element) yield return element;
             // WinUI exposes no public TemplatedParent: stop at nested native controls instead.
-            if (child is not Control)
+            // Icon internals inherit the template's state foreground. Pinning their
+            // glyph TextBlock to idle text would defeat disabled/pressed coloring.
+            if (child is not Control and not IconElement)
                 foreach (var nestedElement in TemplateElements(child)) yield return nestedElement;
         }
     }

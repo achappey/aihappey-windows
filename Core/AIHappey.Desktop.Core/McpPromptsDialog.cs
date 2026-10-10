@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -151,7 +152,7 @@ public sealed class McpPromptsDialog : ContentDialog
                 if (hasSuggestions && old is not AutoSuggestBox)
                 {
                     var input = new AutoSuggestBox { Name = "McpPromptArgumentCompletion", Header = label, Text = value,
-                        QueryIcon = new FontIcon { Glyph = "\uE70D", FontSize = 12 } };
+                        QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12) };
                     input.TextChanged += async (_, args) =>
                     {
                         if (!rendering && !pending && args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)

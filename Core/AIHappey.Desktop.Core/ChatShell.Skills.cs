@@ -1,3 +1,5 @@
+using FluentIcons.WinUI;
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -109,10 +111,10 @@ public sealed partial class ChatShell
             content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
             content.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
             content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-            content.Children.Add(new FontIcon { Glyph = "\uE734", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+            content.Children.Add(new FluentIcon { Icon = Icon.Star, FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
             var text = new TextBlock { Text = label, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(text, 1); content.Children.Add(text);
-            var remove = new Button { Name = "DisableSkill", Tag = id, Content = new FontIcon { Glyph = "\uE711", FontSize = 10 }, Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
+            var remove = new Button { Name = "DisableSkill", Tag = id, Content = DesktopIcons.Create(Icon.Dismiss, 10), Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
             ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("DisableSkill", label));
             remove.Click += async (_, _) =>
             {

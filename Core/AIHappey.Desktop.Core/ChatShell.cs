@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -29,14 +30,14 @@ public sealed partial class ChatShell : UserControl
     private readonly TextBlock welcome = new() { Text = DesktopResources.Get("Welcome"), TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 16), FontSize = 28 };
     private readonly TextBlock disclaimer = new() { Name = "Disclaimer", Text = DesktopResources.Get("Disclaimer"), FontSize = 12, TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(16, 0, 16, 8) };
     private readonly TextBox input = new() { PlaceholderText = DesktopResources.Get("AskAnything"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 96, MaxHeight = 240 };
-    private readonly ToggleButton models = ToolbarControls.CreateModeButton(ToolbarControls.BrainIcon(), DesktopResources.Get("Models"));
-    private readonly ToggleButton agents = ToolbarControls.CreateModeButton(ToolbarControls.BotIcon(), DesktopResources.Get("Agents"));
+    private readonly ToggleButton models = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Brain), DesktopResources.Get("Models"));
+    private readonly ToggleButton agents = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Bot), DesktopResources.Get("Agents"));
     private readonly AutoSuggestBox target = new() { PlaceholderText = DesktopResources.Get("SelectModel"), MinWidth = 120, MaxWidth = 420, Height = 40, CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1), VerticalContentAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly MenuFlyoutItem refresh = new() { Text = DesktopResources.Get("Refresh"), Icon = new SymbolIcon(Symbol.Refresh) };
-    private readonly Button account = new() { Content = new SymbolIcon(Symbol.Contact), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(20) };
-    private readonly MenuFlyoutItem settingsButton = new() { Text = DesktopResources.Get("Settings"), Icon = new SymbolIcon(Symbol.Setting) };
-    private readonly MenuFlyoutItem manageAccount = new() { Icon = new FontIcon { Glyph = "\uE8D7" } };
-    private readonly Button send = new() { Content = new SymbolIcon(Symbol.Send), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Right };
+    private readonly MenuFlyoutItem refresh = new() { Text = DesktopResources.Get("Refresh"), Icon = DesktopIcons.Create(Icon.ArrowSync) };
+    private readonly Button account = new() { Content = DesktopIcons.Create(Icon.Person), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(20) };
+    private readonly MenuFlyoutItem settingsButton = new() { Text = DesktopResources.Get("Settings"), Icon = DesktopIcons.Create(Icon.Settings) };
+    private readonly MenuFlyoutItem manageAccount = new() { Icon = DesktopIcons.Create(Icon.PersonAccounts) };
+    private readonly Button send = new() { Content = DesktopIcons.Create(Icon.Send), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Right };
     private readonly Button stop = new() { Content = DesktopResources.Get("Stop"), Visibility = Visibility.Collapsed };
     private readonly Button newChat = new() { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(6) };
     private readonly ListView chats = new() { SelectionMode = ListViewSelectionMode.Single };
@@ -155,7 +156,7 @@ public sealed partial class ChatShell : UserControl
         agents.Checked += async (_, _) => { if (!updatingMode) await SelectServiceAsync(ServiceKind.Agents); };
         models.Unchecked += (_, _) => { if (!updatingMode) UpdateMode(Service); };
         agents.Unchecked += (_, _) => { if (!updatingMode) UpdateMode(Service); };
-        target.QueryIcon = new FontIcon { Glyph = "\uE70D", FontSize = 12 };
+        target.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
         target.QuerySubmitted += (_, args) =>
         {
             if (args.ChosenSuggestion is ChatTarget selected) target.Text = selected.Id;
@@ -212,7 +213,7 @@ public sealed partial class ChatShell : UserControl
         sidebar.RowDefinitions.Add(new() { Height = GridLength.Auto });
         sidebar.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         var nav = new StackPanel { Spacing = 8 };
-        var toggle = new Button { Name = "SidebarToggle", Content = new FontIcon { Glyph = "\uE700" }, Width = 32, Height = 32, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Right };
+        var toggle = new Button { Name = "SidebarToggle", Content = DesktopIcons.Create(Icon.PanelLeft), Width = 32, Height = 32, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Right };
         ControlAppearance.Native(toggle);
         ToolbarControls.Label(toggle, DesktopResources.Get("ToggleHistory"));
         toggle.Click += (_, _) => split.IsPaneOpen = !split.IsPaneOpen;
@@ -225,7 +226,7 @@ public sealed partial class ChatShell : UserControl
         nav.Children.Add(sidebarHeader);
         var sidebarBody = new StackPanel { Spacing = 8 };
         var newChatContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-        newChatContent.Children.Add(new SymbolIcon(Symbol.Add));
+        newChatContent.Children.Add(DesktopIcons.Create(Icon.Add));
         newChatContent.Children.Add(new TextBlock { Text = DesktopResources.Get("NewChat"), VerticalAlignment = VerticalAlignment.Center });
         newChat.Content = newChatContent;
         sidebarBody.Children.Add(newChat); sidebarBody.Children.Add(searchChats);
@@ -515,22 +516,22 @@ public sealed partial class ChatShell : UserControl
             footerActions.Children.Add(copy);
             if (block.Activity)
             {
-                var previous = ActivityButton(DesktopResources.Get("PreviousActivity"), "\uE76B");
-                var next = ActivityButton(DesktopResources.Get("NextActivity"), "\uE76C");
+                var previous = ActivityButton(DesktopResources.Get("PreviousActivity"), Icon.ChevronLeft);
+                var next = ActivityButton(DesktopResources.Get("NextActivity"), Icon.ChevronRight);
                 previous.IsEnabled = page > 0; next.IsEnabled = page < block.Parts.Count - 1;
                 previous.Click += (_, _) => { activityPages[key] = page - 1; RenderTranscript(); };
                 next.Click += (_, _) => { activityPages[key] = page + 1; RenderTranscript(); };
                 footerActions.Children.Add(previous);
                 footerActions.Children.Add(new TextBlock { Name = "ActivityCount", Text = $"{page + 1}/{block.Parts.Count}", VerticalAlignment = VerticalAlignment.Center });
                 footerActions.Children.Add(next);
-                var list = ActivityButton(DesktopResources.Get("ActivityList"), "\uE8FD");
+                var list = ActivityButton(DesktopResources.Get("ActivityList"), Icon.List);
                 list.Click += (_, _) => ShowActivity(block.Key, key, page, list);
                 footerActions.Children.Add(list);
             }
             if (tokenCount is not null)
             {
                 var usage = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
-                usage.Children.Add(new FontIcon { Glyph = "\uE943", FontSize = 14 });
+                usage.Children.Add(DesktopIcons.Create(Icon.DataUsage, 14));
                 usage.Children.Add(new TextBlock { Text = tokenCount, VerticalAlignment = VerticalAlignment.Center });
                 var badge = new Border { Name = "TokenUsage", Child = usage, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), VerticalAlignment = VerticalAlignment.Center };
                 ToolbarControls.Label(badge, DesktopResources.Format("TokenUsage", tokenCount));
@@ -540,7 +541,7 @@ public sealed partial class ChatShell : UserControl
             if (price is not null)
             {
                 var pricing = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
-                pricing.Children.Add(new FontIcon { Glyph = "$", FontFamily = new FontFamily("Segoe UI"), FontSize = 14 });
+                pricing.Children.Add(DesktopIcons.Create(Icon.Money, 14));
                 pricing.Children.Add(new TextBlock { Text = price, VerticalAlignment = VerticalAlignment.Center });
                 var badge = new Border { Name = "MessagePrice", Child = pricing, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), VerticalAlignment = VerticalAlignment.Center };
                 ToolbarControls.Label(badge, DesktopResources.Format("MessagePrice", price));
@@ -590,9 +591,9 @@ public sealed partial class ChatShell : UserControl
 
     private static TextBlock SelectableText(string text) => new() { Text = text, IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap };
 
-    private static Button ActivityButton(string label, string glyph)
+    private static Button ActivityButton(string label, Icon icon)
     {
-        var button = new Button { Content = new FontIcon { Glyph = glyph, FontSize = 14 }, Width = 32, Height = 32, Padding = new Thickness(0) };
+        var button = new Button { Content = DesktopIcons.Create(icon, 14), Width = 32, Height = 32, Padding = new Thickness(0) };
         ToolbarControls.Subtle(button); ToolbarControls.Label(button, label); return button;
     }
 

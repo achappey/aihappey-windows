@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -9,7 +10,7 @@ public sealed partial class ChatShell
     private readonly MessageFooterPanel mcpTags = new() { Name = "McpConnectedServers" };
     private readonly ScrollViewer mcpTagScroll = new() { MaxHeight = 128, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
         HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Visibility = Visibility.Collapsed };
-    private readonly MenuFlyoutItem manageMcp = new() { Name = "ManageMcpServers", Text = DesktopResources.Get("McpTitle"), Icon = ToolbarControls.ConnectorIcon() };
+    private readonly MenuFlyoutItem manageMcp = new() { Name = "ManageMcpServers", Text = DesktopResources.Get("McpTitle"), Icon = DesktopIcons.Create(Icon.Connector) };
     private readonly HttpClient mcpCatalogHttp = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }) { Timeout = TimeSpan.FromSeconds(30) };
     private DesktopMcpManager Mcp => session.InitializeMcp();
     private McpServersDialog? mcpDialog;
@@ -53,7 +54,7 @@ public sealed partial class ChatShell
             content.Children.Add(new McpServerIcon(McpIcons.ForServer(view), 16));
             var label = new TextBlock { Text = displayName, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(label, 1); content.Children.Add(label);
-            var remove = new Button { Name = "DisconnectMcpServer", Content = new FontIcon { Glyph = "\uE711", FontSize = 10 }, Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
+            var remove = new Button { Name = "DisconnectMcpServer", Content = DesktopIcons.Create(Icon.Dismiss, 10), Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
             ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("McpDisconnect", displayName));
             remove.Click += async (_, _) => { await RunAsync(ct => Mcp.SetEnabledAsync(view.Server.Id, false, ct)); if (!closing) input.Focus(FocusState.Programmatic); };
             Grid.SetColumn(remove, 2); content.Children.Add(remove);

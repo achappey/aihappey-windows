@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
@@ -10,7 +11,7 @@ public sealed partial class ChatShell
 {
     private readonly SharedFileStore sharedFileStore;
     private readonly FilesOverviewPage filesOverview = new();
-    private readonly Button addFiles = new() { Name = "AddFiles", Content = new SymbolIcon(Symbol.Add), Width = 40, Height = 40,
+    private readonly Button addFiles = new() { Name = "AddFiles", Content = DesktopIcons.Create(Icon.Add), Width = 40, Height = 40,
         Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private ContentDialog? removeSharedFileDialog;
     private LocalSharedFileTools? activeSharedFileTools;
@@ -19,8 +20,8 @@ public sealed partial class ChatShell
     {
         ControlAppearance.Stock(addFiles); ToolbarControls.Label(addFiles, DesktopResources.Get("Add"));
         var menu = new MenuFlyout();
-        var files = new MenuFlyoutItem { Name = "ShareFiles", Text = DesktopResources.Get("FilesAddFiles"), Icon = new SymbolIcon(Symbol.OpenFile) };
-        var folder = new MenuFlyoutItem { Name = "ShareFolder", Text = DesktopResources.Get("FilesAddFolder"), Icon = new SymbolIcon(Symbol.Folder) };
+        var files = new MenuFlyoutItem { Name = "ShareFiles", Text = DesktopResources.Get("FilesAddFiles"), Icon = DesktopIcons.Create(Icon.FolderOpen) };
+        var folder = new MenuFlyoutItem { Name = "ShareFolder", Text = DesktopResources.Get("FilesAddFolder"), Icon = DesktopIcons.Create(Icon.Folder) };
         files.Click += async (_, _) => await PickSharedItemsAsync(false); folder.Click += async (_, _) => await PickSharedItemsAsync(true);
         menu.Items.Add(files); menu.Items.Add(folder); addFiles.Flyout = menu;
         filesOverview.RetryRequested = async () => await RunAsync(LoadFilesAsync);

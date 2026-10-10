@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -170,7 +171,7 @@ public sealed class SkillEditDialog : ContentDialog, IResponsiveDialog
                 }
                 catch (InvalidDataException error) { Message(error.Message); }
             };
-            var download = Action("SkillFileDownload", "Download"); download.Content = new FontIcon { Glyph = "\uE896", FontSize = 16 };
+            var download = Action("SkillFileDownload", "Download"); download.Content = DesktopIcons.Create(Icon.ArrowDownload, 16);
             download.Width = 36; download.Padding = new Thickness(0);
             download.Click += async (_, _) => await WorkAsync(async ct =>
             {
@@ -179,7 +180,7 @@ public sealed class SkillEditDialog : ContentDialog, IResponsiveDialog
                 var destination = await picker.PickSaveFileAsync(); if (destination is null) return; CheckCurrent(ct);
                 await using var output = await destination.OpenStreamForWriteAsync(); output.SetLength(0); await output.WriteAsync(file.Data, ct);
             });
-            var remove = Action("SkillFileRemove", "Delete"); remove.Content = new FontIcon { Glyph = "\uE74D", FontSize = 16 };
+            var remove = Action("SkillFileRemove", "Delete"); remove.Content = DesktopIcons.Create(Icon.Delete, 16);
             remove.Width = 36; remove.Padding = new Thickness(0);
             remove.Click += (_, _) => { draft.Files.RemoveAll(f => f.Path == file.Path); RenderFiles(); UpdateSave(); };
         }

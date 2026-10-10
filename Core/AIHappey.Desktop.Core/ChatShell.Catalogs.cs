@@ -1,3 +1,5 @@
+using FluentIcons.WinUI;
+using FluentIcons.Common;
 using System.Text;
 using System.Text.Json;
 using Microsoft.UI.Xaml;
@@ -34,15 +36,15 @@ public sealed partial class ChatShell
     {
         foreach (var (page, label, icon) in new[]
         {
-            (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)new FontIcon { Glyph = "\uEB9F" }),
-            (DesktopPage.Videos, DesktopResources.Get("Videos"), (IconElement)new FontIcon { Glyph = "\uE714" }),
-            (DesktopPage.Transcriptions, DesktopResources.Get("Transcriptions"), (IconElement)new FontIcon { Glyph = "\uE720" }),
-            (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)ToolbarControls.BotIcon()),
-            (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)ToolbarControls.ConnectorIcon()),
-            (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)new FontIcon { Glyph = "\uE734" }),
-            (DesktopPage.Files, DesktopResources.Get("Files"), (IconElement)new FontIcon { Glyph = "\uE8B7" }),
-            (DesktopPage.Models, DesktopResources.Get("Models"), (IconElement)ToolbarControls.BrainIcon()),
-            (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)ToolbarControls.CloudIcon())
+            (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)DesktopIcons.Create(Icon.Image)),
+            (DesktopPage.Videos, DesktopResources.Get("Videos"), (IconElement)DesktopIcons.Create(Icon.Video)),
+            (DesktopPage.Transcriptions, DesktopResources.Get("Transcriptions"), (IconElement)DesktopIcons.Create(Icon.Mic)),
+            (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)DesktopIcons.Create(Icon.Bot)),
+            (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)DesktopIcons.Create(Icon.Connector)),
+            (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)DesktopIcons.Create(Icon.Star)),
+            (DesktopPage.Files, DesktopResources.Get("Files"), (IconElement)DesktopIcons.Create(Icon.Folder)),
+            (DesktopPage.Models, DesktopResources.Get("Models"), (IconElement)DesktopIcons.Create(Icon.Brain)),
+            (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)DesktopIcons.Create(Icon.Cloud))
         })
         {
             if (page == DesktopPage.Agents)
@@ -53,15 +55,16 @@ public sealed partial class ChatShell
                 expandedPageNavigation.Children.Add(SidebarSeparator("ArtificialIntelligenceSeparator"));
                 var header = new Grid { ColumnSpacing = 12 };
                 header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-                header.Children.Add(ToolbarControls.BrainIcon());
+                header.Children.Add(DesktopIcons.Create(Icon.Brain));
                 var title = new TextBlock { Text = DesktopResources.Get("ArtificialIntelligence"), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
                 Grid.SetColumn(title, 1); header.Children.Add(title);
-                var chevron = new FontIcon { Glyph = "\uE70E", FontSize = 12 }; Grid.SetColumn(chevron, 2); header.Children.Add(chevron);
+                var chevron = DesktopIcons.Create(Icon.ChevronUp, 12); chevron.Name = "ArtificialIntelligenceChevron";
+                Grid.SetColumn(chevron, 2); header.Children.Add(chevron);
                 aiCategory = new Button { Name = "ArtificialIntelligenceCategory", Content = header,
                     HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
                     Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(0) };
                 ToolbarControls.Subtle(aiCategory); ToolbarControls.Label(aiCategory, DesktopResources.Get("ArtificialIntelligence"));
-                void UpdateCategory() { aiNavigation.Visibility = aiCategoryExpanded ? Visibility.Visible : Visibility.Collapsed; chevron.Glyph = aiCategoryExpanded ? "\uE70E" : "\uE70D"; }
+                void UpdateCategory() { aiNavigation.Visibility = aiCategoryExpanded ? Visibility.Visible : Visibility.Collapsed; chevron.Icon = aiCategoryExpanded ? Icon.ChevronUp : Icon.ChevronDown; }
                 aiCategory.Click += (_, _) => { aiCategoryExpanded = !aiCategoryExpanded; UpdateCategory(); };
                 expandedPageNavigation.Children.Add(aiCategory); expandedPageNavigation.Children.Add(aiNavigation);
             }
@@ -71,7 +74,7 @@ public sealed partial class ChatShell
                 HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left,
                 Padding = new Thickness(12, 10, 12, 10), BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(6) };
             ControlAppearance.Apply(button, ControlAppearance.NativeResources, palette =>
-            { button.Background = new SolidColorBrush(activePage == page ? palette.Selected : palette.Background); button.Foreground = new SolidColorBrush(palette.Text); icon.Foreground = button.Foreground; });
+            { button.Background = new SolidColorBrush(activePage == page ? palette.Selected : palette.Background); button.Foreground = new SolidColorBrush(palette.Text); });
             ToolbarControls.Label(button, label);
             button.Click += async (_, _) => await NavigateAsync(page);
             pageButtons.Add(page, button);
@@ -129,7 +132,7 @@ public sealed partial class ChatShell
         if (page is DesktopPage.Models or DesktopPage.Providers && aiCategory is not null)
         {
             aiCategoryExpanded = true; aiNavigation.Visibility = Visibility.Visible;
-            if (aiCategory.Content is Grid categoryHeader && categoryHeader.Children.OfType<FontIcon>().FirstOrDefault() is { } chevron) chevron.Glyph = "\uE70E";
+            if (aiCategory.Content is Grid categoryHeader && categoryHeader.Children.OfType<FluentIcon>().FirstOrDefault(icon => icon.Name == "ArtificialIntelligenceChevron") is { } chevron) chevron.Icon = Icon.ChevronUp;
         }
         mcpOverview.Visibility = page == DesktopPage.Mcp ? Visibility.Visible : Visibility.Collapsed;
         imagesPage.Visibility = imageTarget.Visibility = page == DesktopPage.Images ? Visibility.Visible : Visibility.Collapsed;

@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -13,7 +14,7 @@ public sealed partial class ChatShell
     private readonly StackPanel aiNavigation = new() { Spacing = 4 };
     private Button? aiCategory;
     private bool aiCategoryExpanded = true;
-    private readonly ToggleButton modelFilters = ToolbarControls.CreateModeButton(new FontIcon { Glyph = "\uE71C" }, DesktopResources.Get("Filters"));
+    private readonly ToggleButton modelFilters = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Filter), DesktopResources.Get("Filters"));
     private CatalogFavoritesStore modelFavoritesStore = null!;
     private HashSet<string> modelFavorites = new(StringComparer.Ordinal);
     private string? modelFavoritesPartition;

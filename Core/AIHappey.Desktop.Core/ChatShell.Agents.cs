@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -11,12 +12,12 @@ public sealed partial class ChatShell
     private IReadOnlyList<DesktopAgent> localAgents = [];
     private string? localAgentPartition;
     private AgentEditDialog? agentEditor;
-    private readonly Button addAgent = new() { Name = "AddAgent", Content = new SymbolIcon(Symbol.Add), Width = 40, Height = 40,
+    private readonly Button addAgent = new() { Name = "AddAgent", Content = DesktopIcons.Create(Icon.Add), Width = 40, Height = 40,
         Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private void PrepareAgentActions()
     {
-        var menu = new MenuFlyout(); var create = new MenuFlyoutItem { Text = DesktopResources.Get("AgentCreate"), Icon = new SymbolIcon(Symbol.Add) };
-        var import = new MenuFlyoutItem { Text = DesktopResources.Get("AgentImport"), Icon = new SymbolIcon(Symbol.OpenFile) };
+        var menu = new MenuFlyout(); var create = new MenuFlyoutItem { Text = DesktopResources.Get("AgentCreate"), Icon = DesktopIcons.Create(Icon.Add) };
+        var import = new MenuFlyoutItem { Text = DesktopResources.Get("AgentImport"), Icon = DesktopIcons.Create(Icon.FolderOpen) };
         menu.Items.Add(create); menu.Items.Add(import); addAgent.Flyout = menu;
         ControlAppearance.Stock(addAgent); ToolbarControls.Label(addAgent, DesktopResources.Get("Add"));
         create.Click += async (_, _) => await EditAgentAsync(null, addAgent);

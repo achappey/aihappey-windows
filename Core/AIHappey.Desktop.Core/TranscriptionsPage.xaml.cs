@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text.Json.Nodes;
@@ -80,12 +81,12 @@ public sealed partial class TranscriptionsPage : UserControl
         var header = new Grid { Margin = new Thickness(16, 16, 16, 0), ColumnSpacing = 12 };
         header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         var icon = new Grid { Width = 32, Height = 32, VerticalAlignment = VerticalAlignment.Top };
-        icon.Children.Add(new FontIcon { Glyph = "\uE720", FontSize = 24 }); header.Children.Add(icon);
+        icon.Children.Add(DesktopIcons.Create(Icon.Mic, 24)); header.Children.Add(icon);
         var labels = new StackPanel { Spacing = 6 };
         var title = new TextBlock { Text = data.Filename, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, MaxLines = 2, TextTrimming = TextTrimming.CharacterEllipsis }; ToolTipService.SetToolTip(title, data.Filename); labels.Children.Add(title);
         Grid.SetColumn(labels, 1); header.Children.Add(labels);
-        var more = new Button { Content = new FontIcon { Glyph = "\uE712", FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0), Name = "TranscriptionActions", VerticalAlignment = VerticalAlignment.Top }; NativeCardSurface.Action(more); ToolbarControls.Label(more, DesktopResources.Format("ActionForItem", DesktopResources.Get("TranscriptionActions"), data.Filename));
-        var menu = new MenuFlyout(); var delete = new MenuFlyoutItem { Text = DesktopResources.Get("Delete"), Icon = new SymbolIcon(Symbol.Delete) }; ControlAppearance.Stock(delete);
+        var more = new Button { Content = DesktopIcons.Create(Icon.MoreHorizontal, 18), Width = 36, Height = 36, Padding = new Thickness(0), Name = "TranscriptionActions", VerticalAlignment = VerticalAlignment.Top }; NativeCardSurface.Action(more); ToolbarControls.Label(more, DesktopResources.Format("ActionForItem", DesktopResources.Get("TranscriptionActions"), data.Filename));
+        var menu = new MenuFlyout(); var delete = new MenuFlyoutItem { Text = DesktopResources.Get("Delete"), Icon = DesktopIcons.Create(Icon.Delete) }; ControlAppearance.Stock(delete);
         delete.Click += async (_, _) => { if (editable && DeleteRequested is not null) await DeleteRequested(item); }; menu.Items.Add(delete); more.Flyout = menu; Grid.SetColumn(more, 2); header.Children.Add(more); layout.Children.Add(header);
         var badges = new MessageFooterPanel();
         void Badge(string text) { if (string.IsNullOrWhiteSpace(text)) return; var badge = new Border { HorizontalAlignment = HorizontalAlignment.Left, Child = new TextBlock { Text = text, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 320 } }; NativeCardSurface.Badge(badge); ToolTipService.SetToolTip(badge, text); badges.Children.Add(badge); }
@@ -101,7 +102,7 @@ public sealed partial class TranscriptionsPage : UserControl
         var preview = new TextBlock { Text = OpenAIChatConfig.Text(response["text"]) ?? "", TextWrapping = TextWrapping.Wrap, TextTrimming = TextTrimming.CharacterEllipsis, MaxLines = 3, IsTextSelectionEnabled = true, FontSize = 13, Margin = new Thickness(16, 18, 16, 16), MinHeight = 36 };
         NativeCardSurface.Secondary(preview); Grid.SetRow(preview, 1); layout.Children.Add(preview);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        var view = new Button { Name = "TranscriptionView", Content = new FontIcon { Glyph = "\uE890", FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0) };
+        var view = new Button { Name = "TranscriptionView", Content = DesktopIcons.Create(Icon.Info, 18), Width = 36, Height = 36, Padding = new Thickness(0) };
         NativeCardSurface.Action(view); ToolbarControls.Label(view, DesktopResources.Format("ActionForItem", DesktopResources.Get("TranscriptionView"), data.Filename)); AutomationProperties.SetAutomationId(view, data.Id + ":Details");
         view.Click += async (_, _) => { if (editable && ViewRequested is not null) await ViewRequested(item); }; actions.Children.Add(view);
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };

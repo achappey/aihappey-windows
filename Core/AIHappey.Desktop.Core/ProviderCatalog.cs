@@ -21,7 +21,7 @@ public sealed record CatalogProvider
     [JsonExtensionData] public Dictionary<string, JsonElement>? AdditionalMetadata { get; init; }
 }
 
-public sealed record ProviderLink(string Key, string ResourceKey, string Glyph, Uri Uri);
+public sealed record ProviderLink(string Key, string ResourceKey, Uri Uri);
 
 /// <summary>Read-only, offline JSON snapshot copied from chat. Never configures a runtime or stores credentials.</summary>
 public static class ProviderCatalog
@@ -53,12 +53,12 @@ public static class ProviderCatalog
     {
         var urls = provider.Urls;
         var candidates = new[] {
-            ("homepage", "Website", "\uE774", urls.Homepage), ("pricing", "ProviderPricing", "\uE8D4", urls.Pricing),
-            ("console", "ProviderConsole", "\uE756", urls.Console), ("docs", "ProviderDocumentation", "\uE8A5", urls.Docs),
-            ("termsOfService", "ProviderTerms", "\uE8A5", urls.TermsOfService), ("privacyPolicy", "ProviderPrivacy", "\uE72E", urls.PrivacyPolicy)
+            ("homepage", "Website", urls.Homepage), ("pricing", "ProviderPricing", urls.Pricing),
+            ("console", "ProviderConsole", urls.Console), ("docs", "ProviderDocumentation", urls.Docs),
+            ("termsOfService", "ProviderTerms", urls.TermsOfService), ("privacyPolicy", "ProviderPrivacy", urls.PrivacyPolicy)
         };
-        return candidates.Where(c => ModelProviders.SafeWebUri(c.Item4) is not null)
-            .Select(c => new ProviderLink(c.Item1, c.Item2, c.Item3, ModelProviders.SafeWebUri(c.Item4)!)).ToArray();
+        return candidates.Where(c => ModelProviders.SafeWebUri(c.Item3) is not null)
+            .Select(c => new ProviderLink(c.Item1, c.Item2, ModelProviders.SafeWebUri(c.Item3)!)).ToArray();
     }
     public static Uri? FaviconUri(string? homepage) => ModelProviders.SafeWebUri(homepage) is { } uri
         ? new Uri("https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url="

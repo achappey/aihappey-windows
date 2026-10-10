@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -115,12 +116,12 @@ internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
         var actions = new MessageFooterPanel();
         if (item.CanDownload)
         {
-            var download = Button(item.Kind == CatalogKind.Agent ? DesktopResources.Get("DownloadDefinition") : DesktopResources.Get("DownloadDefault"), "\uE896");
+            var download = Button(item.Kind == CatalogKind.Agent ? DesktopResources.Get("DownloadDefinition") : DesktopResources.Get("DownloadDefault"), Icon.ArrowDownload);
             download.Click += (_, _) => DownloadRequested?.Invoke(null); actions.Children.Add(download);
         }
         if (item.Kind == CatalogKind.Agent)
         {
-            var chat = Button(DesktopResources.Get("StartChat"), "\uE8F2"); chat.Click += (_, _) => StartChatRequested?.Invoke(); actions.Children.Add(chat);
+            var chat = Button(DesktopResources.Get("StartChat"), Icon.Chat); chat.Click += (_, _) => StartChatRequested?.Invoke(); actions.Children.Add(chat);
         }
         if (actions.Children.Count > 0) AddActions(card, actions);
         if (item.Kind == CatalogKind.Skill) Card(DesktopResources.Get("Downloads")).Children.Add(Text(DesktopResources.Get("SkillDownloadHint")));
@@ -143,7 +144,7 @@ internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
             if (item.CanDownload)
             {
                 var actions = new MessageFooterPanel();
-                var download = Button(DesktopResources.Format("DownloadVersion", version.Version), "\uE896");
+                var download = Button(DesktopResources.Format("DownloadVersion", version.Version), Icon.ArrowDownload);
                 download.Click += (_, _) => DownloadRequested?.Invoke(version.Version); actions.Children.Add(download); AddActions(card, actions);
             }
         }
@@ -161,10 +162,10 @@ internal sealed class CatalogDetailsDialog : ContentDialog, IResponsiveDialog
         var badge = new Border { Child = Text(text) };
         NativeCardSurface.Badge(badge); return badge;
     }
-    private static Button Button(string label, string glyph)
+    private static Button Button(string label, Icon icon)
     {
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        content.Children.Add(new FontIcon { Glyph = glyph, FontSize = 16 }); content.Children.Add(Text(label));
+        content.Children.Add(DesktopIcons.Create(icon, 16)); content.Children.Add(Text(label));
         var button = new Button { Name = "CatalogDialogAction", Content = content, Padding = new Thickness(8), MinHeight = 36 };
         NativeCardSurface.Action(button); ToolbarControls.Label(button, label); return button;
     }

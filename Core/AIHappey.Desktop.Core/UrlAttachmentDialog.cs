@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -34,7 +35,7 @@ public sealed class UrlAttachmentDialog : ContentDialog
         pending.Children.Add(new TextBlock { Text = DesktopResources.Get("DetectingMime"), VerticalAlignment = VerticalAlignment.Center });
         panel.Children.Add(pending);
         var badgeContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        badgeContent.Children.Add(new FontIcon { Glyph = "\uE723", FontSize = 14 }); badgeContent.Children.Add(detectedLabel);
+        badgeContent.Children.Add(DesktopIcons.Create(Icon.Attach, 14)); badgeContent.Children.Add(detectedLabel);
         badge = new Border { Name = "DetectedAttachmentMediaType", Child = badgeContent, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), HorizontalAlignment = HorizontalAlignment.Left, Visibility = Visibility.Collapsed };
         ControlAppearance.TokenBadge(badge); panel.Children.Add(badge);
         types.Items.Add("Choose a MIME type");

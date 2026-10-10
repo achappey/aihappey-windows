@@ -1,3 +1,5 @@
+using FluentIcons.WinUI;
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -6,7 +8,7 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class ChatShell
 {
     private readonly MenuFlyoutItem selectResources = new() { Name = "SelectMcpResources", Text = DesktopResources.Get("McpResources"),
-        Icon = new FontIcon { Glyph = "\uE8B7" }, IsEnabled = false };
+        Icon = DesktopIcons.Create(Icon.Folder), IsEnabled = false };
     private readonly List<McpSelectedResource> selectedResources = [];
     private McpResourcesDialog? resourcesDialog;
 
@@ -44,9 +46,9 @@ public sealed partial class ChatShell
         foreach (var resource in selectedResources)
         {
             var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-            content.Children.Add(new FontIcon { Glyph = "\uE8B7", FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+            content.Children.Add(new FluentIcon { Icon = Icon.Folder, FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
             content.Children.Add(new TextBlock { Text = resource.Name, MaxWidth = 260, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
-            var remove = new Button { Name = "RemoveMcpResource", Content = new FontIcon { Glyph = "\uE711", FontSize = 10 },
+            var remove = new Button { Name = "RemoveMcpResource", Content = DesktopIcons.Create(Icon.Dismiss, 10),
                 Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
             ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("RemoveContext", resource.Name));
             remove.Click += (_, _) =>

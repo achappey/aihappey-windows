@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -126,8 +127,8 @@ internal sealed class OverviewPage : UserControl
         var searched = CatalogProjection.Search(items, SearchBox.Text);
         // Keep unchanged items alive so result/count refreshes do not reset focus or the indicator.
         updatingFilters = true;
-        AddFilter("all", DesktopResources.Format("AllCount", searched.Count), "\uE8FD");
-        AddFilter("favorites", DesktopResources.Format("FavoritesCount", searched.Count(item => favorites.Contains(item.Key))), "\uE735");
+        AddFilter("all", DesktopResources.Format("AllCount", searched.Count), Icon.List);
+        AddFilter("favorites", DesktopResources.Format("FavoritesCount", searched.Count(item => favorites.Contains(item.Key))), Icon.Star);
         AddFilter("backend", $"{source} ({searched.Count(item => item.Origin == CatalogOrigin.Backend)})");
         AddFilter("local", DesktopResources.Format("LocalCount", searched.Count(item => item.Origin == CatalogOrigin.Local)));
         filters.SelectedItem = filterItems[activeFilter];
@@ -149,12 +150,12 @@ internal sealed class OverviewPage : UserControl
             DispatcherQueue.TryEnqueue(() => (ControlAppearance.Descendants(Cards).OfType<Button>().FirstOrDefault(button => AutomationProperties.GetAutomationId(button) == focusId) as Control ?? SearchBox).Focus(FocusState.Programmatic));
     }
 
-    private void AddFilter(string key, string label, string? glyph = null)
+    private void AddFilter(string key, string label, Icon? icon = null)
     {
         if (!filterItems.TryGetValue(key, out var item))
         {
             item = new NavigationViewItem { Name = "CatalogFilter", Tag = key };
-            if (glyph is not null) item.Icon = new FontIcon { Glyph = glyph };
+            if (icon is not null) item.Icon = DesktopIcons.Create(icon.Value);
             AutomationProperties.SetAutomationId(item, "CatalogFilter_" + key);
             filterItems.Add(key, item); filters.MenuItems.Add(item);
         }
@@ -184,19 +185,19 @@ internal sealed class OverviewPage : UserControl
         Grid.SetRow(description, 1); grid.Children.Add(description);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         if (item.Kind == CatalogKind.Skill)
-        { var view = ActionButton(item, "Details", "\uE890"); view.Click += (_, _) => DetailsRequested?.Invoke(item, view); actions.Children.Add(view); }
+        { var view = ActionButton(item, "Details", Icon.Info); view.Click += (_, _) => DetailsRequested?.Invoke(item, view); actions.Children.Add(view); }
         if (item.Origin == CatalogOrigin.Local)
         {
-            var edit = ActionButton(item, item.Kind == CatalogKind.Agent ? "AgentEdit" : "SkillEdit", "\uE70F"); edit.Click += (_, _) => EditRequested?.Invoke(item, edit); actions.Children.Add(edit);
-            var delete = ActionButton(item, "Delete", "\uE74D"); delete.Click += (_, _) => DeleteRequested?.Invoke(item); actions.Children.Add(delete);
+            var edit = ActionButton(item, item.Kind == CatalogKind.Agent ? "AgentEdit" : "SkillEdit", Icon.Edit); edit.Click += (_, _) => EditRequested?.Invoke(item, edit); actions.Children.Add(edit);
+            var delete = ActionButton(item, "Delete", Icon.Delete); delete.Click += (_, _) => DeleteRequested?.Invoke(item); actions.Children.Add(delete);
         }
         if (item.CanDownload)
-        { var download = ActionButton(item, "Download", "\uE896"); download.Click += (_, _) => DownloadRequested?.Invoke(item); actions.Children.Add(download); }
-        var favorite = ActionButton(item, favorites.Contains(item.Key) ? "RemoveFavorite" : "AddFavorite", favorites.Contains(item.Key) ? "\uE735" : "\uE734");
+        { var download = ActionButton(item, "Download", Icon.ArrowDownload); download.Click += (_, _) => DownloadRequested?.Invoke(item); actions.Children.Add(download); }
+        var favorite = ActionButton(item, favorites.Contains(item.Key) ? "RemoveFavorite" : "AddFavorite", Icon.Star, favorites.Contains(item.Key) ? IconVariant.Filled : IconVariant.Regular);
         AutomationProperties.SetAutomationId(favorite, item.Key + ":Favorite"); favorite.Name = "CatalogFavorite";
         favorite.Click += (_, _) => FavoriteRequested?.Invoke(item); actions.Children.Add(favorite);
         if (item.Kind == CatalogKind.Agent)
-        { var chat = ActionButton(item, "StartChat", "\uE8F2"); chat.Name = "CatalogStartChat"; chat.Click += (_, _) => ChatRequested?.Invoke(item); actions.Children.Add(chat); }
+        { var chat = ActionButton(item, "StartChat", Icon.Chat); chat.Name = "CatalogStartChat"; chat.Click += (_, _) => ChatRequested?.Invoke(item); actions.Children.Add(chat); }
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
         NativeCardSurface.Divider(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
         var card = new Border { Name = "CatalogCard", Tag = item, Child = grid };
@@ -204,16 +205,16 @@ internal sealed class OverviewPage : UserControl
         AutomationProperties.SetName(card, item.Name); return card;
     }
 
-    private static Button ActionButton(CatalogItem item, string action, string glyph)
+    private static Button ActionButton(CatalogItem item, string action, Icon icon, IconVariant variant = IconVariant.Regular)
     {
-        var button = new Button { Name = "Catalog" + action.Replace(" ", ""), Content = new FontIcon { Glyph = glyph, FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0) };
+        var button = new Button { Name = "Catalog" + action.Replace(" ", ""), Content = DesktopIcons.Create(icon, 18, variant), Width = 36, Height = 36, Padding = new Thickness(0) };
         NativeCardSurface.Action(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", DesktopResources.Get(action), item.Name)); AutomationProperties.SetAutomationId(button, item.Key + ":" + action); return button;
     }
 
     private UIElement CardIcon(CatalogItem item)
     {
         var icon = new Grid { Width = 32, Height = 32, VerticalAlignment = VerticalAlignment.Top };
-        icon.Children.Add(item.Kind == CatalogKind.Agent ? ToolbarControls.BotIcon() : new FontIcon { Glyph = "\uE734", FontSize = 24 });
+        icon.Children.Add(item.Kind == CatalogKind.Agent ? DesktopIcons.Create(Icon.Bot) : DesktopIcons.Create(Icon.Star, 24));
         if (!AppContext.TryGetSwitch("AIHappey.Desktop.DisableRemoteImages", out var disabled) || !disabled)
         {
             var theme = ActualTheme == ElementTheme.Dark ? "dark" : "light";

@@ -1,6 +1,8 @@
 using System.Reflection;
 using AIHappey.Desktop.Core;
 using AIHappey.Vercel.Models;
+using FluentIcons.Common;
+using FluentIcons.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
@@ -36,6 +38,11 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--icons-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckIconsAsync(theme);
+                results.Add("All Fluent icon UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--sidebar-only"))
             {
                 foreach (var local in new[] { true, false })
@@ -116,7 +123,7 @@ public partial class App : Application
                 }
             if (!Environment.GetCommandLineArgs().Contains("--transcript-only"))
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
-                { await CheckOverviewTabsAsync(theme); await CheckProvidersAsync(theme); await CheckAgentsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckLocalToolsAsync(theme); await CheckImagesAsync(theme); await CheckVideosAsync(theme); }
+                { await CheckIconsAsync(theme); await CheckOverviewTabsAsync(theme); await CheckProvidersAsync(theme); await CheckAgentsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckLocalToolsAsync(theme); await CheckImagesAsync(theme); await CheckVideosAsync(theme); }
             results.Add("All native UI checks passed.");
             File.WriteAllLines(report, results);
             window.Close();
@@ -196,8 +203,8 @@ public partial class App : Application
                 var priceBadges = Descendants(body).OfType<Border>().Where(b => b.Name == "MessagePrice").ToArray();
                 Check(tokenBadges.Length == (tokens > 0 ? 1 : 0), context + $": token badge/icon omitted for zero, assistant answer only ({tokens})");
                 Check(priceBadges.Length == 1 && ((StackPanel)priceBadges[0].Child).Children.OfType<TextBlock>().Single().Text == expected
-                    && Descendants(priceBadges[0]).OfType<FontIcon>().Single() is { Glyph: "$", FontSize: 14 } costIcon
-                    && costIcon.FontFamily.Source == "Segoe UI" && AutomationProperties.GetName(priceBadges[0]) == "Message price: " + expected,
+                    && Descendants(priceBadges[0]).OfType<FluentIcon>().Single() is { Icon: Icon.Money, FontSize: 14 } costIcon
+                    && costIcon.FontFamily.Source.Contains("FluentIcons.WinUI/Assets/") && AutomationProperties.GetName(priceBadges[0]) == "Message price: " + expected,
                     context + ": accessible themed assistant-only price badge: " + expected);
             }
             SetMetadata(1, new() { ["providerMetadata"] = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>("""{"gateway":{"cost":"invalid"}}""") });
@@ -270,8 +277,8 @@ public partial class App : Application
             await Task.Delay(250);
             Check(split.IsPaneOpen && appTitle.Visibility == Visibility.Visible, context + ": compact toggle reopens sidebar");
             var newChat = Field<Button>(shell, "newChat");
-            Check(newChat.Content is StackPanel newChatContent && newChatContent.Children.OfType<SymbolIcon>().Single().Symbol == Symbol.Add
-                && newChatContent.Children.OfType<TextBlock>().Single().Text == "New chat", context + ": new chat has native plus icon and label");
+            Check(newChat.Content is StackPanel newChatContent && newChatContent.Children.OfType<FluentIcon>().Single().Icon == Icon.Add
+                && newChatContent.Children.OfType<TextBlock>().Single().Text == "New chat", context + ": new chat has Fluent plus icon and label");
             Check(newChat.HorizontalContentAlignment == HorizontalAlignment.Left && newChat.Background is SolidColorBrush newChatFill && newChatFill.Color.A == 0
                 && newChat.BorderThickness == new Thickness(0) && newChat.Style is null, context + ": new chat is left-aligned and unfilled without optional styles");
             var sidebarBody = (StackPanel)((StackPanel)pane.Children[0]).Children[1];
@@ -354,7 +361,7 @@ public partial class App : Application
 
             var profile = Field<Button>(shell, "account");
             var flyout = (MenuFlyout)profile.Flyout;
-            Check(profile.Content is SymbolIcon && profile.CornerRadius.TopLeft == 20, context + ": generic circular profile icon");
+            Check(profile.Content is FluentIcon { Icon: Icon.Person } && profile.CornerRadius.TopLeft == 20, context + ": generic circular Fluent profile icon");
             Check(flyout.Items.OfType<MenuFlyoutItem>().Select(item => item.Text).SequenceEqual(new[] { "Settings", local ? "API keys" : "Sign in", "Refresh" }), context + ": profile menu labels");
             flyout.ShowAt(profile);
             await Task.Delay(100);
@@ -372,7 +379,7 @@ public partial class App : Application
             }
             Invoke(flyout.Items.OfType<MenuFlyoutItem>().ElementAt(1));
             await Task.Delay(100);
-            Check(host.AccountActions == 1 && profile.Content is SymbolIcon, context + ": profile action preserves icon");
+            Check(host.AccountActions == 1 && profile.Content is FluentIcon { Icon: Icon.Person }, context + ": profile action preserves icon");
             flyout.Hide();
             var resolutions = runtime.Resolutions;
             flyout.ShowAt(profile);
@@ -425,15 +432,15 @@ public partial class App : Application
             }
             var transcript = Field<StackPanel>(shell, "transcript");
             var copies = Descendants(transcript).OfType<Button>().Where(button => AutomationProperties.GetName(button) == "Copy message").ToArray();
-            Check(copies.Length == 2 && copies.All(button => button.Content is SymbolIcon && button.Style is null), context + ": transcript and icon-only copy without named styles");
+            Check(copies.Length == 2 && copies.All(button => button.Content is FluentIcon { Icon: Icon.Copy } && button.Style is null), context + ": transcript and icon-only Fluent copy without named styles");
             Check(copies.All(button => button.Background is SolidColorBrush brush && brush.Color.A == 0), context + ": copy has no idle gray fill");
-            Check(Field<Button>(shell, "send").Content is SymbolIcon, context + ": icon-only send");
+            Check(Field<Button>(shell, "send").Content is FluentIcon { Icon: Icon.Send }, context + ": icon-only Fluent send");
             Check(!Descendants(shell).OfType<TextBlock>().Any(text => text.Text.Contains("Enter to send")), context + ": keyboard hint removed");
             Check(AutomationProperties.GetHelpText(Field<TextBox>(shell, "input")).Contains("Shift+Enter"), context + ": accessible keyboard help retained");
             var assistant = (Border)((Grid)transcript.Children[1]).Children[0];
             var footer = Descendants(assistant).OfType<Border>().Single(part => part.Name == "MessageFooter");
             var badge = Descendants(footer).OfType<Border>().Single(part => part.Name == "TokenUsage");
-            Check(((StackPanel)badge.Child).Children.OfType<TextBlock>().Single().Text == "17" && Descendants(badge).OfType<FontIcon>().Any(), context + ": tokens are icon plus number only");
+            Check(((StackPanel)badge.Child).Children.OfType<TextBlock>().Single().Text == "17" && Descendants(badge).OfType<FluentIcon>().Any(icon => icon.Icon == Icon.DataUsage), context + ": tokens are Fluent icon plus number only");
             Check(Descendants(footer).OfType<Button>().Any(button => AutomationProperties.GetName(button) == "Copy message"), context + ": copy and tokens share footer");
             var tokenCopy = Descendants(footer).OfType<Button>().Single(button => AutomationProperties.GetName(button) == "Copy message");
             Check(Math.Abs(badge.TransformToVisual(footer).TransformPoint(new Windows.Foundation.Point()).Y + badge.ActualHeight / 2
@@ -674,7 +681,7 @@ public partial class App : Application
         Check(menu.IsOpen && more.Opacity == 1 && Field<Conversation>(shell, "current").Id == active.Id,
             context + ": invoking row menu keeps actions visible without switching the active chat");
         foreach (var item in menu.Items.OfType<MenuFlyoutItem>())
-            Check(item.Icon is SymbolIcon && Readable(item.Foreground, item.Background, theme) && item.BorderThickness == new Thickness(0),
+            Check(item.Icon is FluentIcon && Readable(item.Foreground, item.Background, theme) && item.BorderThickness == new Thickness(0),
                 context + ": readable native row menu item " + item.Text);
 
         Invoke((MenuFlyoutItem)menu.Items[0]);

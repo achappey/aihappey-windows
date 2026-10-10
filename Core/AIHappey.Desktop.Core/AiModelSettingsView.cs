@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -32,7 +33,7 @@ public sealed class AiModelSettingsView : NavigationView
             {
                 Name = "AiDefaultModel_" + type, Header = DesktopResources.Get("AiDefaultModel"),
                 PlaceholderText = DesktopResources.Get("SelectModel"), Text = DisplayDefault(type),
-                QueryIcon = new SymbolIcon(Symbol.Find), HorizontalAlignment = HorizontalAlignment.Stretch
+                QueryIcon = DesktopIcons.Create(Icon.Search), HorizontalAlignment = HorizontalAlignment.Stretch
             };
             ToolbarControls.Label(picker, label + ": " + DesktopResources.Get("AiDefaultModel"));
             pickers.Add(type, picker); page.Children.Add(picker);

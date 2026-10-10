@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -6,7 +7,7 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class ChatShell
 {
     private readonly MenuFlyoutItem selectPrompts = new() { Name = "SelectMcpPrompts", Text = DesktopResources.Get("McpPrompts"),
-        Icon = new FontIcon { Glyph = "\uE8D2" }, IsEnabled = false };
+        Icon = DesktopIcons.Create(Icon.TextBulletList), IsEnabled = false };
     private McpPromptsDialog? promptsDialog;
 
     private void UpdatePromptMenu()

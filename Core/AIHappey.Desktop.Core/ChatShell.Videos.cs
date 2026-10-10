@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.UI.Xaml;
@@ -16,7 +17,7 @@ public sealed partial class ChatShell
     private readonly VideosPage videosPage = new() { Visibility = Visibility.Collapsed };
     private readonly AutoSuggestBox videoTarget = new() { Name = "VideoModelPicker", PlaceholderText = DesktopResources.Get("SelectModel"), MinWidth = 120, MaxWidth = 420, Height = 40, HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly StackPanel videoModelToolbar = new() { Name = "VideoModelToolbar", Orientation = Orientation.Horizontal, Spacing = 8, Visibility = Visibility.Collapsed };
-    private readonly Button videoFavorite = new() { Name = "VideoModelFavorite", Content = new SymbolIcon(Symbol.OutlineStar), Width = 40, Height = 40, Padding = new Thickness(0) };
+    private readonly Button videoFavorite = new() { Name = "VideoModelFavorite", Content = DesktopIcons.Create(Icon.Star), Width = 40, Height = 40, Padding = new Thickness(0) };
     private IReadOnlyList<ChatTarget> videoModels = [];
     private string? videoPartition;
     private VideoJobCoordinator? videoJobs;
@@ -35,7 +36,7 @@ public sealed partial class ChatShell
     {
         ToolbarControls.Outline(videoTarget); ToolbarControls.Label(videoTarget, DesktopResources.Get("SelectModel")); ToolbarControls.Subtle(videoFavorite);
         videoModelToolbar.Children.Add(videoTarget); videoModelToolbar.Children.Add(videoFavorite);
-        videoTarget.QueryIcon = new FontIcon { Glyph = "\uE70D", FontSize = 12 };
+        videoTarget.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
         videoTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) VideoModelSuggestions(videoTarget.Text); videosPage.SetModelAvailable(SelectedVideoModel is not null); UpdateVideoFavorite(); };
         videoTarget.GotFocus += (_, _) => { VideoModelSuggestions(); videoTarget.IsSuggestionListOpen = true; };
         videoTarget.SuggestionChosen += (_, args) => videoTarget.Text = ((ChatTarget)args.SelectedItem).Id;
@@ -60,7 +61,7 @@ public sealed partial class ChatShell
     private void UpdateVideoFavorite()
     {
         var selected = SelectedVideoModel; var favorite = selected is not null && modelFavorites.Contains(ModelOverviewCatalog.FavoriteKey(selected));
-        videoFavorite.Content = new SymbolIcon(favorite ? Symbol.SolidStar : Symbol.OutlineStar);
+        videoFavorite.Content = DesktopIcons.Create(Icon.Star, variant: favorite ? IconVariant.Filled : IconVariant.Regular);
         ToolbarControls.Label(videoFavorite, DesktopResources.Get(favorite ? "RemoveFavorite" : "AddFavorite")); videoFavorite.IsEnabled = !busy && selected is not null;
     }
     private async Task StartVideoJobsAsync(CancellationToken ct)

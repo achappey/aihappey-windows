@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Microsoft.UI.Xaml;
@@ -97,16 +98,16 @@ public sealed partial class ImagesPage : UserControl
     private MenuFlyout AttachmentMenu(bool context)
     {
         var menu = new MenuFlyout();
-        void Item(string label, string glyph, Func<Task> callback)
+        void Item(string label, Icon icon, Func<Task> callback)
         {
-            var item = new MenuFlyoutItem { Text = DesktopResources.Get(label), Icon = new FontIcon { Glyph = glyph } };
+            var item = new MenuFlyoutItem { Text = DesktopResources.Get(label), Icon = DesktopIcons.Create(icon) };
             ControlAppearance.Stock(item); item.Click += async (_, _) => { if (editable) await callback(); }; menu.Items.Add(item);
         }
         if (context)
         {
-            Item("ImageCopy", "\uE8C8", () => { var data = new DataPackage(); data.SetText(Prompt.SelectedText); Clipboard.SetContent(data); return Task.CompletedTask; });
-            Item("ImageCut", "\uE8C6", () => { var data = new DataPackage(); data.SetText(Prompt.SelectedText); Clipboard.SetContent(data); Prompt.SelectedText = ""; return Task.CompletedTask; });
-            Item("ImagePaste", "\uE77F", async () =>
+            Item("ImageCopy", Icon.Copy, () => { var data = new DataPackage(); data.SetText(Prompt.SelectedText); Clipboard.SetContent(data); return Task.CompletedTask; });
+            Item("ImageCut", Icon.Cut, () => { var data = new DataPackage(); data.SetText(Prompt.SelectedText); Clipboard.SetContent(data); Prompt.SelectedText = ""; return Task.CompletedTask; });
+            Item("ImagePaste", Icon.ClipboardPaste, async () =>
             {
                 try
                 {
@@ -116,10 +117,10 @@ public sealed partial class ImagesPage : UserControl
                 }
                 catch (Exception) { Notice(DesktopResources.Get("ClipboardUnavailable"), InfoBarSeverity.Warning); }
             });
-            Item("ImageSelectAll", "\uE8B3", () => { Prompt.SelectAll(); return Task.CompletedTask; }); menu.Items.Add(new MenuFlyoutSeparator());
+            Item("ImageSelectAll", Icon.SelectAllOn, () => { Prompt.SelectAll(); return Task.CompletedTask; }); menu.Items.Add(new MenuFlyoutSeparator());
         }
-        Item("Attachments", "\uE723", async () => { if (PickRequested is not null) await PickRequested(); });
-        Item("Link", "\uE71B", async () => { if (LinkRequested is not null) await LinkRequested(); });
+        Item("Attachments", Icon.Attach, async () => { if (PickRequested is not null) await PickRequested(); });
+        Item("Link", Icon.Link, async () => { if (LinkRequested is not null) await LinkRequested(); });
         return menu;
     }
     private void ResizeGrid()
@@ -162,9 +163,9 @@ public sealed partial class ImagesPage : UserControl
         {
             var row = new Grid { ColumnSpacing = 8 };
             row.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-            row.Children.Add(new FontIcon { Glyph = file.IsLink ? "\uE71B" : "\uEB9F", FontSize = 14 });
+            row.Children.Add(DesktopIcons.Create(file.IsLink ? Icon.Link : Icon.Image, 14));
             var text = new TextBlock { Text = file.Name, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center }; Grid.SetColumn(text, 1); row.Children.Add(text);
-            var remove = new Button { Name = "ImageRemoveAttachment", Content = new FontIcon { Glyph = "\uE711", FontSize = 10 }, IsEnabled = editable, Width = 28, Height = 28, Padding = new Thickness(0) };
+            var remove = new Button { Name = "ImageRemoveAttachment", Content = DesktopIcons.Create(Icon.Dismiss, 10), IsEnabled = editable, Width = 28, Height = 28, Padding = new Thickness(0) };
             ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("RemoveContext", file.Name));
             remove.Click += (_, _) => { if (editable) { attachments.Remove(file); RenderTags(); } };
             Grid.SetColumn(remove, 2); row.Children.Add(remove);

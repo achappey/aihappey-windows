@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -8,7 +9,7 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class ChatShell
 {
     private readonly ProvidersOverviewPage providersOverview = new() { Visibility = Visibility.Collapsed };
-    private readonly ToggleButton providerFilters = ToolbarControls.CreateModeButton(new FontIcon { Glyph = "\uE71C" }, DesktopResources.Get("Filters"));
+    private readonly ToggleButton providerFilters = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Filter), DesktopResources.Get("Filters"));
     private CatalogFavoritesStore providerFavoritesStore = null!;
     private HashSet<string> providerFavorites = new(StringComparer.Ordinal);
     private string? providerFavoritesPartition;

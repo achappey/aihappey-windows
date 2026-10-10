@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -75,7 +76,7 @@ internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialo
             var summary = new TextBlock { Text = DesktopResources.Format(conversation.Messages.Count == 1 ? "MessageSummaryOne" : "MessageSummary", conversation.Messages.Count, conversation.Updated.ToLocalTime()), TextWrapping = TextWrapping.Wrap };
             NativeCardSurface.Secondary(summary, true); content.Children.Add(summary);
             if (hit.Snippet is not null) content.Children.Add(new TextBlock { Text = hit.Snippet, TextWrapping = TextWrapping.Wrap, MaxLines = 3, TextTrimming = TextTrimming.CharacterEllipsis });
-            var open = new Button { Name = "OpenSearchConversation", Tag = conversation.Id, Content = new FontIcon { Glyph = "\uE8F2", FontSize = 18 }, Width = 36, Height = 36, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };
+            var open = new Button { Name = "OpenSearchConversation", Tag = conversation.Id, Content = DesktopIcons.Create(Icon.Chat, 18), Width = 36, Height = 36, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };
             NativeCardSurface.Action(open); ToolbarControls.Label(open, DesktopResources.Format("OpenConversation", conversation.Title));
             open.Click += (_, _) => { SelectedConversation = conversation; Hide(); };
             var footer = new Border { Child = open, Padding = new Thickness(0, 8, 0, 0), BorderThickness = new Thickness(0, 1, 0, 0) };

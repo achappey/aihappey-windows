@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -34,7 +35,7 @@ public sealed class ToolApprovalDialog : ContentDialog, IResponsiveDialog
         reason.Header = DesktopResources.Get("DenyReason"); layout.Children.Add(reason);
         var menu = new MenuFlyout();
         var tool = new MenuFlyoutItem { Name = "AutoApproveThisTool", Text = DesktopResources.Format("AutoApproveTool", pending.ToolName), IsEnabled = pending.ToolName.Length > 0 };
-        var all = new MenuFlyoutItem { Name = "AutoApproveAllTools", Text = DesktopResources.Get("AutoApproveAll"), Icon = new SymbolIcon(Symbol.Important) };
+        var all = new MenuFlyoutItem { Name = "AutoApproveAllTools", Text = DesktopResources.Get("AutoApproveAll"), Icon = DesktopIcons.Create(Icon.Warning) };
         tool.Click += (_, _) => CompleteAutomatic(ToolApprovalMode.ThisTool);
         all.Click += (_, _) => CompleteAutomatic(ToolApprovalMode.AllTools);
         menu.Items.Add(tool); menu.Items.Add(all); automatic.Flyout = menu;
