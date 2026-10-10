@@ -63,9 +63,9 @@
     <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/OwnedProcessJob.cs" Link="Host/OwnedProcessJob.cs" />
     <ProjectReference Include="../../../aihappey-ai/Core/AIHappey.Vercel/AIHappey.Vercel.csproj" />
     <ProjectReference Include="../../../aihappey-agents/core/AgentHappey.Common/AgentHappey.Common.csproj" />
-    <PackageReference Include="PdfPig" Version="0.1.17-alpha-202610090040-20893" />
+    <PackageReference Include="PdfPig" Version="0.1.17-alpha-202610100039-91ddd" />
     <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
-    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
   </ItemGroup>
 </Project>
