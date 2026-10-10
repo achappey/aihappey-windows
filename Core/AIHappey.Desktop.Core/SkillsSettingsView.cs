@@ -78,9 +78,11 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
     }
     private void Card(DesktopSkill skill)
     {
-        var body = new StackPanel { Spacing = 8 };
-        var toggle = new ToggleSwitch { Name = "ChatSkillToggle", Header = skill.Label, IsOn = draft.EnabledSkillIds.Contains(skill.Id), Tag = skill.Id };
+        var toggle = new ToggleSwitch { Name = "ChatSkillToggle", IsOn = draft.EnabledSkillIds.Contains(skill.Id), Tag = skill.Id,
+            OnContent = "", OffContent = "", MinWidth = 0, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
         ControlAppearance.Stock(toggle); ToolbarControls.Label(toggle, skill.Label);
+        var expander = NativeSettingsSurface.Expander(cards, "ChatSkillCard", skill.Label, toggle, out var body);
+        expander.Tag = skill.Id;
         toggle.Toggled += async (_, _) =>
         {
             draft.EnabledSkillIds.RemoveAll(id => id == skill.Id);
@@ -90,13 +92,10 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
             catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
             catch { if (!disposed) feedback.Text = DesktopResources.Get("SkillPrefetchFailed"); }
         };
-        body.Children.Add(toggle);
         if (skill.Version is not null)
         { var version = new TextBlock { Text = skill.Version }; NativeCardSurface.Secondary(version, true); body.Children.Add(version); }
         var description = new TextBlock { Text = skill.Description, TextWrapping = TextWrapping.Wrap };
         NativeCardSurface.Secondary(description); body.Children.Add(description);
-        var card = new Border { Name = "ChatSkillCard", Child = body };
-        NativeCardSurface.Card(card, true); cards.Children.Add(card);
     }
     public void Dispose() { disposed = true; lifetime.Cancel(); }
 }

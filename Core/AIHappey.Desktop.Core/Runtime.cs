@@ -126,11 +126,11 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     }
     public Func<DateTimeOffset, System.Text.Json.Nodes.JsonObject> SystemInformationProvider { get; set; } = DesktopSystemContext.SystemInformation;
     public AIHappey.Vercel.Models.UIMessage CaptureSystemContext(bool darkMode = false,
-        System.Text.Json.Nodes.JsonObject? systemInformation = null, ChatPreferences? preferences = null, McpTurnSnapshot? mcp = null)
+        System.Text.Json.Nodes.JsonObject? systemInformation = null, McpTurnSnapshot? mcp = null)
     {
         var now = DateTimeOffset.UtcNow;
         return ContextComposer.Compose(new(ContextOptions, systemInformation ?? SystemInformationProvider(now),
-            Host.UserContext, ActiveLanguage, darkMode, (preferences ?? Settings.Chat).SystemInstructions, now)
+            Host.UserContext, ActiveLanguage, darkMode, now)
             { Mcp = mcp ?? Mcp?.Capture() ?? McpTurnSnapshot.Empty });
     }
     public string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIHappey", "Desktop", Host.ProfileId);

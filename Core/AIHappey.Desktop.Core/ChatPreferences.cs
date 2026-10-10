@@ -12,8 +12,6 @@ public sealed class ChatPreferences
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? MaxOutputTokens { get; set; }
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? SystemInstructions { get; set; }
     private List<string> activePlugins = [];
     public List<string> ActivePlugins
     {
@@ -37,7 +35,6 @@ public sealed class ChatPreferences
     public ChatPreferences Clone() => new()
     {
         MaxOutputTokens = MaxOutputTokens,
-        SystemInstructions = SystemInstructions,
         ActivePlugins = ActivePlugins.ToList(),
         EnabledSkillIds = EnabledSkillIds.ToList(),
         ProviderMetadata = ProviderMetadata.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone()),

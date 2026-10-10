@@ -10,7 +10,7 @@ namespace AIHappey.Desktop.UiTests;
 
 public partial class App
 {
-    private async Task CheckLocalToolsAsync(ElementTheme theme)
+    private async Task CheckChatToolsSettingsAsync(ElementTheme theme)
     {
         var context = "Local tools / " + theme;
         var root = new Grid { RequestedTheme = theme }; window!.Content = root;
@@ -26,13 +26,28 @@ public partial class App
         Check(toggles.Length == 5 && toggles.All(t => !t.IsOn), context + ": all five plugins initially off");
         Check(toggles.Select(AutomationProperties.GetName).SequenceEqual(["Chat history", "Skill discovery", "Artificial Intelligence", "Windows Search", "Files"])
             && toggles.All(t => AutomationProperties.GetAutomationId(t) == "ChatPlugin_" + t.Tag), context + ": browser labels and stable accessible identities");
+        var pluginGrid = Descendants(dialog).OfType<Grid>().Single(g => g.Name == "ChatPluginGrid");
+        var pluginCards = pluginGrid.Children.Cast<FrameworkElement>().ToArray();
+        Check(pluginGrid.ColumnDefinitions.Count == 2 && pluginGrid.RowDefinitions.Count == 3
+            && pluginCards.Select(Grid.GetColumn).SequenceEqual([0, 1, 0, 1, 0])
+            && pluginCards.Select(Grid.GetRow).SequenceEqual([0, 0, 1, 1, 2]), context + ": wide Tools tab uses two columns in plugin order with an unpaired final card");
+        var first = (FrameworkElement)pluginGrid.Children[0]; var second = (FrameworkElement)pluginGrid.Children[1];
+        var firstPoint = first.TransformToVisual(dialog).TransformPoint(new()); var secondPoint = second.TransformToVisual(dialog).TransformPoint(new());
+        Check(Math.Abs(firstPoint.Y - secondPoint.Y) < 1 && secondPoint.X > firstPoint.X
+            && toggles.All(t => Within(t, dialog)), context + ": wide plugin cards share a row with visible switches");
         foreach (var toggle in toggles) toggle.IsOn = true;
         Check(original.ActivePlugins.Count == 0, context + ": toggles edit isolated draft");
         dialog.ShowSkillsTab(); await Task.Delay(60); dialog.ShowToolsTab(); await Task.Delay(60);
         Check(Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").All(t => t.IsOn), context + ": navigation retains draft selections");
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(500, 900)); await Task.Delay(120); dialog.UpdateLayout();
+        Check(pluginGrid.ColumnDefinitions.Count == 1 && pluginGrid.RowDefinitions.Count == 5
+            && pluginCards.All(c => Grid.GetColumn(c) == 0)
+            && pluginCards.Select(Grid.GetRow).SequenceEqual([0, 1, 2, 3, 4]) && toggles.All(t => Within(t, dialog)),
+            context + ": narrow Tools tab switches to one column without clipping switches");
         Check(Descendants(dialog).OfType<ScrollViewer>().Where(s => s.HorizontalScrollMode == ScrollMode.Disabled).All(s => s.ScrollableWidth < 1),
             context + ": Tools cards fit narrow native viewport");
+        window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 900)); await Task.Delay(120); dialog.UpdateLayout();
+        Check(pluginGrid.ColumnDefinitions.Count == 2 && toggles.All(t => t.IsOn), context + ": widening restores two columns without rebuilding or resetting switches");
         InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
         Check(saved?.ActivePlugins.Count == 5 && dialog.Result?.ActivePlugins.Count == 5, context + ": close saves all plugin selections");
         var reopen = new ChatSettingsDialog(saved!, null) { XamlRoot = root.XamlRoot, RequestedTheme = theme };
@@ -41,7 +56,12 @@ public partial class App
         InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80); reopen.ShowToolsTab(); await Task.Delay(80);
         Check(Descendants(reopen).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").All(t => !t.IsOn), context + ": restore defaults clears plugins and rebuilds tools page");
         InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
+    }
 
+    private async Task CheckLocalToolsAsync(ElementTheme theme)
+    {
+        await CheckChatToolsSettingsAsync(theme);
+        var context = "Local tools / " + theme;
         var session = new DesktopSession(new UiHost(true), new UiRuntime(), new());
         var shell = new ChatShell(session) { RequestedTheme = theme }; window.Content = shell; await Task.Delay(200); await HistoryIdleAsync(shell);
         try

@@ -55,7 +55,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
         providerKey = ChatPreferences.ResolveProvider(service, target, providerKey);
         using var request = await RequestAsync(service, HttpMethod.Post, "api/chat", ct);
         var requestMessages = DesktopSystemContext.RequestMessages(service, messages,
-            service == ServiceKind.Ai ? systemContext ?? session.CaptureSystemContext(preferences: snapshot) : null);
+            service == ServiceKind.Ai ? systemContext ?? session.CaptureSystemContext() : null);
         request.Headers.Accept.ParseAdd("text/event-stream");
         request.Content = service == ServiceKind.Ai
             ? JsonContent.Create(snapshot.RequestBody(target, conversationId, requestMessages, providerKey, mcp ?? session.Mcp?.Capture()), options: PortableConversations.Json)

@@ -74,7 +74,7 @@ internal static class ChatErrorRegressionTests
             if (enabled)
                 foreach (var plugin in DesktopLocalTools.Plugins) DesktopLocalTools.Register(snapshot, plugin.Id, (_, _, _) => Task.FromResult(DesktopLocalTools.Result(new { })));
             var user = new UIMessage { Id = "user", Role = Role.user, Parts = [new TextUIPart { Text = "test" }] };
-            var context = new DesktopSystemContextComposer().Compose(new(new(), new(), null, "nl", true, null, DateTimeOffset.UtcNow) { Mcp = snapshot });
+            var context = new DesktopSystemContextComposer().Compose(new(new(), new(), null, "nl", true, DateTimeOffset.UtcNow) { Mcp = snapshot });
             var body = preferences.RequestBody("openai/gpt-6-luna", "chat", DesktopSystemContext.RequestMessages(ServiceKind.Ai, [user], context), "openai", snapshot);
             // Use the real backend deserializer, not the desktop's portable converters or a fake accepting anything.
             var backend = body.Deserialize<ChatRequest>(JsonSerializerOptions.Web)!;

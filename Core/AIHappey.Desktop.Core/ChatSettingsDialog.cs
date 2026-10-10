@@ -13,7 +13,6 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock validation = new() { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private TextBox tokens = null!;
-    private TextBox instructions = null!;
     private StackPanel general = null!;
     private IChatProviderForm? providerForm;
     private SkillsSettingsView? skillsView;
@@ -65,10 +64,6 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         ControlAppearance.Stock(tokens); AutomationProperties.SetName(tokens, DesktopResources.Get("ChatMaxOutputTokens")); body.Children.Add(tokens);
         var tokenError = new TextBlock { Text = DesktopResources.Get("ChatTokensInvalid"), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed }; body.Children.Add(tokenError);
         tokens.TextChanged += (_, _) => tokenError.Visibility = ChatPreferences.TryTokenLimit(tokens.Text, out _) ? Visibility.Collapsed : Visibility.Visible;
-        instructions = new TextBox { Name = "SystemInstructions", Header = DesktopResources.Get("SystemInstructions"),
-            Text = draft.SystemInstructions ?? "", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 120, MaxHeight = 240 };
-        ControlAppearance.Stock(instructions); AutomationProperties.SetName(instructions, DesktopResources.Get("SystemInstructions")); body.Children.Add(instructions);
-        body.Children.Add(new TextBlock { Text = DesktopResources.Get("SystemInstructionsHint"), TextWrapping = TextWrapping.Wrap });
         providerForm = ChatProviderForms.Create(provider, draft);
         var generalTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatGeneralTab", Content = DesktopResources.Get("General"), IsChecked = true };
         ControlAppearance.Stock(generalTab); tabs.Children.Add(generalTab);
@@ -113,7 +108,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         var deferral = args.GetDeferral();
         try
         {
-            draft.MaxOutputTokens = limit; draft.SystemInstructions = string.IsNullOrWhiteSpace(instructions.Text) ? null : instructions.Text.Trim(); providerForm?.Commit(draft);
+            draft.MaxOutputTokens = limit; providerForm?.Commit(draft);
             if (SaveAsync is not null) await SaveAsync(draft.Clone());
             Result = draft.Clone();
         }

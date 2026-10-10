@@ -35,7 +35,7 @@ public sealed partial class ChatShell
         {
             ["innerWidth"] = XamlRoot.Size.Width, ["innerHeight"] = XamlRoot.Size.Height, ["devicePixelRatio"] = scale
         };
-        return session.CaptureSystemContext(ActualTheme == ElementTheme.Dark, information, preferences,
+        return session.CaptureSystemContext(ActualTheme == ElementTheme.Dark, information,
             mcp ?? activeMcpTurn ?? CaptureSkillRuntime(preferences ?? session.Settings.Chat));
     }
 

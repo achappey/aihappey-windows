@@ -66,7 +66,7 @@ internal static class SkillRegressionTests
         var context = JsonNode.Parse(turn.Context!.Value.GetRawText())!["availableSkills"]!;
         check(context["skillIdRequired"]!.GetValue<bool>() && context["skills"]![0]!["skill_id"]!.GetValue<string>() == descriptor.Id
             && !turn.Context.Value.GetRawText().Contains("# Instructions"), "skills: system context advertises exact IDs and descriptions, not eager instructions");
-        var system = new DesktopSystemContextComposer().Compose(new(new(), new(), null, "en", false, "User instructions", DateTimeOffset.UtcNow) { Mcp = snapshot });
+        var system = new DesktopSystemContextComposer().Compose(new(new(), new(), null, "en", false, DateTimeOffset.UtcNow) { Mcp = snapshot });
         check(system.Parts.Any(p => PortableConversations.Text(p).Contains("availableSkills")) && DesktopSystemContext.RequestMessages(ServiceKind.Agents, [], system).Count == 0,
             "skills: system context includes skill catalog only for model chat, Agents remains unchanged");
         var activated = await turn.CallAsync("activate_skill", Json("{\"skill_id\":\"provider/sample\"}"), default);

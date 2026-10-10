@@ -25,7 +25,7 @@ public sealed class DesktopContextOptions
 public sealed record DesktopUserContext(string? Username = null, string? Name = null, string? Id = null, string? TenantId = null);
 
 public sealed record SystemContextInput(DesktopContextOptions Options, JsonObject SystemInformation,
-    DesktopUserContext? User, string PreferredLanguage, bool DarkMode, string? UserInstructions, DateTimeOffset Now)
+    DesktopUserContext? User, string PreferredLanguage, bool DarkMode, DateTimeOffset Now)
 {
     public McpTurnSnapshot Mcp { get; init; } = McpTurnSnapshot.Empty;
 }
@@ -51,7 +51,6 @@ public sealed class DesktopSystemContextComposer : ISystemContextComposer
         Add("username", input.User?.Username); Add("name", input.User?.Name);
         Add("id", input.User?.Id); Add("tenantId", input.User?.TenantId);
         parts.Add(Text(user.ToJsonString()));
-        if (!string.IsNullOrWhiteSpace(input.UserInstructions)) parts.Add(Text(input.UserInstructions.Trim()));
         return new UIMessage
         {
             Id = Guid.NewGuid().ToString(), Role = Role.system, Parts = parts,
