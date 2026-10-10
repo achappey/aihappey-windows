@@ -20,8 +20,8 @@ internal static class LocalToolRegressionTests
         check(defaults.ActivePlugins.Count == 2 && clone.ActivePlugins.Count == 3, "local tools: normalized selections and isolated clone");
         var directory = Path.Combine(root, "local-settings"); await SettingsStore.SaveAsync(directory, new() { Chat = clone });
         check((await SettingsStore.LoadAsync(directory, new())).Chat.ActivePlugins.SequenceEqual(clone.ActivePlugins), "local tools: selections persist");
-        check(DesktopLocalTools.Plugins.SelectMany(p => p.Tools).Count() == 13 && DesktopLocalTools.Plugins.SelectMany(p => p.Tools)
-            .Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 13, "local tools: exact 13 unique browser tool contracts");
+        check(DesktopLocalTools.Plugins.Count == 5 && DesktopLocalTools.Plugins.SelectMany(p => p.Tools).Count() == 15 && DesktopLocalTools.Plugins.SelectMany(p => p.Tools)
+            .Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 15, "local tools: 13 unchanged browser and two desktop-only unique contracts");
         check(DesktopLocalTools.Definition("local_conversations_delete_conversation").GetProperty("annotations").GetProperty("destructiveHint").GetBoolean(),
             "local tools: destructive delete annotation preserved");
         check(McpTurnSnapshot.Empty.Tools.Count == 0, "local tools: disabled plugins expose no tools");
@@ -42,8 +42,9 @@ internal static class LocalToolRegressionTests
         check(!sanitized.GetProperty("messages")[0].GetProperty("parts")[4].TryGetProperty("url", out _)
             && (await store.GetAsync(partition, "chat"))!.Messages[0].Message.Parts[4] is { } file && PortableConversations.Element(file).TryGetProperty("url", out _),
             "local tools: portable get omits attachment bytes without mutating stored originals");
-        check(Data(await runtime.CallAsync("local_conversations_get_conversation", Args(new { conversationId = "missing" }), default)).ValueKind == JsonValueKind.Null,
-            "local tools: missing conversation returns browser-compatible null");
+        var missing = await runtime.CallAsync("local_conversations_get_conversation", Args(new { conversationId = "missing" }), default);
+        check(!missing.TryGetProperty("structuredContent", out _) && missing.GetProperty("content")[0].GetProperty("text").GetString() == "null",
+            "local tools: missing conversation uses a null text fallback, not invalid MCP structured content");
         var search = Data(await runtime.CallAsync("local_conversations_search_text", Args(new { query = "BETA alpha", limit = 90 }), default));
         check(search.GetProperty("results").GetArrayLength() == 1 && search.GetProperty("limit").GetInt32() == 50
             && search.GetProperty("results")[0].GetProperty("messageId").GetString() == "user",
@@ -91,6 +92,7 @@ internal static class LocalToolRegressionTests
         await CheckAiAsync(check);
         await CheckSkillsAsync(check);
         await CheckMixedAsync(check, store, partition, extraction);
+        await LocalFileToolRegressionTests.RunAsync(check, root, Pdf());
     }
     private static async Task CheckAiAsync(Action<bool, string> check)
     {

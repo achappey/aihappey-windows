@@ -18,6 +18,16 @@ public sealed partial class ChatShell
             var tools = new LocalArtificialIntelligenceTools(aiModelTargets ?? []);
             DesktopLocalTools.Register(snapshot, DesktopLocalTools.ArtificialIntelligence, tools.CallAsync);
         }
+        if (preferences.PluginEnabled(DesktopLocalTools.WindowsSearch))
+        {
+            var tools = new LocalWindowsSearchTools(isCurrent: () => !closing && session.HistoryPartition == partition);
+            DesktopLocalTools.Register(snapshot, DesktopLocalTools.WindowsSearch, tools.CallAsync);
+        }
+        if (preferences.PluginEnabled(DesktopLocalTools.Files))
+        {
+            var tools = new LocalFileTools(documentExtractor, () => !closing && session.HistoryPartition == partition);
+            DesktopLocalTools.Register(snapshot, DesktopLocalTools.Files, tools.CallAsync);
+        }
     }
     private Task SaveTurnHistoryAsync(string partition, Conversation conversation, CancellationToken ct = default)
     {

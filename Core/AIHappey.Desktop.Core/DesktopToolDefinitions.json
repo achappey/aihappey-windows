@@ -1,0 +1,38 @@
+{
+  "windows-search": [
+    {
+      "name": "local_windows_search",
+      "title": "Search the Windows index",
+      "description": "Search indexed local files using native Windows Advanced Query Syntax (AQS), for example 'kind:document budget' or 'ext:pdf invoice'. Searches indexed filenames, properties, and content when a content filter is installed. English AQS keywords are supported. Only indexed locations are searched; an empty result does not prove a file does not exist. Returns absolute local paths that local_files_read can read if the Files plugin is enabled. Does not crawl folders or download files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "minLength": 1, "maxLength": 4096, "description": "Native Windows AQS query, not SQL." },
+          "folder": { "type": "string", "description": "Optional absolute local folder path. Restricts matches to this folder and its descendants." },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20, "description": "Maximum results; defaults to 20, capped at 100." }
+        },
+        "required": ["query"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false }
+    }
+  ],
+  "local-files": [
+    {
+      "name": "local_files_read",
+      "title": "Read a local file",
+      "description": "Read text from an absolute local file path, including paths returned by local_windows_search. Uses the shared document extractor for PDFs and recognized text/Markdown/JSON/YAML/XML/source files. Does not support OCR, Office documents, downloads, network paths, device paths, or symbolic links. Paging uses 1-based line numbers in extracted text (not PDF page numbers). Results include totalLines, startLine, endLine, truncated, and nextLine; request nextLine as startLine to continue. A text-size ceiling can shorten a page at a complete line boundary. Files may change between calls.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string", "description": "Absolute local filesystem path, for example C:\\Users\\Alice\\Documents\\report.pdf." },
+          "startLine": { "type": "integer", "minimum": 1, "default": 1, "description": "First extracted-text line to return (1-based)." },
+          "maxLines": { "type": "integer", "minimum": 1, "maximum": 2000, "default": 200, "description": "Maximum lines to return; defaults to 200, capped at 2000." }
+        },
+        "required": ["path"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false }
+    }
+  ]
+}

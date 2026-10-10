@@ -5,7 +5,7 @@ namespace AIHappey.Desktop.Core;
 
 public sealed record DesktopToolPlugin(string Id, string ResourceKey, IReadOnlyList<JsonElement> Tools);
 
-/// <summary>Data contracts copied from the browser. No MCP transport/server is needed for local tools.</summary>
+/// <summary>Browser and desktop-only contracts. No MCP transport/server is needed for local tools.</summary>
 public static class DesktopLocalTools
 {
     private static readonly JsonSerializerOptions resultJson = new(JsonSerializerDefaults.Web)
@@ -13,15 +13,24 @@ public static class DesktopLocalTools
     public const string Conversations = "local-conversations";
     public const string SkillSearch = "skill-search";
     public const string ArtificialIntelligence = "local-artificial-intelligence";
+    public const string WindowsSearch = "windows-search";
+    public const string Files = "local-files";
     public static IReadOnlyList<DesktopToolPlugin> Plugins { get; } = Load();
     private static IReadOnlyList<DesktopToolPlugin> Load()
     {
         using var stream = typeof(DesktopLocalTools).Assembly.GetManifestResourceStream("Desktop.LocalToolDefinitions")
             ?? throw new InvalidDataException("Missing local tool contracts.");
         using var document = JsonDocument.Parse(stream);
-        return Array.AsReadOnly(new[] { Conversations, SkillSearch, ArtificialIntelligence }.Select(id => new DesktopToolPlugin(id,
-            id switch { Conversations => "LocalPluginConversations", SkillSearch => "LocalPluginSkills", _ => "LocalPluginAi" },
-            Array.AsReadOnly(document.RootElement.GetProperty(id).EnumerateArray().Select(t => t.Clone()).ToArray()))).ToArray());
+        using var desktopStream = typeof(DesktopLocalTools).Assembly.GetManifestResourceStream("Desktop.DesktopToolDefinitions")
+            ?? throw new InvalidDataException("Missing desktop tool contracts.");
+        using var desktop = JsonDocument.Parse(desktopStream);
+        return Array.AsReadOnly(new[] { Conversations, SkillSearch, ArtificialIntelligence, WindowsSearch, Files }
+            .Select(id => new DesktopToolPlugin(id, id switch
+            {
+                Conversations => "LocalPluginConversations", SkillSearch => "LocalPluginSkills", ArtificialIntelligence => "LocalPluginAi",
+                WindowsSearch => "LocalPluginWindowsSearch", Files => "LocalPluginFiles", _ => throw new InvalidDataException("Unknown local plugin.")
+            }, Array.AsReadOnly((id is WindowsSearch or Files ? desktop : document).RootElement.GetProperty(id)
+                .EnumerateArray().Select(t => t.Clone()).ToArray()))).ToArray());
     }
     public static bool Reserved(string name) => Plugins.Any(p => p.Tools.Any(t => CatalogProjection.Text(t, "name") == name));
     public static JsonElement Definition(string name) => Plugins.SelectMany(p => p.Tools).Single(t => CatalogProjection.Text(t, "name") == name);
@@ -35,11 +44,24 @@ public static class DesktopLocalTools
     }
     public static string Required(JsonElement input, string field) => CatalogProjection.Text(input, field) is { Length: > 0 } text
         ? text : throw new LocalToolException("Missing " + field + ".");
-    public static JsonElement Result(object? structured, params JsonObject[] content) => JsonSerializer.SerializeToElement(new JsonObject
+    public static JsonElement Result(object? structured, params JsonObject[] content)
     {
-        ["isError"] = false, ["structuredContent"] = JsonSerializer.SerializeToNode(structured, resultJson),
-        ["content"] = new JsonArray(content.Select(c => (JsonNode)c).ToArray())
-    });
+        var data = JsonSerializer.SerializeToNode(structured, resultJson);
+        // MCP structuredContent is optional but must be an object when present. Legacy
+        // missing-conversation results remain JSON null in the text fallback, not an invalid object.
+        var result = new JsonObject { ["isError"] = false };
+        if (data is JsonObject) result["structuredContent"] = data;
+        result["content"] = new JsonArray((content.Length == 0 ? [Text(data?.ToJsonString(resultJson) ?? "null")] : content)
+            .Select(c => c.DeepClone()).ToArray());
+        return JsonSerializer.SerializeToElement(result);
+    }
+    public static int Integer(JsonElement input, string field, int fallback, int maximum = int.MaxValue)
+    {
+        if (!input.TryGetProperty(field, out var value)) return fallback;
+        if (value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var number) || number < 1)
+            throw new LocalToolException(field + " must be a positive integer.");
+        return Math.Min(number, maximum);
+    }
     public static JsonObject Text(string text) => new() { ["type"] = "text", ["text"] = text };
     public static JsonElement Error(string text) => JsonSerializer.SerializeToElement(new JsonObject
         { ["isError"] = true, ["content"] = new JsonArray(Text(text)) });

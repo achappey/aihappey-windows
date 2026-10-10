@@ -12,7 +12,7 @@ public interface IDocumentTextExtractor
     Task<string?> ExtractAsync(ReadOnlyMemory<byte> content, CancellationToken ct);
 }
 
-/// <summary>Shared format dispatch for composer conversion and explicit local attachment reads.
+/// <summary>Shared format dispatch for composer conversion, attachment reads, and local file reads.
 /// Register new format handlers here; callers do not need format-specific branches.</summary>
 public sealed class DocumentTextExtraction(IEnumerable<IDocumentTextExtractor>? handlers = null)
 {
@@ -33,8 +33,8 @@ public sealed class DocumentTextExtraction(IEnumerable<IDocumentTextExtractor>? 
 
 public sealed class PlainTextDocumentExtractor : IDocumentTextExtractor
 {
-    public bool Supports(string filename, string mediaType) => mediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase)
-        || filename.EndsWith(".txt", StringComparison.OrdinalIgnoreCase);
+    public bool Supports(string filename, string mediaType) => SkillFiles.IsText(mediaType.ToLowerInvariant())
+        || SkillFiles.IsText(SkillFiles.MimeType(filename)) || filename.EndsWith(".log", StringComparison.OrdinalIgnoreCase);
     public Task<string?> ExtractAsync(ReadOnlyMemory<byte> content, CancellationToken ct) => Task.Run(() =>
     {
         ct.ThrowIfCancellationRequested(); ComposerAttachments.ValidateSize(content.Length);

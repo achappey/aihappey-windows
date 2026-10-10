@@ -1035,6 +1035,24 @@
   <data name="LocalPluginConversations" xml:space="preserve"><value>Chat geschiedenis</value></data>
   <data name="LocalPluginSkills" xml:space="preserve"><value>Skill discovery</value></data>
   <data name="LocalPluginAi" xml:space="preserve"><value>Artificial Intelligence</value></data>
+  <data name="LocalPluginWindowsSearch" xml:space="preserve"><value>Windows Search</value></data>
+  <data name="LocalPluginFiles" xml:space="preserve"><value>Bestanden</value></data>
+  <data name="LocalFilePathRequired" xml:space="preserve"><value>Gebruik een absoluut lokaal bestands- of mappad. Netwerkpaden, apparaatpaden en alternatieve gegevensstromen worden niet ondersteund.</value></data>
+  <data name="LocalFileLinksUnsupported" xml:space="preserve"><value>Gekoppelde bestands- of mappaden worden niet ondersteund.</value></data>
+  <data name="LocalFileUnsupported" xml:space="preserve"><value>Dit bestandsformaat wordt niet ondersteund voor lokale tekstextractie.</value></data>
+  <data name="LocalFileNotFile" xml:space="preserve"><value>Het pad moet naar een bestand verwijzen, niet naar een map.</value></data>
+  <data name="LocalFileTooLarge" xml:space="preserve"><value>Het bestand overschrijdt de lokale extractielimiet van 25 MiB.</value></data>
+  <data name="LocalFileChanged" xml:space="preserve"><value>Het bestand is gewijzigd tijdens het lezen. Probeer het opnieuw te lezen.</value></data>
+  <data name="LocalFileNoText" xml:space="preserve"><value>Het bestand bevat geen extraheerbare tekst. Gescande PDF's vereisen OCR; deze tool voert dat niet uit.</value></data>
+  <data name="LocalFileNotFound" xml:space="preserve"><value>Het lokale bestand is niet gevonden. Windows Search-resultaten kunnen verouderd zijn.</value></data>
+  <data name="LocalFileAccessDenied" xml:space="preserve"><value>De app heeft geen toestemming om dit lokale bestand te lezen.</value></data>
+  <data name="LocalFileEncodingUnsupported" xml:space="preserve"><value>Het tekstbestand is geen geldige UTF-8 of ondersteunde Unicode-codering met BOM.</value></data>
+  <data name="LocalFileLineTooLong" xml:space="preserve"><value>De gevraagde regel overschrijdt de toolpaginalimiet van 50.000 tekens. Een regel kan niet gedeeltelijk worden teruggegeven bij paginering op regelnummer.</value></data>
+  <data name="LocalSearchInvalidQuery" xml:space="preserve"><value>Gebruik een niet-lege Windows Advanced Query Syntax-zoekopdracht van maximaal 4096 tekens.</value></data>
+  <data name="LocalSearchFolderNotFound" xml:space="preserve"><value>De lokale zoekmap is niet gevonden of niet toegankelijk.</value></data>
+  <data name="LocalSearchUnavailable" xml:space="preserve"><value>Windows Search is niet beschikbaar. Controleer of de Windows Search-service en index zijn ingeschakeld.</value></data>
+  <data name="LocalSearchTimeout" xml:space="preserve"><value>Windows Search heeft de tijdslimiet overschreden. Probeer een specifiekere zoekopdracht of map.</value></data>
+  <data name="LocalSearchQueryFailed" xml:space="preserve"><value>Windows Search kon deze zoekopdracht niet uitvoeren. Controleer de Advanced Query Syntax en beschikbaarheid van de index.</value></data>
   <data name="LocalToolFailed" xml:space="preserve"><value>De lokale tool kon niet worden uitgevoerd.</value></data>
   <data name="ChatForm_openai_transcriptionLanguages" xml:space="preserve"><value>Mogelijke talen</value></data>
   <data name="ChatForm_openai_transcriptionLanguagesPlaceholder" xml:space="preserve"><value>ISO-639-1-codes gescheiden door komma's, bijvoorbeeld nl, en</value></data>

@@ -23,8 +23,8 @@ public partial class App
         Check(tabs.Single(t => t.Name == "ChatToolsTab").IsChecked == true && tabs.Count(t => t.IsChecked == true) == 1,
             context + ": Tools tab navigation selects exactly one native tab");
         var toggles = Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").ToArray();
-        Check(toggles.Length == 3 && toggles.All(t => !t.IsOn), context + ": all three plugins initially off");
-        Check(toggles.Select(AutomationProperties.GetName).SequenceEqual(["Chat history", "Skill discovery", "Artificial Intelligence"])
+        Check(toggles.Length == 5 && toggles.All(t => !t.IsOn), context + ": all five plugins initially off");
+        Check(toggles.Select(AutomationProperties.GetName).SequenceEqual(["Chat history", "Skill discovery", "Artificial Intelligence", "Windows Search", "Files"])
             && toggles.All(t => AutomationProperties.GetAutomationId(t) == "ChatPlugin_" + t.Tag), context + ": browser labels and stable accessible identities");
         foreach (var toggle in toggles) toggle.IsOn = true;
         Check(original.ActivePlugins.Count == 0, context + ": toggles edit isolated draft");
@@ -34,7 +34,7 @@ public partial class App
         Check(Descendants(dialog).OfType<ScrollViewer>().Where(s => s.HorizontalScrollMode == ScrollMode.Disabled).All(s => s.ScrollableWidth < 1),
             context + ": Tools cards fit narrow native viewport");
         InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
-        Check(saved?.ActivePlugins.Count == 3 && dialog.Result?.ActivePlugins.Count == 3, context + ": close saves all plugin selections");
+        Check(saved?.ActivePlugins.Count == 5 && dialog.Result?.ActivePlugins.Count == 5, context + ": close saves all plugin selections");
         var reopen = new ChatSettingsDialog(saved!, null) { XamlRoot = root.XamlRoot, RequestedTheme = theme };
         shown = reopen.ShowAsync(); await Task.Delay(100); reopen.ShowToolsTab(); await Task.Delay(100);
         Check(Descendants(reopen).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").All(t => t.IsOn), context + ": reopen restores enabled toggles");
@@ -50,8 +50,14 @@ public partial class App
             Check(runtime.Tools.Count == 0, context + ": default Windows runtime has no plugin tools");
             var preferences = new ChatPreferences { ActivePlugins = DesktopLocalTools.Plugins.Select(p => p.Id).ToList() };
             runtime = (McpTurnSnapshot)Call(shell, "CaptureSkillRuntime", preferences)!;
-            Check(runtime.Tools.Count == 13 && runtime.Tools.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 13,
+            Check(runtime.Tools.Count == 15 && runtime.Tools.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 15,
                 context + ": native shell captures all enabled plugin routes exactly once");
+            foreach (var plugin in DesktopLocalTools.Plugins.Where(p => p.Id is DesktopLocalTools.WindowsSearch or DesktopLocalTools.Files))
+            {
+                var independent = (McpTurnSnapshot)Call(shell, "CaptureSkillRuntime", new ChatPreferences { ActivePlugins = [plugin.Id] })!;
+                Check(independent.Tools.Count == 1 && independent.Tools[0].GetProperty("name").GetString() == plugin.Tools[0].GetProperty("name").GetString(),
+                    context + ": independently enabled " + plugin.Id + " registers only its own tool without executing native work");
+            }
             Check(runtime.ConversationTools is not null, context + ": history runtime belongs to captured turn, not a context-preview side effect");
             var conversation = new Conversation { Id = "deleted-active" };
             typeof(ChatShell).GetField("current", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(shell, conversation);

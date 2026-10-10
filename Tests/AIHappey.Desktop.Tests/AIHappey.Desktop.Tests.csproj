@@ -36,7 +36,12 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalTools.cs" Link="Core/LocalTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalConversationTools.cs" Link="Core/LocalConversationTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalArtificialIntelligenceTools.cs" Link="Core/LocalArtificialIntelligenceTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFilePaths.cs" Link="Core/LocalFilePaths.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFileTools.cs" Link="Core/LocalFileTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalWindowsSearchTools.cs" Link="Core/LocalWindowsSearchTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/NativeWindowsSearch.cs" Link="Core/NativeWindowsSearch.cs" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/LocalToolDefinitions.json" LogicalName="Desktop.LocalToolDefinitions" />
+    <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/DesktopToolDefinitions.json" LogicalName="Desktop.DesktopToolDefinitions" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpSkills.cs" Link="Core/McpSkills.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpResources.cs" Link="Core/McpResources.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpPrompts.cs" Link="Core/McpPrompts.cs" />
@@ -73,7 +78,8 @@
     <ProjectReference Include="../../../aihappey-agents/core/AgentHappey.Common/AgentHappey.Common.csproj" />
     <PackageReference Include="PdfPig" Version="0.1.17-alpha-202610100039-91ddd" />
     <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
+    <PackageReference Include="System.Data.OleDb" Version="10.0.12" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />
   </ItemGroup>
 </Project>

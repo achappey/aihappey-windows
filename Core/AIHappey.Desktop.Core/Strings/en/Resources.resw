@@ -1040,6 +1040,24 @@
   <data name="LocalPluginConversations" xml:space="preserve"><value>Chat history</value></data>
   <data name="LocalPluginSkills" xml:space="preserve"><value>Skill discovery</value></data>
   <data name="LocalPluginAi" xml:space="preserve"><value>Artificial Intelligence</value></data>
+  <data name="LocalPluginWindowsSearch" xml:space="preserve"><value>Windows Search</value></data>
+  <data name="LocalPluginFiles" xml:space="preserve"><value>Files</value></data>
+  <data name="LocalFilePathRequired" xml:space="preserve"><value>Use an absolute local file or folder path. Network paths, device paths, and alternate data streams are not supported.</value></data>
+  <data name="LocalFileLinksUnsupported" xml:space="preserve"><value>Linked file or folder paths are not supported.</value></data>
+  <data name="LocalFileUnsupported" xml:space="preserve"><value>This file format is not supported for local text extraction.</value></data>
+  <data name="LocalFileNotFile" xml:space="preserve"><value>The path must refer to a file, not a folder.</value></data>
+  <data name="LocalFileTooLarge" xml:space="preserve"><value>The file exceeds the 25 MiB local extraction limit.</value></data>
+  <data name="LocalFileChanged" xml:space="preserve"><value>The file changed while being read. Try reading it again.</value></data>
+  <data name="LocalFileNoText" xml:space="preserve"><value>The file contains no extractable text. Scanned PDFs require OCR, which this tool does not perform.</value></data>
+  <data name="LocalFileNotFound" xml:space="preserve"><value>The local file was not found. Windows Search results can be stale.</value></data>
+  <data name="LocalFileAccessDenied" xml:space="preserve"><value>The app does not have permission to read this local file.</value></data>
+  <data name="LocalFileEncodingUnsupported" xml:space="preserve"><value>The text file is not valid UTF-8 or a supported BOM-marked Unicode encoding.</value></data>
+  <data name="LocalFileLineTooLong" xml:space="preserve"><value>The requested line exceeds the 50,000-character tool page limit. A line cannot be partially returned with line-number paging.</value></data>
+  <data name="LocalSearchInvalidQuery" xml:space="preserve"><value>Use a non-empty Windows Advanced Query Syntax query of at most 4096 characters.</value></data>
+  <data name="LocalSearchFolderNotFound" xml:space="preserve"><value>The local search folder was not found or is not accessible.</value></data>
+  <data name="LocalSearchUnavailable" xml:space="preserve"><value>Windows Search is unavailable. Check that the Windows Search service and index are enabled.</value></data>
+  <data name="LocalSearchTimeout" xml:space="preserve"><value>Windows Search timed out. Try a narrower query or folder scope.</value></data>
+  <data name="LocalSearchQueryFailed" xml:space="preserve"><value>Windows Search could not execute this query. Check the Advanced Query Syntax and index availability.</value></data>
   <data name="LocalToolFailed" xml:space="preserve"><value>The local tool could not be completed.</value></data>
   <data name="ChatForm_openai_transcriptionLanguages" xml:space="preserve"><value>Possible languages</value></data>
   <data name="ChatForm_openai_transcriptionLanguagesPlaceholder" xml:space="preserve"><value>Comma-separated ISO-639-1 codes, e.g. en, nl</value></data>
