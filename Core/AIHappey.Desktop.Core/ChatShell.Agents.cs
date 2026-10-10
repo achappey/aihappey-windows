@@ -34,7 +34,17 @@ public sealed partial class ChatShell
     private static IReadOnlyList<ChatTarget> ProjectAgentTargets(IEnumerable<CatalogItem> items) => DesktopAgentTargets.Project(items);
     private async Task<IReadOnlyList<CatalogItem>> LoadCatalogItemsAsync(CatalogKind kind, CancellationToken ct)
     {
-        if (kind != CatalogKind.Agent) return await catalogClient.ListAsync(kind, ct);
+        if (kind == CatalogKind.Skill)
+        {
+            await LoadLocalSkillsAsync(ct);
+            try { return await catalogClient.ListAsync(kind, ct); }
+            catch (Exception error) when (error is not OperationCanceledException)
+            {
+                var cached = await skillStore.CatalogAsync(session.HistoryPartition, ct);
+                if (localSkills.Count == 0 && cached.Count == 0) throw;
+                Show(DesktopResources.Get("SkillBackendUnavailable"), InfoBarSeverity.Warning); return cached;
+            }
+        }
         await LoadLocalAgentsAsync(ct);
         try { return await catalogClient.ListAsync(kind, ct); }
         catch (Exception error) when (error is not OperationCanceledException && localAgents.Count > 0)
@@ -62,13 +72,21 @@ public sealed partial class ChatShell
         try
         {
             await LoadLocalAgentsAsync(downloadLifetime.Token);
+            await LoadLocalSkillsAsync(downloadLifetime.Token); var skillPartition = session.HistoryPartition;
             var agent = item is null ? DesktopAgent.Empty() : localAgents.FirstOrDefault(a => a.Name == item.Id)?.Clone();
             if (agent is null) { Show(DesktopResources.Get("AgentUnavailable"), InfoBarSeverity.Warning); return; }
             IReadOnlyList<ChatTarget> models;
             try { models = aiModelTargets ?? await client.ListAsync(ServiceKind.Ai, downloadLifetime.Token); }
             catch (Exception error) when (error is not OperationCanceledException) { models = []; }
             if (closing || partition != session.AgentPartition) return;
-            agentEditor = new(agent, item is not null, session, catalogClient, mcpCatalogHttp, models, Mcp.Capture()) { XamlRoot = XamlRoot };
+            agentEditor = new(agent, item is not null, session, catalogClient, mcpCatalogHttp, models, Mcp.Capture(), localSkills,
+                async (skill, ct) =>
+                {
+                    ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != skillPartition) throw new OperationCanceledException(ct);
+                    var value = await localSkillStore.ReadAsync(skillPartition, skill, ct);
+                    ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != skillPartition) throw new OperationCanceledException(ct);
+                    return DesktopSkillPackages.Export(value);
+                }) { XamlRoot = XamlRoot };
             agentEditor.SaveAsync = async (value, ct) =>
             {
                 ct.ThrowIfCancellationRequested(); if (partition != session.AgentPartition) throw new OperationCanceledException();

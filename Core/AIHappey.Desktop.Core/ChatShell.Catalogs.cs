@@ -114,6 +114,7 @@ public sealed partial class ChatShell
         modelsOverview.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
         modelFilters.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
         addAgent.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
+        addSkill.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
         if (page == DesktopPage.Models && aiCategory is not null)
         {
             aiCategoryExpanded = true; aiNavigation.Visibility = Visibility.Visible;
@@ -143,6 +144,7 @@ public sealed partial class ChatShell
     {
         foreach (var button in pageButtons.Values) button.IsEnabled = !value;
         addAgent.IsEnabled = !value;
+        addSkill.IsEnabled = !value;
         agentsOverview.SetActionsEnabled(!value); skillsOverview.SetActionsEnabled(!value);
         mcpOverview.SetActionsEnabled(!value);
         modelsOverview.SetActionsEnabled(!value);
@@ -164,6 +166,8 @@ public sealed partial class ChatShell
         InvalidateModelsOverview();
         runtimeSkillCatalog = []; runtimeSkillPartition = null;
         localAgents = []; localAgentPartition = null; agentEditor?.Hide();
+        localSkills = []; localSkillPartition = null; skillEditor?.CancelAndHide();
+        skillDeleteDialog?.Hide();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide();
         details.IsPaneOpen = false;
@@ -188,13 +192,19 @@ public sealed partial class ChatShell
                 await LoadLocalAgentsAsync(ct);
                 items = items.Where(i => i.Origin != CatalogOrigin.Local).Concat(localAgents.Select(a => a.CatalogItem())).ToArray();
             }
+            if (page.Kind == CatalogKind.Skill)
+            {
+                await LoadLocalSkillsAsync(ct);
+                items = items.Where(i => i.Origin == CatalogOrigin.Backend).Concat(LocalSkillCatalog()).ToArray();
+            }
             ct.ThrowIfCancellationRequested();
             if (closing || session.HistoryPartition != partition) return;
             catalogs[page.Kind] = items;
             if (page.Kind == CatalogKind.Skill)
             {
-                await skillStore.SaveCatalogAsync(partition, items, ct);
-                runtimeSkillCatalog = items; runtimeSkillPartition = partition; RenderContextTags();
+                var backend = items.Where(i => i.Origin == CatalogOrigin.Backend).ToArray();
+                await skillStore.SaveCatalogAsync(partition, backend, ct);
+                runtimeSkillCatalog = backend; runtimeSkillPartition = partition; RenderContextTags();
             }
             var config = session.Settings.For(page.Kind == CatalogKind.Agent ? ServiceKind.Agents : ServiceKind.Ai);
             var source = config.Location == RuntimeLocation.Local ? "localhost" : DesktopSettings.RemoteUri(config.RemoteUrl).Host;
@@ -244,6 +254,7 @@ public sealed partial class ChatShell
 
     private async Task OpenCatalogDetailsAsync(CatalogItem item, Button owner)
     {
+        if (item.Kind == CatalogKind.Skill && item.Origin == CatalogOrigin.Local) { await EditSkillAsync(item, owner); return; }
         if (busy || closing || historyDialogOpen || catalogDialog is not null) return;
         var dialog = new CatalogDetailsDialog(item) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog);
@@ -315,7 +326,10 @@ public sealed partial class ChatShell
             if (closing || session.HistoryPartition != partition) return;
             // Fully validate/stage before opening the chosen file for writing. Never extract or execute a skill archive.
             var bytes = json ? Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item.Definition!.Value, new JsonSerializerOptions { WriteIndented = true }))
-                : await catalogClient.DownloadSkillAsync(item.Id, version, ct);
+                : item.Origin == CatalogOrigin.Local
+                    ? DesktopSkillPackages.Export(await localSkillStore.ReadAsync(partition,
+                        localSkills.FirstOrDefault(s => s.Id == item.Id) ?? throw new InvalidDataException(DesktopResources.Get("SkillUnavailableHint")), ct))
+                    : await catalogClient.DownloadSkillAsync(item.Id, version, ct);
             ct.ThrowIfCancellationRequested();
             await using var output = await destination.OpenStreamForWriteAsync(); output.SetLength(0); await output.WriteAsync(bytes, ct);
             Show(json ? DesktopResources.Get("AgentDownloaded") : DesktopResources.Get("SkillDownloaded"), InfoBarSeverity.Success);

@@ -52,12 +52,12 @@ public partial class App
             SelectNativeTab(tabs, "local");
             Check(CardCount(page, "CatalogCard") == 1, context + ": Local filter shows only local items");
             SetOverview(page, items, new HashSet<string>());
-            Check(kind == CatalogKind.Agent ? (string)((NavigationViewItem)tabs.SelectedItem).Tag == "local" && tabs.MenuItems.Count == 4
-                : (string)((NavigationViewItem)tabs.SelectedItem).Tag == "all" && tabs.MenuItems.Count == 3, context + ": Agents retain empty Local filter; Skills use capability-driven Local");
+            Check((string)((NavigationViewItem)tabs.SelectedItem).Tag == "local" && tabs.MenuItems.Count == 4,
+                context + ": Agents and Skills retain empty Local filter for creation/import");
             SelectNativeTab(tabs, "all");
             var all = tabs.SelectedItem;
             InvokeOverview(page, "Loading", new object?[] { null });
-            Check(!tabs.IsEnabled && !search.IsEnabled && tabs.MenuItems.Count == (kind == CatalogKind.Agent ? 4 : 3) && CardCount(page, "CatalogCard") == 0, context + ": loading retains but disables navigation");
+            Check(!tabs.IsEnabled && !search.IsEnabled && tabs.MenuItems.Count == 4 && CardCount(page, "CatalogCard") == 0, context + ": loading retains but disables navigation");
             InvokeOverview(page, "Error", "Fixture failure");
             Check(!tabs.IsEnabled && Descendants(page).OfType<TextBlock>().Any(text => text.Text == "Fixture failure"), context + ": error retains stable tabs and retry state");
             SetOverview(page, items, new HashSet<string>());

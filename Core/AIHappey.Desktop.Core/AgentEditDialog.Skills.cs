@@ -24,6 +24,7 @@ public sealed partial class AgentEditDialog
         public Action? Refresh;
     }
     private readonly Dictionary<string, SkillRow> skillRows = [];
+    private bool IsStoredLocalSkill(CatalogItem item) => localSkills.Any(s => s.Id == item.Id);
     private JsonArray SkillArray()
     {
         if (draft.Definition["skills"] is JsonArray array) return array;
@@ -61,7 +62,8 @@ public sealed partial class AgentEditDialog
                     ?? entries.FirstOrDefault(s => !associated.Contains(s) && DesktopAgent.Text(s["type"]) == "inline" && DesktopAgent.Text(s["name"]) == item.Name && DesktopAgent.Text(s["description"]) == item.Description);
                 if (entry is not null) associated.Add(entry);
                 var version = DesktopAgent.Text(entry?["version"]);
-                skillRows[item.Id] = new(item, entry, version.Length > 0 ? version : entry is null ? "latest" : "__default__");
+                skillRows[item.Id] = new(item, entry, version.Length > 0 ? version : entry is null ? "latest" : "__default__")
+                    { Mode = IsStoredLocalSkill(item) ? "inline" : DesktopAgent.Text(entry?["type"]) == "inline" ? "inline" : "reference" };
             }
             foreach (var entry in entries.Where(e => !associated.Contains(e)))
             {
@@ -98,7 +100,7 @@ public sealed partial class AgentEditDialog
                 var catalogItems = await catalog.ListAsync(CatalogKind.Skill, lifetime.Token); lifetime.Token.ThrowIfCancellationRequested();
                 // Initial unknown rows can be associated with a now-available catalog item without
                 // replacing its stored payload, and no catalog load writes to the agent draft.
-                foreach (var row in skillRows.Values.Where(r => r.Item.Origin == CatalogOrigin.Local && r.Entry is not null).ToArray())
+                foreach (var row in skillRows.Values.Where(r => r.Item.Origin == CatalogOrigin.Local && !IsStoredLocalSkill(r.Item) && r.Entry is not null).ToArray())
                 {
                     var matching = catalogItems.FirstOrDefault(i => i.Id == DesktopAgent.Text(row.Entry!["skill_id"])
                         || DesktopAgent.Text(row.Entry!["type"]) == "inline" && i.Name == DesktopAgent.Text(row.Entry!["name"]) && i.Description == DesktopAgent.Text(row.Entry!["description"]));
@@ -109,6 +111,8 @@ public sealed partial class AgentEditDialog
             catch (OperationCanceledException) { }
             catch { if (!lifetime.IsCancellationRequested) { status.Text = DesktopResources.Get("SkillsCatalogFailed"); retry.Visibility = Visibility.Visible; RequestRender(); } }
         }
+        Hydrate(localSkills.Select(s => new CatalogItem(CatalogKind.Skill, s.Id, s.Name, s.Description)
+            { Origin = CatalogOrigin.Local, Version = s.Version, LatestVersion = s.Version }));
         Hydrate([]); Render(); search.TextChanged += (_, _) => { visible = 50; RequestRender(); };
         more.Click += (_, _) => { visible += 50; RequestRender(); }; retry.Click += async (_, _) => await Load();
         panel.Loaded += async (_, _) => { if (!started) { started = true; await Load(); } };
@@ -134,6 +138,7 @@ public sealed partial class AgentEditDialog
         row.View = expander;
         expander.Tag = row.Item.Id; expander.IsExpanded = row.Expanded;
         body.Children.Add(new TextBlock { Text = row.Item.Description, TextWrapping = TextWrapping.Wrap });
+        if (IsStoredLocalSkill(row.Item)) body.Children.Add(new TextBlock { Text = DesktopResources.Get("SkillLocalInlineHint"), TextWrapping = TextWrapping.Wrap });
         var mode = new ComboBox { Name = "AgentSkillMode", Header = ChatSettingsFields.L("agent.skillMode"), HorizontalAlignment = HorizontalAlignment.Stretch,
             IsEnabled = row.Entry is not null && !row.Working && CatalogRoutes.SupportsSkill(row.Item.Id) };
         mode.Items.Add(new ComboBoxItem { Content = DesktopResources.Get("AgentSkillReference"), Tag = "reference" });
@@ -177,9 +182,18 @@ public sealed partial class AgentEditDialog
                         else
                         {
                             var concrete = nextVersion == "__default__" ? row.Item.Version : nextVersion == "latest" ? row.Item.LatestVersion ?? row.Item.Version : nextVersion;
-                            var bytes = await catalog.DownloadSkillAsync(row.Item.Id, concrete, ct);
-                            var parsed = await SkillFiles.ArchiveAsync(new(row.Item.Id, row.Item.Name, row.Item.Description, "remote", concrete), bytes, ct);
-                            next = InlineSkill(parsed.Skill, bytes);
+                            if (IsStoredLocalSkill(row.Item))
+                            {
+                                var local = localSkills.Single(s => s.Id == row.Item.Id);
+                                var bytes = localSkillArchive is null ? throw new InvalidDataException(DesktopResources.Get("SkillUnavailableHint")) : await localSkillArchive(local, ct);
+                                next = InlineSkill(local, bytes);
+                            }
+                            else
+                            {
+                                var bytes = await catalog.DownloadSkillAsync(row.Item.Id, concrete, ct);
+                                var parsed = await SkillFiles.ArchiveAsync(new(row.Item.Id, row.Item.Name, row.Item.Description, "remote", concrete), bytes, ct);
+                                next = InlineSkill(parsed.Skill, bytes);
+                            }
                         }
                     }
                     else

@@ -1,5 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="SkillCreate" xml:space="preserve"><value>Nieuwe vaardigheid maken</value></data>
+  <data name="SkillEdit" xml:space="preserve"><value>Vaardigheid bewerken</value></data>
+  <data name="SkillImport" xml:space="preserve"><value>Vaardigheidspakket importeren</value></data>
+  <data name="SkillName" xml:space="preserve"><value>Naam</value></data>
+  <data name="SkillDescription" xml:space="preserve"><value>Beschrijving</value></data>
+  <data name="SkillInstructions" xml:space="preserve"><value>Instructies</value></data>
+  <data name="SkillFiles" xml:space="preserve"><value>Bestanden</value></data>
+  <data name="SkillNameHint" xml:space="preserve"><value>Een korte unieke naam met kleine letters, cijfers en enkele koppeltekens.</value></data>
+  <data name="SkillDescriptionHint" xml:space="preserve"><value>Beschrijf wat deze vaardigheid doet en wanneer deze moet worden gebruikt (maximaal 1024 tekens).</value></data>
+  <data name="SkillInstructionsHint" xml:space="preserve"><value>Schrijf hier de Markdown-instructies. Naam en beschrijving worden automatisch als YAML-frontmatter opgeslagen; optionele geïmporteerde metadata blijft behouden.</value></data>
+  <data name="SkillFilesHint" xml:space="preserve"><value>Sleep bestanden hierheen of kies bestanden om toe te voegen of te vervangen. Gebruik relatieve paden voor referenties, scripts of assets. Scripts worden als gegevens opgeslagen en nooit automatisch uitgevoerd.</value></data>
+  <data name="SkillChooseFiles" xml:space="preserve"><value>Bestanden kiezen</value></data>
+  <data name="SkillRelativePath" xml:space="preserve"><value>Relatief pad</value></data>
+  <data name="SkillApplyPath" xml:space="preserve"><value>Pad toepassen</value></data>
+  <data name="SkillFieldRequired" xml:space="preserve"><value>Het veld '{0}' van de vaardigheid is verplicht.</value></data>
+  <data name="SkillFieldInvalid" xml:space="preserve"><value>Het veld '{0}' van de vaardigheid heeft een ongeldig type of een ongeldige lengte.</value></data>
+  <data name="SkillNameInvalid" xml:space="preserve"><value>Gebruik 1–64 kleine letters, cijfers of koppeltekens. De naam mag niet met een koppelteken beginnen of eindigen of opeenvolgende koppeltekens bevatten.</value></data>
+  <data name="SkillNameLocked" xml:space="preserve"><value>De naam van een bestaande vaardigheid kan niet worden gewijzigd.</value></data>
+  <data name="SkillAlreadyExists" xml:space="preserve"><value>Er bestaat al een lokale vaardigheid met deze naam.</value></data>
+  <data name="SkillManifestReserved" xml:space="preserve"><value>SKILL.md is gereserveerd voor de instructie-editor en kan niet als extra bestand worden toegevoegd.</value></data>
+  <data name="SkillDuplicatePath" xml:space="preserve"><value>Het pakket bevat dubbele of conflicterende bestandspaden.</value></data>
+  <data name="SkillPackageTooLarge" xml:space="preserve"><value>Een vaardigheidspakket mag maximaal 512 bestanden en 16 MiB aan ongecomprimeerde gegevens bevatten.</value></data>
+  <data name="SkillArchiveLink" xml:space="preserve"><value>Vaardigheidsarchieven mogen geen symbolische koppelingen bevatten.</value></data>
+  <data name="SkillArchiveEmpty" xml:space="preserve"><value>Er zijn geen SKILL.md-bestanden gevonden in dit ZIP-archief.</value></data>
+  <data name="SkillArchiveOverlapping" xml:space="preserve"><value>Een verzameling mag geen geneste of overlappende vaardigheidsmappen bevatten.</value></data>
+  <data name="SkillDirectoryMismatch" xml:space="preserve"><value>De naam van de vaardigheid moet overeenkomen met de naam van de bovenliggende map.</value></data>
+  <data name="SkillResourceMissing" xml:space="preserve"><value>Het gebundelde vaardigheidsbestand is niet gevonden.</value></data>
+  <data name="SkillStoredInvalid" xml:space="preserve"><value>De opgeslagen vaardigheid is ongeldig of onvolledig.</value></data>
+  <data name="SkillSavedVersion" xml:space="preserve"><value>Versie {0} van de vaardigheid opgeslagen.</value></data>
+  <data name="SkillImportedCount" xml:space="preserve"><value>{0} vaardigheid/vaardigheden geïmporteerd.</value></data>
+  <data name="SkillDeleteConfirm" xml:space="preserve"><value>'{0}' en alle opgeslagen versies verwijderen? Inlinekopieën die al in agents zijn opgeslagen, blijven ongewijzigd.</value></data>
+  <data name="SkillBackendUnavailable" xml:space="preserve"><value>De externe vaardighedencatalogus is niet beschikbaar. Lokale vaardigheden blijven beschikbaar.</value></data>
+  <data name="SkillLocalInlineHint" xml:space="preserve"><value>Lokale vaardigheden worden als draagbare inlinekopieën opgenomen. Latere wijzigingen veranderen de kopie in deze agent niet.</value></data>
   <data name="ToolApproval" xml:space="preserve"><value>Toolgoedkeuring</value></data>
   <data name="ToolDeny" xml:space="preserve"><value>Toolresultaat weigeren</value></data>
   <data name="Allow" xml:space="preserve"><value>Toestaan</value></data>

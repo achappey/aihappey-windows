@@ -30,6 +30,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpClient.cs" Link="Core/McpClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpTools.cs" Link="Core/McpTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Skills.cs" Link="Core/Skills.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalSkills.cs" Link="Core/LocalSkills.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SkillTools.cs" Link="Core/SkillTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpSkills.cs" Link="Core/McpSkills.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpResources.cs" Link="Core/McpResources.cs" />

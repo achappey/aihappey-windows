@@ -50,6 +50,7 @@ public static class SkillFiles
 
     public static (JsonObject Frontmatter, string Body) Markdown(string text)
     {
+        text = text.TrimStart('\uFEFF');
         var match = Regex.Match(text, "\\A---[ \\t]*\\r?\\n([\\s\\S]*?)\\r?\\n---[ \\t]*(?:\\r?\\n|$)([\\s\\S]*)\\z");
         if (!match.Success) throw new InvalidDataException("Missing skill frontmatter.");
         var yaml = new YamlStream(); yaml.Load(new StringReader(match.Groups[1].Value));
@@ -72,7 +73,7 @@ public static class SkillFiles
             }
             if (node is YamlSequenceNode sequence) return new JsonArray(sequence.Children.Select(n => Convert(n, depth + 1)).ToArray());
             if (node is not YamlScalarNode s) throw new InvalidDataException("Unsupported YAML node.");
-            if (s.Style is YamlDotNet.Core.ScalarStyle.Plain)
+            if (s.Style is YamlDotNet.Core.ScalarStyle.Plain && s.Tag != new YamlDotNet.Core.TagName("tag:yaml.org,2002:str"))
             {
                 if (s.Value is null or "null" or "~") return null;
                 if (bool.TryParse(s.Value, out var boolean)) return JsonValue.Create(boolean);
@@ -85,6 +86,7 @@ public static class SkillFiles
         if (OpenAIChatConfig.Text(frontmatter["name"]) is not { Length: > 0 }
             || OpenAIChatConfig.Text(frontmatter["description"]) is not { Length: > 0 })
             throw new InvalidDataException("Skill name and description are required.");
+        DesktopSkillPackages.ValidateFrontmatter(frontmatter);
         return (frontmatter, match.Groups[2].Value.Trim());
     }
 

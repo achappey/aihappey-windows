@@ -13,6 +13,7 @@ public partial class App
 {
     private async Task CheckSkillsAsync(ElementTheme theme)
     {
+        await CheckSkillEditorAsync(theme);
         var root = new Grid { RequestedTheme = theme }; window!.Content = root;
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 900)); window.Activate(); await Task.Delay(100);
         var context = "Skills / " + theme; var original = new ChatPreferences(); var prefetches = 0;
@@ -53,7 +54,7 @@ public partial class App
 
         var session = new DesktopSession(new UiHost(true), new UiRuntime(), new());
         session.Settings.Chat.EnabledSkillIds = ["provider/sample", "mcp:server:missing"];
-        var shell = new ChatShell(session) { RequestedTheme = theme }; window.Content = shell; await Task.Delay(150);
+        var shell = new ChatShell(session) { RequestedTheme = theme }; window.Content = shell; await Task.Delay(200); await HistoryIdleAsync(shell);
         try
         {
             typeof(ChatShell).GetField("runtimeSkillCatalog", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(shell,

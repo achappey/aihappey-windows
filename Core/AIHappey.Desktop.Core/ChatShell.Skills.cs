@@ -16,6 +16,7 @@ public sealed partial class ChatShell
         try
         {
             var partition = session.HistoryPartition;
+            await LoadLocalSkillsAsync(ct);
             if (!refresh && runtimeSkillPartition == partition) return;
             var cached = await skillStore.CatalogAsync(partition, ct);
             if (runtimeSkillPartition != partition) { runtimeSkillCatalog = cached; runtimeSkillPartition = null; }
@@ -31,7 +32,7 @@ public sealed partial class ChatShell
             catch
             {
                 if (session.HistoryPartition != partition || closing) return;
-                if (cached.Count == 0) throw;
+                if (cached.Count == 0 && localSkills.Count == 0) throw;
                 runtimeSkillCatalog = cached; runtimeSkillPartition = partition;
             }
             RenderContextTags();
@@ -45,12 +46,14 @@ public sealed partial class ChatShell
         catch (OperationCanceledException) { throw; }
         catch { warning = DesktopResources.Get("SkillsCatalogFailed"); }
         var favorites = await catalogFavorites.LoadAsync(session.HistoryPartition, ct);
+        ct.ThrowIfCancellationRequested();
         var config = session.Settings.Ai;
         var source = config.Location == RuntimeLocation.Local ? "localhost" : DesktopSettings.RemoteUri(config.RemoteUrl).Host;
-        return new(AvailableSkillDescriptors(), runtimeSkillCatalog.Where(i => favorites.Contains(i.Key)).Select(i => i.Id).ToHashSet(StringComparer.Ordinal), source, warning);
+        return new(AvailableSkillDescriptors(), runtimeSkillCatalog.Concat(LocalSkillCatalog()).Where(i => favorites.Contains(i.Key)).Select(i => i.Id).ToHashSet(StringComparer.Ordinal), source, warning);
     }
     private IReadOnlyList<DesktopSkill> AvailableSkillDescriptors() =>
-        (runtimeSkillPartition == session.HistoryPartition ? runtimeSkillCatalog.Select(i => new DesktopSkill(i.Id, i.Name, i.Description, "remote", i.LatestVersion ?? i.Version)) : [])
+         (runtimeSkillPartition == session.HistoryPartition ? runtimeSkillCatalog.Select(i => new DesktopSkill(i.Id, i.Name, i.Description, "remote", i.LatestVersion ?? i.Version)) : [])
+        .Concat(localSkillPartition == session.HistoryPartition ? localSkills : [])
         .Concat(Mcp.CaptureSkills().Select(s => s.Descriptor)).DistinctBy(s => s.Id).ToArray();
     private async Task PrefetchSkillAsync(string id, CancellationToken ct)
     {
@@ -72,6 +75,20 @@ public sealed partial class ChatShell
                     var content = await skillStore.ReadAsync(partition, item, ct);
                     if (closing || session.HistoryPartition != partition) throw new OperationCanceledException(ct);
                     return content;
+                }));
+        if (localSkillPartition == partition)
+            foreach (var skill in localSkills.Where(s => selected.Contains(s.Id)))
+                readers.Add((skill, async ct =>
+                {
+                    if (closing || session.HistoryPartition != partition) throw new OperationCanceledException(ct);
+                    var draft = await localSkillStore.ReadAsync(partition, skill, ct);
+                    if (closing || session.HistoryPartition != partition) throw new OperationCanceledException(ct);
+                    var content = DesktopSkillPackages.Content(skill, draft);
+                    return content with { Read = async (path, token) =>
+                    {
+                        if (closing || session.HistoryPartition != partition) throw new OperationCanceledException(token);
+                        return await content.Read(path, token);
+                    } };
                 }));
         foreach (var skill in Mcp.CaptureSkills().Where(s => selected.Contains(s.Descriptor.Id))) readers.Add((skill.Descriptor, skill.LoadAsync));
         new DesktopSkillTurn(readers).Register(snapshot); return snapshot;

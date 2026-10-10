@@ -98,6 +98,7 @@ internal static class SkillRegressionTests
             "skills: local activation executes through existing active-turn continuation boundary");
         check(await DesktopMcpToolExecution.ExecutePendingAsync(output, snapshot, executed, "en", default) == 0, "skills: completed activation never executes twice");
 
+        await CheckLocalAsync(check, root);
         await CheckMcpAsync(check, root);
         await CheckSdkDiscoveryAsync(check);
         foreach (var lang in new[] { "en", "nl" })
@@ -105,6 +106,109 @@ internal static class SkillRegressionTests
             var document = System.Xml.Linq.XDocument.Load(typeof(SkillRegressionTests).Assembly.GetManifestResourceStream("Desktop.Resources." + lang)!);
             var values = document.Root!.Elements("data").ToDictionary(e => e.Attribute("name")!.Value, e => e.Element("value")!.Value);
             check(values["SkillLoadFailed"].Length > 0 && string.Format(values["DisableSkill"], "sample").Contains("sample"), "skills: localized UI/tool failure messages " + lang);
+        }
+    }
+    private static async Task CheckLocalAsync(Action<bool, string> check, string root)
+    {
+        var draft = new DesktopSkillDraft { Name = "local-sample", Description = "Use when: \"quoted\" values, YAML: punctuation, or Unicode café appear.\nNext line.",
+            Instructions = "# Instructions\nRead references/info.md.", Files = [new("references/info.md", Encoding.UTF8.GetBytes("reference")), new("assets/raw.bin", [0, 1, 255])] };
+        draft.Frontmatter["license"] = "LICENSE.txt"; draft.Frontmatter["compatibility"] = "Windows";
+        draft.Frontmatter["metadata"] = new JsonObject { ["version"] = "1.0", ["numeric"] = "123", ["boolean"] = "true" };
+        draft.Frontmatter["allowed-tools"] = "Read"; draft.Frontmatter["custom"] = new JsonObject { ["enabled"] = true, ["limit"] = 12 };
+        var bytes = DesktopSkillPackages.Export(draft); var imported = await DesktopSkillPackages.ImportAsync(bytes, default);
+        check(imported.Diagnostics.Count == 0 && imported.Skills.Count == 1, "local skills: generated YAML/ZIP round trip validates");
+        var roundTrip = imported.Skills.Single();
+        check(JsonNode.DeepEquals(draft.Frontmatter, roundTrip.Frontmatter) && roundTrip.Description == draft.Description
+            && roundTrip.Files.Single(f => f.Path == "assets/raw.bin").Data.SequenceEqual(new byte[] { 0, 1, 255 }),
+            "local skills: YAML special characters, optional/extension fields, and binary files preserved");
+        using (var archive = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read))
+            check(archive.Entries.All(e => e.FullName.StartsWith("local-sample/")) && archive.GetEntry("local-sample/SKILL.md") is not null,
+                "local skills: exported parent directory matches name and canonical manifest casing");
+        var empty = draft.Clone(); empty.Instructions = "";
+        var tagged = SkillFiles.Markdown("\uFEFF---\r\nname: !!str 123\r\ndescription: !!str true\r\nmetadata:\r\n  version: !!str 1\r\n---\r\nBody");
+        check(tagged.Frontmatter["name"]!.GetValue<string>() == "123" && tagged.Frontmatter["metadata"]!["version"]!.GetValue<string>() == "1",
+            "local skills: BOM, CRLF, and explicitly tagged YAML strings are supported");
+        check((await DesktopSkillPackages.ImportAsync(DesktopSkillPackages.Export(empty), default)).Skills.Single().Instructions == "",
+            "local skills: empty Markdown body is valid");
+        foreach (var name in new[] { "", "Upper", "a--b", "-name", "name-", new string('a', 65), "a/b" })
+        {
+            var invalid = draft.Clone(); invalid.Name = name;
+            await RejectAsync(() => Task.FromResult(DesktopSkillPackages.Export(invalid)), check, "local skills: strict name rules " + name);
+        }
+        foreach (var description in new[] { "", "  ", new string('a', 1025) })
+        {
+            var invalid = draft.Clone(); invalid.Description = description;
+            await RejectAsync(() => Task.FromResult(DesktopSkillPackages.Export(invalid)), check, "local skills: description constraints");
+        }
+        foreach (var mutation in new Action<JsonObject>[] {
+            f => f["compatibility"] = "", f => f["compatibility"] = new string('a', 501), f => f["license"] = 12,
+            f => f["metadata"] = new JsonObject { ["key"] = 1 }, f => f["allowed-tools"] = new JsonArray("Read") })
+        {
+            var invalid = draft.Clone(); mutation(invalid.Frontmatter);
+            await RejectAsync(() => Task.FromResult(DesktopSkillPackages.Export(invalid)), check, "local skills: optional field constraints");
+        }
+        foreach (var path in new[] { "SKILL.md", "skill.md", "nested/SKILL.md", "../bad", "/bad", "C:/bad", "a//b", "a/%2e%2e/b" })
+        {
+            var invalid = draft.Clone(); invalid.Files.Add(new(path, [1]));
+            await RejectAsync(() => Task.FromResult(DesktopSkillPackages.Export(invalid)), check, "local skills: reserved/unsafe path " + path);
+        }
+        var conflict = draft.Clone(); conflict.Files.Add(new("REFERENCES/INFO.md", [1]));
+        await RejectAsync(() => Task.FromResult(DesktopSkillPackages.Export(conflict)), check, "local skills: case-insensitive resource duplicate rejected");
+        conflict = draft.Clone(); conflict.Files.Add(new("references", [1]));
+        await RejectAsync(() => Task.FromResult(DesktopSkillPackages.Export(conflict)), check, "local skills: file/directory conflict rejected");
+        foreach (var bad in new[] {
+            Archive(("../SKILL.md", Encoding.UTF8.GetBytes(Markdown))),
+            Archive(("sample/SKILL.md", Encoding.UTF8.GetBytes(Markdown)), ("sample/skill.md", [1])),
+            Archive(("sample/SKILL.md", Encoding.UTF8.GetBytes(Markdown)), ("sample/other/SKILL.md", Encoding.UTF8.GetBytes(Markdown))),
+            Archive(("sample/skill.md", Encoding.UTF8.GetBytes(Markdown))) })
+            await RejectAsync(() => DesktopSkillPackages.ImportAsync(bad, default), check, "local skills: unsafe/ambiguous archives rejected");
+        var collection = Archive(("collection/sample/SKILL.md", Encoding.UTF8.GetBytes(Markdown)),
+            ("collection/second/SKILL.md", Encoding.UTF8.GetBytes(Markdown.Replace("name: sample", "name: second"))),
+            ("collection/broken/SKILL.md", Encoding.UTF8.GetBytes("invalid")));
+        var parsedCollection = await DesktopSkillPackages.ImportAsync(collection, default);
+        check(parsedCollection.Skills.Count == 2 && parsedCollection.Diagnostics.Count == 1, "local skills: collection import retains valid skills and reports invalid manifest");
+
+        var store = new DesktopLocalSkillStore(Path.Combine(root, "local-skills"));
+        var first = await store.SaveAsync("account-a", draft, null, default);
+        check(first.Id.StartsWith("local:") && first.Version == "1" && !CatalogRoutes.SupportsSkill(first.Id), "local skills: stable local IDs cannot route to remote API");
+        check((await store.ListAsync("account-a", default)).Count == 1 && (await store.ListAsync("account-b", default)).Count == 0,
+            "local skills: account/API isolation");
+        await RejectAsync(() => store.ReadAsync("account-b", first, default), check, "local skills: cross-account archive access rejected");
+        await RejectAsync(() => store.SaveAsync("account-a", draft, null, default), check, "local skills: duplicate create does not overwrite");
+        var edited = draft.Clone(); edited.Description = "Edited"; edited.Files.RemoveAt(0);
+        var second = await store.SaveAsync("account-a", edited, first.Id, default);
+        check(second.Id == first.Id && second.Version == "2" && (await store.ListAsync("account-a", default)).Single().Version == "2",
+            "local skills: edit appends version and advances stable head");
+        check((await store.ReadAsync("account-a", first, default)).Description == draft.Description
+            && (await store.ReadAsync("account-a", second, default)).Files.Count == 1, "local skills: earlier versions remain immutable and file removals persist");
+        var renamed = edited.Clone(); renamed.Name = "renamed";
+        await RejectAsync(() => store.SaveAsync("account-a", renamed, first.Id, default), check, "local skills: persisted names are immutable");
+        using (var canceled = new CancellationTokenSource())
+        {
+            canceled.Cancel(); await RejectCanceledAsync(() => store.SaveAsync("account-a", edited, first.Id, canceled.Token), check, "local skills: canceled save cannot publish");
+        }
+        check((await store.ListAsync("account-a", default)).Single().Version == "2", "local skills: failed/canceled writes preserve prior head");
+        var folder = Path.Combine(root, "local-skills", McpValidation.Hash("account-a"), McpValidation.Hash(first.Id));
+        var blockedVersion = Path.Combine(folder, "3.zip"); Directory.CreateDirectory(blockedVersion);
+        await RejectAsync(() => store.SaveAsync("account-a", edited, first.Id, default), check, "local skills: publication disk failure is surfaced");
+        Directory.Delete(blockedVersion);
+        check((await store.ReadAsync("account-a", second, default)).Description == "Edited", "local skills: publication failure leaves previous version intact");
+        var contents = DesktopSkillPackages.Content(second, await store.ReadAsync("account-a", second, default));
+        var reads = 0; var turn = new DesktopSkillTurn([(second, ct => { reads++; return Task.FromResult(contents); })]);
+        var runtime = McpTurnSnapshot.Empty; turn.Register(runtime);
+        check(reads == 0 && runtime.Context.Single().GetRawText().Contains(first.Id) && !runtime.Context.Single().GetRawText().Contains("# Instructions"),
+            "local skills: catalog disclosure is lazy and excludes body");
+        var activated = await turn.CallAsync("activate_skill", JsonSerializer.SerializeToElement(new { skill_id = second.Id }), default);
+        check(reads == 1 && !activated.GetProperty("isError").GetBoolean(), "local skills: enabled local skill activates through existing tool");
+        await store.DeleteAsync("account-a", first.Id, default);
+        check((await store.ListAsync("account-a", default)).Count == 0, "local skills: delete removes all versions");
+        await RejectAsync(() => store.ReadAsync("account-a", second, default), check, "local skills: deleted version is unavailable");
+        foreach (var lang in new[] { "en", "nl" })
+        {
+            var document = System.Xml.Linq.XDocument.Load(typeof(SkillRegressionTests).Assembly.GetManifestResourceStream("Desktop.Resources." + lang)!);
+            var values = document.Root!.Elements("data").ToDictionary(e => e.Attribute("name")!.Value, e => e.Element("value")!.Value);
+            check(new[] { "SkillCreate", "SkillEdit", "SkillImport", "SkillFilesHint", "SkillNameInvalid", "SkillDeleteConfirm", "SkillLocalInlineHint" }.All(k => values[k].Length > 0),
+                "local skills: editor actions and validation localized " + lang);
         }
     }
     private static async Task CheckMcpAsync(Action<bool, string> check, string root)
@@ -226,7 +330,7 @@ internal static class SkillRegressionTests
     private static JsonElement Json(string text) => JsonSerializer.Deserialize<JsonElement>(text);
     private static async Task RejectAsync(Func<Task> action, Action<bool, string> check, string name)
     {
-        try { await action(); } catch (Exception e) when (e is InvalidDataException or IOException or YamlDotNet.Core.YamlException) { check(true, name); return; }
+        try { await action(); } catch (Exception e) when (e is InvalidDataException or IOException or UnauthorizedAccessException or YamlDotNet.Core.YamlException) { check(true, name); return; }
         throw new Exception("Expected rejection: " + name);
     }
     private static async Task RejectCanceledAsync(Func<Task> action, Action<bool, string> check, string name)

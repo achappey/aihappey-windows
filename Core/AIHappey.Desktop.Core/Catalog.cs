@@ -18,7 +18,7 @@ public sealed record CatalogItem(CatalogKind Kind, string Id, string Name, strin
     public string? Owner { get; init; }
     public JsonElement? Definition { get; init; }
     public IReadOnlyList<CatalogIcon> Icons { get; init; } = [];
-    public bool CanDownload => Kind == CatalogKind.Agent ? Definition.HasValue : CatalogRoutes.SupportsSkill(Id);
+    public bool CanDownload => Kind == CatalogKind.Agent ? Definition.HasValue : Origin == CatalogOrigin.Local || CatalogRoutes.SupportsSkill(Id);
 }
 
 public sealed record CatalogIcon(string Source, string? Theme);

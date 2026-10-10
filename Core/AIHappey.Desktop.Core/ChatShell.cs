@@ -68,6 +68,7 @@ public sealed partial class ChatShell : UserControl
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
         agentStore = new(Path.Combine(session.DataDirectory, "agents"));
         skillStore = new(Path.Combine(session.DataDirectory, "skills"), (item, version, ct) => catalogClient.DownloadSkillAsync(item.Id, version, ct));
+        localSkillStore = new(Path.Combine(session.DataDirectory, "local-skills"));
         PrepareContext();
         session.ElicitationHandler = ShowElicitationAsync;
         PrepareMcp();
@@ -81,6 +82,7 @@ public sealed partial class ChatShell : UserControl
         PrepareTranscript();
         Content = BuildLayout();
         PrepareAgentActions();
+        PrepareSkillActions();
         PrepareFileDrop();
         ControlAppearance.Apply(this, (_, _) => { }, palette =>
         {
@@ -284,6 +286,7 @@ public sealed partial class ChatShell : UserControl
         account.Flyout = profileMenu;
         Grid.SetColumn(modelFilters, 4); top.Children.Add(modelFilters);
         Grid.SetColumn(addAgent, 4); top.Children.Add(addAgent);
+        Grid.SetColumn(addSkill, 4); top.Children.Add(addSkill);
         Grid.SetColumn(account, 5); top.Children.Add(account);
         workspace.Children.Add(top);
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
@@ -819,6 +822,8 @@ public sealed partial class ChatShell : UserControl
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         agentEditor?.Hide();
+        skillEditor?.CancelAndHide();
+        skillDeleteDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
         imageLinkDialog?.Hide(); imagePreviewDialog?.Hide();
         transcriptionDetailsDialog?.Hide(); transcriptionDeleteDialog?.Hide();

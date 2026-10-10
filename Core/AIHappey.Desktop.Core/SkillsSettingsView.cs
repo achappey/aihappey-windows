@@ -59,7 +59,8 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
         var favorite = items.Where(s => selection.Favorites.Contains(s.Id)).ToArray();
         Section(DesktopResources.Format("FavoritesCount", favorite.Length), favorite);
         Section(DesktopResources.Get("McpTitle"), items.Where(s => s.Origin == "mcp" && !selection.Favorites.Contains(s.Id)).ToArray());
-        Section(selection.RemoteTitle, items.Where(s => s.Origin != "mcp" && !selection.Favorites.Contains(s.Id)).ToArray());
+        Section(DesktopResources.Get("Local"), items.Where(s => s.Origin == "local" && !selection.Favorites.Contains(s.Id)).ToArray());
+        Section(selection.RemoteTitle, items.Where(s => s.Origin == "remote" && !selection.Favorites.Contains(s.Id)).ToArray());
         var missing = draft.EnabledSkillIds.Where(id => !selection.Items.Any(s => s.Id == id))
             .Where(id => id.Contains(query, StringComparison.OrdinalIgnoreCase)).ToArray();
         if (missing.Length > 0)

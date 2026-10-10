@@ -24,6 +24,8 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
     private readonly Dictionary<string, FrameworkElement> pages = [];
     private readonly CancellationTokenSource lifetime = new();
     private readonly string partition;
+    private readonly IReadOnlyList<DesktopSkill> localSkills;
+    private readonly Func<DesktopSkill, CancellationToken, Task<byte[]>>? localSkillArchive;
     private OpenAIChatSettingsForm? openAI;
     private ChatPreferences? providerPreferences;
     private JsonObject? providerBaseline;
@@ -34,9 +36,11 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
     public DesktopAgent Draft => draft.Clone();
 
     public AgentEditDialog(DesktopAgent agent, bool isEditing, DesktopSession session, DesktopCatalogClient catalog,
-        HttpClient registryHttp, IReadOnlyList<ChatTarget> models, McpTurnSnapshot? connected = null)
+        HttpClient registryHttp, IReadOnlyList<ChatTarget> models, McpTurnSnapshot? connected = null,
+        IReadOnlyList<DesktopSkill>? localSkills = null, Func<DesktopSkill, CancellationToken, Task<byte[]>>? localSkillArchive = null)
     {
         draft = agent.Clone(); this.session = session; this.catalog = catalog; this.registryHttp = registryHttp;
+        this.localSkills = localSkills ?? []; this.localSkillArchive = localSkillArchive;
         partition = session.AgentPartition;
         Name = "AgentEditDialog";
         Resources["ContentDialogMaxWidth"] = 920d; Resources["ContentDialogMinWidth"] = 0d;

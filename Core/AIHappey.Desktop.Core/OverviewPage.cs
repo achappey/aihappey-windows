@@ -126,15 +126,10 @@ internal sealed class OverviewPage : UserControl
         var searched = CatalogProjection.Search(items, SearchBox.Text);
         // Keep unchanged items alive so result/count refreshes do not reset focus or the indicator.
         updatingFilters = true;
-        if (Kind != CatalogKind.Agent && !items.Any(item => item.Origin == CatalogOrigin.Local) && filterItems.Remove("local", out var local))
-        {
-            if (activeFilter == "local") { activeFilter = "all"; visible = 50; }
-            filters.MenuItems.Remove(local);
-        }
         AddFilter("all", DesktopResources.Format("AllCount", searched.Count), "\uE8FD");
         AddFilter("favorites", DesktopResources.Format("FavoritesCount", searched.Count(item => favorites.Contains(item.Key))), "\uE735");
         AddFilter("backend", $"{source} ({searched.Count(item => item.Origin == CatalogOrigin.Backend)})");
-        if (Kind == CatalogKind.Agent || items.Any(item => item.Origin == CatalogOrigin.Local)) AddFilter("local", DesktopResources.Format("LocalCount", searched.Count(item => item.Origin == CatalogOrigin.Local)));
+        AddFilter("local", DesktopResources.Format("LocalCount", searched.Count(item => item.Origin == CatalogOrigin.Local)));
         filters.SelectedItem = filterItems[activeFilter];
         filters.IsEnabled = true;
         updatingFilters = false;
@@ -190,9 +185,9 @@ internal sealed class OverviewPage : UserControl
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         if (item.Kind == CatalogKind.Skill)
         { var view = ActionButton(item, "Details", "\uE890"); view.Click += (_, _) => DetailsRequested?.Invoke(item, view); actions.Children.Add(view); }
-        if (item.Kind == CatalogKind.Agent && item.Origin == CatalogOrigin.Local)
+        if (item.Origin == CatalogOrigin.Local)
         {
-            var edit = ActionButton(item, "AgentEdit", "\uE70F"); edit.Click += (_, _) => EditRequested?.Invoke(item, edit); actions.Children.Add(edit);
+            var edit = ActionButton(item, item.Kind == CatalogKind.Agent ? "AgentEdit" : "SkillEdit", "\uE70F"); edit.Click += (_, _) => EditRequested?.Invoke(item, edit); actions.Children.Add(edit);
             var delete = ActionButton(item, "Delete", "\uE74D"); delete.Click += (_, _) => DeleteRequested?.Invoke(item); actions.Children.Add(delete);
         }
         if (item.CanDownload)

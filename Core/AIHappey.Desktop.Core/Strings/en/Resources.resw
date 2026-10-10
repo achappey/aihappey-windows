@@ -1,5 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="SkillCreate" xml:space="preserve"><value>Create new skill</value></data>
+  <data name="SkillEdit" xml:space="preserve"><value>Edit skill</value></data>
+  <data name="SkillImport" xml:space="preserve"><value>Import skill package</value></data>
+  <data name="SkillName" xml:space="preserve"><value>Name</value></data>
+  <data name="SkillDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="SkillInstructions" xml:space="preserve"><value>Instructions</value></data>
+  <data name="SkillFiles" xml:space="preserve"><value>Files</value></data>
+  <data name="SkillNameHint" xml:space="preserve"><value>A short unique name, using lowercase letters, numbers, and single hyphens.</value></data>
+  <data name="SkillDescriptionHint" xml:space="preserve"><value>Describe what this skill does and when to use it (up to 1024 characters).</value></data>
+  <data name="SkillInstructionsHint" xml:space="preserve"><value>Write the Markdown instructions here. Name and description are saved as YAML frontmatter automatically; optional imported metadata is preserved.</value></data>
+  <data name="SkillFilesHint" xml:space="preserve"><value>Drop files here or choose files to add or replace. Use relative paths to organize references, scripts, or assets. Bundled scripts are stored as data and are never executed automatically.</value></data>
+  <data name="SkillChooseFiles" xml:space="preserve"><value>Choose files</value></data>
+  <data name="SkillRelativePath" xml:space="preserve"><value>Relative path</value></data>
+  <data name="SkillApplyPath" xml:space="preserve"><value>Apply path</value></data>
+  <data name="SkillFieldRequired" xml:space="preserve"><value>The skill field '{0}' is required.</value></data>
+  <data name="SkillFieldInvalid" xml:space="preserve"><value>The skill field '{0}' has an invalid type or length.</value></data>
+  <data name="SkillNameInvalid" xml:space="preserve"><value>Use 1–64 lowercase letters, numbers, or hyphens. A name cannot start or end with a hyphen or contain consecutive hyphens.</value></data>
+  <data name="SkillNameLocked" xml:space="preserve"><value>The name of an existing skill cannot be changed.</value></data>
+  <data name="SkillAlreadyExists" xml:space="preserve"><value>A local skill with this name already exists.</value></data>
+  <data name="SkillManifestReserved" xml:space="preserve"><value>SKILL.md is reserved for the instructions editor and cannot be added as an extra file.</value></data>
+  <data name="SkillDuplicatePath" xml:space="preserve"><value>The package contains duplicate or conflicting file paths.</value></data>
+  <data name="SkillPackageTooLarge" xml:space="preserve"><value>A skill package may contain at most 512 files and 16 MiB of uncompressed data.</value></data>
+  <data name="SkillArchiveLink" xml:space="preserve"><value>Skill archives cannot contain symbolic links.</value></data>
+  <data name="SkillArchiveEmpty" xml:space="preserve"><value>No SKILL.md files were found in this ZIP archive.</value></data>
+  <data name="SkillArchiveOverlapping" xml:space="preserve"><value>A collection cannot contain nested or overlapping skill directories.</value></data>
+  <data name="SkillDirectoryMismatch" xml:space="preserve"><value>The skill name must match its parent directory name.</value></data>
+  <data name="SkillResourceMissing" xml:space="preserve"><value>The bundled skill file was not found.</value></data>
+  <data name="SkillStoredInvalid" xml:space="preserve"><value>The stored skill is invalid or incomplete.</value></data>
+  <data name="SkillSavedVersion" xml:space="preserve"><value>Saved skill version {0}.</value></data>
+  <data name="SkillImportedCount" xml:space="preserve"><value>Imported {0} skill(s).</value></data>
+  <data name="SkillDeleteConfirm" xml:space="preserve"><value>Delete '{0}' and all its stored versions? Inline copies already saved in agents will not be changed.</value></data>
+  <data name="SkillBackendUnavailable" xml:space="preserve"><value>The remote skill catalog is unavailable. Local skills remain available.</value></data>
+  <data name="SkillLocalInlineHint" xml:space="preserve"><value>Local skills are included as portable inline copies. Later skill edits do not change the copy saved in this agent.</value></data>
   <data name="ToolApproval" xml:space="preserve"><value>Tool approval</value></data>
   <data name="ToolDeny" xml:space="preserve"><value>Deny tool result</value></data>
   <data name="Allow" xml:space="preserve"><value>Allow</value></data>
