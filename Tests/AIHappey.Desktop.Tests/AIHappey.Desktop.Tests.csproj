@@ -38,6 +38,9 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalArtificialIntelligenceTools.cs" Link="Core/LocalArtificialIntelligenceTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFilePaths.cs" Link="Core/LocalFilePaths.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFileTools.cs" Link="Core/LocalFileTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/SharedFiles.cs" Link="Core/SharedFiles.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/SharedFileAccess.cs" Link="Core/SharedFileAccess.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalSharedFileTools.cs" Link="Core/LocalSharedFileTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalWindowsSearchTools.cs" Link="Core/LocalWindowsSearchTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/NativeWindowsSearch.cs" Link="Core/NativeWindowsSearch.cs" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/LocalToolDefinitions.json" LogicalName="Desktop.LocalToolDefinitions" />

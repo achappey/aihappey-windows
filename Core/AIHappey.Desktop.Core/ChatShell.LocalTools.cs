@@ -25,7 +25,12 @@ public sealed partial class ChatShell
         }
         if (preferences.PluginEnabled(DesktopLocalTools.Files))
         {
-            var tools = new LocalFileTools(documentExtractor, () => !closing && session.HistoryPartition == partition);
+            activeSharedFileTools?.Dispose();
+            var filesPartition = session.FilesPartition;
+            var tools = new LocalSharedFileTools(sharedFileStore, filesPartition, documentExtractor,
+                () => !closing && session.HistoryPartition == partition && session.FilesPartition == filesPartition,
+                async ct => { if (!closing && session.FilesPartition == filesPartition && activePage == DesktopPage.Files) await LoadFilesAsync(ct); });
+            activeSharedFileTools = tools;
             DesktopLocalTools.Register(snapshot, DesktopLocalTools.Files, tools.CallAsync);
         }
     }

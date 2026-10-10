@@ -70,6 +70,7 @@ public sealed partial class ChatShell : UserControl
         agentStore = new(Path.Combine(session.DataDirectory, "agents"));
         skillStore = new(Path.Combine(session.DataDirectory, "skills"), (item, version, ct) => catalogClient.DownloadSkillAsync(item.Id, version, ct));
         localSkillStore = new(Path.Combine(session.DataDirectory, "local-skills"));
+        sharedFileStore = new(Path.Combine(session.DataDirectory, "shared-files"));
         PrepareContext();
         session.ElicitationHandler = ShowElicitationAsync;
         PrepareMcp();
@@ -82,9 +83,11 @@ public sealed partial class ChatShell : UserControl
         PrepareProvidersOverview();
         PrepareSystemContext();
         PrepareTranscript();
+        PrepareSearchChats();
         Content = BuildLayout();
         PrepareAgentActions();
         PrepareSkillActions();
+        PrepareFiles();
         PrepareFileDrop();
         ControlAppearance.Apply(this, (_, _) => { }, palette =>
         {
@@ -93,7 +96,6 @@ public sealed partial class ChatShell : UserControl
         });
         foreach (var control in new Control[] { input, chats, account, send, stop, settingsButton, manageAccount, refresh }) ControlAppearance.Native(control);
         ToolbarControls.Subtle(newChat);
-        PrepareSearchChats();
         ToolbarControls.Label(newChat, DesktopResources.Get("NewChat"));
         ControlAppearance.BorderlessItems(chats, compact: true);
         chats.ItemTemplate = ConversationRow.Template();
@@ -236,8 +238,19 @@ public sealed partial class ChatShell : UserControl
             sidebarHeader.ColumnDefinitions[0].Width = open ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
             sidebarHeader.ColumnSpacing = open ? 8 : 0;
             appTitle.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-            sidebarBody.Visibility = chats.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-            pageNavigation.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+            chats.Visibility = expandedPageNavigation.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var button in new ButtonBase[] { newChat, searchChats, pageButtons[DesktopPage.Images], pageButtons[DesktopPage.Videos], pageButtons[DesktopPage.Transcriptions] })
+            {
+                button.Width = open ? double.NaN : 32;
+                button.Height = open ? double.NaN : 32;
+                button.Padding = open ? new Thickness(12, 10, 12, 10) : new Thickness(0);
+                button.HorizontalContentAlignment = open ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+                if (button.Content is StackPanel content)
+                {
+                    content.Spacing = open ? 12 : 0;
+                    foreach (var label in content.Children.OfType<TextBlock>()) label.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+                }
+            }
         }
         split.RegisterPropertyChangedCallback(SplitView.IsPaneOpenProperty, (_, _) => UpdateSidebar());
         split.Pane = sidebar;
@@ -286,6 +299,7 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(providerFilters, 4); top.Children.Add(providerFilters);
         Grid.SetColumn(addAgent, 4); top.Children.Add(addAgent);
         Grid.SetColumn(addSkill, 4); top.Children.Add(addSkill);
+        Grid.SetColumn(addFiles, 4); top.Children.Add(addFiles);
         Grid.SetColumn(account, 5); top.Children.Add(account);
         workspace.Children.Add(top);
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
@@ -445,6 +459,7 @@ public sealed partial class ChatShell : UserControl
             finally
             {
                 activeMcpTurn = null;
+                activeSharedFileTools?.Dispose(); activeSharedFileTools = null;
                 if (output.Status == "streaming") output.Status = "interrupted";
                 try { await SaveTurnHistoryAsync(partition, current); await LoadHistoryAsync(CancellationToken.None); }
                 catch { Show(DesktopResources.Get("HistorySaveFailed"), InfoBarSeverity.Error); }
@@ -834,6 +849,7 @@ public sealed partial class ChatShell : UserControl
         agentEditor?.Hide();
         skillEditor?.CancelAndHide();
         skillDeleteDialog?.Hide();
+        removeSharedFileDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
         imageLinkDialog?.Hide(); imagePreviewDialog?.Hide();
         transcriptionDetailsDialog?.Hide(); transcriptionDeleteDialog?.Hide();
@@ -846,6 +862,7 @@ public sealed partial class ChatShell : UserControl
         mcpDialog?.Shutdown(); Mcp.Changed -= McpChanged;
         if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.CancelSkillLoading(); chatSettingsDialog.Hide(); }
         while (busy) await Task.Delay(20);
+        activeSharedFileTools?.Dispose(); activeSharedFileTools = null;
         await approvalSettingsWrite.WaitAsync(); approvalSettingsWrite.Release();
         // A save picker may remain open until dismissed; no download continues after shutdown.
         await session.DisposeAsync(); http.Dispose(); contextHttp.Dispose(); mcpCatalogHttp.Dispose();

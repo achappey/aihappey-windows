@@ -1062,4 +1062,42 @@
   <data name="ChatForm_openai_transcriptionKeywords" xml:space="preserve"><value>Keywords</value></data>
   <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>One word or phrase per line to guide transcription</value></data>
   <data name="ChatForm_openai_transcriptionResponseFormat" xml:space="preserve"><value>Response format</value></data>
+  <data name="Files" xml:space="preserve"><value>Files</value></data>
+  <data name="FilesDescription" xml:space="preserve"><value>Share files and folders with AI. Only references are saved—your files stay where they are. Sharing a folder lets AI read its contents and subfolders and create new files there when the Files plugin is enabled. Existing files are never overwritten. File tools execute before results are reviewed.</value></data>
+  <data name="FilesSearch" xml:space="preserve"><value>Search shared files and folders</value></data>
+  <data name="FilesCount" xml:space="preserve"><value>Files ({0})</value></data>
+  <data name="FoldersCount" xml:space="preserve"><value>Folders ({0})</value></data>
+  <data name="FilesFile" xml:space="preserve"><value>File</value></data>
+  <data name="FilesFolder" xml:space="preserve"><value>Folder</value></data>
+  <data name="FilesEmpty" xml:space="preserve"><value>No shared items yet. Use + or drop files and folders here to share references with AI.</value></data>
+  <data name="FilesAddFiles" xml:space="preserve"><value>Add files</value></data>
+  <data name="FilesAddFolder" xml:space="preserve"><value>Add folder</value></data>
+  <data name="FilesDropCaption" xml:space="preserve"><value>Share file and folder references</value></data>
+  <data name="FilesRefresh" xml:space="preserve"><value>Refresh shared files and folders</value></data>
+  <data name="FilesOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="FilesRemove" xml:space="preserve"><value>Remove sharing</value></data>
+  <data name="FilesRemoveConfirm" xml:space="preserve"><value>Remove the reference to “{0}”? The original file or folder will not be deleted. Items covered by another shared folder remain shared. The separate absolute-path file-read tool is not restricted by this list.</value></data>
+  <data name="FilesStatus_available" xml:space="preserve"><value>Available</value></data>
+  <data name="FilesStatus_missing" xml:space="preserve"><value>Missing or moved</value></data>
+  <data name="FilesStatus_denied" xml:space="preserve"><value>Access denied</value></data>
+  <data name="FilesStatus_changed" xml:space="preserve"><value>Item type has changed</value></data>
+  <data name="FilesStatus_unavailable" xml:space="preserve"><value>Unavailable or unsupported path</value></data>
+  <data name="FilesSize" xml:space="preserve"><value>{0:N0} bytes</value></data>
+  <data name="FilesInvalidStore" xml:space="preserve"><value>The shared-file reference store is invalid or unsupported.</value></data>
+  <data name="FilesKindChanged" xml:space="preserve"><value>The selected item is no longer the expected file or folder.</value></data>
+  <data name="FilesReferenceLimit" xml:space="preserve"><value>The shared-file reference limit has been reached.</value></data>
+  <data name="FilesFolderRequired" xml:space="preserve"><value>This operation requires an explicitly shared folder.</value></data>
+  <data name="FilesRelativePathInvalid" xml:space="preserve"><value>Use a valid path relative to the shared folder, without absolute paths or traversal segments.</value></data>
+  <data name="FilesAlreadyExists" xml:space="preserve"><value>The destination already exists. Existing files and folders are never overwritten.</value></data>
+  <data name="FilesNotShared" xml:space="preserve"><value>The shared reference is unavailable or has been removed. List shared items again.</value></data>
+  <data name="FilesCursorExpired" xml:space="preserve"><value>The listing cursor is invalid or expired. Restart the listing without a cursor.</value></data>
+  <data name="FilesCursorLimit" xml:space="preserve"><value>Too many unfinished directory listings. Finish their continuation pages before starting more.</value></data>
+  <data name="FilesCreateLimit" xml:space="preserve"><value>New file content must not exceed 1 MiB.</value></data>
+  <data name="FilesEncodingInvalid" xml:space="preserve"><value>Use valid UTF-8 text or base64 data with the matching encoding.</value></data>
+  <data name="FilesIncompleteOutput" xml:space="preserve"><value>Creation did not finish and the new output could not be removed. Check the destination before retrying.</value></data>
+  <data name="FilesCreatedReferenceWarning" xml:space="preserve"><value>The file was created, but its reference could not be registered or refreshed. Check the Files page and add the existing file if needed; do not retry creation at this path.</value></data>
+  <data name="FilesLoadFailed" xml:space="preserve"><value>Shared files and folders could not be loaded.</value></data>
+  <data name="FilesShareFailed" xml:space="preserve"><value>The reference could not be saved. Only accessible local files and folders without links are supported.</value></data>
+  <data name="FilesSharedCount" xml:space="preserve"><value>{0} selected items are shared. Existing references were kept without duplication.</value></data>
+  <data name="FilesOpenFailed" xml:space="preserve"><value>Windows could not open this item.</value></data>
 </root>

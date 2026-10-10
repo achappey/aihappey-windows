@@ -118,6 +118,7 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
             : Task.FromResult(new ModelContextProtocol.Protocol.ElicitResult { Action = "decline" });
     }
     public string McpPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
+    public string FilesPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
     public DesktopMcpManager InitializeMcp()
     {
         if (Mcp is not null) return Mcp;

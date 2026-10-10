@@ -36,6 +36,12 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--sidebar-only"))
+            {
+                foreach (var local in new[] { true, false })
+                    foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckSidebarAsync(local, theme);
+                results.Add("All sidebar UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--chat-settings-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
@@ -105,7 +111,8 @@ public partial class App : Application
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
                 {
                     await CheckTranscriptAsync(local, theme);
-                    if (!Environment.GetCommandLineArgs().Contains("--transcript-only")) await CheckShellAsync(local, theme);
+                    if (!Environment.GetCommandLineArgs().Contains("--transcript-only"))
+                    { await CheckShellAsync(local, theme); await CheckSidebarAsync(local, theme); }
                 }
             if (!Environment.GetCommandLineArgs().Contains("--transcript-only"))
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
@@ -269,11 +276,12 @@ public partial class App : Application
             var sidebarBody = (StackPanel)((StackPanel)pane.Children[0]).Children[1];
             Check(sidebarBody.Children.Count == 2 && sidebarBody.Children[0] == newChat && sidebarBody.Children[1] == Field<Button>(shell, "searchChats"), context + ": top section has New chat and modal Search chats actions only");
             var navigation = Field<StackPanel>(shell, "pageNavigation");
-            Check(navigation.Children.OfType<TextBlock>().Select(text => text.Text).SequenceEqual(new[] { "Agents", "Chats" })
-                && navigation.Children.OfType<Border>().Select(border => border.Name).SequenceEqual(new[] { "AgentsSeparator", "ArtificialIntelligenceSeparator", "ChatsSeparator" })
-                && navigation.Children.OfType<ToggleButton>().Select(button => button.Name).SequenceEqual(new[] { "NavigateImages", "NavigateVideos", "NavigateTranscriptions", "NavigateAgents", "NavigateMcp", "NavigateSkills" })
+            var expandedNavigation = Field<StackPanel>(shell, "expandedPageNavigation");
+            Check(expandedNavigation.Children.OfType<TextBlock>().Select(text => text.Text).SequenceEqual(new[] { "Agents", "Chats" })
+                && expandedNavigation.Children.OfType<Border>().Select(border => border.Name).SequenceEqual(new[] { "AgentsSeparator", "ArtificialIntelligenceSeparator", "ChatsSeparator" })
+                && navigation.Children.OfType<ToggleButton>().Select(button => button.Name).SequenceEqual(new[] { "NavigateImages", "NavigateVideos", "NavigateTranscriptions" })
                 && !Descendants(pane).OfType<TextBox>().Any(), context + ": browser-style categories and no extra Chat button or inline history search");
-            Check(navigation.Children.OfType<ToggleButton>().Skip(3).Select(button => AutomationProperties.GetName(button))
+            Check(expandedNavigation.Children.OfType<ToggleButton>().Where(button => button.Name is "NavigateAgents" or "NavigateMcp" or "NavigateSkills").Select(button => AutomationProperties.GetName(button))
                 .SequenceEqual(new[] { "Agents", DesktopResources.Get("McpTitle"), "Skills" }), context + ": Agents → More context → Skills navigation order");
             foreach (var state in new[] { "Normal", "PointerOver", "Pressed" })
             {

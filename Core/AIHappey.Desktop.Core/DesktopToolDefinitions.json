@@ -19,6 +19,52 @@
   ],
   "local-files": [
     {
+      "name": "local_files_list",
+      "title": "List shared files and folders",
+      "description": "List references explicitly shared through the Windows Files page, including AI-created files. References contain stable IDs, paths, kind, and availability; the app does not copy file contents. Use IDs with the shared directory/read/create tools. Names may not be unique. Sharing a folder includes its descendants and permits creation of new files there. This list does not restrict the separate local_files_read absolute-path reader. Use nextCursor to continue; roots may change between calls.",
+      "inputSchema": { "type": "object", "properties": {
+        "cursor": { "type": "string", "description": "nextCursor returned by the previous shared-item listing." },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 }
+      }, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false }
+    },
+    {
+      "name": "local_files_list_directory",
+      "title": "Browse a shared folder",
+      "description": "List direct children of a shared folder or any nested subfolder. Pass the folder reference ID and a root-relative relativePath (omit for the root). Returned relativePath values are always relative to that shared root; use them to browse deeper or read files. No recursion or whole-disk scanning is performed. Returns files, folders, and explicit unsupported/denied/unavailable entries; links/junctions are never traversed. Pages are bounded; continue with nextCursor, the same ID and relativePath. Cursors are opaque, single-use, and valid only for this chat turn; restart the listing if expired. Directory contents can change between pages.",
+      "inputSchema": { "type": "object", "properties": {
+        "id": { "type": "string", "description": "Shared folder ID returned by local_files_list." },
+        "relativePath": { "type": "string", "description": "Subfolder path relative to the shared root; omitted or empty for the root. No absolute paths or dot/dot-dot segments." },
+        "cursor": { "type": "string", "description": "Single-use nextCursor returned by the previous directory page." },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 }
+      }, "required": ["id"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_files_read_shared",
+      "title": "Read a shared file",
+      "description": "Read extracted text from an explicitly shared file ID, or from a file within a shared folder ID using a root-relative relativePath. Uses the same PDF/plain-text extractor as local_files_read; does not support OCR, Office formats, network paths or links. Paging is 1-based extracted-text lines, not PDF pages. Use nextLine as startLine to continue. Files can change between reads. A removed reference cannot be used, although another overlapping share may still allow access.",
+      "inputSchema": { "type": "object", "properties": {
+        "id": { "type": "string", "description": "Shared file or folder reference ID." },
+        "relativePath": { "type": "string", "description": "Required for a file inside a shared folder; omitted for a directly shared file." },
+        "startLine": { "type": "integer", "minimum": 1, "default": 1 },
+        "maxLines": { "type": "integer", "minimum": 1, "maximum": 2000, "default": 200 }
+      }, "required": ["id"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false }
+    },
+    {
+      "name": "local_files_create",
+      "title": "Create a file in a shared folder",
+      "description": "Create a NEW file inside an explicitly shared folder or existing nested subfolder. Requires the shared folder ID and a root-relative destination relativePath. Existing files/directories are never overwritten, renamed or deleted; missing parent folders are not created. No absolute paths, traversal, network paths or links. data is UTF-8 text by default; use encoding=base64 for explicitly encoded binary bytes. Maximum decoded file size is 1 MiB. Merely giving text a PDF/Office extension does not generate that format. The file is written to the real shared folder and registered as a reference on the Files page, not copied into app storage or executed. Sharing a folder authorizes creation; the existing execute-then-review flow is retained. A successful creation can include a warning if reference registration/refresh fails; do not retry creation of that same destination.",
+      "inputSchema": { "type": "object", "properties": {
+        "id": { "type": "string", "description": "Shared folder ID." },
+        "relativePath": { "type": "string", "minLength": 1, "description": "New filename including any existing subfolders, relative to the shared root." },
+        "data": { "type": "string", "description": "UTF-8 text or base64-encoded bytes, matching encoding." },
+        "encoding": { "type": "string", "enum": ["utf8", "base64"], "default": "utf8" }
+      }, "required": ["id", "relativePath", "data"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
       "name": "local_files_read",
       "title": "Read a local file",
       "description": "Read text from an absolute local file path, including paths returned by local_windows_search. Uses the shared document extractor for PDFs and recognized text/Markdown/JSON/YAML/XML/source files. Does not support OCR, Office documents, downloads, network paths, device paths, or symbolic links. Paging uses 1-based line numbers in extracted text (not PDF page numbers). Results include totalLines, startLine, endLine, truncated, and nextLine; request nextLine as startLine to continue. A text-size ceiling can shorten a page at a complete line boundary. Files may change between calls.",

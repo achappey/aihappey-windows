@@ -9,7 +9,7 @@ using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
 
-internal enum DesktopPage { Chat, Images, Videos, Transcriptions, Agents, Skills, Mcp, Models, Providers }
+internal enum DesktopPage { Chat, Images, Videos, Transcriptions, Agents, Skills, Mcp, Models, Providers, Files }
 
 public sealed partial class ChatShell
 {
@@ -20,6 +20,7 @@ public sealed partial class ChatShell
     private readonly Grid overviewHost = new() { Visibility = Visibility.Collapsed };
     private readonly StackPanel chatModes = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
     private readonly StackPanel pageNavigation = new() { Spacing = 4 };
+    private readonly StackPanel expandedPageNavigation = new() { Spacing = 4 };
     private readonly Dictionary<DesktopPage, ToggleButton> pageButtons = [];
     private readonly Dictionary<CatalogKind, IReadOnlyList<CatalogItem>> catalogs = [];
     private HashSet<string> favorites = new(StringComparer.Ordinal);
@@ -36,6 +37,7 @@ public sealed partial class ChatShell
             (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)new FontIcon { Glyph = "\uEB9F" }),
             (DesktopPage.Videos, DesktopResources.Get("Videos"), (IconElement)new FontIcon { Glyph = "\uE714" }),
             (DesktopPage.Transcriptions, DesktopResources.Get("Transcriptions"), (IconElement)new FontIcon { Glyph = "\uE720" }),
+            (DesktopPage.Files, DesktopResources.Get("Files"), (IconElement)new FontIcon { Glyph = "\uE8B7" }),
             (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)ToolbarControls.BotIcon()),
             (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)new FontIcon { Glyph = "\uE774" }),
             (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)new FontIcon { Glyph = "\uE734" }),
@@ -44,10 +46,10 @@ public sealed partial class ChatShell
         })
         {
             if (page == DesktopPage.Agents)
-            { pageNavigation.Children.Add(SidebarSeparator("AgentsSeparator")); pageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Agents"))); }
+            { expandedPageNavigation.Children.Add(SidebarSeparator("AgentsSeparator")); expandedPageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Agents"))); }
             if (page == DesktopPage.Models)
             {
-                pageNavigation.Children.Add(SidebarSeparator("ArtificialIntelligenceSeparator"));
+                expandedPageNavigation.Children.Add(SidebarSeparator("ArtificialIntelligenceSeparator"));
                 var header = new Grid { ColumnSpacing = 12 };
                 header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
                 header.Children.Add(ToolbarControls.BrainIcon());
@@ -60,7 +62,7 @@ public sealed partial class ChatShell
                 ToolbarControls.Subtle(aiCategory); ToolbarControls.Label(aiCategory, DesktopResources.Get("ArtificialIntelligence"));
                 void UpdateCategory() { aiNavigation.Visibility = aiCategoryExpanded ? Visibility.Visible : Visibility.Collapsed; chevron.Glyph = aiCategoryExpanded ? "\uE70E" : "\uE70D"; }
                 aiCategory.Click += (_, _) => { aiCategoryExpanded = !aiCategoryExpanded; UpdateCategory(); };
-                pageNavigation.Children.Add(aiCategory); pageNavigation.Children.Add(aiNavigation);
+                expandedPageNavigation.Children.Add(aiCategory); expandedPageNavigation.Children.Add(aiNavigation);
             }
             var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
             content.Children.Add(icon); content.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center });
@@ -73,15 +75,18 @@ public sealed partial class ChatShell
             button.Click += async (_, _) => await NavigateAsync(page);
             pageButtons.Add(page, button);
             if (page is DesktopPage.Models or DesktopPage.Providers) { button.Margin = new Thickness(24, 0, 0, 0); aiNavigation.Children.Add(button); }
-            else pageNavigation.Children.Add(button);
+            else if (page is DesktopPage.Images or DesktopPage.Videos or DesktopPage.Transcriptions) pageNavigation.Children.Add(button);
+            else expandedPageNavigation.Children.Add(button);
         }
-        pageNavigation.Children.Add(SidebarSeparator("ChatsSeparator"));
-        pageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Chats")));
+        expandedPageNavigation.Children.Add(SidebarSeparator("ChatsSeparator"));
+        expandedPageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Chats")));
+        pageNavigation.Children.Add(expandedPageNavigation);
         overviewHost.Children.Add(imagesPage); overviewHost.Children.Add(agentsOverview); overviewHost.Children.Add(skillsOverview); overviewHost.Children.Add(mcpOverview);
         overviewHost.Children.Add(transcriptionsPage);
         overviewHost.Children.Add(videosPage);
         overviewHost.Children.Add(modelsOverview);
         overviewHost.Children.Add(providersOverview);
+        overviewHost.Children.Add(filesOverview);
         foreach (var page in new[] { agentsOverview, skillsOverview })
         {
             page.RetryRequested = async () => await RunAsync(ct => LoadOverviewAsync(page, ct));
@@ -119,6 +124,7 @@ public sealed partial class ChatShell
         providerFilters.Visibility = page == DesktopPage.Providers ? Visibility.Visible : Visibility.Collapsed;
         addAgent.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         addSkill.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
+        filesOverview.Visibility = addFiles.Visibility = page == DesktopPage.Files ? Visibility.Visible : Visibility.Collapsed;
         if (page is DesktopPage.Models or DesktopPage.Providers && aiCategory is not null)
         {
             aiCategoryExpanded = true; aiNavigation.Visibility = Visibility.Visible;
@@ -131,7 +137,7 @@ public sealed partial class ChatShell
         transcriptionsPage.Visibility = transcriptionTarget.Visibility = page == DesktopPage.Transcriptions ? Visibility.Visible : Visibility.Collapsed;
         UpdatePageButtons();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
-        { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", _ => "RefreshSkills" }));
+        { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Files => "FilesRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", _ => "RefreshSkills" }));
     }
 
     private void UpdatePageButtons()
@@ -149,6 +155,7 @@ public sealed partial class ChatShell
         foreach (var button in pageButtons.Values) button.IsEnabled = !value;
         addAgent.IsEnabled = !value;
         addSkill.IsEnabled = !value;
+        addFiles.IsEnabled = !value; filesOverview.SetActionsEnabled(!value);
         agentsOverview.SetActionsEnabled(!value); skillsOverview.SetActionsEnabled(!value);
         mcpOverview.SetActionsEnabled(!value);
         modelsOverview.SetActionsEnabled(!value);
@@ -170,6 +177,7 @@ public sealed partial class ChatShell
         InvalidateTranscriptions();
         InvalidateModelsOverview();
         InvalidateProvidersOverview();
+        InvalidateFiles();
         runtimeSkillCatalog = []; runtimeSkillPartition = null;
         localAgents = []; localAgentPartition = null; agentEditor?.Hide();
         localSkills = []; localSkillPartition = null; skillEditor?.CancelAndHide();

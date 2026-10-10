@@ -1057,4 +1057,42 @@
   <data name="ChatForm_openai_transcriptionKeywords" xml:space="preserve"><value>Trefwoorden</value></data>
   <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>Eén woord of uitdrukking per regel om de transcriptie te sturen</value></data>
   <data name="ChatForm_openai_transcriptionResponseFormat" xml:space="preserve"><value>Antwoordformaat</value></data>
+  <data name="Files" xml:space="preserve"><value>Bestanden</value></data>
+  <data name="FilesDescription" xml:space="preserve"><value>Deel bestanden en mappen met AI. Alleen verwijzingen worden opgeslagen—je bestanden blijven op hun plek. Met een gedeelde map kan AI de inhoud en submappen lezen en daar nieuwe bestanden maken wanneer de Bestanden-plug-in aanstaat. Bestaande bestanden worden nooit overschreven. Bestandstools worden uitgevoerd voordat de resultaten worden beoordeeld.</value></data>
+  <data name="FilesSearch" xml:space="preserve"><value>Zoek gedeelde bestanden en mappen</value></data>
+  <data name="FilesCount" xml:space="preserve"><value>Bestanden ({0})</value></data>
+  <data name="FoldersCount" xml:space="preserve"><value>Mappen ({0})</value></data>
+  <data name="FilesFile" xml:space="preserve"><value>Bestand</value></data>
+  <data name="FilesFolder" xml:space="preserve"><value>Map</value></data>
+  <data name="FilesEmpty" xml:space="preserve"><value>Nog geen gedeelde items. Gebruik + of sleep bestanden en mappen hierheen om verwijzingen met AI te delen.</value></data>
+  <data name="FilesAddFiles" xml:space="preserve"><value>Bestanden toevoegen</value></data>
+  <data name="FilesAddFolder" xml:space="preserve"><value>Map toevoegen</value></data>
+  <data name="FilesDropCaption" xml:space="preserve"><value>Bestands- en mapverwijzingen delen</value></data>
+  <data name="FilesRefresh" xml:space="preserve"><value>Gedeelde bestanden en mappen vernieuwen</value></data>
+  <data name="FilesOpen" xml:space="preserve"><value>Openen</value></data>
+  <data name="FilesRemove" xml:space="preserve"><value>Delen stoppen</value></data>
+  <data name="FilesRemoveConfirm" xml:space="preserve"><value>De verwijzing naar “{0}” verwijderen? Het oorspronkelijke bestand of de map wordt niet verwijderd. Items die onder een andere gedeelde map vallen, blijven gedeeld. De aparte bestandstool voor absolute paden wordt niet door deze lijst beperkt.</value></data>
+  <data name="FilesStatus_available" xml:space="preserve"><value>Beschikbaar</value></data>
+  <data name="FilesStatus_missing" xml:space="preserve"><value>Ontbreekt of verplaatst</value></data>
+  <data name="FilesStatus_denied" xml:space="preserve"><value>Toegang geweigerd</value></data>
+  <data name="FilesStatus_changed" xml:space="preserve"><value>Het type item is gewijzigd</value></data>
+  <data name="FilesStatus_unavailable" xml:space="preserve"><value>Niet beschikbaar of niet-ondersteund pad</value></data>
+  <data name="FilesSize" xml:space="preserve"><value>{0:N0} bytes</value></data>
+  <data name="FilesInvalidStore" xml:space="preserve"><value>De opslag van gedeelde bestandsverwijzingen is ongeldig of wordt niet ondersteund.</value></data>
+  <data name="FilesKindChanged" xml:space="preserve"><value>Het geselecteerde item is niet meer het verwachte bestand of de map.</value></data>
+  <data name="FilesReferenceLimit" xml:space="preserve"><value>De limiet voor gedeelde bestandsverwijzingen is bereikt.</value></data>
+  <data name="FilesFolderRequired" xml:space="preserve"><value>Deze bewerking vereist een expliciet gedeelde map.</value></data>
+  <data name="FilesRelativePathInvalid" xml:space="preserve"><value>Gebruik een geldig pad relatief aan de gedeelde map, zonder absolute paden of padtraversal.</value></data>
+  <data name="FilesAlreadyExists" xml:space="preserve"><value>De bestemming bestaat al. Bestaande bestanden en mappen worden nooit overschreven.</value></data>
+  <data name="FilesNotShared" xml:space="preserve"><value>De gedeelde verwijzing is niet beschikbaar of is verwijderd. Vraag de gedeelde items opnieuw op.</value></data>
+  <data name="FilesCursorExpired" xml:space="preserve"><value>De lijstcursor is ongeldig of verlopen. Start de lijst opnieuw zonder cursor.</value></data>
+  <data name="FilesCursorLimit" xml:space="preserve"><value>Te veel onvoltooide maplijsten. Rond de vervolgpagina's af voordat je meer lijsten start.</value></data>
+  <data name="FilesCreateLimit" xml:space="preserve"><value>De inhoud van een nieuw bestand mag niet groter zijn dan 1 MiB.</value></data>
+  <data name="FilesEncodingInvalid" xml:space="preserve"><value>Gebruik geldige UTF-8-tekst of base64-gegevens met de bijpassende codering.</value></data>
+  <data name="FilesIncompleteOutput" xml:space="preserve"><value>Het maken is niet voltooid en het nieuwe bestand kon niet worden verwijderd. Controleer de bestemming voordat je het opnieuw probeert.</value></data>
+  <data name="FilesCreatedReferenceWarning" xml:space="preserve"><value>Het bestand is gemaakt, maar de verwijzing kon niet worden geregistreerd of vernieuwd. Controleer de Bestanden-pagina en voeg zo nodig het bestaande bestand toe; maak het niet opnieuw op dit pad.</value></data>
+  <data name="FilesLoadFailed" xml:space="preserve"><value>Gedeelde bestanden en mappen konden niet worden geladen.</value></data>
+  <data name="FilesShareFailed" xml:space="preserve"><value>De verwijzing kon niet worden opgeslagen. Alleen toegankelijke lokale bestanden en mappen zonder koppelingen worden ondersteund.</value></data>
+  <data name="FilesSharedCount" xml:space="preserve"><value>{0} geselecteerde items worden gedeeld. Bestaande verwijzingen zijn behouden zonder duplicaten.</value></data>
+  <data name="FilesOpenFailed" xml:space="preserve"><value>Windows kon dit item niet openen.</value></data>
 </root>
