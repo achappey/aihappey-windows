@@ -2,7 +2,7 @@
 
 A native Windows AI client built with WinUI 3. Chat with AI models and agents, connect MCP servers, use tools and skills and manage conversations through a native Windows interface.
 
-![aihappey-windows](https://achappey.github.io/aihappey-windows/screenshots/screenshot_windows.png)
+![aihappey-windows](https://achappey.github.io/aihappey-chat/images/screenshot_windows.png)
 
 ## Features
 
