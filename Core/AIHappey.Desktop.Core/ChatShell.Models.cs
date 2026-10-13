@@ -121,6 +121,13 @@ public sealed partial class ChatShell
                 transcriptionTarget.Text = selected.Id; transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null);
                 ShowPage(DesktopPage.Transcriptions); transcriptionTarget.Focus(FocusState.Programmatic);
             }
+            else if (selected.ModelType == "speech")
+            {
+                await LoadSpeechAsync(ct, useCache: true);
+                ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != partition) return;
+                speechTarget.Text = selected.Id; speechPage.SetModelAvailable(SelectedSpeechModel is not null);
+                ShowPage(DesktopPage.Speech); speechTarget.Focus(FocusState.Programmatic);
+            }
             else
             {
                 UpdateMode(ServiceKind.Ai); targets = available; UpdateTargetSuggestions(); target.Text = selected.Id;

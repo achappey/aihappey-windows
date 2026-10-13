@@ -54,6 +54,11 @@ try
         await ImageRegressionTests.RunAsync(Check, root);
         Console.WriteLine($"All {tests} image checks passed."); return;
     }
+    if (args.Contains("--speech-only"))
+    {
+        await SpeechRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} speech checks passed."); return;
+    }
     if (args.Contains("--models-overview-only"))
     {
         await ModelsOverviewRegressionTests.RunAsync(Check, root);
@@ -79,6 +84,7 @@ try
     await SkillRegressionTests.RunAsync(Check, root);
     await ImageRegressionTests.RunAsync(Check, root);
     await VideoRegressionTests.RunAsync(Check, root);
+    await SpeechRegressionTests.RunAsync(Check, root);
     var defaults = new DesktopSettings();
     Check(defaults.Ai.Location == RuntimeLocation.Local && defaults.Agents.Location == RuntimeLocation.Local, "public defaults are local");
     Reject(() => defaults.Validate(false), "enterprise rejects local");

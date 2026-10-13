@@ -780,6 +780,47 @@
   <data name="ImageRefresh" xml:space="preserve"><value>Afbeeldingsmodellen en bibliotheek vernieuwen</value></data>
   <data name="ImageAttachmentTotalLimit" xml:space="preserve"><value>Gebruik maximaal 20 afbeeldingsbijlagen en 100 MB aan bronafbeeldingen en masker per aanvraag.</value></data>
   <data name="Text" xml:space="preserve"><value>Tekst</value></data>
+  <data name="Speech" xml:space="preserve"><value>Spraak</value></data>
+  <data name="MySpeechFiles" xml:space="preserve"><value>Mijn spraakbestanden</value></data>
+  <data name="SpeechPromptPlaceholder" xml:space="preserve"><value>Voer tekst in om naar spraak om te zetten</value></data>
+  <data name="SpeechNoModels" xml:space="preserve"><value>Er zijn geen spraakmodellen beschikbaar. Controleer je providersleutels of vernieuw de modellenlijst.</value></data>
+  <data name="SpeechEmptyLibrary" xml:space="preserve"><value>Je gegenereerde spraakbestanden verschijnen hier.</value></data>
+  <data name="SpeechGenerate" xml:space="preserve"><value>Spraak genereren</value></data>
+  <data name="SpeechGenerating" xml:space="preserve"><value>Spraak genereren…</value></data>
+  <data name="SpeechImport" xml:space="preserve"><value>Documenttekst importeren</value></data>
+  <data name="SpeechImportFailed" xml:space="preserve"><value>Sommige bestanden konden niet worden geconverteerd: {0}</value></data>
+  <data name="SpeechDictate" xml:space="preserve"><value>Tekst dicteren</value></data>
+  <data name="SpeechDictationWindowsHint" xml:space="preserve"><value>Druk op Windows+H om Windows-spraakinvoer in de spraakprompt te gebruiken.</value></data>
+  <data name="SpeechOpenFolder" xml:space="preserve"><value>Map openen</value></data>
+  <data name="SpeechPlay" xml:space="preserve"><value>Spraak afspelen</value></data>
+  <data name="SpeechDetails" xml:space="preserve"><value>Spraakdetails</value></data>
+  <data name="SpeechInput" xml:space="preserve"><value>Invoer</value></data>
+  <data name="SpeechProviderInput" xml:space="preserve"><value>Providerinvoer</value></data>
+  <data name="SpeechProviderResult" xml:space="preserve"><value>Providerresultaat</value></data>
+  <data name="SpeechDeleteTitle" xml:space="preserve"><value>Spraakbestand verwijderen?</value></data>
+  <data name="SpeechDeleteHint" xml:space="preserve"><value>Dit verwijdert de gegenereerde audio definitief uit de lokale bibliotheek.</value></data>
+  <data name="SpeechRefresh" xml:space="preserve"><value>Spraakmodellen en bibliotheek vernieuwen</value></data>
+  <data name="SpeechPromptRequired" xml:space="preserve"><value>Voer tekst in en selecteer een beschikbaar spraakmodel.</value></data>
+  <data name="SpeechResponseInvalid" xml:space="preserve"><value>De spraakservice heeft ongeldige, niet-ondersteunde of te grote audio teruggestuurd.</value></data>
+  <data name="SpeechSettings" xml:space="preserve"><value>Spraakinstellingen</value></data>
+  <data name="SpeechSettingsInvalid" xml:space="preserve"><value>Gebruik een snelheid van 0,5 tot 2 en een ondersteund uitvoerformaat.</value></data>
+  <data name="SpeechSettingsSaveFailedDetail" xml:space="preserve"><value>De spraakinstellingen konden niet worden opgeslagen: {0}</value></data>
+  <data name="SpeechVoice" xml:space="preserve"><value>Stem</value></data>
+  <data name="SpeechVoiceHint" xml:space="preserve"><value>Stemnaam of ID van provider</value></data>
+  <data name="SpeechCustomVoice" xml:space="preserve"><value>Aangepaste stem-ID</value></data>
+  <data name="SpeechCustomVoiceRequired" xml:space="preserve"><value>Voer een aangepaste OpenAI-stem-ID in.</value></data>
+  <data name="SpeechOpenAISpeedInvalid" xml:space="preserve"><value>Gebruik voor OpenAI een snelheid van 0,25 tot 4.</value></data>
+  <data name="SpeechOutputFormat" xml:space="preserve"><value>Uitvoerformaat</value></data>
+  <data name="SpeechSpeed" xml:space="preserve"><value>Snelheid</value></data>
+  <data name="SpeechLanguage" xml:space="preserve"><value>Taal</value></data>
+  <data name="SpeechLanguageHint" xml:space="preserve"><value>Taalcode, bijvoorbeeld nl of nl-NL</value></data>
+  <data name="SpeechInstructions" xml:space="preserve"><value>Instructies</value></data>
+  <data name="SpeechInstructionsHint" xml:space="preserve"><value>Optionele instructies voor de spreekstijl</value></data>
+  <data name="SpeechProviderOptions" xml:space="preserve"><value>Exacte provideropties voor aanvraag (JSON)</value></data>
+  <data name="SpeechProviderOptionsHint" xml:space="preserve"><value>JSON-object met de exacte veldnamen van de provider</value></data>
+  <data name="SpeechProviderContractHint" xml:space="preserve"><value>Deze opties worden ongewijzigd onder deze providersleutel verzonden. Bestaande en toekomstige velden blijven behouden.</value></data>
+  <data name="ProviderDefault" xml:space="preserve"><value>Standaard van provider</value></data>
+  <data name="Audio" xml:space="preserve"><value>Audio</value></data>
   <data name="Transcriptions" xml:space="preserve"><value>Transcripties</value></data>
   <data name="MyTranscriptions" xml:space="preserve"><value>Mijn transcripties</value></data>
   <data name="TranscriptionDropHint" xml:space="preserve"><value>Sleep audio- of videobestanden hierheen, of kies bestanden om te transcriberen.</value></data>

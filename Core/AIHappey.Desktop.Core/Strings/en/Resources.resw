@@ -784,6 +784,47 @@
   <data name="ImageRefresh" xml:space="preserve"><value>Refresh image models and library</value></data>
   <data name="ImageAttachmentTotalLimit" xml:space="preserve"><value>Use at most 20 image attachments and 100 MB of source images and mask per request.</value></data>
   <data name="Text" xml:space="preserve"><value>Text</value></data>
+  <data name="Speech" xml:space="preserve"><value>Speech</value></data>
+  <data name="MySpeechFiles" xml:space="preserve"><value>My speech files</value></data>
+  <data name="SpeechPromptPlaceholder" xml:space="preserve"><value>Enter text to turn into speech</value></data>
+  <data name="SpeechNoModels" xml:space="preserve"><value>No speech models are available. Check your provider keys or refresh the model list.</value></data>
+  <data name="SpeechEmptyLibrary" xml:space="preserve"><value>Your generated speech files will appear here.</value></data>
+  <data name="SpeechGenerate" xml:space="preserve"><value>Generate speech</value></data>
+  <data name="SpeechGenerating" xml:space="preserve"><value>Generating speech…</value></data>
+  <data name="SpeechImport" xml:space="preserve"><value>Import document text</value></data>
+  <data name="SpeechImportFailed" xml:space="preserve"><value>Some files could not be converted: {0}</value></data>
+  <data name="SpeechDictate" xml:space="preserve"><value>Dictate text</value></data>
+  <data name="SpeechDictationWindowsHint" xml:space="preserve"><value>Press Windows+H to use Windows voice typing in the speech prompt.</value></data>
+  <data name="SpeechOpenFolder" xml:space="preserve"><value>Open folder</value></data>
+  <data name="SpeechPlay" xml:space="preserve"><value>Play speech</value></data>
+  <data name="SpeechDetails" xml:space="preserve"><value>Speech details</value></data>
+  <data name="SpeechInput" xml:space="preserve"><value>Input</value></data>
+  <data name="SpeechProviderInput" xml:space="preserve"><value>Provider input</value></data>
+  <data name="SpeechProviderResult" xml:space="preserve"><value>Provider result</value></data>
+  <data name="SpeechDeleteTitle" xml:space="preserve"><value>Delete speech file?</value></data>
+  <data name="SpeechDeleteHint" xml:space="preserve"><value>This permanently deletes the generated audio from the local library.</value></data>
+  <data name="SpeechRefresh" xml:space="preserve"><value>Refresh speech models and library</value></data>
+  <data name="SpeechPromptRequired" xml:space="preserve"><value>Enter text and select an available speech model.</value></data>
+  <data name="SpeechResponseInvalid" xml:space="preserve"><value>The speech service returned invalid, unsupported or oversized audio.</value></data>
+  <data name="SpeechSettings" xml:space="preserve"><value>Speech settings</value></data>
+  <data name="SpeechSettingsInvalid" xml:space="preserve"><value>Use a speed from 0.5 to 2 and a supported output format.</value></data>
+  <data name="SpeechSettingsSaveFailedDetail" xml:space="preserve"><value>Speech settings could not be saved: {0}</value></data>
+  <data name="SpeechVoice" xml:space="preserve"><value>Voice</value></data>
+  <data name="SpeechVoiceHint" xml:space="preserve"><value>Provider voice name or ID</value></data>
+  <data name="SpeechCustomVoice" xml:space="preserve"><value>Custom voice ID</value></data>
+  <data name="SpeechCustomVoiceRequired" xml:space="preserve"><value>Enter an OpenAI custom voice ID.</value></data>
+  <data name="SpeechOpenAISpeedInvalid" xml:space="preserve"><value>Use an OpenAI speed from 0.25 to 4.</value></data>
+  <data name="SpeechOutputFormat" xml:space="preserve"><value>Output format</value></data>
+  <data name="SpeechSpeed" xml:space="preserve"><value>Speed</value></data>
+  <data name="SpeechLanguage" xml:space="preserve"><value>Language</value></data>
+  <data name="SpeechLanguageHint" xml:space="preserve"><value>Language code, for example en or nl-NL</value></data>
+  <data name="SpeechInstructions" xml:space="preserve"><value>Instructions</value></data>
+  <data name="SpeechInstructionsHint" xml:space="preserve"><value>Optional speaking style instructions</value></data>
+  <data name="SpeechProviderOptions" xml:space="preserve"><value>Exact provider request options (JSON)</value></data>
+  <data name="SpeechProviderOptionsHint" xml:space="preserve"><value>JSON object using the provider's exact request field names</value></data>
+  <data name="SpeechProviderContractHint" xml:space="preserve"><value>These options are sent unchanged under this provider key. Existing and future fields are preserved.</value></data>
+  <data name="ProviderDefault" xml:space="preserve"><value>Provider default</value></data>
+  <data name="Audio" xml:space="preserve"><value>Audio</value></data>
   <data name="Transcriptions" xml:space="preserve"><value>Transcriptions</value></data>
   <data name="MyTranscriptions" xml:space="preserve"><value>My transcriptions</value></data>
   <data name="TranscriptionDropHint" xml:space="preserve"><value>Drop audio or video files here, or choose files to transcribe.</value></data>

@@ -11,7 +11,7 @@ using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
 
-internal enum DesktopPage { Chat, Images, Videos, Transcriptions, Agents, Skills, Mcp, Models, Providers, Files }
+internal enum DesktopPage { Chat, Images, Videos, Speech, Transcriptions, Agents, Skills, Mcp, Models, Providers, Files }
 
 public sealed partial class ChatShell
 {
@@ -38,6 +38,7 @@ public sealed partial class ChatShell
         {
             (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)DesktopIcons.Create(Icon.Image)),
             (DesktopPage.Videos, DesktopResources.Get("Videos"), (IconElement)DesktopIcons.Create(Icon.Video)),
+            (DesktopPage.Speech, DesktopResources.Get("Speech"), (IconElement)DesktopIcons.Create(Icon.Speaker2)),
             (DesktopPage.Transcriptions, DesktopResources.Get("Transcriptions"), (IconElement)DesktopIcons.Create(Icon.Mic)),
             (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)DesktopIcons.Create(Icon.Bot)),
             (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)DesktopIcons.Create(Icon.Connector)),
@@ -79,13 +80,14 @@ public sealed partial class ChatShell
             button.Click += async (_, _) => await NavigateAsync(page);
             pageButtons.Add(page, button);
             if (page is DesktopPage.Models or DesktopPage.Providers) { button.Margin = new Thickness(24, 0, 0, 0); aiNavigation.Children.Add(button); }
-            else if (page is DesktopPage.Images or DesktopPage.Videos or DesktopPage.Transcriptions) pageNavigation.Children.Add(button);
+            else if (page is DesktopPage.Images or DesktopPage.Videos or DesktopPage.Speech or DesktopPage.Transcriptions) pageNavigation.Children.Add(button);
             else expandedPageNavigation.Children.Add(button);
         }
         expandedPageNavigation.Children.Add(SidebarSeparator("ChatsSeparator"));
         expandedPageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Chats")));
         pageNavigation.Children.Add(expandedPageNavigation);
         overviewHost.Children.Add(imagesPage); overviewHost.Children.Add(agentsOverview); overviewHost.Children.Add(skillsOverview); overviewHost.Children.Add(mcpOverview);
+        overviewHost.Children.Add(speechPage);
         overviewHost.Children.Add(transcriptionsPage);
         overviewHost.Children.Add(videosPage);
         overviewHost.Children.Add(modelsOverview);
@@ -138,10 +140,11 @@ public sealed partial class ChatShell
         imagesPage.Visibility = imageTarget.Visibility = page == DesktopPage.Images ? Visibility.Visible : Visibility.Collapsed;
         videosPage.Visibility = videoModelToolbar.Visibility = page == DesktopPage.Videos ? Visibility.Visible : Visibility.Collapsed;
         videosPage.RefreshShimmers();
+        speechPage.Visibility = speechTarget.Visibility = page == DesktopPage.Speech ? Visibility.Visible : Visibility.Collapsed;
         transcriptionsPage.Visibility = transcriptionTarget.Visibility = page == DesktopPage.Transcriptions ? Visibility.Visible : Visibility.Collapsed;
         UpdatePageButtons();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
-        { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Files => "FilesRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", _ => "RefreshSkills" }));
+        { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Speech => "SpeechRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Files => "FilesRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", _ => "RefreshSkills" }));
     }
 
     private void UpdatePageButtons()
@@ -178,6 +181,7 @@ public sealed partial class ChatShell
         catalogs.Clear(); favorites.Clear(); catalogPartition = null;
         InvalidateImages();
         InvalidateVideos();
+        InvalidateSpeech();
         InvalidateTranscriptions();
         InvalidateModelsOverview();
         InvalidateProvidersOverview();

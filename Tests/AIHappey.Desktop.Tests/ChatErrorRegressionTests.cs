@@ -53,6 +53,9 @@ internal static class ChatErrorRegressionTests
         using var jsonResponse = new HttpResponseMessage(HttpStatusCode.BadRequest) { Content = new StringContent(JsonSerializer.Serialize(new { error = new { message = exact } }), System.Text.Encoding.UTF8, "application/json") };
         try { await GatewayErrors.CheckResponseAsync(jsonResponse, default); throw new Exception("Expected HTTP failure"); }
         catch (GatewayException error) { check(error.Message == "HTTP 400: " + exact, "chat errors: HTTP JSON error message displayed with status"); }
+        using var textResponse = new HttpResponseMessage(HttpStatusCode.BadRequest) { Content = new StringContent(exact, System.Text.Encoding.UTF8, "text/plain") };
+        try { await GatewayErrors.CheckResponseAsync(textResponse, default); throw new Exception("Expected HTTP failure"); }
+        catch (GatewayException error) { check(error.Message == "HTTP 400: " + exact, "chat errors: bounded controller text error displayed with status"); }
         using var html = new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent("<html>private diagnostics</html>") };
         try { await GatewayErrors.CheckResponseAsync(html, default); throw new Exception("Expected HTTP failure"); }
         catch (GatewayException error) { check(!error.Message.Contains("private"), "chat errors: arbitrary non-error response dumps stay out of UI"); }

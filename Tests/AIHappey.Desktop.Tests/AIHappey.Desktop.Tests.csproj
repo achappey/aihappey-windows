@@ -77,6 +77,9 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/VideoLibrary.cs" Link="Core/VideoLibrary.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/VideoJobs.cs" Link="Core/VideoJobs.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionPreferences.cs" Link="Core/TranscriptionPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/SpeechPreferences.cs" Link="Core/SpeechPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/SpeechClient.cs" Link="Core/SpeechClient.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/SpeechLibrary.cs" Link="Core/SpeechLibrary.cs" />
     <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/ManagedLocalRuntime.cs" Link="Host/ManagedLocalRuntime.cs" />
     <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/OwnedProcessJob.cs" Link="Host/OwnedProcessJob.cs" />
     <ProjectReference Include="../../../aihappey-ai/Core/AIHappey.Vercel/AIHappey.Vercel.csproj" />

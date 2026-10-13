@@ -80,6 +80,7 @@ public sealed partial class ChatShell : UserControl
         PrepareChatSettings();
         PrepareImages();
         PrepareVideos();
+        PrepareSpeech();
         PrepareTranscriptions();
         PrepareModelsOverview();
         PrepareProvidersOverview();
@@ -245,7 +246,7 @@ public sealed partial class ChatShell : UserControl
             pageNavigation.Spacing = open ? 4 : 8;
             appTitle.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
             chats.Visibility = expandedPageNavigation.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var button in new ButtonBase[] { newChat, searchChats, pageButtons[DesktopPage.Images], pageButtons[DesktopPage.Videos], pageButtons[DesktopPage.Transcriptions] })
+            foreach (var button in new ButtonBase[] { newChat, searchChats, pageButtons[DesktopPage.Images], pageButtons[DesktopPage.Videos], pageButtons[DesktopPage.Speech], pageButtons[DesktopPage.Transcriptions] })
             {
                 button.Width = open ? double.NaN : 32;
                 button.Height = open ? double.NaN : 32;
@@ -278,6 +279,7 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(target, 1); top.Children.Add(target);
         Grid.SetColumn(imageTarget, 1); top.Children.Add(imageTarget);
         Grid.SetColumn(videoModelToolbar, 1); top.Children.Add(videoModelToolbar);
+        Grid.SetColumn(speechTarget, 1); top.Children.Add(speechTarget);
         Grid.SetColumn(transcriptionTarget, 1); top.Children.Add(transcriptionTarget);
         Grid.SetColumn(progress, 3); top.Children.Add(progress);
         var profileMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
@@ -817,6 +819,8 @@ public sealed partial class ChatShell : UserControl
         imagesPage.SetBusy(value, inference && activePage == DesktopPage.Images);
         videoTarget.IsEnabled = !value; videosPage.SetBusy(value); UpdateVideoFavorite();
         transcriptionTarget.IsEnabled = !value;
+        speechTarget.IsEnabled = !value;
+        speechPage.SetBusy(value, inference && activePage == DesktopPage.Speech);
         transcriptionsPage.SetBusy(value, inference && activePage == DesktopPage.Transcriptions);
         progress.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         stop.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
@@ -828,6 +832,7 @@ public sealed partial class ChatShell : UserControl
     {
         if (activePage == DesktopPage.Images) { imagesPage.Notice(message, severity); return; }
         if (activePage == DesktopPage.Videos) { videosPage.Notice(message, severity); return; }
+        if (activePage == DesktopPage.Speech) { speechPage.Notice(message, severity); return; }
         if (activePage == DesktopPage.Transcriptions) { transcriptionsPage.Notice(message, severity); return; }
         var label = severity switch
         {
@@ -861,6 +866,8 @@ public sealed partial class ChatShell : UserControl
         removeSharedFileDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();
         imageLinkDialog?.Hide(); imagePreviewDialog?.Hide();
+        speechDetailsDialog?.Hide();
+        if (speechSettingsDialog is not null) { speechSettingsDialog.DiscardOnShutdown = true; speechSettingsDialog.Hide(); }
         transcriptionDetailsDialog?.Hide(); transcriptionDeleteDialog?.Hide();
         if (transcriptionSettingsDialog is not null) { transcriptionSettingsDialog.DiscardOnShutdown = true; transcriptionSettingsDialog.Hide(); }
         if (imageSettingsDialog is not null) { imageSettingsDialog.DiscardOnShutdown = true; imageSettingsDialog.Hide(); }

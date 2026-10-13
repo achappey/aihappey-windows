@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace AIHappey.Desktop.Core;
 
@@ -40,7 +41,8 @@ public static class GatewayErrors
         string? message = null;
         try
         {
-            // Error envelopes only. Never display arbitrary HTML, stack traces, or the full HTTP body.
+            // Error envelopes and bounded text/plain messages only. Never display arbitrary HTML,
+            // stack traces, binary payloads, or an unbounded HTTP body.
             await using var stream = await response.Content.ReadAsStreamAsync(ct);
             var buffer = new byte[64 * 1024 + 1]; var length = 0;
             while (length < buffer.Length)
@@ -49,12 +51,23 @@ public static class GatewayErrors
             }
             if (length < buffer.Length)
             {
-                using var document = JsonDocument.Parse(buffer.AsMemory(0, length));
-                message = Message(document.RootElement);
+                try
+                {
+                    using var document = JsonDocument.Parse(buffer.AsMemory(0, length));
+                    message = Message(document.RootElement);
+                }
+                catch (JsonException) when (response.Content.Headers.ContentType?.MediaType?.StartsWith("text/plain", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    var text = Encoding.UTF8.GetString(buffer, 0, length);
+                    // Controllers intentionally return provider exception messages as plain text.
+                    // Reject markup/control-heavy payloads so proxy HTML and diagnostics stay hidden.
+                    if (!text.Contains('<') && !text.Contains('>') && text.Count(char.IsControl) <= text.Count(c => c is '\r' or '\n' or '\t'))
+                        message = Display(text.Trim().Trim('"'));
+                }
             }
         }
         catch (OperationCanceledException) { throw; }
-        catch (Exception error) when (error is JsonException or IOException or HttpRequestException) { }
+        catch (Exception error) when (error is IOException or HttpRequestException) { }
         if (message is not null) throw new GatewayException($"HTTP {(int)response.StatusCode}: {message}");
         DesktopChatClient.CheckResponse(response);
     }

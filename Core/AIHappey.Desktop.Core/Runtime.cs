@@ -22,6 +22,8 @@ public sealed class DesktopSettings
     public VideoPreferences Videos { get => videos; set => videos = value ?? new(); }
     private TranscriptionPreferences transcriptions = new();
     public TranscriptionPreferences Transcriptions { get => transcriptions; set => transcriptions = value ?? new(); }
+    private SpeechPreferences speech = new();
+    public SpeechPreferences Speech { get => speech; set => speech = value ?? new(); }
     private AiModelPreferences aiModels = new();
     public AiModelPreferences AiModels { get => aiModels; set => aiModels = value ?? new(); }
     private ModelContextPreferences modelContext = new();
@@ -41,7 +43,7 @@ public sealed class DesktopSettings
         Ai = new() { Location = Ai.Location, RemoteUrl = Ai.RemoteUrl },
         Agents = new() { Location = Agents.Location, RemoteUrl = Agents.RemoteUrl },
         Language = Language, ConvertAttachmentsToText = ConvertAttachmentsToText,
-        Chat = Chat.Clone(), Images = Images.Clone(), Videos = Videos.Clone(), Transcriptions = Transcriptions.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
+        Chat = Chat.Clone(), Images = Images.Clone(), Videos = Videos.Clone(), Transcriptions = Transcriptions.Clone(), Speech = Speech.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
         SideInferenceAgentNames = SideInferenceAgentNames.Clone(),
         AllowedToolList = AllowedToolList.ToList()
     };
