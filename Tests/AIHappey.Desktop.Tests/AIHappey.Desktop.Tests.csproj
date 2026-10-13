@@ -11,6 +11,7 @@
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/nl/Resources.resw" LogicalName="Desktop.Resources.nl" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RelativeTime.cs" Link="Core/RelativeTime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/MessageUsage.cs" Link="Core/MessageUsage.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ChatMessagePresentation.cs" Link="Core/ChatMessagePresentation.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Agents.cs" Link="Core/Agents.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AppAgentPreferences.cs" Link="Core/AppAgentPreferences.cs" />

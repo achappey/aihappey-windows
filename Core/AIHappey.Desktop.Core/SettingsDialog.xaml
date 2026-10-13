@@ -16,6 +16,10 @@
                     <NavigationViewItem.Icon><ic:FluentIcon Icon="Settings" /></NavigationViewItem.Icon>
                     <TextBlock x:Uid="SettingsGeneral" />
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="ChatTab" Tag="chat" x:Uid="SettingsChatTab">
+                    <NavigationViewItem.Icon><ic:FluentIcon Icon="Chat" /></NavigationViewItem.Icon>
+                    <TextBlock x:Uid="SettingsChat" />
+                </NavigationViewItem>
                 <NavigationViewItem x:Name="ArtificialIntelligenceTab" Tag="artificialIntelligence" x:Uid="SettingsArtificialIntelligenceTab">
                     <NavigationViewItem.Icon><ic:FluentIcon Icon="Brain" /></NavigationViewItem.Icon>
                     <TextBlock x:Uid="SettingsArtificialIntelligence" />
@@ -47,6 +51,10 @@
                         <ComboBoxItem Content="Nederlands" Tag="nl" />
                     </ComboBox>
                     <TextBlock x:Uid="SettingsRestartHint" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel x:Name="ChatPage" Spacing="16" Visibility="Collapsed">
+                    <ToggleSwitch x:Name="ShowTokens" x:Uid="SettingsShowTokens" />
+                    <ToggleSwitch x:Name="ShowProviderLogo" x:Uid="SettingsShowProviderLogo" />
                 </StackPanel>
                 <Grid x:Name="ArtificialIntelligencePage" Visibility="Collapsed" />
                 <Grid x:Name="AppAgentsPage" Visibility="Collapsed" />

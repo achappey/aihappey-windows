@@ -194,6 +194,8 @@ public partial class App : Application
                 var target = conversation.Messages[index].Message.Metadata!; target.Clear();
                 foreach (var entry in metadata) target[entry.Key] = entry.Value!;
             }
+            await CheckChatDisplayAsync(shell, session, conversation, timestamp, context);
+            session.Settings.Chat.ShowTokens = true; // Existing usage fixtures explicitly opt in.
             foreach (var (tokens, cost, expected) in new[] { (0, 0d, "0.00"), (0, .001d, "0.00>"), (17, .0123d, "0.01") })
             {
                 var metadata = FinishMessageMetadata.Create("test-agent", timestamp, totalTokens: tokens, gateway: new FinishGatewayMetadata { Cost = (decimal)cost }).ToDictionary();
@@ -399,6 +401,7 @@ public partial class App : Application
             dialog!.Hide();
             await settingsTask;
 
+            session.Settings.Chat.ShowTokens = true; // The footer smoke fixture tests enabled token display.
             var conversation = new Conversation
             {
                 Service = ServiceKind.Agents, Target = "test-agent", Messages =

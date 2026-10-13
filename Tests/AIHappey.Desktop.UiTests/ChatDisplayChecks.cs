@@ -1,0 +1,107 @@
+using System.Text.Json;
+using AIHappey.Desktop.Core;
+using AIHappey.Vercel.Models;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+
+namespace AIHappey.Desktop.UiTests;
+
+public partial class App
+{
+    private async Task CheckChatDisplayAsync(ChatShell shell, DesktopSession session, Conversation conversation,
+        DateTimeOffset timestamp, string context)
+    {
+        var transcript = Field<StackPanel>(shell, "transcript");
+        conversation.Service = ServiceKind.Ai; conversation.Target = "anthropic/current-model";
+        conversation.Messages[1].Message.Metadata = FinishMessageMetadata.Create("openai/gpt-fixture", timestamp,
+            totalTokens: 17, gateway: new FinishGatewayMetadata { Cost = .0123m }).ToDictionary()!;
+        var original = PortableConversations.Write(conversation);
+        Call(shell, "RenderTranscript"); await Task.Delay(100); shell.UpdateLayout();
+        Grid[] Logos() => Descendants(transcript).OfType<Grid>().Where(g => g.Name == "ProviderLogo").ToArray();
+        string[] Labels() => Descendants(transcript).OfType<TextBlock>().Where(t => t.Name == "MessageModel").Select(t => t.Text).ToArray();
+        bool Tokens() => Descendants(transcript).OfType<Border>().Any(b => b.Name == "TokenUsage");
+        bool Price() => Descendants(transcript).OfType<Border>().Any(b => b.Name == "MessagePrice");
+        Check(!Tokens() && Price(), context + ": default tokens off leaves assistant pricing visible");
+        Check(Logos().Length == 2 && Labels().All(label => label == "gpt-fixture"), context + ": answer and activity headers use each assistant's provider logo and abbreviated model");
+        Check(Logos().All(logo => logo.Width == 20 && AutomationProperties.GetName(logo).Contains("OpenAI")
+            && ToolTipService.GetToolTip(logo) is ToolTip), context + ": compact theme-aware logos have provider-specific accessibility labels and tooltips");
+        Check(Logos().All(logo => logo.Children.OfType<Image>().Single().Visibility == Visibility.Collapsed
+            && logo.Children.OfType<IconElement>().Single().Visibility == Visibility.Visible), context + ": offline remote-image switch keeps safe native placeholders");
+        var userCard = Descendants(transcript).OfType<Border>().First(b => b.Name == "MessageCard");
+        Check(!Descendants(userCard).OfType<Grid>().Any(g => g.Name == "ProviderLogo"), context + ": user messages do not get logos");
+
+        var input = Field<TextBox>(shell, "input"); input.Text = "Unsent display-settings draft";
+        var resolutions = ((UiRuntime)session.Runtime).Resolutions;
+        async Task<SettingsDialog> OpenSettings()
+        {
+            var task = (Task)Call(shell, "EditSettingsAsync")!;
+            await Task.Delay(150);
+            if (task.IsFaulted) await task;
+            var dialog = VisualTreeHelper.GetOpenPopupsForXamlRoot(shell.XamlRoot).SelectMany(p => Descendants(p.Child)).OfType<SettingsDialog>().Single();
+            dialog.Tag = task;
+            var tabs = (NavigationView)dialog.FindName("Tabs");
+            tabs.SelectedItem = tabs.MenuItems.OfType<NavigationViewItem>().Single(item => (string)item.Tag == "chat");
+            await Task.Delay(80); dialog.UpdateLayout();
+            Check(((StackPanel)dialog.FindName("ChatPage")).Visibility == Visibility.Visible
+                && ((StackPanel)dialog.FindName("GeneralPage")).Visibility == Visibility.Collapsed,
+                context + ": native Chat tab shows only its settings page");
+            return dialog;
+        }
+        var cancelled = await OpenSettings();
+        var controls = ((StackPanel)cancelled.FindName("ChatPage")).Children.OfType<ToggleSwitch>().ToArray();
+        Check(controls.Select(t => t.Name).SequenceEqual(["ShowTokens", "ShowProviderLogo"])
+            && !controls[0].IsOn && controls[1].IsOn && controls.All(t => AutomationProperties.GetName(t).Length > 0),
+            context + ": Chat has exactly two accessible toggles in the requested order and defaults");
+        controls[0].IsOn = true; controls[1].IsOn = false;
+        InvokeButton(Descendants(cancelled).OfType<Button>().Single(b => b.Name == "CloseButton")); await (Task)cancelled.Tag;
+        Check(!session.Settings.Chat.ShowTokens && session.Settings.Chat.ShowProviderLogo && !Tokens() && Logos().Length == 2,
+            context + ": Cancel discards display draft and leaves transcript unchanged");
+
+        var saved = await OpenSettings();
+        ((ToggleSwitch)saved.FindName("ShowTokens")).IsOn = true;
+        ((ToggleSwitch)saved.FindName("ShowProviderLogo")).IsOn = false;
+        window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(520, 900)); await Task.Delay(100); saved.UpdateLayout();
+        Check(((NavigationView)saved.FindName("Tabs")).IsPaneToggleButtonVisible
+            && ((Grid)saved.FindName("Layout")).ActualWidth <= shell.XamlRoot.Size.Width,
+            context + ": narrow Chat settings retains responsive native navigation");
+        InvokeButton(Descendants(saved).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await (Task)saved.Tag; await Task.Delay(80);
+        Check(session.Settings.Chat.ShowTokens && !session.Settings.Chat.ShowProviderLogo && Tokens() && Logos().Length == 0
+            && Labels().All(label => label == "openai/gpt-fixture") && Price(), context + ": Save immediately shows tokens and restores model prefixes without changing prices");
+        Check(input.Text == "Unsent display-settings draft" && ((UiRuntime)session.Runtime).Resolutions == resolutions
+            && Field<Conversation>(shell, "current") == conversation && PortableConversations.Write(conversation) == original,
+            context + ": display Save preserves composer draft, runtime, current conversation and metadata");
+        var persisted = await SettingsStore.LoadAsync(session.DataDirectory, new());
+        Check(persisted.Chat.ShowTokens && !persisted.Chat.ShowProviderLogo, context + ": native settings Save persists both choices");
+
+        window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); await Task.Delay(80);
+        var restored = await OpenSettings();
+        Check(((ToggleSwitch)restored.FindName("ShowTokens")).IsOn && !((ToggleSwitch)restored.FindName("ShowProviderLogo")).IsOn,
+            context + ": reopening settings restores saved display values");
+        ((ToggleSwitch)restored.FindName("ShowTokens")).IsOn = false;
+        ((ToggleSwitch)restored.FindName("ShowProviderLogo")).IsOn = true;
+        InvokeButton(Descendants(restored).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await (Task)restored.Tag; await Task.Delay(80);
+        Check(!Tokens() && Logos().Length == 2 && Labels().All(label => label == "gpt-fixture") && Price(),
+            context + ": restoring defaults refreshes existing assistant cards without reopening history");
+        foreach (var width in new[] { 520, 1280 })
+        {
+            window.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(80); shell.UpdateLayout();
+            Check(Field<ScrollViewer>(shell, "scroll").ScrollableWidth < 1, context + $": provider headers wrap without overflow at {width}px");
+        }
+        conversation.Messages[1].Message.Metadata!["model"] = "unknown-provider/model";
+        Call(shell, "RenderTranscript"); await Task.Delay(60);
+        Check(Logos().Length == 0 && Labels().All(label => label == "unknown-provider/model"), context + ": unknown provider uses full label without a misleading logo");
+        conversation.Messages[1].Message.Metadata!["model"] = "echo/embedded-model";
+        Call(shell, "RenderTranscript"); await Task.Delay(200);
+        Check(Logos().Length == 2 && Logos().All(logo => logo.Children.OfType<Image>().Single().Visibility == Visibility.Visible)
+            && Labels().All(label => label == "embedded-model"), context + ": embedded provider logos render in offline assistant headers");
+        shell.RequestedTheme = shell.RequestedTheme == ElementTheme.Light ? ElementTheme.Dark : ElementTheme.Light; await Task.Delay(150);
+        Check(Logos().All(logo => logo.ActualTheme == shell.ActualTheme) && Labels().All(label => label == "embedded-model"),
+            context + ": provider logos follow live native theme changes");
+        shell.RequestedTheme = shell.RequestedTheme == ElementTheme.Light ? ElementTheme.Dark : ElementTheme.Light;
+        conversation.Service = ServiceKind.Agents; conversation.Target = "test-agent";
+        conversation.Messages[1].Message.Metadata!["model"] = "test-agent";
+        input.Text = ""; Call(shell, "RenderTranscript");
+    }
+}

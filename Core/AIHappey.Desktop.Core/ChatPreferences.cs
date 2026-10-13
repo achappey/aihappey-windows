@@ -6,10 +6,12 @@ using AIHappey.Vercel.Models;
 
 namespace AIHappey.Desktop.Core;
 
-/// <summary>App-wide inference preferences, not conversation data or host credentials.
+/// <summary>App-wide chat preferences, not conversation data or host credentials.
 /// Provider objects retain their native wire shape, including fields unknown to this UI.</summary>
 public sealed class ChatPreferences
 {
+    public bool ShowTokens { get; set; }
+    public bool ShowProviderLogo { get; set; } = true;
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? MaxOutputTokens { get; set; }
     private List<string> activePlugins = [];
@@ -34,6 +36,8 @@ public sealed class ChatPreferences
 
     public ChatPreferences Clone() => new()
     {
+        ShowTokens = ShowTokens,
+        ShowProviderLogo = ShowProviderLogo,
         MaxOutputTokens = MaxOutputTokens,
         ActivePlugins = ActivePlugins.ToList(),
         EnabledSkillIds = EnabledSkillIds.ToList(),

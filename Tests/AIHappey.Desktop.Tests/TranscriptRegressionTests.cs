@@ -9,6 +9,30 @@ internal static class TranscriptRegressionTests
     public static void Run(Action<bool, string> check)
     {
         Dictionary<string, object> Metadata(string json) => JsonSerializer.Deserialize<Dictionary<string, object>>(json)!;
+        ChatMessagePresentation Present(string? model, bool enabled = true, string? providerKey = null,
+            Role role = Role.assistant, ServiceKind service = ServiceKind.Ai, string fallback = "openai/fallback")
+            => ChatMessagePresentation.Resolve(new UIMessage { Role = role, Metadata = new()
+                { ["model"] = model!, ["providerKey"] = providerKey! } }, service, fallback, enabled);
+        check(Present("openai/gpt-chat") is { Model: "gpt-chat", Provider.Id: "openai" }, "assistant header: catalog logo replaces matching provider prefix");
+        check(Present("openai/gpt-chat", false) is { Model: "openai/gpt-chat", Provider: null }, "assistant header: disabling logos restores the full label");
+        check(Present("openrouter/anthropic/claude") is { Model: "anthropic/claude", Provider.Id: "openrouter" }, "assistant header: strip only the outer provider, preserve nested model path");
+        check(Present("unknown-provider/model") is { Model: "unknown-provider/model", Provider: null }, "assistant header: unknown provider preserves full label");
+        check(Present("gpt-chat", providerKey: " OPENAI ") is { Model: "gpt-chat", Provider.Id: "openai" }, "assistant header: explicit provider metadata supports raw model IDs");
+        check(Present("anthropic/model", providerKey: "openai") is { Model: "anthropic/model", Provider.Id: "openai" }, "assistant header: explicit identity wins but a mismatched prefix is never removed");
+        check(Present("openai/model", providerKey: "unknown") is { Model: "openai/model", Provider: null }, "assistant header: unknown explicit identity never guesses another provider");
+        check(Present("openai/") is { Model: "openai/" }, "assistant header: a provider-only prefix never produces an empty label");
+        check(Present("raw-model") is { Model: "raw-model", Provider: null }, "assistant header: raw model without identity does not inherit current provider");
+        check(Present(null) is { Model: "fallback", Provider.Id: "openai" } && Present(" ") is { Model: "fallback" }, "assistant header: missing model uses conversation target for streaming and old history");
+        foreach (var role in new[] { Role.user, Role.system })
+            check(Present("openai/model", role: role) is { Model: "openai/model", Provider: null }, "assistant header: user/system never get logos or shortened labels");
+        check(Present("openai/agent", service: ServiceKind.Agents) is { Model: "openai/agent", Provider: null }, "assistant header: agent path is not treated as a provider prefix");
+        var historical = new Conversation { Target = "anthropic/current", Messages = [new() { Message = new UIMessage
+            { Role = Role.assistant, Metadata = Metadata("""{"model":"openai/historical"}""") } }] };
+        var beforePresentation = PortableConversations.Write(historical);
+        check(ChatMessagePresentation.Resolve(historical.Messages[0].Message, ServiceKind.Ai, historical.Target, true) is { Model: "historical", Provider.Id: "openai" },
+            "assistant header: each historical message retains its own provider rather than current target");
+        ChatMessagePresentation.Resolve(historical.Messages[0].Message, ServiceKind.Ai, historical.Target, false);
+        check(PortableConversations.Write(historical) == beforePresentation, "assistant header: presentation never rewrites history metadata");
         var timestamp = DateTimeOffset.UtcNow;
         foreach (var (value, expected) in new[] { (0d, "0.00"), (.001d, "0.00>"), (.0049d, "0.00>"), (.005d, "0.01"), (.0123d, "0.01"), (1.005d, "1.01"), (42.125d, "42.13") })
             check(MessageUsage.FormatCost(value) == expected, $"price matches browser formatting for {value}");
@@ -71,6 +95,12 @@ internal static class TranscriptRegressionTests
             }) check(Format(elapsed) == string.Format(values[key], count), $"{language}: relative time {elapsed} selects translated singular/plural unit");
             check(Format(TimeSpan.FromMinutes(2)) == (language == "en" ? "2 minutes ago" : "2 minuten geleden"), language + ": relative time uses real translations");
             check(values["GeneratedByAi"].Length > 0 && values["GeneratedByAiWarning"].Length > 0, language + ": AI disclosure translations present");
+            foreach (var key in new[] { "SettingsChat.Text", "SettingsChatTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name",
+                "SettingsShowTokens.Header", "SettingsShowTokens.OnContent", "SettingsShowTokens.OffContent",
+                "SettingsShowTokens.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name", "SettingsShowProviderLogo.Header",
+                "SettingsShowProviderLogo.OnContent", "SettingsShowProviderLogo.OffContent",
+                "SettingsShowProviderLogo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" })
+                check(values.TryGetValue(key, out var text) && text.Length > 0, language + ": chat display setting is translated: " + key);
             check(values["MessagePrice"].Contains("{0}"), language + ": accessible price badge label translated");
             foreach (var key in new[] { "Activities", "ToggleActivities", "ToolsCount", "DataCount", "NoToolActivities", "NoDataActivities", "ExplainToolCall", "ToolExplanationFallback", "ToolOutputTitle" })
                 check(values.TryGetValue(key, out var translated) && translated.Length > 0, language + ": conversation activity resource present: " + key);

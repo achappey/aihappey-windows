@@ -17,6 +17,10 @@ internal static class ChatSettingsRegressionTests
               "providerMetadata":{"custom":{"futureOption":true}}}}
             """);
         var loaded = await SettingsStore.LoadAsync(directory, new());
+        check(!loaded.Chat.ShowTokens && loaded.Chat.ShowProviderLogo,
+            "chat display: old settings default to tokens off and provider logos on");
+        check(!new ChatPreferences().ShowTokens && new ChatPreferences().ShowProviderLogo,
+            "chat display: fresh preferences have browser-compatible defaults");
         check(loaded.Chat.MaxOutputTokens == 123 && loaded.Chat.EnabledSkillIds.SequenceEqual(["provider/sample"])
             && loaded.Chat.ActivePlugins.SequenceEqual(["files"]), "chat settings: legacy instruction option does not prevent loading other preferences");
         check(!JsonSerializer.Serialize(loaded.Chat.Clone(), JsonSerializerOptions.Web).Contains("systemInstructions"),
@@ -26,6 +30,23 @@ internal static class ChatSettingsRegressionTests
         check(persisted["chat"]!.AsObject().ContainsKey("systemInstructions") == false
             && persisted["chat"]!["providerMetadata"]!["custom"]!["futureOption"]!.GetValue<bool>(),
             "chat settings: saving drops legacy instructions without discarding native provider options");
+        loaded.Chat.ShowTokens = true; loaded.Chat.ShowProviderLogo = false;
+        var clone = loaded.Clone();
+        check(clone.Chat.ShowTokens && !clone.Chat.ShowProviderLogo, "chat display: settings cloning preserves both explicit values");
+        clone.Chat.ShowTokens = false; clone.Chat.ShowProviderLogo = true;
+        check(loaded.Chat.ShowTokens && !loaded.Chat.ShowProviderLogo, "chat display: editing a clone does not mutate saved choices");
+        await SettingsStore.SaveAsync(directory, loaded);
+        var reloaded = await SettingsStore.LoadAsync(directory, new());
+        check(reloaded.Chat.ShowTokens && !reloaded.Chat.ShowProviderLogo, "chat display: tokens on and logos off survive settings persistence");
+        var displayRequest = loaded.Chat.RequestBody("custom/model", "fixture", [], "custom");
+        check(!displayRequest.ContainsKey("showTokens") && !displayRequest.ContainsKey("showProviderLogo"),
+            "chat display: UI preferences are not inference request fields");
+        loaded.Chat.ShowTokens = false; loaded.Chat.ShowProviderLogo = true;
+        check(JsonNode.DeepEquals(displayRequest, loaded.Chat.RequestBody("custom/model", "fixture", [], "custom")),
+            "chat display: changing display preferences never changes inference requests");
+        await SettingsStore.SaveAsync(directory, loaded);
+        reloaded = await SettingsStore.LoadAsync(directory, new());
+        check(!reloaded.Chat.ShowTokens && reloaded.Chat.ShowProviderLogo, "chat display: explicit default choices also round-trip");
 
         var mcp = McpTurnSnapshot.Empty;
         mcp.AddContext(JsonSerializer.SerializeToElement(new { availableSkills = new { skills = new[] { new { skill_id = "provider/sample" } } } }));

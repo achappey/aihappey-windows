@@ -36,9 +36,16 @@ public sealed partial class ChatShell
         var items = new MessageFooterPanel(); // Reuse the existing wrapping, vertically centered layout.
         if (!user)
         {
+            var presentation = ChatMessagePresentation.Resolve(message.Message, current.Service, current.Target, session.Settings.Chat.ShowProviderLogo);
+            if (presentation.Provider is { } provider)
+            {
+                var logo = new ProviderLogo(provider, 20) { VerticalAlignment = VerticalAlignment.Center };
+                ToolTipService.SetToolTip(logo, new ToolTip { Content = provider.Name });
+                items.Children.Add(logo);
+            }
             items.Children.Add(new TextBlock
             {
-                Name = "MessageModel", Text = PortableConversations.MetadataString(message.Message.Metadata, "model") ?? current.Target,
+                Name = "MessageModel", Text = presentation.Model,
                 TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center
             });
             var badge = new Border

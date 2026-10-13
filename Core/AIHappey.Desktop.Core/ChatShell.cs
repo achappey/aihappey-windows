@@ -439,6 +439,8 @@ public sealed partial class ChatShell : UserControl
             current.Messages.Add(new() { Message = prepared.Message });
             var output = new ConversationMessage { Message = new UIMessage { Id = Guid.NewGuid().ToString("N"), Role = Role.assistant,
                 Metadata = new Dictionary<string, object> { ["model"] = selected, ["timestamp"] = DateTimeOffset.UtcNow.ToString("O") } }, Status = "streaming" };
+            if (Service == ServiceKind.Ai && ChatPreferences.ResolveProvider(Service, selected, selectedProvider) is { } providerKey)
+                output.Message.Metadata!["providerKey"] = providerKey;
             current.Messages.Add(output);
             if (selectedPrompt is null) input.Text = "";
             ResetContext(); followBottom = true; RenderTranscript();
@@ -531,7 +533,7 @@ public sealed partial class ChatShell : UserControl
                 list.Click += (_, _) => ShowActivity(block.Key, key, page, list);
                 footerActions.Children.Add(list);
             }
-            if (tokenCount is not null)
+            if (session.Settings.Chat.ShowTokens && tokenCount is not null)
             {
                 var usage = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
                 usage.Children.Add(DesktopIcons.Create(Icon.DataUsage, 14));
@@ -764,6 +766,7 @@ public sealed partial class ChatShell : UserControl
             if (connectionsChanged) await StopVideoJobsAsync();
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
+            RenderTranscript();
             RefreshWelcome();
             UpdateTargetSuggestions();
             if (elicitationChanged || mcpSkillsChanged) await Mcp.ReconnectAsync(ct);

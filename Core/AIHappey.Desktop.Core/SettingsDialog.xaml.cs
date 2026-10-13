@@ -53,6 +53,8 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             location.SelectionChanged += (_, _) => ToggleUrl();
         }
         DocumentTextExtraction.IsOn = settings.ConvertAttachmentsToText;
+        ShowTokens.IsOn = chatPreferences.ShowTokens;
+        ShowProviderLogo.IsOn = chatPreferences.ShowProviderLogo;
         FormElicitation.IsOn = settings.ModelContext.EnableFormElicitation;
         ToolTimeout.Value = settings.ModelContext.ToolTimeoutMinutes;
         ResetTimeoutOnProgress.IsOn = settings.ModelContext.ResetTimeoutOnProgress;
@@ -83,8 +85,9 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private void TabChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         // Selection can fire while InitializeComponent is still creating the page controls.
-        if (GeneralPage is null || EndpointsPage is null || AttachmentsPage is null || ModelContextPage is null || ArtificialIntelligencePage is null || AppAgentsPage is null) return;
+        if (GeneralPage is null || ChatPage is null || EndpointsPage is null || AttachmentsPage is null || ModelContextPage is null || ArtificialIntelligencePage is null || AppAgentsPage is null) return;
         GeneralPage.Visibility = ReferenceEquals(Tabs.SelectedItem, GeneralTab) ? Visibility.Visible : Visibility.Collapsed;
+        ChatPage.Visibility = ReferenceEquals(Tabs.SelectedItem, ChatTab) ? Visibility.Visible : Visibility.Collapsed;
         ArtificialIntelligencePage.Visibility = ReferenceEquals(Tabs.SelectedItem, ArtificialIntelligenceTab) ? Visibility.Visible : Visibility.Collapsed;
         AppAgentsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, AppAgentsTab) ? Visibility.Visible : Visibility.Collapsed;
         EndpointsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, EndpointsTab) ? Visibility.Visible : Visibility.Collapsed;
@@ -106,6 +109,8 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     {
         Result = null;
         if (imageStorage.PickerOpen || videoStorage.PickerOpen) { args.Cancel = true; return; }
+        chatPreferences.ShowTokens = ShowTokens.IsOn;
+        chatPreferences.ShowProviderLogo = ShowProviderLogo.IsOn;
         var next = new DesktopSettings
         {
             Language = (string)((ComboBoxItem)LanguageChoice.SelectedItem).Tag,

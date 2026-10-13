@@ -353,6 +353,16 @@
   <data name="SettingsDialog.CloseButtonText" xml:space="preserve"><value>Annuleren</value></data>
   <data name="SettingsTabs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Instellingen</value></data>
   <data name="SettingsGeneral.Text" xml:space="preserve"><value>Algemeen</value></data>
+  <data name="SettingsChat.Text" xml:space="preserve"><value>Chat</value></data>
+  <data name="SettingsChatTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Chat</value></data>
+  <data name="SettingsShowTokens.Header" xml:space="preserve"><value>Toon tokens per bericht</value></data>
+  <data name="SettingsShowTokens.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Toon tokens per bericht</value></data>
+  <data name="SettingsShowTokens.OnContent" xml:space="preserve"><value>Aan</value></data>
+  <data name="SettingsShowTokens.OffContent" xml:space="preserve"><value>Uit</value></data>
+  <data name="SettingsShowProviderLogo.Header" xml:space="preserve"><value>Toon providerlogo</value></data>
+  <data name="SettingsShowProviderLogo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Toon providerlogo</value></data>
+  <data name="SettingsShowProviderLogo.OnContent" xml:space="preserve"><value>Aan</value></data>
+  <data name="SettingsShowProviderLogo.OffContent" xml:space="preserve"><value>Uit</value></data>
   <data name="SettingsEndpoints.Text" xml:space="preserve"><value>Endpoints</value></data>
   <data name="SettingsAttachments.Text" xml:space="preserve"><value>Bijlagen</value></data>
   <data name="SettingsGeneralTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Algemeen</value></data>

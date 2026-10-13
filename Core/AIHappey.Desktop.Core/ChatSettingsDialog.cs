@@ -48,7 +48,9 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         Build();
         PrimaryButtonClick += (_, args) =>
         {
-            args.Cancel = true; draft = new ChatPreferences(); Result = null; validation.Visibility = Visibility.Collapsed; Build();
+            // This dialog restores inference options, not the display choices in user settings.
+            args.Cancel = true; draft = new ChatPreferences { ShowTokens = draft.ShowTokens, ShowProviderLogo = draft.ShowProviderLogo };
+            Result = null; validation.Visibility = Visibility.Collapsed; Build();
         };
         Closing += CommitOnClose;
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; tokens.Focus(FocusState.Programmatic); };
