@@ -4,7 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace AIHappey.Desktop.Core;
 
-/// <summary>All five browser assignments are editable; only welcome/naming are executed.</summary>
+/// <summary>All five browser assignments are editable; welcome, naming and tool explanations are executed.</summary>
 public sealed class AppAgentsSettingsView : StackPanel
 {
     private readonly AppAgentPreferences draft;
@@ -27,7 +27,7 @@ public sealed class AppAgentsSettingsView : StackPanel
             pickers[role] = picker; body.Children.Add(picker);
             var warning = new TextBlock { Text = DesktopResources.Get("AppAgentUnavailable"), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
             unavailable[role] = warning; body.Children.Add(warning);
-            if (role is not AppAgentRole.WelcomeMessage and not AppAgentRole.ConversationName)
+            if (role is AppAgentRole.ToolSearch or AppAgentRole.ResourceSearch)
                 body.Children.Add(new TextBlock { Text = DesktopResources.Get("AppAgentNotActive"), TextWrapping = TextWrapping.Wrap });
             picker.SelectionChanged += (_, _) =>
             {

@@ -142,6 +142,7 @@ public sealed partial class ChatShell
         videosPage.RefreshShimmers();
         speechPage.Visibility = speechTarget.Visibility = page == DesktopPage.Speech ? Visibility.Visible : Visibility.Collapsed;
         transcriptionsPage.Visibility = transcriptionTarget.Visibility = page == DesktopPage.Transcriptions ? Visibility.Visible : Visibility.Collapsed;
+        RefreshConversationActivity();
         UpdatePageButtons();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
         { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Speech => "SpeechRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Files => "FilesRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", _ => "RefreshSkills" }));

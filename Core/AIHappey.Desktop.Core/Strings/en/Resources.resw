@@ -71,6 +71,20 @@
   <data name="Save" xml:space="preserve"><value>Save</value></data>
   <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Activities" xml:space="preserve"><value>Activities</value></data>
+  <data name="ToggleActivities" xml:space="preserve"><value>Show conversation activities</value></data>
+  <data name="CloseActivities" xml:space="preserve"><value>Close conversation activities</value></data>
+  <data name="ToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
+  <data name="DataCount" xml:space="preserve"><value>Data ({0})</value></data>
+  <data name="Data" xml:space="preserve"><value>Data</value></data>
+  <data name="NoToolActivities" xml:space="preserve"><value>No tool activity in this conversation.</value></data>
+  <data name="NoDataActivities" xml:space="preserve"><value>No data activity in this conversation.</value></data>
+  <data name="ToolStateUnknown" xml:space="preserve"><value>Unknown state</value></data>
+  <data name="ShowToolOutput" xml:space="preserve"><value>Show output for {0}</value></data>
+  <data name="ExplainToolCall" xml:space="preserve"><value>Explain tool call {0}</value></data>
+  <data name="ToolExplanationFallback" xml:space="preserve"><value>The tool call could not be explained.</value></data>
+  <data name="ToolOutputTitle" xml:space="preserve"><value>{0} output</value></data>
+  <data name="NoToolOutputResult" xml:space="preserve"><value>No tool output is available.</value></data>
   <data name="Context" xml:space="preserve"><value>Context</value></data>
   <data name="SystemContext" xml:space="preserve"><value>System</value></data>
   <data name="User" xml:space="preserve"><value>User</value></data>

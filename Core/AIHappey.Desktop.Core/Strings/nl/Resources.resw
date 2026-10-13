@@ -71,6 +71,20 @@
   <data name="Save" xml:space="preserve"><value>Opslaan</value></data>
   <data name="Cancel" xml:space="preserve"><value>Annuleren</value></data>
   <data name="Close" xml:space="preserve"><value>Sluiten</value></data>
+  <data name="Activities" xml:space="preserve"><value>Activiteiten</value></data>
+  <data name="ToggleActivities" xml:space="preserve"><value>Gespreksactiviteiten tonen</value></data>
+  <data name="CloseActivities" xml:space="preserve"><value>Gespreksactiviteiten sluiten</value></data>
+  <data name="ToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
+  <data name="DataCount" xml:space="preserve"><value>Gegevens ({0})</value></data>
+  <data name="Data" xml:space="preserve"><value>Gegevens</value></data>
+  <data name="NoToolActivities" xml:space="preserve"><value>Geen toolactiviteit in dit gesprek.</value></data>
+  <data name="NoDataActivities" xml:space="preserve"><value>Geen gegevensactiviteit in dit gesprek.</value></data>
+  <data name="ToolStateUnknown" xml:space="preserve"><value>Onbekende status</value></data>
+  <data name="ShowToolOutput" xml:space="preserve"><value>Uitvoer van {0} tonen</value></data>
+  <data name="ExplainToolCall" xml:space="preserve"><value>Toolaanroep {0} uitleggen</value></data>
+  <data name="ToolExplanationFallback" xml:space="preserve"><value>De toolaanroep kon niet worden uitgelegd.</value></data>
+  <data name="ToolOutputTitle" xml:space="preserve"><value>Uitvoer van {0}</value></data>
+  <data name="NoToolOutputResult" xml:space="preserve"><value>Er is geen tooluitvoer beschikbaar.</value></data>
   <data name="Context" xml:space="preserve"><value>Context</value></data>
   <data name="SystemContext" xml:space="preserve"><value>Systeem</value></data>
   <data name="User" xml:space="preserve"><value>Gebruiker</value></data>

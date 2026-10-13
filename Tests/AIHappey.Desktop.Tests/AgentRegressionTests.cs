@@ -99,6 +99,14 @@ internal static class AgentRegressionTests
         await foreach (var _ in client.StreamAsync(ServiceKind.Agents, "local:PortableAgent", "conversation", [], CancellationToken.None, localAgent: original)) { }
         check(handler.Body.GetProperty("agents")[0].GetProperty("plugins")[0].GetProperty("data").GetString() == "opaque" && handler.Path.EndsWith("/api/chat"),
             "local agent execution forwards plugins/schema/options to the existing agents gateway unchanged");
+        using (var call = JsonDocument.Parse("""{"type":"tool-search","toolCallId":"call","input":{"query":"models"},"output":{"items":["test/model"]}}"""))
+        using (var tool = JsonDocument.Parse("""{"name":"search","description":"Search models"}"""))
+        {
+            var explain = DesktopAppAgentClient.ToolExplanationInput(call.RootElement, tool.RootElement, "English");
+            check(explain["language"]?.ToString() == "English" && explain["toolcall"]?.ToString().Contains("\"toolcall\"") == true
+                && explain["toolcall"]?.ToString().Contains("\"tool\"") == true,
+                "tool explanation input matches browser nested string payload");
+        }
         await foreach (var _ in client.StreamAsync(ServiceKind.Agents, "backend-id", "conversation", [], CancellationToken.None)) { }
         check(handler.Body.GetProperty("model").GetString() == "backend-id" && (!handler.Body.TryGetProperty("agents", out var agents) || agents.ValueKind == JsonValueKind.Null),
             "backend agent execution retains its existing model-based request");

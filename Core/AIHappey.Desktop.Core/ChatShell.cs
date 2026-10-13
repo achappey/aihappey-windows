@@ -308,6 +308,7 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(addAgent, 4); top.Children.Add(addAgent);
         Grid.SetColumn(addSkill, 4); top.Children.Add(addSkill);
         Grid.SetColumn(addFiles, 4); top.Children.Add(addFiles);
+        Grid.SetColumn(activityToggle, 4); top.Children.Add(activityToggle);
         Grid.SetColumn(account, 5); top.Children.Add(account);
         workspace.Children.Add(top);
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
@@ -325,7 +326,7 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(stop, 2); actions.Children.Add(stop); Grid.SetColumn(send, 3); actions.Children.Add(send);
         composer.Children.Add(actions);
         Grid.SetRow(disclaimer, 3); workspace.Children.Add(disclaimer);
-        workspace.Children.Add(composer); split.Content = BuildDetailsLayout(workspace);
+        workspace.Children.Add(composer); split.Content = BuildConversationActivityLayout(BuildDetailsLayout(workspace));
         Grid.SetRow(overviewHost, 1); Grid.SetRowSpan(overviewHost, 2); workspace.Children.Add(overviewHost);
         return root;
     }
@@ -583,6 +584,7 @@ public sealed partial class ChatShell : UserControl
         }
         foreach (var key in activityPages.Keys.Where(key => !liveActivity.Contains(key)).ToArray()) activityPages.Remove(key);
         RefreshDetails();
+        RefreshConversationActivity();
         if (followBottom && !empty)
             DispatcherQueue.TryEnqueue(() =>
             {
@@ -852,6 +854,7 @@ public sealed partial class ChatShell : UserControl
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
         appAgentLifetime.Cancel(); welcomeRequest?.Cancel();
+        toolOutputDialog?.Hide();
         videoWorkLifetime.Cancel();
         videoLinkDialog?.Hide(); videoDeleteDialog?.Hide(); videoPreviewDialog?.ReleasePlayer(); videoPreviewDialog?.Hide();
         if (videoSettingsDialog is not null) { videoSettingsDialog.DiscardOnShutdown = true; videoSettingsDialog.Hide(); }

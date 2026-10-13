@@ -25,6 +25,12 @@ public sealed class DesktopAppAgentClient(DesktopSession session, DesktopChatCli
             ["currentDateTime"] = local.ToString("G", CultureInfo.CurrentCulture) + " " + zone };
     }
     public static JsonObject ConversationNameInput(string userMessage, string language) => new() { ["userMessage"] = userMessage, ["language"] = language };
+    public static JsonObject ToolExplanationInput(JsonElement toolCall, JsonElement? tool, string language)
+    {
+        var payload = new JsonObject { ["toolcall"] = JsonNode.Parse(toolCall.GetRawText()) };
+        payload["tool"] = tool is { } definition ? JsonNode.Parse(definition.GetRawText()) : null;
+        return new() { ["toolcall"] = payload.ToJsonString(InputJson), ["language"] = language };
+    }
 
     public async Task<string> InvokeAsync(DesktopAgent? agent, IReadOnlyList<ChatTarget> models, JsonObject input, string fallback, CancellationToken ct)
     {

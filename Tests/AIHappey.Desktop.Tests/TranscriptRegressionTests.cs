@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Xml.Linq;
 using AIHappey.Desktop.Core;
+using AIHappey.Vercel.Models;
 
 internal static class TranscriptRegressionTests
 {
@@ -20,6 +21,26 @@ internal static class TranscriptRegressionTests
         }
         check(MessageUsage.Read(Metadata("""{"totalTokens":17,"gateway":{"cost":0}}"""), "test/model", timestamp) == ("17", "0.00"), "legacy metadata keeps tokens and zero cost");
         check(MessageUsage.Read(Metadata("{}"), "test/model", timestamp) == (null, null), "missing metadata omits both usage badges");
+        var activityConversation = new List<ConversationMessage>
+        {
+            new() { Timestamp = timestamp.AddMinutes(-2), Message = new UIMessage { Id = "first", Role = Role.assistant, Parts =
+            [
+                PortableConversations.Part(JsonDocument.Parse("""{"type":"tool-first","toolCallId":"one","input":{"value":1}}""").RootElement),
+                PortableConversations.Part(JsonDocument.Parse("""{"type":"data-first","id":"one","data":{"value":1}}""").RootElement)
+            ] } },
+            new() { Timestamp = timestamp, Message = new UIMessage { Id = "second", Role = Role.assistant, Parts =
+            [
+                PortableConversations.Part(JsonDocument.Parse("""{"type":"tool-second","toolCallId":"two","state":"output-available","input":{"value":2},"output":{"value":2}}""").RootElement),
+                PortableConversations.Part(JsonDocument.Parse("""{"type":"data-second","id":"two","data":{"value":2}}""").RootElement)
+            ] } }
+        };
+        var beforeActivityProjection = PortableConversations.Write(new Conversation { Messages = activityConversation });
+        var projectedActivity = ConversationActivityProjection.Project(activityConversation);
+        check(projectedActivity.Tools.Select(item => item.Part.Type).SequenceEqual(["tool-second", "tool-first"])
+            && projectedActivity.Data.Select(item => item.Part.Type).SequenceEqual(["data-second", "data-first"]),
+            "conversation activity projects tools and data newest-first");
+        check(PortableConversations.Write(new Conversation { Messages = activityConversation }) == beforeActivityProjection,
+            "conversation activity projection does not mutate portable history");
         foreach (var gateway in new[] { "null", "[]", "\"invalid\"", "{}", "{\"cost\":null}", "{\"cost\":\"0.12\"}", "{\"cost\":{}}", "{\"cost\":1e999}" })
             check(MessageUsage.Read(Metadata("{\"usage\":{\"totalTokens\":17},\"providerMetadata\":{\"gateway\":" + gateway + "}}"), "test/model", timestamp) == ("17", null), "invalid/missing cost preserves positive tokens: " + gateway);
         check(MessageUsage.Read(Metadata("""{"usage":"invalid"}"""), "test/model", timestamp) == (null, null), "malformed optional usage does not break rendering");
@@ -51,6 +72,8 @@ internal static class TranscriptRegressionTests
             check(Format(TimeSpan.FromMinutes(2)) == (language == "en" ? "2 minutes ago" : "2 minuten geleden"), language + ": relative time uses real translations");
             check(values["GeneratedByAi"].Length > 0 && values["GeneratedByAiWarning"].Length > 0, language + ": AI disclosure translations present");
             check(values["MessagePrice"].Contains("{0}"), language + ": accessible price badge label translated");
+            foreach (var key in new[] { "Activities", "ToggleActivities", "ToolsCount", "DataCount", "NoToolActivities", "NoDataActivities", "ExplainToolCall", "ToolExplanationFallback", "ToolOutputTitle" })
+                check(values.TryGetValue(key, out var translated) && translated.Length > 0, language + ": conversation activity resource present: " + key);
         }
     }
 }
