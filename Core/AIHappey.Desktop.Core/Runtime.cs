@@ -16,6 +16,8 @@ public sealed class DesktopSettings
     public bool ConvertAttachmentsToText { get; set; } = true;
     public string? Language { get; set; }
     public ChatPreferences Chat { get; set; } = new();
+    private NavigationPreferences navigation = new();
+    public NavigationPreferences Navigation { get => navigation; set => navigation = value ?? new(); }
     private ImagePreferences images = new();
     public ImagePreferences Images { get => images; set => images = value ?? new(); }
     private VideoPreferences videos = new();
@@ -45,6 +47,7 @@ public sealed class DesktopSettings
         Language = Language, ConvertAttachmentsToText = ConvertAttachmentsToText,
         Chat = Chat.Clone(), Images = Images.Clone(), Videos = Videos.Clone(), Transcriptions = Transcriptions.Clone(), Speech = Speech.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
         SideInferenceAgentNames = SideInferenceAgentNames.Clone(),
+        Navigation = Navigation.Clone(),
         AllowedToolList = AllowedToolList.ToList()
     };
 

@@ -1175,4 +1175,11 @@
   <data name="FilesShareFailed" xml:space="preserve"><value>De verwijzing kon niet worden opgeslagen. Alleen toegankelijke lokale bestanden en mappen zonder koppelingen worden ondersteund.</value></data>
   <data name="FilesSharedCount" xml:space="preserve"><value>{0} geselecteerde items worden gedeeld. Bestaande verwijzingen zijn behouden zonder duplicaten.</value></data>
   <data name="FilesOpenFailed" xml:space="preserve"><value>Windows kon dit item niet openen.</value></data>
+  <data name="NavigationMore" xml:space="preserve"><value>Meer</value></data>
+  <data name="NavigationShow" xml:space="preserve"><value>Tonen</value></data>
+  <data name="NavigationHide" xml:space="preserve"><value>Verbergen</value></data>
+  <data name="NavigationOpen" xml:space="preserve"><value>Openen</value></data>
+  <data name="NavigationOptions" xml:space="preserve"><value>Opties voor {0}</value></data>
+  <data name="NavigationExpand" xml:space="preserve"><value>Verborgen navigatielinks tonen</value></data>
+  <data name="NavigationCollapse" xml:space="preserve"><value>Verborgen navigatielinks inklappen</value></data>
 </root>

@@ -225,13 +225,11 @@ public sealed partial class ChatShell : UserControl
         sidebarHeader.Children.Add(appTitle);
         Grid.SetColumn(toggle, 1); sidebarHeader.Children.Add(toggle);
         nav.Children.Add(sidebarHeader);
-        var sidebarBody = new StackPanel { Spacing = 8 };
         var newChatContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
         newChatContent.Children.Add(DesktopIcons.Create(Icon.Add));
         newChatContent.Children.Add(new TextBlock { Text = DesktopResources.Get("NewChat"), VerticalAlignment = VerticalAlignment.Center });
         newChat.Content = newChatContent;
-        sidebarBody.Children.Add(newChat); sidebarBody.Children.Add(searchChats);
-        nav.Children.Add(sidebarBody); sidebar.Children.Add(nav);
+        sidebar.Children.Add(nav);
         nav.Children.Add(BuildPageNavigation());
         Grid.SetRow(chats, 1); sidebar.Children.Add(chats);
         void UpdateSidebar()
@@ -246,18 +244,7 @@ public sealed partial class ChatShell : UserControl
             pageNavigation.Spacing = open ? 4 : 8;
             appTitle.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
             chats.Visibility = expandedPageNavigation.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var button in new ButtonBase[] { newChat, searchChats, pageButtons[DesktopPage.Images], pageButtons[DesktopPage.Videos], pageButtons[DesktopPage.Speech], pageButtons[DesktopPage.Transcriptions] })
-            {
-                button.Width = open ? double.NaN : 32;
-                button.Height = open ? double.NaN : 32;
-                button.Padding = open ? new Thickness(12, 10, 12, 10) : new Thickness(0);
-                button.HorizontalContentAlignment = open ? HorizontalAlignment.Left : HorizontalAlignment.Center;
-                if (button.Content is StackPanel content)
-                {
-                    content.Spacing = open ? 12 : 0;
-                    foreach (var label in content.Children.OfType<TextBlock>()) label.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-                }
-            }
+            UpdateNavigationLayout();
         }
         split.RegisterPropertyChangedCallback(SplitView.IsPaneOpenProperty, (_, _) => UpdateSidebar());
         split.Pane = sidebar;
@@ -820,6 +807,7 @@ public sealed partial class ChatShell : UserControl
         RenderContextTags();
         RenderApprovalBadges();
         SetOverviewBusy(value);
+        SetNavigationBusy(value);
         imageTarget.IsEnabled = !value;
         imagesPage.SetBusy(value, inference && activePage == DesktopPage.Images);
         videoTarget.IsEnabled = !value; videosPage.SetBusy(value); UpdateVideoFavorite();

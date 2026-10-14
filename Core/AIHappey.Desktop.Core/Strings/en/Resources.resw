@@ -1180,4 +1180,11 @@
   <data name="FilesShareFailed" xml:space="preserve"><value>The reference could not be saved. Only accessible local files and folders without links are supported.</value></data>
   <data name="FilesSharedCount" xml:space="preserve"><value>{0} selected items are shared. Existing references were kept without duplication.</value></data>
   <data name="FilesOpenFailed" xml:space="preserve"><value>Windows could not open this item.</value></data>
+  <data name="NavigationMore" xml:space="preserve"><value>More</value></data>
+  <data name="NavigationShow" xml:space="preserve"><value>Show</value></data>
+  <data name="NavigationHide" xml:space="preserve"><value>Hide</value></data>
+  <data name="NavigationOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="NavigationOptions" xml:space="preserve"><value>Options for {0}</value></data>
+  <data name="NavigationExpand" xml:space="preserve"><value>Show hidden navigation links</value></data>
+  <data name="NavigationCollapse" xml:space="preserve"><value>Collapse hidden navigation links</value></data>
 </root>

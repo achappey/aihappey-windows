@@ -34,6 +34,11 @@ public sealed partial class ChatShell
 
     private UIElement BuildPageNavigation()
     {
+        var primary = CreateNavigationGroup("Primary", pageNavigation);
+        AddNavigationLink(primary, "new", newChat, Icon.Add, () => { NewConversation(); return Task.CompletedTask; });
+        AddNavigationLink(primary, "search-conversations", searchChats, Icon.Search, SearchConversationsAsync);
+        var agentLinks = CreateNavigationGroup("Agents", expandedPageNavigation, DesktopResources.Get("Agents"));
+        var resourceLinks = CreateNavigationGroup("Files", expandedPageNavigation);
         foreach (var (page, label, icon) in new[]
         {
             (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)DesktopIcons.Create(Icon.Image)),
@@ -48,9 +53,6 @@ public sealed partial class ChatShell
             (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)DesktopIcons.Create(Icon.Cloud))
         })
         {
-            if (page == DesktopPage.Agents)
-            { expandedPageNavigation.Children.Add(SidebarSeparator("AgentsSeparator")); expandedPageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Agents"))); }
-            if (page == DesktopPage.Files) expandedPageNavigation.Children.Add(SidebarSeparator("FilesSeparator"));
             if (page == DesktopPage.Models)
             {
                 expandedPageNavigation.Children.Add(SidebarSeparator("ArtificialIntelligenceSeparator"));
@@ -80,12 +82,22 @@ public sealed partial class ChatShell
             button.Click += async (_, _) => await NavigateAsync(page);
             pageButtons.Add(page, button);
             if (page is DesktopPage.Models or DesktopPage.Providers) { button.Margin = new Thickness(24, 0, 0, 0); aiNavigation.Children.Add(button); }
-            else if (page is DesktopPage.Images or DesktopPage.Videos or DesktopPage.Speech or DesktopPage.Transcriptions) pageNavigation.Children.Add(button);
-            else expandedPageNavigation.Children.Add(button);
+            else
+            {
+                var key = page == DesktopPage.Mcp ? "servers" : page.ToString().ToLowerInvariant();
+                var group = NavigationPreferences.PrimaryKeys.Contains(key) ? primary : page == DesktopPage.Files ? resourceLinks : agentLinks;
+                AddNavigationLink(group, key, button, page switch
+                {
+                    DesktopPage.Images => Icon.Image, DesktopPage.Videos => Icon.Video, DesktopPage.Speech => Icon.Speaker2,
+                    DesktopPage.Transcriptions => Icon.Mic, DesktopPage.Agents => Icon.Bot, DesktopPage.Mcp => Icon.Connector,
+                    DesktopPage.Skills => Icon.Star, _ => Icon.Folder
+                }, () => NavigateAsync(page));
+            }
         }
         expandedPageNavigation.Children.Add(SidebarSeparator("ChatsSeparator"));
         expandedPageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Chats")));
         pageNavigation.Children.Add(expandedPageNavigation);
+        UpdateNavigationLayout();
         overviewHost.Children.Add(imagesPage); overviewHost.Children.Add(agentsOverview); overviewHost.Children.Add(skillsOverview); overviewHost.Children.Add(mcpOverview);
         overviewHost.Children.Add(speechPage);
         overviewHost.Children.Add(transcriptionsPage);
