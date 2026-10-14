@@ -21,7 +21,7 @@ internal sealed class SystemContextDialog : ContentDialog, IResponsiveDialog
     private readonly Dictionary<int, McpSystemContextView> mcpViews = [];
     private readonly bool agentMode;
 
-    public SystemContextDialog(UIMessage message, string appName, bool agentMode)
+    public SystemContextDialog(UIMessage message, string appName, bool agentMode, IReadOnlyList<JsonElement> requestTools)
     {
         this.agentMode = agentMode;
         Name = "SystemContextDialog"; Title = DesktopResources.Get("Context");
@@ -36,20 +36,9 @@ internal sealed class SystemContextDialog : ContentDialog, IResponsiveDialog
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalContentAlignment = HorizontalAlignment.Stretch };
         Grid.SetRow(viewer, 1); layout.Children.Add(viewer); Content = layout;
-        // Read from this exact composed context, not a second live discovery snapshot.
-        // Tool names/schemas therefore match the request, including collision aliases.
-        foreach (var part in message.Parts.Where(part => part.Type == "text"))
-        {
-            try
-            {
-                using var document = JsonDocument.Parse(PortableConversations.Text(part));
-                var value = document.RootElement;
-                if (value.ValueKind == JsonValueKind.Object && value.TryGetProperty("modelContextProtocolServer", out _)
-                    && value.TryGetProperty("tools", out var serverTools) && serverTools.ValueKind == JsonValueKind.Array)
-                    tools.AddRange(serverTools.EnumerateArray().Where(tool => tool.ValueKind == JsonValueKind.Object).Select(tool => tool.Clone()));
-            }
-            catch (JsonException) { /* Other system parts may contain plain text. */ }
-        }
+        // Use the complete request tool list from the same snapshot as the composed context.
+        // MCP context blocks alone omit local, resource and skill tools. Keep exact aliases/schemas.
+        tools.AddRange(requestTools.Select(tool => tool.Clone()));
         if (tools.Count > 0)
         {
             var label = DesktopResources.Format("McpToolsCount", tools.Count);

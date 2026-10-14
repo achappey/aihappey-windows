@@ -105,7 +105,110 @@ public partial class App
             && Descendants(approval).OfType<SplitButton>().Any(button => button.Name == "AutomaticToolApproval")
             && approval.Decision is null, context + ": approval actions remain available without implicit decision");
         approval.Hide(); await approvalTask;
+        window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 800));
+        await CheckSystemContextToolsAsync(root, context);
         File.WriteAllLines(report, results); window.Content = null;
+    }
+
+    private async Task CheckSystemContextToolsAsync(Grid root, string context)
+    {
+        var calls = 0;
+        Task<JsonElement> Call(string name, JsonElement input, CancellationToken ct)
+        { calls++; return Task.FromResult(Json("{}")); }
+        var local = McpTurnSnapshot.Empty;
+        foreach (var plugin in DesktopLocalTools.Plugins.Where(plugin => plugin.Id != DesktopLocalTools.SkillSearch))
+            DesktopLocalTools.Register(local, plugin.Id, Call);
+        await InspectAsync(local, "local plugins without MCP");
+
+        var resourceDiscovery = new McpDiscovery(Json("{}"), Json("{}"), null, [])
+        {
+            Resources = [Json("""{"name":"Resource","uri":"resource://example"}""")]
+        };
+        var server = new McpCatalogItem("context-server", "Context server", "", "https://mcp.example/");
+        var resources = McpTurnSnapshot.Create([new McpConnectedServer(server, resourceDiscovery,
+            (name, input, id, locale, ct) => Call(name, input, ct),
+            (uri, cursor, limit, ct) => Call(uri, Json("{}"), ct))]);
+        Check(resources.Tools.Count == 1 && CatalogProjection.Text(resources.Tools[0], "name") == DesktopMcpResources.ToolName,
+            context + ": resource-only fixture exposes read_resource");
+        await InspectAsync(resources, "resource-only MCP connection");
+
+        var skill = new DesktopSkill("context-skill", "Context skill", "Test skill", "local");
+        var skillTurn = new DesktopSkillTurn([(skill, ct =>
+        {
+            calls++; throw new InvalidOperationException("Context inspection must not load skill content.");
+        })]);
+        var skills = McpTurnSnapshot.Empty; skillTurn.Register(skills);
+        Check(skills.Tools.Count == 2, context + ": enabled skill fixture exposes activation and resource tools");
+        await InspectAsync(skills, "enabled skill without MCP");
+        var search = McpTurnSnapshot.Empty;
+        new DesktopSkillTurn([], searchEnabled: true).Register(search);
+        await InspectAsync(search, "skill search tools without enabled skills");
+
+        var collisionName = CatalogProjection.Text(local.Tools[0], "name")!;
+        var collision = JsonSerializer.SerializeToElement(new
+        {
+            name = collisionName, title = "Server collision tool", description = "Server tool description",
+            inputSchema = new { type = "object", properties = new { query = new { type = "string" } } },
+            outputSchema = new { type = "object", properties = new { answer = new { type = "string" } } },
+            annotations = new { readOnlyHint = true, idempotentHint = true }
+        });
+        var mixed = McpTurnSnapshot.Create([new McpConnectedServer(server, resourceDiscovery with { Tools = [collision] },
+            (name, input, id, locale, ct) => Call(name, input, ct))]);
+        foreach (var plugin in DesktopLocalTools.Plugins.Where(plugin => plugin.Id != DesktopLocalTools.SkillSearch))
+            DesktopLocalTools.Register(mixed, plugin.Id, Call);
+        skillTurn.Register(mixed);
+        var alias = CatalogProjection.Text(mixed.Tools[0], "name")!;
+        Check(alias != collisionName && alias.StartsWith("mcp_"), context + ": mixed fixture uses MCP collision alias");
+        await InspectAsync(mixed, "mixed MCP, resource, local and skill tools");
+        await InspectAsync(McpTurnSnapshot.Empty, "disabled tools and no connected servers");
+
+        // Custom composers may include descriptive tool blocks. They must never override request availability.
+        var omitted = McpTurnSnapshot.Empty;
+        omitted.AddContext(Json("""{"modelContextProtocolServer":{"name":"Stale server"},"tools":[{"name":"disabled_tool","inputSchema":{"type":"object"}}]}"""));
+        await InspectAsync(omitted, "context-only tool is not in request");
+        Check(calls == 0, context + ": inspecting tools does not execute tools or read resources/skills");
+
+        async Task InspectAsync(McpTurnSnapshot snapshot, string scenario)
+        {
+            var message = new DesktopSystemContextComposer().Compose(new(new() { AppName = "Context test", ChatbotInstructions = "Test instructions" },
+                new(), null, "en", false, DateTimeOffset.UtcNow) { Mcp = snapshot });
+            var request = new ChatPreferences().RequestBody("test/model", "context-test", [message], null, snapshot);
+            var expected = JsonSerializer.Deserialize<JsonElement>(request["tools"]!.ToJsonString()).EnumerateArray().ToArray();
+            var dialogType = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.SystemContextDialog")!;
+            var dialog = (ContentDialog)Activator.CreateInstance(dialogType, new object[] { message, "Context test", false, snapshot.Tools })!;
+            dialog.XamlRoot = root.XamlRoot;
+            var dialogTask = dialog.ShowAsync(); await Task.Delay(120); dialog.UpdateLayout();
+            var prefix = context + " / " + scenario;
+            var displayed = (List<JsonElement>)dialogType.GetField("tools", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(dialog)!;
+            Check(displayed.Select(tool => tool.GetRawText()).SequenceEqual(expected.Select(tool => tool.GetRawText())),
+                prefix + ": complete definitions match request exactly, including schemas and aliases");
+            var toolTab = Descendants(dialog).OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>()
+                .SingleOrDefault(button => button.Name == "SystemContextToolsTab");
+            Check(expected.Length == 0 ? toolTab is null : toolTab is { IsChecked: true }
+                && toolTab.Content?.ToString() == "Tools (" + expected.Length + ")", prefix + ": correct Tools count and initial selection");
+            var cards = Descendants(dialog).OfType<Border>().Where(border => border.Name == "SystemContextToolCard").ToArray();
+            Check(cards.Length == expected.Length && cards.Select((card, index) =>
+                Descendants(card).OfType<TextBlock>().Any(text => text.Text == CatalogProjection.Text(expected[index], "name"))).All(match => match),
+                prefix + ": every request tool is rendered once with its exact name");
+            foreach (var (card, tool) in cards.Zip(expected))
+            {
+                Check(Descendants(card).OfType<Expander>().Count() >= 1, prefix + ": input schema remains inspectable");
+                if (tool.TryGetProperty("outputSchema", out _))
+                    Check(Descendants(card).OfType<Expander>().Any(expander => expander.Header?.ToString() == "Output"), prefix + ": output schema remains inspectable");
+                if (CatalogProjection.Text(tool, "title") == "Server collision tool")
+                    Check(Descendants(card).OfType<TextBlock>().Any(text => text.Text == "Server tool description")
+                        && Descendants(card).OfType<TextBlock>().Any(text => text.Text == "Read-only"), prefix + ": descriptions and annotation badges preserved");
+            }
+            var tabs = Descendants(dialog).OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>()
+                .Where(button => button.Name.StartsWith("SystemContextTab")).ToArray();
+            Check(tabs.Length == message.Parts.Count && tabs.Any(button => button.Content?.ToString() == "Context test"),
+                prefix + ": all original context tabs retained");
+            dialogType.GetMethod("Render", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(dialog, [expected.Length > 0 ? 1 : 0]);
+            dialog.UpdateLayout();
+            Check(!Descendants(dialog).OfType<Border>().Any(border => border.Name == "SystemContextToolCard"),
+                prefix + ": other context tabs remain separately navigable");
+            dialog.Hide(); await dialogTask;
+        }
     }
 
     private static JsonElement Json(string value) => JsonSerializer.Deserialize<JsonElement>(value);

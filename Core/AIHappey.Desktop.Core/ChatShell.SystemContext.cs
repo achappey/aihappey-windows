@@ -46,8 +46,9 @@ public sealed partial class ChatShell
         if (!busy && Service == ServiceKind.Ai && NeedsSkillCatalog(session.Settings.Chat))
             await RunAsync(ct => LoadRuntimeSkillsAsync(ct));
         if (closing) return;
-        var dialog = new SystemContextDialog(CaptureSystemContext(), session.ContextOptions.AppName ?? DesktopBranding.AppName,
-            Service == ServiceKind.Agents) { XamlRoot = XamlRoot };
+        var snapshot = activeMcpTurn ?? CaptureSkillRuntime(session.Settings.Chat);
+        var dialog = new SystemContextDialog(CaptureSystemContext(mcp: snapshot), session.ContextOptions.AppName ?? DesktopBranding.AppName,
+            Service == ServiceKind.Agents, snapshot.Tools) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog); systemContextDialog = dialog; historyDialogOpen = true;
         try { await dialog.ShowAsync(); }
         finally
