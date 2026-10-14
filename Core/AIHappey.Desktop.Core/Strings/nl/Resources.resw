@@ -284,6 +284,8 @@
   <data name="InvalidProviderHeaders" xml:space="preserve"><value>Gebruik geldige X- providerheadernamen en niet-lege API-sleutels op ├⌐├⌐n regel.</value></data>
   <data name="ApiKeysHint" xml:space="preserve"><value>Sleutels worden beveiligd voor je Windows-account. Ze worden als HTTP-headers naar de geselecteerde lokale of externe gateways verzonden. Voeg de exacte headernaam van de provider toe, bijvoorbeeld X-OpenAI-Key of X-Anthropic-Key. Sleutels worden niet opgenomen in de chatgeschiedenis.</value></data>
   <data name="AddProviderKey" xml:space="preserve"><value>Providersleutel toevoegen</value></data>
+  <data name="SelectApiKeyProvider" xml:space="preserve"><value>Provider kiezen</value></data>
+  <data name="ApiKeyProviderSearch" xml:space="preserve"><value>Providers zoeken op naam</value></data>
   <data name="ProviderApiKeys" xml:space="preserve"><value>API-sleutels van providers</value></data>
   <data name="UniqueProviderHeaders" xml:space="preserve"><value>Providerheadernamen moeten uniek zijn.</value></data>
   <data name="EnterpriseConfigurationRequired" xml:space="preserve"><value>Stel desktop.json in met je Entra-tenant-ID, desktop-public-client-ID en gatewayscopes en start de app opnieuw.</value></data>

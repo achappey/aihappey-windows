@@ -29,7 +29,7 @@ public sealed class PluginsOverviewPage : UserControl
     public PluginsOverviewPage()
     {
         Name = "PluginsOverview";
-        var panel = new StackPanel { Spacing = 16, MaxWidth = 900, Margin = new Thickness(24), HorizontalAlignment = HorizontalAlignment.Stretch };
+        var panel = new StackPanel { Name = "PluginsBody", Spacing = 16, MaxWidth = 900, Margin = new Thickness(24), HorizontalAlignment = HorizontalAlignment.Center };
         panel.Children.Add(new TextBlock { Text = DesktopResources.Get("PluginsTitle"), FontSize = 28, HorizontalAlignment = HorizontalAlignment.Center });
         panel.Children.Add(new TextBlock { Text = DesktopResources.Get("PluginsDescription"), TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center });
         var links = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Center };
@@ -37,7 +37,16 @@ public sealed class PluginsOverviewPage : UserControl
         links.Children.Add(new HyperlinkButton { Content = DesktopResources.Get("PluginSpecification"), NavigateUri = new("https://agent-plugins.org/specification") }); panel.Children.Add(links);
         var filters = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 }; filters.Children.Add(search); filters.Children.Add(keywords); filters.Children.Add(authors); panel.Children.Add(filters);
         var tabs = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 }; tabs.Children.Add(all); tabs.Children.Add(favorites); panel.Children.Add(tabs); panel.Children.Add(rows);
-        Content = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled };
+        var viewer = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+        Content = viewer;
+        void SizeBody()
+        {
+            var width = viewer.ViewportWidth > 0 ? viewer.ViewportWidth : viewer.ActualWidth;
+            if (width > 0) panel.Width = Math.Max(0, Math.Min(900, width - 48));
+        }
+        viewer.SizeChanged += (_, _) => SizeBody();
+        Loaded += (_, _) => SizeBody();
         foreach (var control in new Control[] { search, keywords, authors, all, favorites }) ControlAppearance.Stock(control);
         AutomationProperties.SetName(search, DesktopResources.Get("Search"));
         search.TextChanged += (_, _) => Render();

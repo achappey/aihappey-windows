@@ -66,7 +66,7 @@ public sealed partial class ChatShell
                 Grid.SetColumn(chevron, 2); header.Children.Add(chevron);
                 aiCategory = new Button { Name = "ArtificialIntelligenceCategory", Content = header,
                     HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                    Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(0) };
+                    MinHeight = 40, Padding = new Thickness(12, 4, 12, 4), CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(0) };
                 ToolbarControls.Subtle(aiCategory); ToolbarControls.Label(aiCategory, DesktopResources.Get("ArtificialIntelligence"));
                 void UpdateCategory() { aiNavigation.Visibility = aiCategoryExpanded ? Visibility.Visible : Visibility.Collapsed; chevron.Icon = aiCategoryExpanded ? Icon.ChevronUp : Icon.ChevronDown; }
                 aiCategory.Click += (_, _) => { aiCategoryExpanded = !aiCategoryExpanded; UpdateCategory(); };
@@ -76,7 +76,7 @@ public sealed partial class ChatShell
             content.Children.Add(icon); content.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center });
             var button = new ToggleButton { Name = "Navigate" + page, Content = content, IsChecked = page == DesktopPage.Chat,
                 HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left,
-                Padding = new Thickness(12, 10, 12, 10), BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(6) };
+                MinHeight = 40, Padding = new Thickness(12, 4, 12, 4), BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(6) };
             ControlAppearance.Apply(button, ControlAppearance.NativeResources, palette =>
             { button.Background = new SolidColorBrush(activePage == page ? palette.Selected : palette.Background); button.Foreground = new SolidColorBrush(palette.Text); });
             ToolbarControls.Label(button, label);

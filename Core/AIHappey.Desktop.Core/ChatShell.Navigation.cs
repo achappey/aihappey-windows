@@ -139,7 +139,8 @@ public sealed partial class ChatShell
     {
         button.Width = open ? double.NaN : 32;
         button.Height = open ? double.NaN : 32;
-        button.Padding = open ? new Thickness(12, 10, 12, 10) : new Thickness(0);
+        button.MinHeight = open ? 40 : 32;
+        button.Padding = open ? new Thickness(12, 4, 12, 4) : new Thickness(0);
         button.HorizontalContentAlignment = open ? HorizontalAlignment.Left : HorizontalAlignment.Center;
         if (button.Content is not StackPanel content) return;
         content.Spacing = open ? 12 : 0;

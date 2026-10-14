@@ -30,6 +30,12 @@ public static class ProviderCatalog
     private static readonly Lazy<IReadOnlyDictionary<string, CatalogProvider>> catalog = new(Load);
     public static IReadOnlyDictionary<string, CatalogProvider> All => catalog.Value;
     public static CatalogProvider Get(string id) => All.GetValueOrDefault(id) ?? new() { Id = id, Name = id };
+    public static string? ApiKeyHeader(CatalogProvider provider)
+    {
+        var name = new string(provider.Name.Where(char.IsAsciiLetterOrDigit).ToArray());
+        return name.Length == 0 ? null : "X-" + name + "-Key";
+    }
+
     private static IReadOnlyDictionary<string, CatalogProvider> Load()
     {
         var assembly = typeof(ProviderCatalog).Assembly;

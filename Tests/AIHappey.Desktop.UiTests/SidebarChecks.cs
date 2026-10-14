@@ -119,7 +119,7 @@ public partial class App
         Check(split.IsPaneOpen && expanded.Visibility == Visibility.Visible && Field<ListView>(shell, "chats").Visibility == Visibility.Visible
             && header.Margin == new Thickness(0, 0, 0, 12) && navigation.Spacing == 4
             && buttons.All(button => double.IsNaN(button.Width) && double.IsNaN(button.Height)
-                && button.Padding == new Thickness(12, 10, 12, 10) && button.HorizontalContentAlignment == HorizontalAlignment.Left
+                && button.MinHeight == 40 && button.Padding == new Thickness(12, 4, 12, 4) && button.HorizontalContentAlignment == HorizontalAlignment.Left
                 && ((StackPanel)button.Content).Spacing == 12 && ((StackPanel)button.Content).Children.OfType<TextBlock>().Single().Visibility == Visibility.Visible),
             context + ": menu toggle restores expanded labels, dimensions, categories, and history");
         InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();

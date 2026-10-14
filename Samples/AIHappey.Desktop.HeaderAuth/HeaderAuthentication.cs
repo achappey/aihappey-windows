@@ -51,27 +51,7 @@ public sealed class HeaderAuthentication : IDesktopHost
     public async Task ManageAccountAsync(object xamlRoot, CancellationToken cancellationToken)
     {
         await LoadAsync(cancellationToken);
-        var panel = new StackPanel { Spacing = 12, MinWidth = 420 };
-        panel.Children.Add(new TextBlock { Text = DesktopResources.Get("ApiKeysHint"), TextWrapping = TextWrapping.Wrap, MaxWidth = 440 });
-        var rows = new StackPanel { Spacing = 8 };
-        var entries = new List<(TextBox Name, PasswordBox Key, Grid Row)>();
-        void Add(string name, string key)
-        {
-            var row = new Grid { ColumnSpacing = 8 };
-            row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-            row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-            row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-            var field = new TextBox { Text = name, PlaceholderText = "X-OpenAI-Key" };
-            var secret = new PasswordBox { Password = key, PlaceholderText = DesktopResources.Get("ApiKey") };
-            var remove = new Button { Content = DesktopResources.Get("Remove") };
-            row.Children.Add(field); Grid.SetColumn(secret, 1); row.Children.Add(secret); Grid.SetColumn(remove, 2); row.Children.Add(remove);
-            entries.Add((field, secret, row)); rows.Children.Add(row);
-            remove.Click += (_, _) => { entries.RemoveAll(x => x.Row == row); rows.Children.Remove(row); };
-        }
-        foreach (var item in headers!) Add(item.Key, item.Value);
-        if (entries.Count == 0) Add("X-OpenAI-Key", "");
-        panel.Children.Add(new ScrollViewer { Content = rows, MaxHeight = 320 });
-        var add = new Button { Content = DesktopResources.Get("AddProviderKey") }; add.Click += (_, _) => Add("", ""); panel.Children.Add(add);
+        var panel = new ProviderApiKeysView(headers!);
         var error = new TextBlock { TextWrapping = TextWrapping.Wrap }; panel.Children.Add(error);
         var dialog = new ContentDialog { XamlRoot = (XamlRoot)xamlRoot, Title = DesktopResources.Get("ProviderApiKeys"), Content = panel, PrimaryButtonText = DesktopResources.Get("Save"), CloseButtonText = DesktopResources.Get("Cancel") };
         SystemAppearance.PrepareDialog(dialog);
@@ -80,12 +60,7 @@ public sealed class HeaderAuthentication : IDesktopHost
         {
             try
             {
-                next = new(StringComparer.OrdinalIgnoreCase);
-                foreach (var entry in entries)
-                {
-                    if (string.IsNullOrWhiteSpace(entry.Key.Password)) continue;
-                    if (!next.TryAdd(entry.Name.Text.Trim(), entry.Key.Password.Trim())) throw new ArgumentException(DesktopResources.Get("UniqueProviderHeaders"));
-                }
+                next = panel.ReadHeaders();
                 Validate(next);
             }
             catch (ArgumentException e) { args.Cancel = true; error.Text = e.Message; }

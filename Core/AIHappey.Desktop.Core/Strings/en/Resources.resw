@@ -284,6 +284,8 @@
   <data name="InvalidProviderHeaders" xml:space="preserve"><value>Use valid X- provider header names and non-empty, single-line API keys.</value></data>
   <data name="ApiKeysHint" xml:space="preserve"><value>Keys are protected for your Windows account. They are sent as HTTP headers to the selected local or remote gateways. Add the provider's exact header name, for example X-OpenAI-Key or X-Anthropic-Key. No keys are included in chat history.</value></data>
   <data name="AddProviderKey" xml:space="preserve"><value>Add provider key</value></data>
+  <data name="SelectApiKeyProvider" xml:space="preserve"><value>Select provider</value></data>
+  <data name="ApiKeyProviderSearch" xml:space="preserve"><value>Search providers by name</value></data>
   <data name="ProviderApiKeys" xml:space="preserve"><value>Provider API keys</value></data>
   <data name="UniqueProviderHeaders" xml:space="preserve"><value>Provider header names must be unique.</value></data>
   <data name="EnterpriseConfigurationRequired" xml:space="preserve"><value>Configure desktop.json with your Entra tenant ID, desktop public-client ID, and gateway scopes, then restart the app.</value></data>
