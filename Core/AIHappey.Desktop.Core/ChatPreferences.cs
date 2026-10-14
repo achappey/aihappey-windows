@@ -33,6 +33,12 @@ public sealed class ChatPreferences
         ["openai"] = OpenAIChatConfig.Defaults()
     };
     public Dictionary<string, Dictionary<string, string>> ProviderHeaders { get; set; } = [];
+    private List<string> enabledAgentPluginIds = [];
+    public List<string> EnabledAgentPluginIds
+    {
+        get => enabledAgentPluginIds;
+        set => enabledAgentPluginIds = value?.Where(AgentPluginPackages.ValidName).Distinct(StringComparer.Ordinal).ToList() ?? [];
+    }
 
     public ChatPreferences Clone() => new()
     {
@@ -41,6 +47,7 @@ public sealed class ChatPreferences
         MaxOutputTokens = MaxOutputTokens,
         ActivePlugins = ActivePlugins.ToList(),
         EnabledSkillIds = EnabledSkillIds.ToList(),
+        EnabledAgentPluginIds = EnabledAgentPluginIds.ToList(),
         ProviderMetadata = ProviderMetadata.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone()),
         ProviderHeaders = ProviderHeaders.ToDictionary(p => p.Key, p => new Dictionary<string, string>(p.Value, StringComparer.OrdinalIgnoreCase))
     };

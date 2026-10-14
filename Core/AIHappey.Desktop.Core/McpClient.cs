@@ -19,7 +19,7 @@ public sealed class DesktopMcpHeaderAuthentication : IDesktopMcpAuthentication
     public Task<HttpMessageHandler> ConfigureAsync(DesktopMcpServer server, HttpClientTransportOptions options, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        options.AdditionalHeaders = McpValidation.Headers(server.Headers);
+        options.AdditionalHeaders = server.PluginId is null ? McpValidation.Headers(server.Headers) : new Dictionary<string, string>(server.Headers, StringComparer.OrdinalIgnoreCase);
         return Task.FromResult<HttpMessageHandler>(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
     }
 }
@@ -65,7 +65,7 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
     public async Task<IDesktopMcpConnection> ConnectAsync(DesktopMcpServer server, CancellationToken ct)
     {
         server = server.Clone(); server.Validate();
-        var options = new HttpClientTransportOptions { Endpoint = McpValidation.Endpoint(server.Url), TransportMode = HttpTransportMode.StreamableHttp };
+        var options = new HttpClientTransportOptions { Endpoint = server.PluginId is null ? McpValidation.Endpoint(server.Url) : new Uri(server.Url), TransportMode = HttpTransportMode.StreamableHttp };
         var handler = await authentication.ConfigureAsync(server, options, ct);
         var http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan, MaxResponseContentBufferSize = 8 * 1024 * 1024 };
         var transport = new HttpClientTransport(options, http, ownsHttpClient: true);
@@ -293,6 +293,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
     public async Task InstallAsync(DesktopMcpServer server, CancellationToken ct)
     {
         server = server.Clone(); server.Validate();
+        if (server.PluginId is not null || server.Id.StartsWith("agent-plugin/", StringComparison.Ordinal)) throw new InvalidOperationException("Plugin servers are managed by their package.");
         await gate.WaitAsync(ct);
         try
         {
@@ -333,6 +334,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
             ObjectDisposedException.ThrowIf(disposed, this);
             Entry? entry; lock (sync) entries.TryGetValue(id, out entry);
             if (entry is null) return;
+            if (entry.Server.PluginId is not null) throw new InvalidOperationException("Plugin servers are managed by their package.");
             await store.SaveAsync(partition!, Entries().Where(e => e != entry).Select(e => e.Server), ct);
             await DisconnectAsync(entry); lock (sync) entries.Remove(id);
             Changed?.Invoke();
@@ -340,6 +342,31 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         finally { gate.Release(); }
     }
     private Entry[] Entries() { lock (sync) return entries.Values.ToArray(); }
+    public async Task ReconcilePluginsAsync(IEnumerable<DesktopMcpServer> desired, CancellationToken ct)
+    {
+        var servers = desired.Select(s => s.Clone()).ToDictionary(s => s.Id, StringComparer.Ordinal);
+        foreach (var server in servers.Values) { if (server.PluginId is null) throw new InvalidOperationException("Missing plugin ownership."); server.Validate(); }
+        await gate.WaitAsync(ct);
+        try
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            foreach (var previous in Entries().Where(e => e.Server.PluginId is not null))
+            {
+                if (servers.TryGetValue(previous.Server.Id, out var next) && previous.Server.Url == next.Url
+                    && previous.Server.Headers.OrderBy(p => p.Key).SequenceEqual(next.Headers.OrderBy(p => p.Key))
+                    && previous.Server.PluginSettings?.GetRawText() == next.PluginSettings?.GetRawText())
+                { servers.Remove(previous.Server.Id); continue; }
+                await DisconnectAsync(previous); lock (sync) entries.Remove(previous.Server.Id);
+            }
+            foreach (var server in servers.Values)
+            {
+                ct.ThrowIfCancellationRequested();
+                var entry = new Entry(server); lock (sync) entries.Add(server.Id, entry);
+                if (server.Enabled) await ConnectAsync(entry, ct);
+            }
+        }
+        finally { gate.Release(); Changed?.Invoke(); }
+    }
     public async Task ReconnectAsync(CancellationToken ct)
     {
         await gate.WaitAsync(ct);

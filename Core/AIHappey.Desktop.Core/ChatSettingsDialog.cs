@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AIHappey.Desktop.Core;
 
@@ -21,6 +22,8 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private Action? selectSkillsTab;
     private Action? selectToolsTab;
     private Action? selectGeneralTab, selectProviderTab;
+    private Action? selectPluginsTab;
+    private readonly IReadOnlyList<DesktopAgentPlugin> plugins;
     public ChatPreferences? Result { get; private set; }
     public Func<ChatPreferences, Task>? SaveAsync { get; set; }
     public bool DiscardOnShutdown { get; set; }
@@ -28,12 +31,14 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     public void CancelSkillLoading() => skillsView?.Dispose();
     public void ShowSkillsTab() => selectSkillsTab?.Invoke();
     public void ShowToolsTab() => selectToolsTab?.Invoke();
+    public void ShowPluginsTab() => selectPluginsTab?.Invoke();
 
     public ChatSettingsDialog(ChatPreferences preferences, string? provider,
         Func<CancellationToken, Task<DesktopSkillSelection>>? loadSkills = null,
-        Func<string, CancellationToken, Task>? prefetchSkill = null)
+        Func<string, CancellationToken, Task>? prefetchSkill = null, IReadOnlyList<DesktopAgentPlugin>? plugins = null)
     {
         this.loadSkills = loadSkills; this.prefetchSkill = prefetchSkill;
+        this.plugins = plugins ?? [];
         Name = "ChatSettingsDialog"; this.provider = provider; draft = preferences.Clone();
         Title = DesktopResources.Get("ChatSettings"); CloseButtonText = DesktopResources.Get("Close");
         PrimaryButtonText = DesktopResources.Get("ChatRestoreDefaults");
@@ -74,6 +79,12 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         ControlAppearance.Stock(toolsTab); tabs.Children.Add(toolsTab);
         var skillsTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatSkillsTab", Content = DesktopResources.Get("Skills") };
         ControlAppearance.Stock(skillsTab); tabs.Children.Add(skillsTab);
+        var pluginsTab = new ToggleButton { Name = "ChatPluginsTab", Content = DesktopResources.Get("PluginsTitle") };
+        ControlAppearance.Stock(pluginsTab); tabs.Children.Add(pluginsTab);
+        var pluginsView = new PluginsSettingsView(plugins, draft.EnabledAgentPluginIds);
+        selectPluginsTab = () => { foreach (var tab in tabs.Children.OfType<ToggleButton>()) tab.IsChecked = tab == pluginsTab; page.Content = pluginsView; page.ChangeView(null, 0, null, true); };
+        pluginsTab.Click += (_, _) => ShowPluginsTab();
+        foreach (var tab in tabs.Children.OfType<ToggleButton>().Where(t => t != pluginsTab)) tab.Click += (_, _) => pluginsTab.IsChecked = false;
         Microsoft.UI.Xaml.Controls.Primitives.ToggleButton? providerTab = null;
         selectProviderTab = null;
         if (providerForm is not null)

@@ -16,7 +16,7 @@
   <data name="SkillApplyPath" xml:space="preserve"><value>Apply path</value></data>
   <data name="SkillFieldRequired" xml:space="preserve"><value>The skill field '{0}' is required.</value></data>
   <data name="SkillFieldInvalid" xml:space="preserve"><value>The skill field '{0}' has an invalid type or length.</value></data>
-  <data name="SkillNameInvalid" xml:space="preserve"><value>Use 1–64 lowercase letters, numbers, or hyphens. A name cannot start or end with a hyphen or contain consecutive hyphens.</value></data>
+  <data name="SkillNameInvalid" xml:space="preserve"><value>Use 1ΓÇô64 lowercase letters, numbers, or hyphens. A name cannot start or end with a hyphen or contain consecutive hyphens.</value></data>
   <data name="SkillNameLocked" xml:space="preserve"><value>The name of an existing skill cannot be changed.</value></data>
   <data name="SkillAlreadyExists" xml:space="preserve"><value>A local skill with this name already exists.</value></data>
   <data name="SkillManifestReserved" xml:space="preserve"><value>SKILL.md is reserved for the instructions editor and cannot be added as an extra file.</value></data>
@@ -146,7 +146,7 @@
   <data name="RefreshTargets" xml:space="preserve"><value>Refresh models or agents</value></data>
   <data name="RefreshAgents" xml:space="preserve"><value>Refresh agent overview</value></data>
   <data name="RefreshSkills" xml:space="preserve"><value>Refresh skill overview</value></data>
-  <data name="Working" xml:space="preserve"><value>Working…</value></data>
+  <data name="Working" xml:space="preserve"><value>WorkingΓÇª</value></data>
   <data name="Dismiss" xml:space="preserve"><value>Dismiss</value></data>
   <data name="ToggleHistory" xml:space="preserve"><value>Toggle chat history</value></data>
   <data name="ManageAccount" xml:space="preserve"><value>Manage account</value></data>
@@ -182,10 +182,10 @@
   <data name="OperationFailed" xml:space="preserve"><value>The operation failed. Check service availability, settings, and local storage permissions.</value></data>
   <data name="SearchChats" xml:space="preserve"><value>Search chats</value></data>
   <data name="SearchConversations" xml:space="preserve"><value>Search conversations</value></data>
-  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Search conversations…</value></data>
+  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Search conversationsΓÇª</value></data>
   <data name="ChatActions" xml:space="preserve"><value>Chat actions</value></data>
   <data name="RecentChats" xml:space="preserve"><value>Recent chats</value></data>
-  <data name="Searching" xml:space="preserve"><value>Searching…</value></data>
+  <data name="Searching" xml:space="preserve"><value>SearchingΓÇª</value></data>
   <data name="NoRecentChats" xml:space="preserve"><value>No recent chats.</value></data>
   <data name="NoResults" xml:space="preserve"><value>No results.</value></data>
   <data name="Details" xml:space="preserve"><value>Details</value></data>
@@ -206,17 +206,17 @@
   <data name="PublicUrl" xml:space="preserve"><value>URL (publicly accessible)</value></data>
   <data name="MimeType" xml:space="preserve"><value>MIME type</value></data>
   <data name="CustomMimeType" xml:space="preserve"><value>Custom MIME type</value></data>
-  <data name="DetectingMime" xml:space="preserve"><value>Detecting MIME type…</value></data>
+  <data name="DetectingMime" xml:space="preserve"><value>Detecting MIME typeΓÇª</value></data>
   <data name="MimeNotDetected" xml:space="preserve"><value>MIME type could not be detected. Select the type of content at this URL.</value></data>
   <data name="InvalidPublicUrl" xml:space="preserve"><value>Enter a valid HTTP or HTTPS URL without credentials.</value></data>
   <data name="InvalidMime" xml:space="preserve"><value>Enter a valid MIME type, for example application/pdf.</value></data>
   <data name="Custom" xml:space="preserve"><value>Custom</value></data>
-  <data name="SearchPlaceholder" xml:space="preserve"><value>Search…</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>SearchΓÇª</value></data>
   <data name="SearchAgents" xml:space="preserve"><value>Search agents</value></data>
   <data name="SearchSkills" xml:space="preserve"><value>Search skills</value></data>
   <data name="AgentsDescription" xml:space="preserve"><value>Agents bring capabilities, context, and execution logic together in a single model. Explore the available agents and choose one to start a conversation.</value></data>
   <data name="SkillsDescription" xml:space="preserve"><value>An overview of available skills for tasks and workflows. See what each skill does and choose the right option. Skills combine instructions, logic, and execution in a consistent structure.</value></data>
-  <data name="Loading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="Loading" xml:space="preserve"><value>LoadingΓÇª</value></data>
   <data name="CatalogNoResults" xml:space="preserve"><value>No results. Try another search or filter.</value></data>
   <data name="CatalogCanceled" xml:space="preserve"><value>Catalog loading was canceled or timed out.</value></data>
   <data name="CatalogFailed" xml:space="preserve"><value>The catalog could not be loaded. Check your connection, account, and local storage permissions.</value></data>
@@ -243,7 +243,7 @@
   <data name="SkillDownloadHint" xml:space="preserve"><value>Downloading saves a ZIP file only. It does not install or enable this skill.</value></data>
   <data name="DefinitionUnavailable" xml:space="preserve"><value>Definition unavailable</value></data>
   <data name="DefinitionUnavailableHint" xml:space="preserve"><value>You can chat with this agent, but its backend does not expose a downloadable definition.</value></data>
-  <data name="LoadingVersions" xml:space="preserve"><value>Loading versions…</value></data>
+  <data name="LoadingVersions" xml:space="preserve"><value>Loading versionsΓÇª</value></data>
   <data name="VersionsUnavailable" xml:space="preserve"><value>Versions unavailable</value></data>
   <data name="NoVersions" xml:space="preserve"><value>No versions are available.</value></data>
   <data name="Default" xml:space="preserve"><value>Default</value></data>
@@ -303,8 +303,8 @@
   <data name="OpenConversation" xml:space="preserve"><value>Open conversation: {0}</value></data>
   <data name="ConversationCount" xml:space="preserve"><value>{0}{1} conversations</value></data>
   <data name="ConversationCountOne" xml:space="preserve"><value>{0} conversation</value></data>
-  <data name="MessageSummary" xml:space="preserve"><value>{0} messages · {1:g}</value></data>
-  <data name="MessageSummaryOne" xml:space="preserve"><value>{0} message · {1:g}</value></data>
+  <data name="MessageSummary" xml:space="preserve"><value>{0} messages ┬╖ {1:g}</value></data>
+  <data name="MessageSummaryOne" xml:space="preserve"><value>{0} message ┬╖ {1:g}</value></data>
   <data name="AllCount" xml:space="preserve"><value>All ({0})</value></data>
   <data name="FavoritesCount" xml:space="preserve"><value>Favorites ({0})</value></data>
   <data name="LocalCount" xml:space="preserve"><value>Local ({0})</value></data>
@@ -617,7 +617,7 @@
   <data name="ChatForm_openai_realtimeTurnDetectionType" xml:space="preserve"><value>Turn detection type</value></data>
   <data name="ChatForm_openai_realtimeTurnCreateResponse" xml:space="preserve"><value>Auto-create response on speech stop</value></data>
   <data name="ChatForm_openai_realtimeTurnInterruptResponse" xml:space="preserve"><value>Interrupt ongoing response on speech start</value></data>
-  <data name="ChatForm_openai_realtimeVadThreshold" xml:space="preserve"><value>VAD threshold (0.0–1.0)</value></data>
+  <data name="ChatForm_openai_realtimeVadThreshold" xml:space="preserve"><value>VAD threshold (0.0ΓÇô1.0)</value></data>
   <data name="ChatForm_openai_realtimeVadPrefixPaddingMs" xml:space="preserve"><value>Prefix padding (ms)</value></data>
   <data name="ChatForm_openai_realtimeVadSilenceDurationMs" xml:space="preserve"><value>Silence duration (ms)</value></data>
   <data name="ChatForm_openai_realtimeVadIdleTimeoutMs" xml:space="preserve"><value>Idle timeout (ms)</value></data>
@@ -646,7 +646,7 @@
   <data name="McpEnabled" xml:space="preserve"><value>Enabled</value></data>
   <data name="McpDisabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="McpStateDisabled" xml:space="preserve"><value>Disconnected</value></data>
-  <data name="McpStateConnecting" xml:space="preserve"><value>Connecting…</value></data>
+  <data name="McpStateConnecting" xml:space="preserve"><value>ConnectingΓÇª</value></data>
   <data name="McpStateConnected" xml:space="preserve"><value>Connected</value></data>
   <data name="McpStateError" xml:space="preserve"><value>Connection failed</value></data>
   <data name="McpDisconnect" xml:space="preserve"><value>Disconnect {0}</value></data>
@@ -715,9 +715,9 @@
   <data name="ElicitationBoolean" xml:space="preserve"><value>Yes / No (indeterminate means not provided)</value></data>
   <data name="ElicitationIntegerHint" xml:space="preserve"><value>Whole number</value></data>
   <data name="ElicitationNumberHint" xml:space="preserve"><value>Number (use a decimal point)</value></data>
-  <data name="ElicitationNumberRange" xml:space="preserve"><value>Minimum: {0} · Maximum: {1}</value></data>
-  <data name="ElicitationLengthRange" xml:space="preserve"><value>Text length — minimum: {0} · maximum: {1}</value></data>
-  <data name="ElicitationChoiceRange" xml:space="preserve"><value>Selected choices — minimum: {0} · maximum: {1}</value></data>
+  <data name="ElicitationNumberRange" xml:space="preserve"><value>Minimum: {0} ┬╖ Maximum: {1}</value></data>
+  <data name="ElicitationLengthRange" xml:space="preserve"><value>Text length ΓÇö minimum: {0} ┬╖ maximum: {1}</value></data>
+  <data name="ElicitationChoiceRange" xml:space="preserve"><value>Selected choices ΓÇö minimum: {0} ┬╖ maximum: {1}</value></data>
   <data name="ElicitationRequired" xml:space="preserve"><value>This field is required.</value></data>
   <data name="ElicitationInvalidValue" xml:space="preserve"><value>Enter a value of the requested type.</value></data>
   <data name="ElicitationInvalidNumber" xml:space="preserve"><value>Enter a valid number; integer fields require a whole number.</value></data>
@@ -746,7 +746,7 @@
   <data name="AiChatWith_video" xml:space="preserve"><value>Chat with video models</value></data>
   <data name="AiChatWith_speech" xml:space="preserve"><value>Chat with speech models</value></data>
   <data name="AiChatWith_transcription" xml:space="preserve"><value>Chat with transcription models</value></data>
-  <data name="AiModelsLoading" xml:space="preserve"><value>Loading models…</value></data>
+  <data name="AiModelsLoading" xml:space="preserve"><value>Loading modelsΓÇª</value></data>
   <data name="AiModelsLoadFailed" xml:space="preserve"><value>Models could not be loaded. Reopen settings to try again. Saved defaults have been retained.</value></data>
   <data name="AiNoModels" xml:space="preserve"><value>No models of this type are available.</value></data>
   <data name="AiDefaultUnavailable" xml:space="preserve"><value>The saved default is not currently available for this model type. It has been retained. New language chats use the newest available language model.</value></data>
@@ -760,7 +760,7 @@
   <data name="Images" xml:space="preserve"><value>Images</value></data>
   <data name="MyImages" xml:space="preserve"><value>My images</value></data>
   <data name="ImageSettings" xml:space="preserve"><value>Image settings</value></data>
-  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Describe the image you want to create…</value></data>
+  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Describe the image you want to createΓÇª</value></data>
   <data name="ImageGenerate" xml:space="preserve"><value>Generate images</value></data>
   <data name="ImageNoModels" xml:space="preserve"><value>No image model selected. Select an available image model in the header.</value></data>
   <data name="ImageEmptyLibrary" xml:space="preserve"><value>Your generated images will appear here.</value></data>
@@ -776,7 +776,7 @@
   <data name="ImageMask" xml:space="preserve"><value>Select image mask</value></data>
   <data name="ImageMaskFailed" xml:space="preserve"><value>The image mask could not be read.</value></data>
   <data name="ImageStorage" xml:space="preserve"><value>Storage</value></data>
-  <data name="ImageChooseFolder" xml:space="preserve"><value>Choose folder…</value></data>
+  <data name="ImageChooseFolder" xml:space="preserve"><value>Choose folderΓÇª</value></data>
   <data name="ImageDefaultFolder" xml:space="preserve"><value>Use Pictures folder</value></data>
   <data name="ImageFolderHint" xml:space="preserve"><value>Each account and AI backend has a separate library. Changing this folder switches libraries; existing files are not moved or deleted.</value></data>
   <data name="ImageFolderFailed" xml:space="preserve"><value>The image folder could not be opened. Check its location and permissions.</value></data>
@@ -801,7 +801,7 @@
   <data name="ImagePaste" xml:space="preserve"><value>Paste</value></data>
   <data name="ImageSelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="ImagePreview" xml:space="preserve"><value>Image preview</value></data>
-  <data name="ImageSaveCopy" xml:space="preserve"><value>Save a copy…</value></data>
+  <data name="ImageSaveCopy" xml:space="preserve"><value>Save a copyΓÇª</value></data>
   <data name="ImageAddToPrompt" xml:space="preserve"><value>Add to prompt</value></data>
   <data name="ImageDeleteTitle" xml:space="preserve"><value>Delete image?</value></data>
   <data name="ImageDeleteHint" xml:space="preserve"><value>This permanently deletes the selected image from the local library.</value></data>
@@ -814,7 +814,7 @@
   <data name="SpeechNoModels" xml:space="preserve"><value>No speech models are available. Check your provider keys or refresh the model list.</value></data>
   <data name="SpeechEmptyLibrary" xml:space="preserve"><value>Your generated speech files will appear here.</value></data>
   <data name="SpeechGenerate" xml:space="preserve"><value>Generate speech</value></data>
-  <data name="SpeechGenerating" xml:space="preserve"><value>Generating speech…</value></data>
+  <data name="SpeechGenerating" xml:space="preserve"><value>Generating speechΓÇª</value></data>
   <data name="SpeechImport" xml:space="preserve"><value>Import document text</value></data>
   <data name="SpeechImportFailed" xml:space="preserve"><value>Some files could not be converted: {0}</value></data>
   <data name="SpeechDictate" xml:space="preserve"><value>Dictate text</value></data>
@@ -858,7 +858,7 @@
   <data name="TranscriptionNoModels" xml:space="preserve"><value>No transcription models are available. Check your provider keys or refresh the model list.</value></data>
   <data name="TranscriptionEmptyLibrary" xml:space="preserve"><value>Your saved transcriptions will appear here.</value></data>
   <data name="TranscriptionOpenFolder" xml:space="preserve"><value>Open folder</value></data>
-  <data name="TranscriptionProcessing" xml:space="preserve"><value>Transcribing…</value></data>
+  <data name="TranscriptionProcessing" xml:space="preserve"><value>TranscribingΓÇª</value></data>
   <data name="TranscriptionUnsupported" xml:space="preserve"><value>Choose a non-empty audio or video file.</value></data>
   <data name="TranscriptionInvalidResponse" xml:space="preserve"><value>The transcription service returned an invalid or oversized response.</value></data>
   <data name="TranscriptionLanguage" xml:space="preserve"><value>Language</value></data>
@@ -919,13 +919,13 @@
   <data name="VideoStorageRetry" xml:space="preserve"><value>Video storage is unavailable. Saved jobs are retained and will be retried.</value></data>
   <data name="VideoPollingRetry" xml:space="preserve"><value>The video status or storage could not be updated. The saved operation will be retried.</value></data>
   <data name="VideoGenerationFailed" xml:space="preserve"><value>Video generation failed.</value></data>
-  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Describe the video you want to create…</value></data>
+  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Describe the video you want to createΓÇª</value></data>
   <data name="VideoNoModels" xml:space="preserve"><value>No video models are available. Your stored videos remain available.</value></data>
   <data name="VideoEmptyLibrary" xml:space="preserve"><value>Your generated videos will appear here.</value></data>
   <data name="VideoOpenFolder" xml:space="preserve"><value>Open videos folder</value></data>
   <data name="VideoGenerate" xml:space="preserve"><value>Generate videos</value></data>
   <data name="VideoAttachFiles" xml:space="preserve"><value>Attach an image or video</value></data>
-  <data name="VideoProcessing" xml:space="preserve"><value>Video queued or processing…</value></data>
+  <data name="VideoProcessing" xml:space="preserve"><value>Video queued or processingΓÇª</value></data>
   <data name="VideoSize" xml:space="preserve"><value>Video size</value></data>
   <data name="VideoResolution" xml:space="preserve"><value>Resolution</value></data>
   <data name="VideoCount" xml:space="preserve"><value>Number of videos</value></data>
@@ -970,7 +970,7 @@
   <data name="AgentSkillImport" xml:space="preserve"><value>Import skill ZIP</value></data>
   <data name="AgentBackendUnavailable" xml:space="preserve"><value>The agent backend catalog is unavailable. Your local agents are still available.</value></data>
   <data name="AgentImportedCount" xml:space="preserve"><value>Imported {0} agents.</value></data>
-  <data name="AgentDeleteConfirm" xml:space="preserve"><value>Delete the locally stored agent “{0}”? Export it first if you want to keep a copy.</value></data>
+  <data name="AgentDeleteConfirm" xml:space="preserve"><value>Delete the locally stored agent ΓÇ£{0}ΓÇ¥? Export it first if you want to keep a copy.</value></data>
   <data name="ChatForm_agent_general" xml:space="preserve"><value>General</value></data>
   <data name="ChatForm_agent_name" xml:space="preserve"><value>Name</value></data>
   <data name="ChatForm_agent_description" xml:space="preserve"><value>Description</value></data>
@@ -1143,7 +1143,7 @@
   <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>One word or phrase per line to guide transcription</value></data>
   <data name="ChatForm_openai_transcriptionResponseFormat" xml:space="preserve"><value>Response format</value></data>
   <data name="Files" xml:space="preserve"><value>Files</value></data>
-  <data name="FilesDescription" xml:space="preserve"><value>Share files and folders with AI. Only references are saved—your files stay where they are. Sharing a folder lets AI read its contents and subfolders and create new files there when the Files plugin is enabled. Existing files are never overwritten. File tools execute before results are reviewed.</value></data>
+  <data name="FilesDescription" xml:space="preserve"><value>Share files and folders with AI. Only references are savedΓÇöyour files stay where they are. Sharing a folder lets AI read its contents and subfolders and create new files there when the Files plugin is enabled. Existing files are never overwritten. File tools execute before results are reviewed.</value></data>
   <data name="FilesSearch" xml:space="preserve"><value>Search shared files and folders</value></data>
   <data name="FilesCount" xml:space="preserve"><value>Files ({0})</value></data>
   <data name="FoldersCount" xml:space="preserve"><value>Folders ({0})</value></data>
@@ -1156,7 +1156,7 @@
   <data name="FilesRefresh" xml:space="preserve"><value>Refresh shared files and folders</value></data>
   <data name="FilesOpen" xml:space="preserve"><value>Open</value></data>
   <data name="FilesRemove" xml:space="preserve"><value>Remove sharing</value></data>
-  <data name="FilesRemoveConfirm" xml:space="preserve"><value>Remove the reference to “{0}”? The original file or folder will not be deleted. Items covered by another shared folder remain shared. The separate absolute-path file-read tool is not restricted by this list.</value></data>
+  <data name="FilesRemoveConfirm" xml:space="preserve"><value>Remove the reference to ΓÇ£{0}ΓÇ¥? The original file or folder will not be deleted. Items covered by another shared folder remain shared. The separate absolute-path file-read tool is not restricted by this list.</value></data>
   <data name="FilesStatus_available" xml:space="preserve"><value>Available</value></data>
   <data name="FilesStatus_missing" xml:space="preserve"><value>Missing or moved</value></data>
   <data name="FilesStatus_denied" xml:space="preserve"><value>Access denied</value></data>
@@ -1187,4 +1187,144 @@
   <data name="NavigationOptions" xml:space="preserve"><value>Options for {0}</value></data>
   <data name="NavigationExpand" xml:space="preserve"><value>Show hidden navigation links</value></data>
   <data name="NavigationCollapse" xml:space="preserve"><value>Collapse hidden navigation links</value></data>
+  <data name="Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Description" xml:space="preserve"><value>Description</value></data>
+  <data name="PluginsTitle" xml:space="preserve">
+    <value>Plugins</value>
+  </data>
+  <data name="PluginsDescription" xml:space="preserve">
+    <value>Portable packages containing Agent Skills, MCP servers and reusable files.</value>
+  </data>
+  <data name="PluginWebsite" xml:space="preserve">
+    <value>Official website</value>
+  </data>
+  <data name="PluginSpecification" xml:space="preserve">
+    <value>Specification</value>
+  </data>
+  <data name="PluginKeywords" xml:space="preserve">
+    <value>Keywords</value>
+  </data>
+  <data name="PluginAuthor" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="PluginCounts" xml:space="preserve">
+    <value>{0} skills · {1} MCP servers · {2} diagnostics</value>
+  </data>
+  <data name="PluginDetails" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="PluginFavorite" xml:space="preserve">
+    <value>Add to favorites</value>
+  </data>
+  <data name="PluginUnfavorite" xml:space="preserve">
+    <value>Remove from favorites</value>
+  </data>
+  <data name="PluginUnavailable" xml:space="preserve">
+    <value>Unavailable package (remove to disable)</value>
+  </data>
+  <data name="PluginCreate" xml:space="preserve">
+    <value>Create new plugin</value>
+  </data>
+  <data name="PluginVersion" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="PluginHomepage" xml:space="preserve">
+    <value>Homepage</value>
+  </data>
+  <data name="PluginRepository" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="PluginLicense" xml:space="preserve">
+    <value>License</value>
+  </data>
+  <data name="PluginAuthorName" xml:space="preserve">
+    <value>Author name</value>
+  </data>
+  <data name="PluginAuthorEmail" xml:space="preserve">
+    <value>Author email</value>
+  </data>
+  <data name="PluginAuthorUrl" xml:space="preserve">
+    <value>Author URL</value>
+  </data>
+  <data name="PluginTransportHint" xml:space="preserve">
+    <value>Streamable HTTP is supported. Local-process and legacy SSE configurations are preserved but never executed. Package headers are public data, not secret storage.</value>
+  </data>
+  <data name="PluginMcpCatalog" xml:space="preserve">
+    <value>MCP catalog</value>
+  </data>
+  <data name="PluginEndpoint" xml:space="preserve">
+    <value>Endpoint URL</value>
+  </data>
+  <data name="PluginAllServers" xml:space="preserve">
+    <value>Settings for all servers</value>
+  </data>
+  <data name="PluginFilesHint" xml:space="preserve">
+    <value>Package files remain data. Skill files use the Skills tab. Root manifest and MCP files are generated. Do not include credentials.</value>
+  </data>
+  <data name="PluginAddFiles" xml:space="preserve">
+    <value>Add files</value>
+  </data>
+  <data name="PluginDiagnostics" xml:space="preserve">
+    <value>Diagnostics</value>
+  </data>
+  <data name="PluginOperationFailed" xml:space="preserve">
+    <value>The plugin operation failed. Your previously saved package is unchanged.</value>
+  </data>
+  <data name="PluginSetting_defer_loading" xml:space="preserve">
+    <value>Defer loading</value>
+  </data>
+  <data name="PluginSetting_namespace" xml:space="preserve">
+    <value>Namespace tools</value>
+  </data>
+  <data name="PluginSetting_direct" xml:space="preserve">
+    <value>Allow direct callers</value>
+  </data>
+  <data name="PluginSetting_programmatic" xml:space="preserve">
+    <value>Allow programmatic callers</value>
+  </data>
+  <data name="PluginConfiguration" xml:space="preserve">
+    <value>Server configuration (JSON)</value>
+  </data>
+  <data name="PluginApplyConfiguration" xml:space="preserve">
+    <value>Apply configuration</value>
+  </data>
+  <data name="PluginImport" xml:space="preserve">
+    <value>Import plugin ZIP</value>
+  </data>
+  <data name="PluginLoadFolder" xml:space="preserve">
+    <value>Load plugin folder</value>
+  </data>
+  <data name="PluginImported" xml:space="preserve">
+    <value>Imported {0} plugins.</value>
+  </data>
+  <data name="PluginZipOnly" xml:space="preserve">
+    <value>Choose a ZIP plugin archive.</value>
+  </data>
+  <data name="PluginArchive" xml:space="preserve">
+    <value>Agent Plugin archive</value>
+  </data>
+  <data name="PluginDeleteConfirm" xml:space="preserve">
+    <value>Delete plugin {0}? Embedded agent snapshots will remain unchanged.</value>
+  </data>
+  <data name="PluginDisable" xml:space="preserve">
+    <value>Disable plugin {0}</value>
+  </data>
+  <data name="PluginEditorTools" xml:space="preserve">
+    <value>Plugin editor</value>
+  </data>
+  <data name="PluginAgentEmpty" xml:space="preserve">
+    <value>This agent has no direct skills or enabled MCP servers to package.</value>
+  </data>
+  <data name="PluginAgentSnapshotHint" xml:space="preserve">
+    <value>Selected plugins are embedded ZIP snapshots. Library changes and deletion do not change this agent. Remove and reselect a plugin to refresh its snapshot.</value>
+  </data>
+  <data name="PluginEmbedded" xml:space="preserve">
+    <value>Embedded snapshot</value>
+  </data>
+  <data name="PluginFromAgent" xml:space="preserve">
+    <value>Create plugin from agent</value>
+  </data>
+  <data name="PluginAgentConverted" xml:space="preserve">
+    <value>Created plugin {0}.</value>
+  </data>
 </root>

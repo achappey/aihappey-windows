@@ -38,7 +38,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
 
     public AgentEditDialog(DesktopAgent agent, bool isEditing, DesktopSession session, DesktopCatalogClient catalog,
         HttpClient registryHttp, IReadOnlyList<ChatTarget> models, McpTurnSnapshot? connected = null,
-        IReadOnlyList<DesktopSkill>? localSkills = null, Func<DesktopSkill, CancellationToken, Task<byte[]>>? localSkillArchive = null)
+        IReadOnlyList<DesktopSkill>? localSkills = null, Func<DesktopSkill, CancellationToken, Task<byte[]>>? localSkillArchive = null, IReadOnlyList<DesktopAgentPlugin>? plugins = null)
     {
         draft = agent.Clone(); this.session = session; this.catalog = catalog; this.registryHttp = registryHttp;
         this.localSkills = localSkills ?? []; this.localSkillArchive = localSkillArchive;
@@ -54,6 +54,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         AddTab("general", DesktopResources.Get("General"), General(isEditing, models));
         AddTab("modelContext", DesktopResources.Get("McpTitle"), ModelContext(connected ?? McpTurnSnapshot.Empty));
         AddTab("skills", DesktopResources.Get("Skills"), Skills());
+        AddTab("plugins", DesktopResources.Get("PluginsTitle"), Plugins(plugins ?? []));
         AddTab("tools", DesktopResources.Get("Tools"), Tools());
         AddTab("checks", DesktopResources.Get("AgentChecks"), Checks(connected ?? McpTurnSnapshot.Empty));
         BuildProvider();

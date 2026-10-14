@@ -72,6 +72,7 @@ public sealed partial class ChatShell : UserControl
         agentStore = new(Path.Combine(session.DataDirectory, "agents"));
         skillStore = new(Path.Combine(session.DataDirectory, "skills"), (item, version, ct) => catalogClient.DownloadSkillAsync(item.Id, version, ct));
         localSkillStore = new(Path.Combine(session.DataDirectory, "local-skills"));
+        pluginStore = new(Path.Combine(session.DataDirectory, "agent-plugins"));
         sharedFileStore = new(Path.Combine(session.DataDirectory, "shared-files"));
         PrepareContext();
         session.ElicitationHandler = ShowElicitationAsync;
@@ -90,6 +91,7 @@ public sealed partial class ChatShell : UserControl
         Content = BuildLayout();
         PrepareAgentActions();
         PrepareSkillActions();
+        PreparePlugins();
         PrepareFiles();
         PrepareFileDrop();
         ControlAppearance.Apply(this, (_, _) => { }, palette =>
@@ -294,6 +296,7 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(providerFilters, 4); top.Children.Add(providerFilters);
         Grid.SetColumn(addAgent, 4); top.Children.Add(addAgent);
         Grid.SetColumn(addSkill, 4); top.Children.Add(addSkill);
+        Grid.SetColumn(addPlugin, 4); top.Children.Add(addPlugin);
         Grid.SetColumn(addFiles, 4); top.Children.Add(addFiles);
         Grid.SetColumn(activityToggle, 4); top.Children.Add(activityToggle);
         Grid.SetColumn(account, 5); top.Children.Add(account);
@@ -637,6 +640,7 @@ public sealed partial class ChatShell : UserControl
     private async Task LoadHistoryAsync(CancellationToken ct)
     {
         if (await Mcp.LoadAsync(session.McpPartition, ct)) Show(DesktopResources.Get("McpInvalidStoredEntries"), InfoBarSeverity.Warning);
+        await LoadPluginsAsync(ct);
         conversations = await history.ListAsync(session.HistoryPartition, ct);
         FilterHistory();
     }
@@ -856,6 +860,7 @@ public sealed partial class ChatShell : UserControl
         providerDialog?.Hide();
         agentEditor?.Hide();
         skillEditor?.CancelAndHide();
+        pluginDialog?.CancelAndHide(); pluginSelectionDialog?.Hide();
         skillDeleteDialog?.Hide();
         removeSharedFileDialog?.Hide();
         searchDialog?.Hide(); linkDialog?.Hide();

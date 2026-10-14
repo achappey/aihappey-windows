@@ -9,14 +9,14 @@
   <data name="SkillFiles" xml:space="preserve"><value>Bestanden</value></data>
   <data name="SkillNameHint" xml:space="preserve"><value>Een korte unieke naam met kleine letters, cijfers en enkele koppeltekens.</value></data>
   <data name="SkillDescriptionHint" xml:space="preserve"><value>Beschrijf wat deze vaardigheid doet en wanneer deze moet worden gebruikt (maximaal 1024 tekens).</value></data>
-  <data name="SkillInstructionsHint" xml:space="preserve"><value>Schrijf hier de Markdown-instructies. Naam en beschrijving worden automatisch als YAML-frontmatter opgeslagen; optionele geïmporteerde metadata blijft behouden.</value></data>
+  <data name="SkillInstructionsHint" xml:space="preserve"><value>Schrijf hier de Markdown-instructies. Naam en beschrijving worden automatisch als YAML-frontmatter opgeslagen; optionele ge├»mporteerde metadata blijft behouden.</value></data>
   <data name="SkillFilesHint" xml:space="preserve"><value>Sleep bestanden hierheen of kies bestanden om toe te voegen of te vervangen. Gebruik relatieve paden voor referenties, scripts of assets. Scripts worden als gegevens opgeslagen en nooit automatisch uitgevoerd.</value></data>
   <data name="SkillChooseFiles" xml:space="preserve"><value>Bestanden kiezen</value></data>
   <data name="SkillRelativePath" xml:space="preserve"><value>Relatief pad</value></data>
   <data name="SkillApplyPath" xml:space="preserve"><value>Pad toepassen</value></data>
   <data name="SkillFieldRequired" xml:space="preserve"><value>Het veld '{0}' van de vaardigheid is verplicht.</value></data>
   <data name="SkillFieldInvalid" xml:space="preserve"><value>Het veld '{0}' van de vaardigheid heeft een ongeldig type of een ongeldige lengte.</value></data>
-  <data name="SkillNameInvalid" xml:space="preserve"><value>Gebruik 1–64 kleine letters, cijfers of koppeltekens. De naam mag niet met een koppelteken beginnen of eindigen of opeenvolgende koppeltekens bevatten.</value></data>
+  <data name="SkillNameInvalid" xml:space="preserve"><value>Gebruik 1ΓÇô64 kleine letters, cijfers of koppeltekens. De naam mag niet met een koppelteken beginnen of eindigen of opeenvolgende koppeltekens bevatten.</value></data>
   <data name="SkillNameLocked" xml:space="preserve"><value>De naam van een bestaande vaardigheid kan niet worden gewijzigd.</value></data>
   <data name="SkillAlreadyExists" xml:space="preserve"><value>Er bestaat al een lokale vaardigheid met deze naam.</value></data>
   <data name="SkillManifestReserved" xml:space="preserve"><value>SKILL.md is gereserveerd voor de instructie-editor en kan niet als extra bestand worden toegevoegd.</value></data>
@@ -29,10 +29,10 @@
   <data name="SkillResourceMissing" xml:space="preserve"><value>Het gebundelde vaardigheidsbestand is niet gevonden.</value></data>
   <data name="SkillStoredInvalid" xml:space="preserve"><value>De opgeslagen vaardigheid is ongeldig of onvolledig.</value></data>
   <data name="SkillSavedVersion" xml:space="preserve"><value>Versie {0} van de vaardigheid opgeslagen.</value></data>
-  <data name="SkillImportedCount" xml:space="preserve"><value>{0} vaardigheid/vaardigheden geïmporteerd.</value></data>
-  <data name="SkillDeleteConfirm" xml:space="preserve"><value>'{0}' en alle opgeslagen versies verwijderen? Inlinekopieën die al in agents zijn opgeslagen, blijven ongewijzigd.</value></data>
+  <data name="SkillImportedCount" xml:space="preserve"><value>{0} vaardigheid/vaardigheden ge├»mporteerd.</value></data>
+  <data name="SkillDeleteConfirm" xml:space="preserve"><value>'{0}' en alle opgeslagen versies verwijderen? Inlinekopie├½n die al in agents zijn opgeslagen, blijven ongewijzigd.</value></data>
   <data name="SkillBackendUnavailable" xml:space="preserve"><value>De externe vaardighedencatalogus is niet beschikbaar. Lokale vaardigheden blijven beschikbaar.</value></data>
-  <data name="SkillLocalInlineHint" xml:space="preserve"><value>Lokale vaardigheden worden als draagbare inlinekopieën opgenomen. Latere wijzigingen veranderen de kopie in deze agent niet.</value></data>
+  <data name="SkillLocalInlineHint" xml:space="preserve"><value>Lokale vaardigheden worden als draagbare inlinekopie├½n opgenomen. Latere wijzigingen veranderen de kopie in deze agent niet.</value></data>
   <data name="ToolApproval" xml:space="preserve"><value>Toolgoedkeuring</value></data>
   <data name="ToolDeny" xml:space="preserve"><value>Toolresultaat weigeren</value></data>
   <data name="Allow" xml:space="preserve"><value>Toestaan</value></data>
@@ -118,17 +118,17 @@
   <data name="GeneratedByAi" xml:space="preserve"><value>Door AI gegenereerd</value></data>
   <data name="GeneratedByAiWarning" xml:space="preserve"><value>Door AI gegenereerde inhoud is mogelijk onjuist</value></data>
   <data name="TimeJustNow" xml:space="preserve"><value>Zojuist</value></data>
-  <data name="TimeMinuteAgo" xml:space="preserve"><value>Eén minuut geleden</value></data>
+  <data name="TimeMinuteAgo" xml:space="preserve"><value>E├⌐n minuut geleden</value></data>
   <data name="TimeMinutesAgo" xml:space="preserve"><value>{0} minuten geleden</value></data>
-  <data name="TimeHourAgo" xml:space="preserve"><value>Eén uur geleden</value></data>
+  <data name="TimeHourAgo" xml:space="preserve"><value>E├⌐n uur geleden</value></data>
   <data name="TimeHoursAgo" xml:space="preserve"><value>{0} uur geleden</value></data>
-  <data name="TimeDayAgo" xml:space="preserve"><value>Eén dag geleden</value></data>
+  <data name="TimeDayAgo" xml:space="preserve"><value>E├⌐n dag geleden</value></data>
   <data name="TimeDaysAgo" xml:space="preserve"><value>{0} dagen geleden</value></data>
-  <data name="TimeWeekAgo" xml:space="preserve"><value>Eén week geleden</value></data>
+  <data name="TimeWeekAgo" xml:space="preserve"><value>E├⌐n week geleden</value></data>
   <data name="TimeWeeksAgo" xml:space="preserve"><value>{0} weken geleden</value></data>
-  <data name="TimeMonthAgo" xml:space="preserve"><value>Eén maand geleden</value></data>
+  <data name="TimeMonthAgo" xml:space="preserve"><value>E├⌐n maand geleden</value></data>
   <data name="TimeMonthsAgo" xml:space="preserve"><value>{0} maanden geleden</value></data>
-  <data name="TimeYearAgo" xml:space="preserve"><value>Eén jaar geleden</value></data>
+  <data name="TimeYearAgo" xml:space="preserve"><value>E├⌐n jaar geleden</value></data>
   <data name="TimeYearsAgo" xml:space="preserve"><value>{0} jaar geleden</value></data>
   <data name="AskAnything" xml:space="preserve"><value>Vraag maar raak</value></data>
   <data name="Models" xml:space="preserve"><value>Modellen</value></data>
@@ -146,7 +146,7 @@
   <data name="RefreshTargets" xml:space="preserve"><value>Modellen of agents vernieuwen</value></data>
   <data name="RefreshAgents" xml:space="preserve"><value>Agentoverzicht vernieuwen</value></data>
   <data name="RefreshSkills" xml:space="preserve"><value>Skilloverzicht vernieuwen</value></data>
-  <data name="Working" xml:space="preserve"><value>Bezig…</value></data>
+  <data name="Working" xml:space="preserve"><value>BezigΓÇª</value></data>
   <data name="Dismiss" xml:space="preserve"><value>Sluiten</value></data>
   <data name="ToggleHistory" xml:space="preserve"><value>Chatgeschiedenis tonen of verbergen</value></data>
   <data name="ManageAccount" xml:space="preserve"><value>Account beheren</value></data>
@@ -169,23 +169,23 @@
   <data name="NextActivity" xml:space="preserve"><value>Volgende activiteit</value></data>
   <data name="ActivityList" xml:space="preserve"><value>Activiteitenlijst tonen</value></data>
   <data name="AttachmentsSources" xml:space="preserve"><value>Bijlagen en bronnen</value></data>
-  <data name="CopyMessage" xml:space="preserve"><value>Bericht kopiëren</value></data>
+  <data name="CopyMessage" xml:space="preserve"><value>Bericht kopi├½ren</value></data>
   <data name="RenameChat" xml:space="preserve"><value>Chatnaam wijzigen</value></data>
   <data name="DeleteChat" xml:space="preserve"><value>Chat verwijderen?</value></data>
   <data name="DeleteChatHint" xml:space="preserve"><value>Hiermee wordt de lokale chat definitief verwijderd.</value></data>
   <data name="NoTargets" xml:space="preserve"><value>De service is gereed, maar er zijn geen modellen of agents beschikbaar. Stel API-sleutels in of installeer agentdefinities.</value></data>
   <data name="SelectTarget" xml:space="preserve"><value>Selecteer een model of agent uit de catalogus.</value></data>
-  <data name="StreamInterrupted" xml:space="preserve"><value>De stream is voortijdig beëindigd. Gedeeltelijke uitvoer is bewaard.</value></data>
+  <data name="StreamInterrupted" xml:space="preserve"><value>De stream is voortijdig be├½indigd. Gedeeltelijke uitvoer is bewaard.</value></data>
   <data name="HistorySaveFailed" xml:space="preserve"><value>De chatgeschiedenis kon niet worden opgeslagen. De chat blijft beschikbaar totdat de app wordt gesloten.</value></data>
   <data name="ClipboardUnavailable" xml:space="preserve"><value>Het klembord is momenteel niet beschikbaar.</value></data>
   <data name="OperationCanceled" xml:space="preserve"><value>De bewerking is geannuleerd of de tijdslimiet is verstreken.</value></data>
   <data name="OperationFailed" xml:space="preserve"><value>De bewerking is mislukt. Controleer de beschikbaarheid van de service, de instellingen en de toegangsrechten voor lokale opslag.</value></data>
   <data name="SearchChats" xml:space="preserve"><value>Chats zoeken</value></data>
   <data name="SearchConversations" xml:space="preserve"><value>Chats doorzoeken</value></data>
-  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Chats doorzoeken…</value></data>
+  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Chats doorzoekenΓÇª</value></data>
   <data name="ChatActions" xml:space="preserve"><value>Chatacties</value></data>
   <data name="RecentChats" xml:space="preserve"><value>Recente chats</value></data>
-  <data name="Searching" xml:space="preserve"><value>Zoeken…</value></data>
+  <data name="Searching" xml:space="preserve"><value>ZoekenΓÇª</value></data>
   <data name="NoRecentChats" xml:space="preserve"><value>Geen recente chats.</value></data>
   <data name="NoResults" xml:space="preserve"><value>Geen resultaten.</value></data>
   <data name="Details" xml:space="preserve"><value>Details</value></data>
@@ -193,7 +193,7 @@
   <data name="Sources" xml:space="preserve"><value>Bronnen</value></data>
   <data name="AllSources" xml:space="preserve"><value>Alle bronnen</value></data>
   <data name="CloseDetails" xml:space="preserve"><value>Details sluiten</value></data>
-  <data name="CopySource" xml:space="preserve"><value>Bron kopiëren</value></data>
+  <data name="CopySource" xml:space="preserve"><value>Bron kopi├½ren</value></data>
   <data name="OpenSource" xml:space="preserve"><value>Bron openen in browser</value></data>
   <data name="SourceOpenFailed" xml:space="preserve"><value>De bron kon niet worden geopend.</value></data>
   <data name="Download" xml:space="preserve"><value>Downloaden</value></data>
@@ -206,17 +206,17 @@
   <data name="PublicUrl" xml:space="preserve"><value>URL (openbaar toegankelijk)</value></data>
   <data name="MimeType" xml:space="preserve"><value>MIME-type</value></data>
   <data name="CustomMimeType" xml:space="preserve"><value>Aangepast MIME-type</value></data>
-  <data name="DetectingMime" xml:space="preserve"><value>MIME-type bepalen…</value></data>
+  <data name="DetectingMime" xml:space="preserve"><value>MIME-type bepalenΓÇª</value></data>
   <data name="MimeNotDetected" xml:space="preserve"><value>Het MIME-type kon niet worden bepaald. Selecteer het type inhoud op deze URL.</value></data>
   <data name="InvalidPublicUrl" xml:space="preserve"><value>Voer een geldige HTTP- of HTTPS-URL zonder inloggegevens in.</value></data>
   <data name="InvalidMime" xml:space="preserve"><value>Voer een geldig MIME-type in, bijvoorbeeld application/pdf.</value></data>
   <data name="Custom" xml:space="preserve"><value>Aangepast</value></data>
-  <data name="SearchPlaceholder" xml:space="preserve"><value>Zoeken…</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>ZoekenΓÇª</value></data>
   <data name="SearchAgents" xml:space="preserve"><value>Agents zoeken</value></data>
   <data name="SearchSkills" xml:space="preserve"><value>Skills zoeken</value></data>
-  <data name="AgentsDescription" xml:space="preserve"><value>Agents combineren mogelijkheden, context en uitvoeringslogica in één model. Ontdek de beschikbare agents en kies er een om een chat te starten.</value></data>
+  <data name="AgentsDescription" xml:space="preserve"><value>Agents combineren mogelijkheden, context en uitvoeringslogica in ├⌐├⌐n model. Ontdek de beschikbare agents en kies er een om een chat te starten.</value></data>
   <data name="SkillsDescription" xml:space="preserve"><value>Een overzicht van beschikbare skills voor taken en workflows. Bekijk wat elke skill doet en kies de juiste optie. Skills combineren instructies, logica en uitvoering in een consistente structuur.</value></data>
-  <data name="Loading" xml:space="preserve"><value>Laden…</value></data>
+  <data name="Loading" xml:space="preserve"><value>LadenΓÇª</value></data>
   <data name="CatalogNoResults" xml:space="preserve"><value>Geen resultaten. Probeer een andere zoekopdracht of filter.</value></data>
   <data name="CatalogCanceled" xml:space="preserve"><value>Het laden van de catalogus is geannuleerd of de tijdslimiet is verstreken.</value></data>
   <data name="CatalogFailed" xml:space="preserve"><value>De catalogus kon niet worden geladen. Controleer je verbinding, account en toegangsrechten voor lokale opslag.</value></data>
@@ -226,7 +226,7 @@
   <data name="AgentDefinition" xml:space="preserve"><value>Agentdefinitie</value></data>
   <data name="SkillArchive" xml:space="preserve"><value>ZIP-archief van skill</value></data>
   <data name="AgentDownloaded" xml:space="preserve"><value>Agentdefinitie gedownload.</value></data>
-  <data name="SkillDownloaded" xml:space="preserve"><value>Skillarchief gedownload. Het is niet geïnstalleerd of ingeschakeld.</value></data>
+  <data name="SkillDownloaded" xml:space="preserve"><value>Skillarchief gedownload. Het is niet ge├»nstalleerd of ingeschakeld.</value></data>
   <data name="AddFavorite" xml:space="preserve"><value>Favoriet toevoegen</value></data>
   <data name="RemoveFavorite" xml:space="preserve"><value>Favoriet verwijderen</value></data>
   <data name="StartChat" xml:space="preserve"><value>Chat starten</value></data>
@@ -240,10 +240,10 @@
   <data name="DownloadDefinition" xml:space="preserve"><value>Definitie downloaden</value></data>
   <data name="DownloadDefault" xml:space="preserve"><value>Standaardversie downloaden</value></data>
   <data name="Downloads" xml:space="preserve"><value>Downloads</value></data>
-  <data name="SkillDownloadHint" xml:space="preserve"><value>Bij het downloaden wordt alleen een ZIP-bestand opgeslagen. De skill wordt niet geïnstalleerd of ingeschakeld.</value></data>
+  <data name="SkillDownloadHint" xml:space="preserve"><value>Bij het downloaden wordt alleen een ZIP-bestand opgeslagen. De skill wordt niet ge├»nstalleerd of ingeschakeld.</value></data>
   <data name="DefinitionUnavailable" xml:space="preserve"><value>Definitie niet beschikbaar</value></data>
   <data name="DefinitionUnavailableHint" xml:space="preserve"><value>Je kunt met deze agent chatten, maar de backend biedt geen downloadbare definitie aan.</value></data>
-  <data name="LoadingVersions" xml:space="preserve"><value>Versies laden…</value></data>
+  <data name="LoadingVersions" xml:space="preserve"><value>Versies ladenΓÇª</value></data>
   <data name="VersionsUnavailable" xml:space="preserve"><value>Versies niet beschikbaar</value></data>
   <data name="NoVersions" xml:space="preserve"><value>Er zijn geen versies beschikbaar.</value></data>
   <data name="Default" xml:space="preserve"><value>Standaard</value></data>
@@ -281,7 +281,7 @@
   <data name="InvalidHistoryPartition" xml:space="preserve"><value>Ongeldige geschiedenisp artitie.</value></data>
   <data name="InvalidConversationId" xml:space="preserve"><value>Ongeldige chat-ID.</value></data>
   <data name="ApiKeysReadFailed" xml:space="preserve"><value>De beveiligde API-sleutelopslag kon niet worden gelezen. Herstel of verwijder credentials.bin in de gegevensmap HeaderAuth.</value></data>
-  <data name="InvalidProviderHeaders" xml:space="preserve"><value>Gebruik geldige X- providerheadernamen en niet-lege API-sleutels op één regel.</value></data>
+  <data name="InvalidProviderHeaders" xml:space="preserve"><value>Gebruik geldige X- providerheadernamen en niet-lege API-sleutels op ├⌐├⌐n regel.</value></data>
   <data name="ApiKeysHint" xml:space="preserve"><value>Sleutels worden beveiligd voor je Windows-account. Ze worden als HTTP-headers naar de geselecteerde lokale of externe gateways verzonden. Voeg de exacte headernaam van de provider toe, bijvoorbeeld X-OpenAI-Key of X-Anthropic-Key. Sleutels worden niet opgenomen in de chatgeschiedenis.</value></data>
   <data name="AddProviderKey" xml:space="preserve"><value>Providersleutel toevoegen</value></data>
   <data name="ProviderApiKeys" xml:space="preserve"><value>API-sleutels van providers</value></data>
@@ -303,8 +303,8 @@
   <data name="OpenConversation" xml:space="preserve"><value>Chat openen: {0}</value></data>
   <data name="ConversationCount" xml:space="preserve"><value>{0}{1} chats</value></data>
   <data name="ConversationCountOne" xml:space="preserve"><value>{0} chat</value></data>
-  <data name="MessageSummary" xml:space="preserve"><value>{0} berichten · {1:g}</value></data>
-  <data name="MessageSummaryOne" xml:space="preserve"><value>{0} bericht · {1:g}</value></data>
+  <data name="MessageSummary" xml:space="preserve"><value>{0} berichten ┬╖ {1:g}</value></data>
+  <data name="MessageSummaryOne" xml:space="preserve"><value>{0} bericht ┬╖ {1:g}</value></data>
   <data name="AllCount" xml:space="preserve"><value>Alle ({0})</value></data>
   <data name="FavoritesCount" xml:space="preserve"><value>Favorieten ({0})</value></data>
   <data name="LocalCount" xml:space="preserve"><value>Lokaal ({0})</value></data>
@@ -316,7 +316,7 @@
   <data name="Owner" xml:space="preserve"><value>Eigenaar: {0}</value></data>
   <data name="Created" xml:space="preserve"><value>Aangemaakt: {0:g}</value></data>
   <data name="DownloadVersion" xml:space="preserve"><value>Versie {0} downloaden</value></data>
-  <data name="ExtractionFailed" xml:space="preserve"><value>Tekst kon niet worden geëxtraheerd uit {0}. Het originele bestand wordt wel meegestuurd.</value></data>
+  <data name="ExtractionFailed" xml:space="preserve"><value>Tekst kon niet worden ge├½xtraheerd uit {0}. Het originele bestand wordt wel meegestuurd.</value></data>
   <data name="RejectedFiles" xml:space="preserve"><value>Kon niet toevoegen: {0}. Sleep afzonderlijke bestanden en controleer de bestandstoegang en de limiet van 25 MB per bestand. Andere bestanden zijn behouden.</value></data>
   <data name="AttachmentHttpError" xml:space="preserve"><value>De bijlageserver gaf HTTP {0} terug. Er zijn geen inloggegevens verzonden en omleidingen zijn niet automatisch gevolgd.</value></data>
   <data name="ShowActivity" xml:space="preserve"><value>Activiteit {0} tonen: {1}</value></data>
@@ -468,7 +468,7 @@
   <data name="ChatForm_openai_sessionAgent_programmaticEnabled" xml:space="preserve"><value>Aanroepen vanuit gegenereerde code inschakelen</value></data>
   <data name="ChatForm_openai_sessionAgent_searchMode" xml:space="preserve"><value>Webzoekmodus</value></data>
   <data name="ChatForm_openai_sessionAgent_searchContext" xml:space="preserve"><value>Grootte van zoekcontext</value></data>
-  <data name="ChatForm_openai_sessionAgent_allowedDomains" xml:space="preserve"><value>Toegestane zoekdomeinen (één per regel)</value></data>
+  <data name="ChatForm_openai_sessionAgent_allowedDomains" xml:space="preserve"><value>Toegestane zoekdomeinen (├⌐├⌐n per regel)</value></data>
   <data name="ChatForm_openai_sessionAgent_city" xml:space="preserve"><value>Plaats</value></data>
   <data name="ChatForm_openai_sessionAgent_country" xml:space="preserve"><value>Land</value></data>
   <data name="ChatForm_openai_sessionAgent_region" xml:space="preserve"><value>Regio</value></data>
@@ -490,8 +490,8 @@
   <data name="ChatForm_openai_sessionEnvironment_disabled" xml:space="preserve"><value>Uitgeschakeld</value></data>
   <data name="ChatForm_openai_sessionEnvironment_restricted" xml:space="preserve"><value>Beperkt</value></data>
   <data name="ChatForm_openai_sessionEnvironment_domainHelp" xml:space="preserve"><value>Gebruik toegestane of geblokkeerde domeinen, niet beide. Jokertekens worden niet ondersteund.</value></data>
-  <data name="ChatForm_openai_sessionEnvironment_allowedDomains" xml:space="preserve"><value>Toegestane domeinen (één per regel)</value></data>
-  <data name="ChatForm_openai_sessionEnvironment_blockedDomains" xml:space="preserve"><value>Geblokkeerde domeinen (één per regel)</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_allowedDomains" xml:space="preserve"><value>Toegestane domeinen (├⌐├⌐n per regel)</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_blockedDomains" xml:space="preserve"><value>Geblokkeerde domeinen (├⌐├⌐n per regel)</value></data>
   <data name="ChatForm_openai_sessionEnvironment_workspaceDirectory" xml:space="preserve"><value>Absoluut werkmap-pad</value></data>
   <data name="ChatForm_openai_topP" xml:space="preserve"><value>Top-p</value></data>
   <data name="ChatForm_openai_serviceTier_title" xml:space="preserve"><value>Servicelaag</value></data>
@@ -598,7 +598,7 @@
   <data name="ChatForm_openai_knownSpeakersDescription" xml:space="preserve"><value>Voeg maximaal 4 sprekersnamen toe en upload een korte stem-voorbeeld per spreker om herkenning te verbeteren.</value></data>
   <data name="ChatForm_openai_knownSpeakersAdd" xml:space="preserve"><value>Spreker toevoegen</value></data>
   <data name="ChatForm_openai_knownSpeakersNamePlaceholder" xml:space="preserve"><value>bijv. Alice</value></data>
-  <data name="ChatForm_openai_knownSpeakersSampleMissing" xml:space="preserve"><value>Geen sample geüpload</value></data>
+  <data name="ChatForm_openai_knownSpeakersSampleMissing" xml:space="preserve"><value>Geen sample ge├╝pload</value></data>
   <data name="ChatForm_openai_knownSpeakersNameExists" xml:space="preserve"><value>Deze naam bestaat al.</value></data>
   <data name="ChatForm_openai_knownSpeakersMax" xml:space="preserve"><value>Je kunt maximaal 4 sprekers toevoegen.</value></data>
   <data name="ChatForm_openai_knownSpeakersDeleteConfirm" xml:space="preserve"><value>Deze spreker heeft een opgeslagen sample. Spreker en sample verwijderen?</value></data>
@@ -613,7 +613,7 @@
   <data name="ChatForm_openai_realtimeTurnDetectionType" xml:space="preserve"><value>Type turn-detectie</value></data>
   <data name="ChatForm_openai_realtimeTurnCreateResponse" xml:space="preserve"><value>Automatisch response maken bij einde spraak</value></data>
   <data name="ChatForm_openai_realtimeTurnInterruptResponse" xml:space="preserve"><value>Lopende response onderbreken bij start spraak</value></data>
-  <data name="ChatForm_openai_realtimeVadThreshold" xml:space="preserve"><value>VAD-drempel (0.0–1.0)</value></data>
+  <data name="ChatForm_openai_realtimeVadThreshold" xml:space="preserve"><value>VAD-drempel (0.0ΓÇô1.0)</value></data>
   <data name="ChatForm_openai_realtimeVadPrefixPaddingMs" xml:space="preserve"><value>Prefix padding (ms)</value></data>
   <data name="ChatForm_openai_realtimeVadSilenceDurationMs" xml:space="preserve"><value>Stilte-duur (ms)</value></data>
   <data name="ChatForm_openai_realtimeVadIdleTimeoutMs" xml:space="preserve"><value>Idle timeout (ms)</value></data>
@@ -627,7 +627,7 @@
   <data name="McpTitle" xml:space="preserve"><value>Model Context</value></data>
   <data name="McpDescription" xml:space="preserve"><value>Verbind tools en diensten met je modellen via Model Context Protocol.</value></data>
   <data name="McpAddServer" xml:space="preserve"><value>Server toevoegen</value></data>
-  <data name="McpInstalledServers" xml:space="preserve"><value>Geïnstalleerde servers</value></data>
+  <data name="McpInstalledServers" xml:space="preserve"><value>Ge├»nstalleerde servers</value></data>
   <data name="McpManage" xml:space="preserve"><value>Beheren</value></data>
   <data name="McpInstall" xml:space="preserve"><value>Installeren</value></data>
   <data name="McpRemove" xml:space="preserve"><value>Verwijderen</value></data>
@@ -637,12 +637,12 @@
   <data name="McpRegistryPartialFailure" xml:space="preserve"><value>Sommige registers konden niet volledig worden geladen. Beschikbare servers blijven zichtbaar. Probeer opnieuw om te vernieuwen.</value></data>
   <data name="McpNoRegistries" xml:space="preserve"><value>Deze app heeft geen MCP-registers geconfigureerd. Je kunt handmatig een Streamable HTTP-server toevoegen.</value></data>
   <data name="McpNoServers" xml:space="preserve"><value>Geen overeenkomende servers gevonden.</value></data>
-  <data name="McpNoInstalledServers" xml:space="preserve"><value>Geen servers geïnstalleerd. Installeer via Model Context of voeg een server-URL toe.</value></data>
+  <data name="McpNoInstalledServers" xml:space="preserve"><value>Geen servers ge├»nstalleerd. Installeer via Model Context of voeg een server-URL toe.</value></data>
   <data name="McpEnableHint" xml:space="preserve"><value>Schakel vertrouwde servers in om hun tools beschikbaar te maken voor modelchat. Tools kunnen met jouw gegevens data lezen of wijzigen. Uitschakelen verbreekt de verbinding zonder de server te verwijderen.</value></data>
   <data name="McpEnabled" xml:space="preserve"><value>Ingeschakeld</value></data>
   <data name="McpDisabled" xml:space="preserve"><value>Uitgeschakeld</value></data>
   <data name="McpStateDisabled" xml:space="preserve"><value>Niet verbonden</value></data>
-  <data name="McpStateConnecting" xml:space="preserve"><value>Verbinden…</value></data>
+  <data name="McpStateConnecting" xml:space="preserve"><value>VerbindenΓÇª</value></data>
   <data name="McpStateConnected" xml:space="preserve"><value>Verbonden</value></data>
   <data name="McpStateError" xml:space="preserve"><value>Verbinding mislukt</value></data>
   <data name="McpDisconnect" xml:space="preserve"><value>Verbinding met {0} verbreken</value></data>
@@ -699,10 +699,10 @@
   <data name="SettingsMcpTools.Text" xml:space="preserve"><value>Tools</value></data>
   <data name="SettingsMcpTimeout.Header" xml:space="preserve"><value>Tool-time-out (minuten)</value></data>
   <data name="SettingsMcpResetProgress.Header" xml:space="preserve"><value>Time-out opnieuw starten bij voortgang</value></data>
-  <data name="SettingsMcpOfficialExtensions.Text" xml:space="preserve"><value>Officiële extensies</value></data>
+  <data name="SettingsMcpOfficialExtensions.Text" xml:space="preserve"><value>Offici├½le extensies</value></data>
   <data name="SettingsMcpApps.Header" xml:space="preserve"><value>Apps</value></data>
   <data name="SettingsMcpSkills.Header" xml:space="preserve"><value>Skills</value></data>
-  <data name="SettingsMcpExtensionsHint.Text" xml:space="preserve"><value>Deze voorkeuren worden opgeslagen voor toekomstige ondersteuning. Apps en Vaardigheden zijn nog niet geïmplementeerd in deze client.</value></data>
+  <data name="SettingsMcpExtensionsHint.Text" xml:space="preserve"><value>Deze voorkeuren worden opgeslagen voor toekomstige ondersteuning. Apps en Vaardigheden zijn nog niet ge├»mplementeerd in deze client.</value></data>
   <data name="ElicitationTitle" xml:space="preserve"><value>Aanvullende informatie gevraagd</value></data>
   <data name="ElicitationProviderOrigin" xml:space="preserve"><value>Invoerverzoek van model / agent</value></data>
   <data name="ElicitationAccept" xml:space="preserve"><value>Accepteren</value></data>
@@ -711,9 +711,9 @@
   <data name="ElicitationBoolean" xml:space="preserve"><value>Ja / Nee (onbepaald betekent niet opgegeven)</value></data>
   <data name="ElicitationIntegerHint" xml:space="preserve"><value>Geheel getal</value></data>
   <data name="ElicitationNumberHint" xml:space="preserve"><value>Getal (gebruik een decimale punt)</value></data>
-  <data name="ElicitationNumberRange" xml:space="preserve"><value>Minimum: {0} · Maximum: {1}</value></data>
-  <data name="ElicitationLengthRange" xml:space="preserve"><value>Tekstlengte — minimum: {0} · maximum: {1}</value></data>
-  <data name="ElicitationChoiceRange" xml:space="preserve"><value>Geselecteerde opties — minimum: {0} · maximum: {1}</value></data>
+  <data name="ElicitationNumberRange" xml:space="preserve"><value>Minimum: {0} ┬╖ Maximum: {1}</value></data>
+  <data name="ElicitationLengthRange" xml:space="preserve"><value>Tekstlengte ΓÇö minimum: {0} ┬╖ maximum: {1}</value></data>
+  <data name="ElicitationChoiceRange" xml:space="preserve"><value>Geselecteerde opties ΓÇö minimum: {0} ┬╖ maximum: {1}</value></data>
   <data name="ElicitationRequired" xml:space="preserve"><value>Dit veld is verplicht.</value></data>
   <data name="ElicitationInvalidValue" xml:space="preserve"><value>Voer een waarde van het gevraagde type in.</value></data>
   <data name="ElicitationInvalidNumber" xml:space="preserve"><value>Voer een geldig getal in; een geheel getal mag geen decimalen bevatten.</value></data>
@@ -742,7 +742,7 @@
   <data name="AiChatWith_video" xml:space="preserve"><value>Chat met videomodellen</value></data>
   <data name="AiChatWith_speech" xml:space="preserve"><value>Chat met spraakmodellen</value></data>
   <data name="AiChatWith_transcription" xml:space="preserve"><value>Chat met transcriptiemodellen</value></data>
-  <data name="AiModelsLoading" xml:space="preserve"><value>Modellen laden…</value></data>
+  <data name="AiModelsLoading" xml:space="preserve"><value>Modellen ladenΓÇª</value></data>
   <data name="AiModelsLoadFailed" xml:space="preserve"><value>Modellen konden niet worden geladen. Open de instellingen opnieuw om het nogmaals te proberen. Opgeslagen standaardmodellen zijn behouden.</value></data>
   <data name="AiNoModels" xml:space="preserve"><value>Er zijn geen modellen van dit type beschikbaar.</value></data>
   <data name="AiDefaultUnavailable" xml:space="preserve"><value>Het opgeslagen standaardmodel is momenteel niet beschikbaar voor dit modeltype. Het is behouden. Nieuwe taalchats gebruiken het nieuwste beschikbare taalmodel.</value></data>
@@ -756,7 +756,7 @@
   <data name="Images" xml:space="preserve"><value>Afbeeldingen</value></data>
   <data name="MyImages" xml:space="preserve"><value>Mijn afbeeldingen</value></data>
   <data name="ImageSettings" xml:space="preserve"><value>Afbeeldingsinstellingen</value></data>
-  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Beschrijf de afbeelding die je wilt maken…</value></data>
+  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Beschrijf de afbeelding die je wilt makenΓÇª</value></data>
   <data name="ImageGenerate" xml:space="preserve"><value>Afbeeldingen genereren</value></data>
   <data name="ImageNoModels" xml:space="preserve"><value>Geen afbeeldingsmodel geselecteerd. Selecteer een beschikbaar model in de koptekst.</value></data>
   <data name="ImageEmptyLibrary" xml:space="preserve"><value>Je gegenereerde afbeeldingen verschijnen hier.</value></data>
@@ -772,7 +772,7 @@
   <data name="ImageMask" xml:space="preserve"><value>Afbeeldingsmasker selecteren</value></data>
   <data name="ImageMaskFailed" xml:space="preserve"><value>Het afbeeldingsmasker kon niet worden gelezen.</value></data>
   <data name="ImageStorage" xml:space="preserve"><value>Opslag</value></data>
-  <data name="ImageChooseFolder" xml:space="preserve"><value>Map kiezen…</value></data>
+  <data name="ImageChooseFolder" xml:space="preserve"><value>Map kiezenΓÇª</value></data>
   <data name="ImageDefaultFolder" xml:space="preserve"><value>Map Afbeeldingen gebruiken</value></data>
   <data name="ImageFolderHint" xml:space="preserve"><value>Elk account en elke AI-backend heeft een aparte bibliotheek. Een andere map kiezen wisselt van bibliotheek; bestaande bestanden worden niet verplaatst of verwijderd.</value></data>
   <data name="ImageFolderFailed" xml:space="preserve"><value>De afbeeldingsmap kon niet worden geopend. Controleer de locatie en toegangsrechten.</value></data>
@@ -793,11 +793,11 @@
   <data name="ImageOption_opaque" xml:space="preserve"><value>Dekkend</value></data>
   <data name="ImageAttachFiles" xml:space="preserve"><value>Afbeeldingen toevoegen</value></data>
   <data name="ImageCut" xml:space="preserve"><value>Knippen</value></data>
-  <data name="ImageCopy" xml:space="preserve"><value>Kopiëren</value></data>
+  <data name="ImageCopy" xml:space="preserve"><value>Kopi├½ren</value></data>
   <data name="ImagePaste" xml:space="preserve"><value>Plakken</value></data>
   <data name="ImageSelectAll" xml:space="preserve"><value>Alles selecteren</value></data>
   <data name="ImagePreview" xml:space="preserve"><value>Afbeeldingsvoorbeeld</value></data>
-  <data name="ImageSaveCopy" xml:space="preserve"><value>Kopie opslaan…</value></data>
+  <data name="ImageSaveCopy" xml:space="preserve"><value>Kopie opslaanΓÇª</value></data>
   <data name="ImageAddToPrompt" xml:space="preserve"><value>Aan prompt toevoegen</value></data>
   <data name="ImageDeleteTitle" xml:space="preserve"><value>Afbeelding verwijderen?</value></data>
   <data name="ImageDeleteHint" xml:space="preserve"><value>Dit verwijdert de geselecteerde afbeelding definitief uit de lokale bibliotheek.</value></data>
@@ -810,7 +810,7 @@
   <data name="SpeechNoModels" xml:space="preserve"><value>Er zijn geen spraakmodellen beschikbaar. Controleer je providersleutels of vernieuw de modellenlijst.</value></data>
   <data name="SpeechEmptyLibrary" xml:space="preserve"><value>Je gegenereerde spraakbestanden verschijnen hier.</value></data>
   <data name="SpeechGenerate" xml:space="preserve"><value>Spraak genereren</value></data>
-  <data name="SpeechGenerating" xml:space="preserve"><value>Spraak genereren…</value></data>
+  <data name="SpeechGenerating" xml:space="preserve"><value>Spraak genererenΓÇª</value></data>
   <data name="SpeechImport" xml:space="preserve"><value>Documenttekst importeren</value></data>
   <data name="SpeechImportFailed" xml:space="preserve"><value>Sommige bestanden konden niet worden geconverteerd: {0}</value></data>
   <data name="SpeechDictate" xml:space="preserve"><value>Tekst dicteren</value></data>
@@ -854,7 +854,7 @@
   <data name="TranscriptionNoModels" xml:space="preserve"><value>Er zijn geen transcriptiemodellen beschikbaar. Controleer je providersleutels of vernieuw de modellenlijst.</value></data>
   <data name="TranscriptionEmptyLibrary" xml:space="preserve"><value>Je opgeslagen transcripties verschijnen hier.</value></data>
   <data name="TranscriptionOpenFolder" xml:space="preserve"><value>Map openen</value></data>
-  <data name="TranscriptionProcessing" xml:space="preserve"><value>Bezig met transcriberen…</value></data>
+  <data name="TranscriptionProcessing" xml:space="preserve"><value>Bezig met transcriberenΓÇª</value></data>
   <data name="TranscriptionUnsupported" xml:space="preserve"><value>Kies een niet-leeg audio- of videobestand.</value></data>
   <data name="TranscriptionInvalidResponse" xml:space="preserve"><value>De transcriptieservice heeft een ongeldig of te groot antwoord teruggestuurd.</value></data>
   <data name="TranscriptionLanguage" xml:space="preserve"><value>Taal</value></data>
@@ -862,7 +862,7 @@
   <data name="TranscriptionLanguages" xml:space="preserve"><value>Mogelijke talen</value></data>
   <data name="TranscriptionLanguagesHint" xml:space="preserve"><value>ISO-639-1-codes gescheiden door komma's, bijvoorbeeld nl, en</value></data>
   <data name="TranscriptionKeywords" xml:space="preserve"><value>Trefwoorden</value></data>
-  <data name="TranscriptionKeywordsHint" xml:space="preserve"><value>Eén woord of uitdrukking per regel om de transcriptie te sturen</value></data>
+  <data name="TranscriptionKeywordsHint" xml:space="preserve"><value>E├⌐n woord of uitdrukking per regel om de transcriptie te sturen</value></data>
   <data name="TranscriptionPrompt" xml:space="preserve"><value>Prompt</value></data>
   <data name="TranscriptionPromptHint" xml:space="preserve"><value>Optionele instructies in de audiotaal om de stijl te sturen of een eerder fragment voort te zetten</value></data>
   <data name="TranscriptionResponseFormat" xml:space="preserve"><value>Antwoordformaat</value></data>
@@ -899,13 +899,13 @@
   <data name="ModelsContextBadge" xml:space="preserve"><value>Contextvenster: {0} tokens</value></data>
   <data name="ModelsOutputBadge" xml:space="preserve"><value>Maximale uitvoer: {0} tokens</value></data>
   <data name="New" xml:space="preserve"><value>Nieuw</value></data>
-  <data name="Copy" xml:space="preserve"><value>Model-ID kopiëren</value></data>
+  <data name="Copy" xml:space="preserve"><value>Model-ID kopi├½ren</value></data>
   <data name="ModelsLaunch" xml:space="preserve"><value>Model gebruiken</value></data>
   <data name="ModelsProviderWebsite" xml:space="preserve"><value>Website van {0} openen</value></data>
   <data name="ModelsWebsiteFailed" xml:space="preserve"><value>De website van de provider kon niet worden geopend.</value></data>
   <data name="ModelsUnavailable" xml:space="preserve"><value>Dit model is niet meer beschikbaar bij de huidige AI-service. Vernieuw het modellenoverzicht.</value></data>
-  <data name="Videos" xml:space="preserve"><value>Video’s</value></data>
-  <data name="MyVideos" xml:space="preserve"><value>Mijn video’s</value></data>
+  <data name="Videos" xml:space="preserve"><value>VideoΓÇÖs</value></data>
+  <data name="MyVideos" xml:space="preserve"><value>Mijn videoΓÇÖs</value></data>
   <data name="VideoSettings" xml:space="preserve"><value>Video-instellingen</value></data>
   <data name="VideoSettingsInvalid" xml:space="preserve"><value>Voer geldige video-instellingen en een absoluut opslagpad in.</value></data>
   <data name="VideoPromptRequired" xml:space="preserve"><value>Selecteer een videomodel en voer een prompt in.</value></data>
@@ -915,17 +915,17 @@
   <data name="VideoStorageRetry" xml:space="preserve"><value>Video-opslag is niet beschikbaar. Opgeslagen opdrachten blijven bewaard en worden opnieuw geprobeerd.</value></data>
   <data name="VideoPollingRetry" xml:space="preserve"><value>De videostatus of opslag kon niet worden bijgewerkt. De opgeslagen opdracht wordt opnieuw geprobeerd.</value></data>
   <data name="VideoGenerationFailed" xml:space="preserve"><value>Video genereren is mislukt.</value></data>
-  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Beschrijf de video die je wilt maken…</value></data>
-  <data name="VideoNoModels" xml:space="preserve"><value>Er zijn geen videomodellen beschikbaar. Je opgeslagen video’s blijven beschikbaar.</value></data>
-  <data name="VideoEmptyLibrary" xml:space="preserve"><value>Je gegenereerde video’s verschijnen hier.</value></data>
+  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Beschrijf de video die je wilt makenΓÇª</value></data>
+  <data name="VideoNoModels" xml:space="preserve"><value>Er zijn geen videomodellen beschikbaar. Je opgeslagen videoΓÇÖs blijven beschikbaar.</value></data>
+  <data name="VideoEmptyLibrary" xml:space="preserve"><value>Je gegenereerde videoΓÇÖs verschijnen hier.</value></data>
   <data name="VideoOpenFolder" xml:space="preserve"><value>Videomap openen</value></data>
-  <data name="VideoGenerate" xml:space="preserve"><value>Video’s genereren</value></data>
+  <data name="VideoGenerate" xml:space="preserve"><value>VideoΓÇÖs genereren</value></data>
   <data name="VideoAttachFiles" xml:space="preserve"><value>Een afbeelding of video bijvoegen</value></data>
-  <data name="VideoProcessing" xml:space="preserve"><value>Video in wachtrij of wordt verwerkt…</value></data>
+  <data name="VideoProcessing" xml:space="preserve"><value>Video in wachtrij of wordt verwerktΓÇª</value></data>
   <data name="VideoSize" xml:space="preserve"><value>Videoformaat</value></data>
   <data name="VideoResolution" xml:space="preserve"><value>Resolutie</value></data>
-  <data name="VideoCount" xml:space="preserve"><value>Aantal video’s</value></data>
-  <data name="VideoBatchLimit" xml:space="preserve"><value>Maximaal aantal video’s per verzoek</value></data>
+  <data name="VideoCount" xml:space="preserve"><value>Aantal videoΓÇÖs</value></data>
+  <data name="VideoBatchLimit" xml:space="preserve"><value>Maximaal aantal videoΓÇÖs per verzoek</value></data>
   <data name="VideoProperties" xml:space="preserve"><value>Eigenschappen</value></data>
   <data name="VideoDuration" xml:space="preserve"><value>Duur in seconden (standaard van provider indien leeg)</value></data>
   <data name="VideoFps" xml:space="preserve"><value>Frames per seconde (standaard van provider indien leeg)</value></data>
@@ -937,7 +937,7 @@
   <data name="VideoImageDropHint" xml:space="preserve"><value>Kies afbeeldingsbestanden of sleep ze hierheen.</value></data>
   <data name="VideoProviderOptions" xml:space="preserve"><value>Provideropties (JSON)</value></data>
   <data name="VideoStorage" xml:space="preserve"><value>Video-opslag</value></data>
-  <data name="VideoFolderHint" xml:space="preserve"><value>Nieuwe video’s worden in deze map opgeslagen, gescheiden per account en AI-endpoint. Een andere map verplaatst geen opgeslagen video’s en wijzigt de bestemming van bestaande opdrachten niet.</value></data>
+  <data name="VideoFolderHint" xml:space="preserve"><value>Nieuwe videoΓÇÖs worden in deze map opgeslagen, gescheiden per account en AI-endpoint. Een andere map verplaatst geen opgeslagen videoΓÇÖs en wijzigt de bestemming van bestaande opdrachten niet.</value></data>
   <data name="VideoChooseFolder" xml:space="preserve"><value>Map kiezen</value></data>
   <data name="VideoDefaultFolder" xml:space="preserve"><value>Standaardmap gebruiken</value></data>
   <data name="VideoFolderFailed" xml:space="preserve"><value>De videomap kon niet worden geopend of voorbereid.</value></data>
@@ -945,7 +945,7 @@
   <data name="VideoPlaybackFailed" xml:space="preserve"><value>Windows kan deze video niet afspelen. Sla hem op en open hem in een speler die dit formaat ondersteunt.</value></data>
   <data name="VideoDeleteTitle" xml:space="preserve"><value>Video verwijderen?</value></data>
   <data name="VideoDeleteHint" xml:space="preserve"><value>Deze video wordt uit je opgeslagen bibliotheek verwijderd. Andere resultaten van hetzelfde verzoek blijven bewaard.</value></data>
-  <data name="VideoRefresh" xml:space="preserve"><value>Videomodellen en opgeslagen video’s vernieuwen</value></data>
+  <data name="VideoRefresh" xml:space="preserve"><value>Videomodellen en opgeslagen videoΓÇÖs vernieuwen</value></data>
   <data name="AgentFieldsRequired" xml:space="preserve"><value>Naam, beschrijving, model en instructies zijn verplicht.</value></data>
   <data name="AgentNameInvalid" xml:space="preserve"><value>Voer een geldige naam of identificatie in.</value></data>
   <data name="AgentDuplicateName" xml:space="preserve"><value>Er bestaat al een item met deze naam. Bestaande items zijn niet overschreven.</value></data>
@@ -965,8 +965,8 @@
   <data name="AgentSkillReference" xml:space="preserve"><value>Catalogusverwijzing</value></data>
   <data name="AgentSkillImport" xml:space="preserve"><value>Skill-ZIP importeren</value></data>
   <data name="AgentBackendUnavailable" xml:space="preserve"><value>De agentcatalogus van de backend is niet beschikbaar. Je lokale agents zijn wel beschikbaar.</value></data>
-  <data name="AgentImportedCount" xml:space="preserve"><value>{0} agents geïmporteerd.</value></data>
-  <data name="AgentDeleteConfirm" xml:space="preserve"><value>De lokaal opgeslagen agent “{0}” verwijderen? Exporteer de agent eerst als je een kopie wilt bewaren.</value></data>
+  <data name="AgentImportedCount" xml:space="preserve"><value>{0} agents ge├»mporteerd.</value></data>
+  <data name="AgentDeleteConfirm" xml:space="preserve"><value>De lokaal opgeslagen agent ΓÇ£{0}ΓÇ¥ verwijderen? Exporteer de agent eerst als je een kopie wilt bewaren.</value></data>
   <data name="ChatForm_agent_general" xml:space="preserve"><value>Algemeen</value></data>
   <data name="ChatForm_agent_name" xml:space="preserve"><value>Naam</value></data>
   <data name="ChatForm_agent_description" xml:space="preserve"><value>Beschrijving</value></data>
@@ -1002,11 +1002,11 @@
   <data name="ChatForm_agent_nonEmpty" xml:space="preserve"><value>Niet-leeg antwoord</value></data>
   <data name="ChatForm_agent_minLength" xml:space="preserve"><value>Minimumlengte</value></data>
   <data name="ChatForm_agent_keywordCheck" xml:space="preserve"><value>Trefwoorden</value></data>
-  <data name="ChatForm_agent_keywords" xml:space="preserve"><value>Trefwoorden (één per regel)</value></data>
+  <data name="ChatForm_agent_keywords" xml:space="preserve"><value>Trefwoorden (├⌐├⌐n per regel)</value></data>
   <data name="ChatForm_agent_caseSensitive" xml:space="preserve"><value>Hoofdlettergevoelig</value></data>
   <data name="ChatForm_agent_toolCallsPresent" xml:space="preserve"><value>Toolaanroepen aanwezig</value></data>
   <data name="ChatForm_agent_toolCalledCheck" xml:space="preserve"><value>Benoemde tools aangeroepen</value></data>
-  <data name="ChatForm_agent_toolNames" xml:space="preserve"><value>Toolnamen (één per regel)</value></data>
+  <data name="ChatForm_agent_toolNames" xml:space="preserve"><value>Toolnamen (├⌐├⌐n per regel)</value></data>
   <data name="ChatForm_agent_availableTools" xml:space="preserve"><value>Beschikbare tool toevoegen</value></data>
   <data name="ChatForm_agent_mode" xml:space="preserve"><value>Overeenkomstmodus</value></data>
   <data name="ChatForm_agent_hasImageContent" xml:space="preserve"><value>Afbeelding aanwezig</value></data>
@@ -1023,7 +1023,7 @@
   <data name="RefreshProviders" xml:space="preserve"><value>Providers vernieuwen</value></data>
   <data name="ProviderCategory" xml:space="preserve"><value>Categorie</value></data>
   <data name="ProviderCountry" xml:space="preserve"><value>Land van herkomst</value></data>
-  <data name="ProviderInferenceRegions" xml:space="preserve"><value>Inferentieregio’s</value></data>
+  <data name="ProviderInferenceRegions" xml:space="preserve"><value>InferentieregioΓÇÖs</value></data>
   <data name="ProviderAvailableModelTypes" xml:space="preserve"><value>Beschikbare modeltypen</value></data>
   <data name="ProviderNoDiscoveredModels" xml:space="preserve"><value>Geen modellen gevonden voor deze provider.</value></data>
   <data name="ProviderDiscoveryUnavailable" xml:space="preserve"><value>De providercatalogus is offline beschikbaar. Modeldetectie is niet beschikbaar; informatie over modeltypen kan onvolledig zijn.</value></data>
@@ -1051,39 +1051,39 @@
   <data name="ProviderCountry_EE" xml:space="preserve"><value>Estland</value></data>
   <data name="ProviderCountry_ES" xml:space="preserve"><value>Spanje</value></data>
   <data name="ProviderCountry_FI" xml:space="preserve"><value>Finland</value></data>
-  <data name="ProviderCountry_ID" xml:space="preserve"><value>Indonesië</value></data>
+  <data name="ProviderCountry_ID" xml:space="preserve"><value>Indonesi├½</value></data>
   <data name="ProviderCountry_AT" xml:space="preserve"><value>Oostenrijk</value></data>
-  <data name="ProviderCountry_AU" xml:space="preserve"><value>Australië</value></data>
-  <data name="ProviderCountry_HR" xml:space="preserve"><value>Kroatië</value></data>
-  <data name="ProviderCountry_RO" xml:space="preserve"><value>Roemenië</value></data>
+  <data name="ProviderCountry_AU" xml:space="preserve"><value>Australi├½</value></data>
+  <data name="ProviderCountry_HR" xml:space="preserve"><value>Kroati├½</value></data>
+  <data name="ProviderCountry_RO" xml:space="preserve"><value>Roemeni├½</value></data>
   <data name="ProviderCountry_HU" xml:space="preserve"><value>Hongarije</value></data>
   <data name="ProviderCountry_SK" xml:space="preserve"><value>Slowakije</value></data>
   <data name="ProviderCountry_CM" xml:space="preserve"><value>Kameroen</value></data>
   <data name="ProviderCountry_MA" xml:space="preserve"><value>Marokko</value></data>
-  <data name="ProviderCountry_MY" xml:space="preserve"><value>Maleisië</value></data>
+  <data name="ProviderCountry_MY" xml:space="preserve"><value>Maleisi├½</value></data>
   <data name="ProviderCountry_TR" xml:space="preserve"><value>Turkije</value></data>
-  <data name="ProviderCountry_SI" xml:space="preserve"><value>Slovenië</value></data>
+  <data name="ProviderCountry_SI" xml:space="preserve"><value>Sloveni├½</value></data>
   <data name="ProviderCountry_ZA" xml:space="preserve"><value>Zuid-Afrika</value></data>
   <data name="ProviderCountry_AE" xml:space="preserve"><value>Verenigde Arabische Emiraten</value></data>
   <data name="ProviderCountry_FR" xml:space="preserve"><value>Frankrijk</value></data>
   <data name="ProviderCountry_KE" xml:space="preserve"><value>Kenia</value></data>
-  <data name="ProviderCountry_AR" xml:space="preserve"><value>Argentinië</value></data>
+  <data name="ProviderCountry_AR" xml:space="preserve"><value>Argentini├½</value></data>
   <data name="ProviderCountry_LU" xml:space="preserve"><value>Luxemburg</value></data>
   <data name="ProviderCountry_IE" xml:space="preserve"><value>Ierland</value></data>
   <data name="ProviderCountry_GB" xml:space="preserve"><value>Verenigd Koninkrijk</value></data>
   <data name="ProviderCountry_EG" xml:space="preserve"><value>Egypte</value></data>
-  <data name="ProviderCountry_UA" xml:space="preserve"><value>Oekraïne</value></data>
+  <data name="ProviderCountry_UA" xml:space="preserve"><value>Oekra├»ne</value></data>
   <data name="ProviderCountry_DK" xml:space="preserve"><value>Denemarken</value></data>
   <data name="ProviderCountry_LT" xml:space="preserve"><value>Litouwen</value></data>
-  <data name="ProviderCountry_CZ" xml:space="preserve"><value>Tsjechië</value></data>
+  <data name="ProviderCountry_CZ" xml:space="preserve"><value>Tsjechi├½</value></data>
   <data name="ProviderCountry_HK" xml:space="preserve"><value>Hongkong</value></data>
-  <data name="ProviderCountry_IL" xml:space="preserve"><value>Israël</value></data>
+  <data name="ProviderCountry_IL" xml:space="preserve"><value>Isra├½l</value></data>
   <data name="ProviderCountry_CH" xml:space="preserve"><value>Zwitserland</value></data>
   <data name="ProviderCountry_IN" xml:space="preserve"><value>India</value></data>
-  <data name="ProviderCountry_IT" xml:space="preserve"><value>Italië</value></data>
+  <data name="ProviderCountry_IT" xml:space="preserve"><value>Itali├½</value></data>
   <data name="ProviderCountry_NO" xml:space="preserve"><value>Noorwegen</value></data>
   <data name="ProviderCountry_KR" xml:space="preserve"><value>Zuid-Korea</value></data>
-  <data name="ProviderCountry_BR" xml:space="preserve"><value>Brazilië</value></data>
+  <data name="ProviderCountry_BR" xml:space="preserve"><value>Brazili├½</value></data>
   <data name="ProviderCountry_NL" xml:space="preserve"><value>Nederland</value></data>
   <data name="ProviderCountry_PL" xml:space="preserve"><value>Polen</value></data>
   <data name="ProviderCountry_SE" xml:space="preserve"><value>Zweden</value></data>
@@ -1092,9 +1092,9 @@
   <data name="ProviderCountry_PK" xml:space="preserve"><value>Pakistan</value></data>
   <data name="ProviderRegion_Africa" xml:space="preserve"><value>Afrika</value></data>
   <data name="ProviderRegion_Americas" xml:space="preserve"><value>Amerika</value></data>
-  <data name="ProviderRegion_Asia" xml:space="preserve"><value>Azië</value></data>
+  <data name="ProviderRegion_Asia" xml:space="preserve"><value>Azi├½</value></data>
   <data name="ProviderRegion_Europe" xml:space="preserve"><value>Europa</value></data>
-  <data name="ProviderRegion_Oceania" xml:space="preserve"><value>Oceanië</value></data>
+  <data name="ProviderRegion_Oceania" xml:space="preserve"><value>Oceani├½</value></data>
   <data name="ProviderRegion_World" xml:space="preserve"><value>Wereld</value></data>
   <data name="ProviderCountry_NZ" xml:space="preserve"><value>Nieuw-Zeeland</value></data>
   <data name="ProviderCountry_VN" xml:space="preserve"><value>Vietnam</value></data>
@@ -1135,10 +1135,10 @@
   <data name="ChatForm_openai_transcriptionLanguages" xml:space="preserve"><value>Mogelijke talen</value></data>
   <data name="ChatForm_openai_transcriptionLanguagesPlaceholder" xml:space="preserve"><value>ISO-639-1-codes gescheiden door komma's, bijvoorbeeld nl, en</value></data>
   <data name="ChatForm_openai_transcriptionKeywords" xml:space="preserve"><value>Trefwoorden</value></data>
-  <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>Eén woord of uitdrukking per regel om de transcriptie te sturen</value></data>
+  <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>E├⌐n woord of uitdrukking per regel om de transcriptie te sturen</value></data>
   <data name="ChatForm_openai_transcriptionResponseFormat" xml:space="preserve"><value>Antwoordformaat</value></data>
   <data name="Files" xml:space="preserve"><value>Bestanden</value></data>
-  <data name="FilesDescription" xml:space="preserve"><value>Deel bestanden en mappen met AI. Alleen verwijzingen worden opgeslagen—je bestanden blijven op hun plek. Met een gedeelde map kan AI de inhoud en submappen lezen en daar nieuwe bestanden maken wanneer de Bestanden-plug-in aanstaat. Bestaande bestanden worden nooit overschreven. Bestandstools worden uitgevoerd voordat de resultaten worden beoordeeld.</value></data>
+  <data name="FilesDescription" xml:space="preserve"><value>Deel bestanden en mappen met AI. Alleen verwijzingen worden opgeslagenΓÇöje bestanden blijven op hun plek. Met een gedeelde map kan AI de inhoud en submappen lezen en daar nieuwe bestanden maken wanneer de Bestanden-plug-in aanstaat. Bestaande bestanden worden nooit overschreven. Bestandstools worden uitgevoerd voordat de resultaten worden beoordeeld.</value></data>
   <data name="FilesSearch" xml:space="preserve"><value>Zoek gedeelde bestanden en mappen</value></data>
   <data name="FilesCount" xml:space="preserve"><value>Bestanden ({0})</value></data>
   <data name="FoldersCount" xml:space="preserve"><value>Mappen ({0})</value></data>
@@ -1151,7 +1151,7 @@
   <data name="FilesRefresh" xml:space="preserve"><value>Gedeelde bestanden en mappen vernieuwen</value></data>
   <data name="FilesOpen" xml:space="preserve"><value>Openen</value></data>
   <data name="FilesRemove" xml:space="preserve"><value>Delen stoppen</value></data>
-  <data name="FilesRemoveConfirm" xml:space="preserve"><value>De verwijzing naar “{0}” verwijderen? Het oorspronkelijke bestand of de map wordt niet verwijderd. Items die onder een andere gedeelde map vallen, blijven gedeeld. De aparte bestandstool voor absolute paden wordt niet door deze lijst beperkt.</value></data>
+  <data name="FilesRemoveConfirm" xml:space="preserve"><value>De verwijzing naar ΓÇ£{0}ΓÇ¥ verwijderen? Het oorspronkelijke bestand of de map wordt niet verwijderd. Items die onder een andere gedeelde map vallen, blijven gedeeld. De aparte bestandstool voor absolute paden wordt niet door deze lijst beperkt.</value></data>
   <data name="FilesStatus_available" xml:space="preserve"><value>Beschikbaar</value></data>
   <data name="FilesStatus_missing" xml:space="preserve"><value>Ontbreekt of verplaatst</value></data>
   <data name="FilesStatus_denied" xml:space="preserve"><value>Toegang geweigerd</value></data>
@@ -1182,4 +1182,144 @@
   <data name="NavigationOptions" xml:space="preserve"><value>Opties voor {0}</value></data>
   <data name="NavigationExpand" xml:space="preserve"><value>Verborgen navigatielinks tonen</value></data>
   <data name="NavigationCollapse" xml:space="preserve"><value>Verborgen navigatielinks inklappen</value></data>
+  <data name="Search" xml:space="preserve"><value>Zoeken</value></data>
+  <data name="Description" xml:space="preserve"><value>Beschrijving</value></data>
+  <data name="PluginsTitle" xml:space="preserve">
+    <value>Plugins</value>
+  </data>
+  <data name="PluginsDescription" xml:space="preserve">
+    <value>Draagbare pakketten met Agent Skills, MCP-servers en herbruikbare bestanden.</value>
+  </data>
+  <data name="PluginWebsite" xml:space="preserve">
+    <value>Officiële website</value>
+  </data>
+  <data name="PluginSpecification" xml:space="preserve">
+    <value>Specificatie</value>
+  </data>
+  <data name="PluginKeywords" xml:space="preserve">
+    <value>Trefwoorden</value>
+  </data>
+  <data name="PluginAuthor" xml:space="preserve">
+    <value>Auteur</value>
+  </data>
+  <data name="PluginCounts" xml:space="preserve">
+    <value>{0} skills · {1} MCP-servers · {2} meldingen</value>
+  </data>
+  <data name="PluginDetails" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="PluginFavorite" xml:space="preserve">
+    <value>Toevoegen aan favorieten</value>
+  </data>
+  <data name="PluginUnfavorite" xml:space="preserve">
+    <value>Verwijderen uit favorieten</value>
+  </data>
+  <data name="PluginUnavailable" xml:space="preserve">
+    <value>Pakket niet beschikbaar (verwijder om uit te schakelen)</value>
+  </data>
+  <data name="PluginCreate" xml:space="preserve">
+    <value>Nieuwe plugin maken</value>
+  </data>
+  <data name="PluginVersion" xml:space="preserve">
+    <value>Versie</value>
+  </data>
+  <data name="PluginHomepage" xml:space="preserve">
+    <value>Homepage</value>
+  </data>
+  <data name="PluginRepository" xml:space="preserve">
+    <value>Repository</value>
+  </data>
+  <data name="PluginLicense" xml:space="preserve">
+    <value>Licentie</value>
+  </data>
+  <data name="PluginAuthorName" xml:space="preserve">
+    <value>Naam auteur</value>
+  </data>
+  <data name="PluginAuthorEmail" xml:space="preserve">
+    <value>E-mail auteur</value>
+  </data>
+  <data name="PluginAuthorUrl" xml:space="preserve">
+    <value>URL auteur</value>
+  </data>
+  <data name="PluginTransportHint" xml:space="preserve">
+    <value>Streamable HTTP wordt ondersteund. Configuraties voor lokale processen en oudere SSE worden bewaard maar nooit uitgevoerd. Pakketheaders zijn openbare gegevens, geen opslag voor geheimen.</value>
+  </data>
+  <data name="PluginMcpCatalog" xml:space="preserve">
+    <value>MCP-catalogus</value>
+  </data>
+  <data name="PluginEndpoint" xml:space="preserve">
+    <value>Endpoint-URL</value>
+  </data>
+  <data name="PluginAllServers" xml:space="preserve">
+    <value>Instellingen voor alle servers</value>
+  </data>
+  <data name="PluginFilesHint" xml:space="preserve">
+    <value>Pakketbestanden blijven gegevens. Gebruik het tabblad Skills voor skillbestanden. Manifest- en MCP-bestanden worden gegenereerd. Neem geen inloggegevens op.</value>
+  </data>
+  <data name="PluginAddFiles" xml:space="preserve">
+    <value>Bestanden toevoegen</value>
+  </data>
+  <data name="PluginDiagnostics" xml:space="preserve">
+    <value>Meldingen</value>
+  </data>
+  <data name="PluginOperationFailed" xml:space="preserve">
+    <value>De pluginbewerking is mislukt. Het eerder opgeslagen pakket is ongewijzigd.</value>
+  </data>
+  <data name="PluginSetting_defer_loading" xml:space="preserve">
+    <value>Uitgesteld laden</value>
+  </data>
+  <data name="PluginSetting_namespace" xml:space="preserve">
+    <value>Tools in naamruimte</value>
+  </data>
+  <data name="PluginSetting_direct" xml:space="preserve">
+    <value>Directe aanroepen toestaan</value>
+  </data>
+  <data name="PluginSetting_programmatic" xml:space="preserve">
+    <value>Programmatische aanroepen toestaan</value>
+  </data>
+  <data name="PluginConfiguration" xml:space="preserve">
+    <value>Serverconfiguratie (JSON)</value>
+  </data>
+  <data name="PluginApplyConfiguration" xml:space="preserve">
+    <value>Configuratie toepassen</value>
+  </data>
+  <data name="PluginImport" xml:space="preserve">
+    <value>Plugin-ZIP importeren</value>
+  </data>
+  <data name="PluginLoadFolder" xml:space="preserve">
+    <value>Pluginmap laden</value>
+  </data>
+  <data name="PluginImported" xml:space="preserve">
+    <value>{0} plugins geïmporteerd.</value>
+  </data>
+  <data name="PluginZipOnly" xml:space="preserve">
+    <value>Kies een ZIP-pluginarchief.</value>
+  </data>
+  <data name="PluginArchive" xml:space="preserve">
+    <value>Agent Plugin-archief</value>
+  </data>
+  <data name="PluginDeleteConfirm" xml:space="preserve">
+    <value>Plugin {0} verwijderen? In agents ingesloten kopieën blijven ongewijzigd.</value>
+  </data>
+  <data name="PluginDisable" xml:space="preserve">
+    <value>Plugin {0} uitschakelen</value>
+  </data>
+  <data name="PluginEditorTools" xml:space="preserve">
+    <value>Plugin-editor</value>
+  </data>
+  <data name="PluginAgentEmpty" xml:space="preserve">
+    <value>Deze agent heeft geen directe skills of ingeschakelde MCP-servers om te verpakken.</value>
+  </data>
+  <data name="PluginAgentSnapshotHint" xml:space="preserve">
+    <value>Geselecteerde plugins worden als ZIP-kopie ingesloten. Wijzigingen en verwijderingen in de bibliotheek wijzigen deze agent niet. Verwijder en selecteer een plugin opnieuw om de kopie te vernieuwen.</value>
+  </data>
+  <data name="PluginEmbedded" xml:space="preserve">
+    <value>Ingesloten kopie</value>
+  </data>
+  <data name="PluginFromAgent" xml:space="preserve">
+    <value>Plugin van agent maken</value>
+  </data>
+  <data name="PluginAgentConverted" xml:space="preserve">
+    <value>Plugin {0} gemaakt.</value>
+  </data>
 </root>

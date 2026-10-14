@@ -5,6 +5,7 @@ public sealed partial class ChatShell
     private LocalConversationTools? activeConversationTools;
     private void RegisterLocalPlugins(McpTurnSnapshot snapshot, ChatPreferences preferences, string partition)
     {
+        RegisterAgentPluginTools(snapshot, preferences);
         if (preferences.PluginEnabled(DesktopLocalTools.Conversations))
         {
             var tools = new LocalConversationTools(history, partition, documentExtractor,

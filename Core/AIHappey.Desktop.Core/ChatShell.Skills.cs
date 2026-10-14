@@ -70,6 +70,13 @@ public sealed partial class ChatShell
         var selected = preferences.EnabledSkillIds.ToHashSet(StringComparer.Ordinal);
         var discover = preferences.PluginEnabled(DesktopLocalTools.SkillSearch);
         var readers = new List<(DesktopSkill Skill, Func<CancellationToken, Task<DesktopSkillContent>> Load)>();
+        var pluginGeneration = pluginEpoch;
+        foreach (var plugin in EnabledPlugins(preferences).Select(p => p.Clone()))
+            foreach (var skill in plugin.Skills())
+            {
+                selected.Add(skill.Descriptor.Id);
+                readers.Add((skill.Descriptor, ct => { ct.ThrowIfCancellationRequested(); if (closing || partition != session.HistoryPartition || pluginGeneration != pluginEpoch) throw new OperationCanceledException(ct); return Task.FromResult(plugin.Content(skill)); }));
+            }
         if (runtimeSkillPartition == partition)
             foreach (var item in runtimeSkillCatalog.Where(i => discover || selected.Contains(i.Id)))
                 readers.Add((new DesktopSkill(item.Id, item.Name, item.Description, "remote", item.LatestVersion ?? item.Version)
@@ -96,6 +103,7 @@ public sealed partial class ChatShell
                 }));
         foreach (var skill in Mcp.CaptureSkills().Where(s => discover || selected.Contains(s.Descriptor.Id))) readers.Add((skill.Descriptor, skill.LoadAsync));
         new DesktopSkillTurn(readers, discover, selected, skill => !closing && session.HistoryPartition == partition
+            && (skill.Origin != "plugin" || pluginGeneration == pluginEpoch)
             && (skill.Origin != "mcp" || session.Settings.ModelContext.EnableSkills && Mcp.CaptureSkills().Any(s => s.Descriptor.Id == skill.Id)))
             .Register(snapshot);
         RegisterLocalPlugins(snapshot, preferences, partition); return snapshot;

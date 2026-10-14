@@ -20,7 +20,7 @@ public sealed partial class ChatShell
         historyDialogOpen = true;
         var selected = targets.FirstOrDefault(t => t.Id == target.Text.Trim());
         var provider = selected is null ? null : ChatPreferences.ResolveProvider(Service, selected.Id, selected.ProviderKey);
-        var dialog = new ChatSettingsDialog(session.Settings.Chat, provider, LoadSkillSelectionAsync, PrefetchSkillAsync) { XamlRoot = XamlRoot };
+        var dialog = new ChatSettingsDialog(session.Settings.Chat, provider, LoadSkillSelectionAsync, PrefetchSkillAsync, agentPlugins) { XamlRoot = XamlRoot };
         chatSettingsDialog = dialog;
         dialog.SaveAsync = async preferences =>
         {
@@ -29,6 +29,7 @@ public sealed partial class ChatShell
             next.Chat = preferences.Clone();
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
+            await LoadPluginsAsync(downloadLifetime.Token);
             RenderContextTags();
         };
         SystemAppearance.PrepareDialog(dialog);

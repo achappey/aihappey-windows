@@ -19,6 +19,8 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--plugins-only")) { await PluginRegressionTests.RunAsync(Check, root); Console.WriteLine($"All {tests} plugin checks passed."); return; }
+    await PluginRegressionTests.RunAsync(Check, root);
     await ChatSettingsRegressionTests.RunAsync(Check, root);
     if (args.Contains("--chat-settings-only"))
     {

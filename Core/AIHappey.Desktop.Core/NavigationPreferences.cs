@@ -4,7 +4,7 @@ namespace AIHappey.Desktop.Core;
 public sealed class NavigationPreferences
 {
     public static IReadOnlyList<string> PrimaryKeys { get; } = Array.AsReadOnly<string>(["new", "search-conversations", "images", "videos", "speech", "transcriptions"]);
-    public static IReadOnlyList<string> AgentKeys { get; } = Array.AsReadOnly<string>(["agents", "servers", "skills"]);
+    public static IReadOnlyList<string> AgentKeys { get; } = Array.AsReadOnly<string>(["agents", "servers", "skills", "plugins"]);
     public static IReadOnlyList<string> ResourceKeys { get; } = Array.AsReadOnly<string>(["files"]);
 
     private List<string> hiddenItemKeys = ["videos", "speech"];

@@ -112,6 +112,8 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     /// <summary>Sample-owned initial definitions, copied into editable storage only on first use.</summary>
     public IReadOnlyList<DesktopAgent> DefaultAgents { get; set; } = [];
     public string AgentPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
+    public string PluginPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
+    public string PluginExtensionNamespace { get; set; } = AgentPluginPackages.DefaultNamespace;
     public ISystemContextComposer ContextComposer { get; set; } = new DesktopSystemContextComposer();
     public IDesktopMcpClientFactory McpClientFactory { get; set; } = new DesktopMcpClientFactory();
     public DesktopToolApprovalPolicy ToolApprovals { get; } = new();

@@ -10,6 +10,8 @@ public sealed record McpCatalogItem(string Id, string Name, string Description, 
     string? Version = null, string? RegistryUrl = null)
 {
     public IReadOnlyList<McpIcon> Icons { get; init; } = [];
+    public string? PluginId { get; init; }
+    public JsonElement? PluginSettings { get; init; }
 }
 public sealed record McpCatalogResult(IReadOnlyList<McpCatalogItem> Items, IReadOnlyList<string> FailedSources);
 

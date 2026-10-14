@@ -41,6 +41,7 @@ internal sealed class OverviewPage : UserControl
     public Action<CatalogItem>? ChatRequested { get; set; }
     public Action<CatalogItem, Button>? EditRequested { get; set; }
     public Action<CatalogItem>? DeleteRequested { get; set; }
+    public Action<CatalogItem>? PluginRequested { get; set; }
 
     public OverviewPage(CatalogKind kind)
     {
@@ -197,7 +198,8 @@ internal sealed class OverviewPage : UserControl
         AutomationProperties.SetAutomationId(favorite, item.Key + ":Favorite"); favorite.Name = "CatalogFavorite";
         favorite.Click += (_, _) => FavoriteRequested?.Invoke(item); actions.Children.Add(favorite);
         if (item.Kind == CatalogKind.Agent)
-        { var chat = ActionButton(item, "StartChat", Icon.Chat); chat.Name = "CatalogStartChat"; chat.Click += (_, _) => ChatRequested?.Invoke(item); actions.Children.Add(chat); }
+        { var chat = ActionButton(item, "StartChat", Icon.Chat); chat.Name = "CatalogStartChat"; chat.Click += (_, _) => ChatRequested?.Invoke(item); actions.Children.Add(chat);
+          var plugin = ActionButton(item, "PluginFromAgent", Icon.PuzzlePiece); plugin.Name = "CatalogCreatePlugin"; plugin.Click += (_, _) => PluginRequested?.Invoke(item); actions.Children.Add(plugin); }
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
         NativeCardSurface.Divider(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
         var card = new Border { Name = "CatalogCard", Tag = item, Child = grid };

@@ -43,7 +43,7 @@ public sealed class McpTurnSnapshot
             foreach (var candidate in candidates.Where(c => c.Server.Id == server.Server.Id))
             {
                 var name = candidate.Name;
-                if (name is DesktopMcpResources.ToolName or DesktopMcpToolExecution.ElicitationToolName || DesktopLocalTools.Reserved(name) || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
+                if (name == AgentPluginTools.ReadToolName || name is DesktopMcpResources.ToolName or DesktopMcpToolExecution.ElicitationToolName || DesktopLocalTools.Reserved(name) || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
                 {
                     var stem = Regex.Replace(name, "[^a-zA-Z0-9_-]", "_");
                     stem = stem[..Math.Min(stem.Length, 40)];
@@ -56,6 +56,7 @@ public sealed class McpTurnSnapshot
                 var tool = new JsonObject { ["name"] = name, ["inputSchema"] = JsonNode.Parse(schema.GetRawText()) };
                 foreach (var field in new[] { "description", "title", "outputSchema", "annotations" })
                     if (candidate.Tool.TryGetProperty(field, out var value)) tool[field] = JsonNode.Parse(value.GetRawText());
+                if (server.Server.PluginSettings is { } settings) tool["requestOptions"] = JsonNode.Parse(settings.GetRawText());
                 result.tools.Add(JsonSerializer.SerializeToElement(tool));
                 result.routes.Add(name, new(candidate.Name, candidate.Call));
                 serverTools.Add(tool.DeepClone());

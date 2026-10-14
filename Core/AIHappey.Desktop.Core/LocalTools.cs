@@ -30,7 +30,7 @@ public static class DesktopLocalTools
                 Conversations => "LocalPluginConversations", SkillSearch => "LocalPluginSkills", ArtificialIntelligence => "LocalPluginAi",
                 WindowsSearch => "LocalPluginWindowsSearch", Files => "LocalPluginFiles", _ => throw new InvalidDataException("Unknown local plugin.")
             }, Array.AsReadOnly((id is WindowsSearch or Files ? desktop : document).RootElement.GetProperty(id)
-                .EnumerateArray().Select(t => t.Clone()).ToArray()))).ToArray());
+                .EnumerateArray().Select(t => t.Clone()).ToArray()))).Append(new DesktopToolPlugin(AgentPluginTools.EditorId, "PluginEditorTools", AgentPluginTools.Definitions)).ToArray());
     }
     public static bool Reserved(string name) => Plugins.Any(p => p.Tools.Any(t => CatalogProjection.Text(t, "name") == name));
     public static JsonElement Definition(string name) => Plugins.SelectMany(p => p.Tools).Single(t => CatalogProjection.Text(t, "name") == name);

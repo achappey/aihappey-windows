@@ -24,6 +24,7 @@ public sealed partial class ChatShell
         import.Click += async (_, _) => await ImportAgentsAsync();
         agentsOverview.EditRequested = async (item, owner) => await EditAgentAsync(item, owner);
         agentsOverview.DeleteRequested = async item => await DeleteAgentAsync(item);
+        agentsOverview.PluginRequested = async item => await ConvertAgentToPluginAsync(item);
     }
     private async Task LoadLocalAgentsAsync(CancellationToken ct)
     {
@@ -74,6 +75,7 @@ public sealed partial class ChatShell
         try
         {
             await LoadLocalAgentsAsync(downloadLifetime.Token);
+            await LoadPluginsAsync(downloadLifetime.Token);
             await LoadLocalSkillsAsync(downloadLifetime.Token); var skillPartition = session.HistoryPartition;
             var agent = item is null ? DesktopAgent.Empty() : localAgents.FirstOrDefault(a => a.Name == item.Id)?.Clone();
             if (agent is null) { Show(DesktopResources.Get("AgentUnavailable"), InfoBarSeverity.Warning); return; }
@@ -88,7 +90,7 @@ public sealed partial class ChatShell
                     var value = await localSkillStore.ReadAsync(skillPartition, skill, ct);
                     ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != skillPartition) throw new OperationCanceledException(ct);
                     return DesktopSkillPackages.Export(value);
-                }) { XamlRoot = XamlRoot };
+                }, agentPlugins) { XamlRoot = XamlRoot };
             agentEditor.SaveAsync = async (value, ct) =>
             {
                 ct.ThrowIfCancellationRequested(); if (partition != session.AgentPartition) throw new OperationCanceledException();
@@ -147,5 +149,20 @@ public sealed partial class ChatShell
         catch (OperationCanceledException) { }
         catch { Show(DesktopResources.Get("ChatSettingsSaveFailed"), InfoBarSeverity.Error); }
         finally { historyDialogOpen = false; }
+    }
+    private async Task ConvertAgentToPluginAsync(CatalogItem item)
+    {
+        if (busy || closing || historyDialogOpen) return;
+        await RunAsync(async ct =>
+        {
+            var partition = session.PluginPartition; await LoadPluginsAsync(ct);
+            DesktopAgent agent;
+            if (item.Origin == CatalogOrigin.Local) { await LoadLocalAgentsAsync(ct); agent = localAgents.FirstOrDefault(a => a.Name == item.Id)?.Clone() ?? throw new InvalidDataException(DesktopResources.Get("AgentUnavailable")); }
+            else agent = item.Definition is { } definition ? new DesktopAgent(System.Text.Json.Nodes.JsonNode.Parse(definition.GetRawText())!.AsObject())
+                : throw new InvalidDataException(DesktopResources.Get("AgentUnavailable"));
+            var plugin = await DesktopAgentPluginSnapshots.ConvertAsync(agent, agentPlugins.Select(p => p.Id), session.PluginExtensionNamespace, SnapshotPluginSkillAsync, ct);
+            if (!CurrentPluginPartition(partition)) throw new OperationCanceledException(ct);
+            await pluginStore.SaveAsync(partition, plugin, false, ct); await LoadPluginsAsync(ct); Show(DesktopResources.Format("PluginAgentConverted", plugin.Id), InfoBarSeverity.Success);
+        });
     }
 }

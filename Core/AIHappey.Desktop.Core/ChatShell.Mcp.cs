@@ -89,6 +89,7 @@ public sealed partial class ChatShell
         DesktopPage.Speech => LoadSpeechAsync(ct, useCache),
         DesktopPage.Transcriptions => LoadTranscriptionsAsync(ct, useCache),
         DesktopPage.Files => LoadFilesAsync(ct),
+        DesktopPage.Plugins => LoadPluginsAsync(ct),
         DesktopPage.Mcp => LoadMcpOverviewAsync(ct, useCache),
         DesktopPage.Models => LoadModelsOverviewAsync(ct, useCache),
         DesktopPage.Providers => LoadProvidersOverviewAsync(ct, useCache),

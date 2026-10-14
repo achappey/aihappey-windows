@@ -11,7 +11,7 @@ using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
 
-internal enum DesktopPage { Chat, Images, Videos, Speech, Transcriptions, Agents, Skills, Mcp, Models, Providers, Files }
+internal enum DesktopPage { Chat, Images, Videos, Speech, Transcriptions, Agents, Skills, Plugins, Mcp, Models, Providers, Files }
 
 public sealed partial class ChatShell
 {
@@ -48,6 +48,7 @@ public sealed partial class ChatShell
             (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)DesktopIcons.Create(Icon.Bot)),
             (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)DesktopIcons.Create(Icon.Connector)),
             (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)DesktopIcons.Create(Icon.Star)),
+            (DesktopPage.Plugins, DesktopResources.Get("PluginsTitle"), (IconElement)DesktopIcons.Create(Icon.PuzzlePiece)),
             (DesktopPage.Files, DesktopResources.Get("Files"), (IconElement)DesktopIcons.Create(Icon.Folder)),
             (DesktopPage.Models, DesktopResources.Get("Models"), (IconElement)DesktopIcons.Create(Icon.Brain)),
             (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)DesktopIcons.Create(Icon.Cloud))
@@ -90,7 +91,7 @@ public sealed partial class ChatShell
                 {
                     DesktopPage.Images => Icon.Image, DesktopPage.Videos => Icon.Video, DesktopPage.Speech => Icon.Speaker2,
                     DesktopPage.Transcriptions => Icon.Mic, DesktopPage.Agents => Icon.Bot, DesktopPage.Mcp => Icon.Connector,
-                    DesktopPage.Skills => Icon.Star, _ => Icon.Folder
+                    DesktopPage.Skills => Icon.Star, DesktopPage.Plugins => Icon.PuzzlePiece, _ => Icon.Folder
                 }, () => NavigateAsync(page));
             }
         }
@@ -105,6 +106,7 @@ public sealed partial class ChatShell
         overviewHost.Children.Add(modelsOverview);
         overviewHost.Children.Add(providersOverview);
         overviewHost.Children.Add(filesOverview);
+        overviewHost.Children.Add(pluginsOverview);
         foreach (var page in new[] { agentsOverview, skillsOverview })
         {
             page.RetryRequested = async () => await RunAsync(ct => LoadOverviewAsync(page, ct));
@@ -142,6 +144,7 @@ public sealed partial class ChatShell
         providerFilters.Visibility = page == DesktopPage.Providers ? Visibility.Visible : Visibility.Collapsed;
         addAgent.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         addSkill.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
+        pluginsOverview.Visibility = addPlugin.Visibility = page == DesktopPage.Plugins ? Visibility.Visible : Visibility.Collapsed;
         filesOverview.Visibility = addFiles.Visibility = page == DesktopPage.Files ? Visibility.Visible : Visibility.Collapsed;
         if (page is DesktopPage.Models or DesktopPage.Providers && aiCategory is not null)
         {
@@ -175,6 +178,7 @@ public sealed partial class ChatShell
         foreach (var button in pageButtons.Values) button.IsEnabled = !value;
         addAgent.IsEnabled = !value;
         addSkill.IsEnabled = !value;
+        addPlugin.IsEnabled = !value; pluginsOverview.SetActionsEnabled(!value);
         addFiles.IsEnabled = !value; filesOverview.SetActionsEnabled(!value);
         agentsOverview.SetActionsEnabled(!value); skillsOverview.SetActionsEnabled(!value);
         mcpOverview.SetActionsEnabled(!value);
@@ -202,6 +206,7 @@ public sealed partial class ChatShell
         runtimeSkillCatalog = []; runtimeSkillPartition = null;
         localAgents = []; localAgentPartition = null; agentEditor?.Hide();
         localSkills = []; localSkillPartition = null; skillEditor?.CancelAndHide();
+        agentPlugins = []; pluginPartition = null; pluginEpoch++; pluginsOverview.SetItems([]); pluginDialog?.CancelAndHide(); pluginSelectionDialog?.Hide();
         skillDeleteDialog?.Hide();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         searchDialog?.Hide();

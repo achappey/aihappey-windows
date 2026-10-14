@@ -15,18 +15,25 @@ public sealed class DesktopMcpServer
     public string? Version { get; set; }
     public IReadOnlyList<McpIcon> Icons { get; set; } = [];
     public bool Enabled { get; set; }
+    public string? PluginId { get; set; }
+    public JsonElement? PluginSettings { get; set; }
     [JsonIgnore] public Dictionary<string, string> Headers { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public string? ProtectedHeaders { get; set; }
 
     public DesktopMcpServer Clone() => new() { Id = Id, Name = Name, Description = Description, Url = Url,
-        RegistryUrl = RegistryUrl, Version = Version, Icons = Icons.ToArray(), Enabled = Enabled, Headers = new(Headers, StringComparer.OrdinalIgnoreCase) };
-    public McpCatalogItem CatalogItem => new(Id, Name, Description, Url, Version, RegistryUrl) { Icons = Icons.ToArray() };
+        RegistryUrl = RegistryUrl, Version = Version, Icons = Icons.ToArray(), Enabled = Enabled, PluginId = PluginId, PluginSettings = PluginSettings?.Clone(), Headers = new(Headers, StringComparer.OrdinalIgnoreCase) };
+    public McpCatalogItem CatalogItem => new(Id, Name, Description, Url, Version, RegistryUrl) { Icons = Icons.ToArray(), PluginId = PluginId, PluginSettings = PluginSettings?.Clone() };
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Id) || Id.Length > 2048 || string.IsNullOrWhiteSpace(Name) || Name.Length > 256)
             throw new InvalidOperationException(DesktopResources.Get("McpInvalidName"));
-        Url = McpValidation.Endpoint(Url).AbsoluteUri;
-        Headers = McpValidation.Headers(Headers);
+        if (PluginId is null) { Url = McpValidation.Endpoint(Url).AbsoluteUri; Headers = McpValidation.Headers(Headers); }
+        else
+        {
+            AgentPluginPackages.Server(Name, new System.Text.Json.Nodes.JsonObject { ["type"] = "streamable-http", ["url"] = Url,
+                ["headers"] = JsonSerializer.SerializeToNode(Headers) });
+            Headers = Headers.Where(p => !p.Key.StartsWith("Mcp-", StringComparison.OrdinalIgnoreCase) && !new[] { "Host", "Content-Length", "Content-Type", "Accept", "Connection", "Transfer-Encoding", "Cookie", "Authorization" }.Contains(p.Key, StringComparer.OrdinalIgnoreCase)).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+        }
         Icons = (Icons ?? []).Where(icon => icon is not null && McpIcons.Supported(icon)).Take(32).ToArray();
     }
 }
@@ -87,7 +94,7 @@ public sealed class DesktopMcpStore(string root, IMcpSecretProtector? secretProt
 
     public async Task SaveAsync(string partition, IEnumerable<DesktopMcpServer> servers, CancellationToken ct = default)
     {
-        var copies = servers.Select(s => s.Clone()).ToList();
+        var copies = servers.Where(s => s.PluginId is null).Select(s => s.Clone()).ToList();
         if (copies.Count > 200 || copies.Select(s => s.Id).Distinct().Count() != copies.Count)
             throw new InvalidOperationException(DesktopResources.Get("McpServerLimit"));
         foreach (var server in copies)
