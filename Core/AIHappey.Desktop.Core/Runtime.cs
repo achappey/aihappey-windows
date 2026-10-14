@@ -144,7 +144,7 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
             Host.UserContext, ActiveLanguage, darkMode, now)
             { Mcp = mcp ?? Mcp?.Capture() ?? McpTurnSnapshot.Empty });
     }
-    public string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIHappey", "Desktop", Host.ProfileId);
+    public string DataDirectory => DesktopPaths.ProfileDirectory(Host.ProfileId);
     public string HistoryPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity,
         Settings.Ai.Location.ToString(), Settings.Ai.Location == RuntimeLocation.Remote ? Settings.Ai.RemoteUrl.TrimEnd('/') : "managed-ai",
         Settings.Agents.Location.ToString(), Settings.Agents.Location == RuntimeLocation.Remote ? Settings.Agents.RemoteUrl.TrimEnd('/') : "managed-agents");

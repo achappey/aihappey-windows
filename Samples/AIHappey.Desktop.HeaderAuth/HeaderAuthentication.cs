@@ -9,7 +9,7 @@ namespace AIHappey_Desktop_HeaderAuth;
 public sealed class HeaderAuthentication : IDesktopHost
 {
     private static readonly byte[] Entropy = "AIHappey.Desktop.HeaderAuth.v1"u8.ToArray();
-    private readonly string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIHappey", "Desktop", "HeaderAuth", "credentials.bin");
+    private readonly string path = Path.Combine(DesktopPaths.ProfileDirectory("HeaderAuth"), "credentials.bin");
     private Dictionary<string, string>? headers;
     public string ProfileId => "HeaderAuth";
     public bool AllowLocal => true;

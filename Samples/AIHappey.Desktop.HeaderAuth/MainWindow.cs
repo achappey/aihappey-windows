@@ -14,12 +14,14 @@ public sealed class MainWindow : Window
         shell = new ChatShell(session);
         appearance = new SystemAppearance(shell);
         Content = shell;
+        DesktopActivation.Bind(this, shell);
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
         AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900));
         AppWindow.Closing += async (_, args) =>
         {
             if (allowClose) return;
             args.Cancel = true;
+            DesktopActivation.Stop();
             await shell.ShutdownAsync();
             allowClose = true; Close();
         };

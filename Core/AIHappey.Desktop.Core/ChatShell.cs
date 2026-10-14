@@ -56,7 +56,8 @@ public sealed partial class ChatShell : UserControl
     private bool followBottom = true;
     private bool closing;
     private bool updatingMode;
-    private bool historyDialogOpen;
+    private bool historyDialogActive;
+    private bool historyDialogOpen { get => historyDialogActive; set { historyDialogActive = value; if (!value) ScheduleExplorerDrain(); } }
     private readonly Dictionary<string, int> activityPages = [];
     private ServiceKind service;
     private ServiceKind Service => service;
@@ -131,6 +132,7 @@ public sealed partial class ChatShell : UserControl
                 await DiscoverAsync(ct);
             });
             appAgentsReady = true;
+            explorerReady = true; ScheduleExplorerDrain();
             RefreshWelcome();
         };
         newChat.Click += (_, _) => NewConversation();
@@ -140,6 +142,9 @@ public sealed partial class ChatShell : UserControl
         settingsButton.Click += async (_, _) => await EditSettingsAsync();
         manageAccount.Click += async (_, _) => await RunAsync(async ct =>
         {
+            accountTransition = true;
+            try
+            {
             await Mcp.ResetAsync(ct);
             await StopVideoJobsAsync();
             await session.Host.ManageAccountAsync(XamlRoot, ct);
@@ -154,6 +159,8 @@ public sealed partial class ChatShell : UserControl
             await LoadHistoryAsync(ct);
             await DiscoverAsync(ct);
             if (activePage != DesktopPage.Chat) await LoadActiveOverviewAsync(ct);
+            }
+            finally { accountTransition = false; ScheduleExplorerDrain(); }
         });
         models.Checked += async (_, _) => { if (!updatingMode) await SelectServiceAsync(ServiceKind.Ai); };
         agents.Checked += async (_, _) => { if (!updatingMode) await SelectServiceAsync(ServiceKind.Agents); };
@@ -208,7 +215,8 @@ public sealed partial class ChatShell : UserControl
         ControlAppearance.Stock(notice);
         notice.Closed += (_, _) => notice.Visibility = Visibility.Collapsed;
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(noticeMessage, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Assertive);
-        root.Children.Add(notice);
+        var notices = new StackPanel(); notices.Children.Add(notice); PrepareExplorerNotice(notices);
+        root.Children.Add(notices);
         Grid.SetRow(split, 1); root.Children.Add(split);
 
         var sidebar = new Grid { Padding = new Thickness(8), HorizontalAlignment = HorizontalAlignment.Left };
@@ -795,7 +803,7 @@ public sealed partial class ChatShell : UserControl
             Show(e is GatewayException or InvalidOperationException or JsonException ? GatewayErrors.Display(e.Message) ?? DesktopResources.Get("OperationFailed")
                 : DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error);
         }
-        finally { operation.Dispose(); operation = null; busy = false; SetBusy(false, false); }
+        finally { operation.Dispose(); operation = null; busy = false; SetBusy(false, false); ScheduleExplorerDrain(); }
     }
 
     private void SetBusy(bool value, bool inference)
@@ -848,6 +856,7 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        explorerConfirmation?.Hide(); CancelExplorerBatches();
         appAgentLifetime.Cancel(); welcomeRequest?.Cancel();
         toolOutputDialog?.Hide();
         videoWorkLifetime.Cancel();

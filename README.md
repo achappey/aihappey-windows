@@ -20,6 +20,13 @@ A native Windows AI client built with WinUI 3. Chat with AI models and agents, c
 - Header-based/BYOK and Microsoft Entra authentication
 - Local or remote AI and Agents runtimes
 - English and Dutch localization
+- Optional Windows 11 MSIX installation with native Explorer file attachments to the chat draft (never auto-submit)
+
+## Windows distributions
+
+The portable ZIP remains installation-free and independently buildable/publishable without signing credentials. The Windows 11 MSIX distribution adds package-owned Explorer integration, upgrades, and clean uninstallation using the same application codebase. Installed and portable profiles are isolated.
+
+See [Windows installation, publishing, signing, and lifecycle tests](Packaging/README.md) for deployment requirements and CI configuration. Production MSIX publication is blocked until signing and Windows 11 lifecycle validation are configured; portable ZIP publication is not blocked by those requirements.
 
 ## Architecture
 

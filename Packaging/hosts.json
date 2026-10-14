@@ -1,0 +1,4 @@
+{
+  "HeaderAuth": { "identity": "AIHappey.Desktop.HeaderAuth", "clsid": "DD829838-C01B-4B4A-918E-468109092920" },
+  "AzureAuth": { "identity": "AIHappey.Desktop.AzureAuth", "clsid": "CE1495F0-8F76-47D4-BB4B-524F129318DC" }
+}

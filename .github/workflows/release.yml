@@ -1,63 +1,246 @@
-
-name: Publish chathappey release
+name: Build and publish Windows distributions
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'Releases/chathappey-*.zip'
+    tags: ['[0-9]*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version yyMMdd.HHmm (UTC); empty builds without publishing'
+        type: string
+      installer:
+        description: 'Publish MSIX after protected signing and Windows 11 gates (ZIP is independent)'
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: chathappey-releases
-  cancel-in-progress: false
+  group: windows-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-
+  build:
+    runs-on: windows-2025
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      publish: ${{ steps.metadata.outputs.publish }}
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: aihappey-windows
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 0
+          path: aihappey-windows
+          persist-credentials: false
+      - id: metadata
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          . ./Packaging/Tools.ps1
+          $version = if ($env:REQUESTED_VERSION) { $env:REQUESTED_VERSION } elseif ($env:REF_TYPE -eq 'tag') { $env:REF_NAME } else { (Get-Date).ToUniversalTime().ToString('yyMMdd.HHmm') }
+          $null = Get-PackageVersion $version
+          $publish = $env:EVENT_NAME -ne 'pull_request' -and ($env:REF_TYPE -eq 'tag' -or ($env:REQUESTED_VERSION -and $env:REF_NAME -eq 'main'))
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "publish=$($publish.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          $sources = Get-Content ./Packaging/sources.json -Raw | ConvertFrom-Json
+          foreach ($name in @('aihappey-ai','aihappey-agents','aihappey-chat')) { "$name=$($sources.$name)" >> $env:GITHUB_OUTPUT }
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: achappey/aihappey-ai
+          ref: ${{ steps.metadata.outputs.aihappey-ai }}
+          path: aihappey-ai
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: achappey/aihappey-agents
+          ref: ${{ steps.metadata.outputs.aihappey-agents }}
+          path: aihappey-agents
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: achappey/aihappey-chat
+          ref: ${{ steps.metadata.outputs.aihappey-chat }}
+          path: aihappey-chat
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Regression and packaging checks
+        run: |
+          ./Tests/check-packaging.ps1
+          dotnet run --project Tests/AIHappey.Desktop.Tests/AIHappey.Desktop.Tests.csproj
+          if ($LASTEXITCODE) { throw 'Regression checks failed' }
+      - name: Publish shared payload and portable ZIPs without signing prerequisites
+        env:
+          VERSION: ${{ steps.metadata.outputs.version }}
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          ./publish.ps1 -Distribution Portable -ReleaseVersion $env:VERSION
+          $provenance = @{ desktop=$env:SOURCE_COMMIT; dependencies=(Get-Content Packaging/sources.json -Raw | ConvertFrom-Json); portableSigned=$false }
+          foreach ($zip in Get-ChildItem Releases/*.zip) { $provenance | ConvertTo-Json -Depth 5 | Set-Content ($zip.FullName + '.json') }
+      - name: Build native extensions for both hosts (no signing secrets)
+        run: |
+          $hosts = Get-Content Packaging/hosts.json -Raw | ConvertFrom-Json
+          foreach ($name in @('HeaderAuth','AzureAuth')) {
+            cmake -S Integration/ExplorerCommand -B "artifacts/native/$name" -A x64 "-DCOMMAND_CLSID=$($hosts.$name.clsid)" "-DHOST_NAME=$name" '-DAPP_NAME=aihappey'
+            if ($LASTEXITCODE) { throw 'Native configure failed' }
+            cmake --build "artifacts/native/$name" --config Release
+            if ($LASTEXITCODE) { throw 'Native build failed' }
+          }
+      - name: Publish native UI test payload for isolated Windows 11 checks
+        run: |
+          dotnet publish Tests/AIHappey.Desktop.UiTests/AIHappey.Desktop.UiTests.csproj -c Debug -r win-x64 --self-contained true -p:Platform=x64 -o artifacts/Debug/UiTests
+          if ($LASTEXITCODE) { throw 'Native UI test build failed' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-ui-tests
+          path: aihappey-windows/artifacts/Debug/UiTests
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: portable
+          path: aihappey-windows/Releases/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: shared-payload
+          path: aihappey-windows/artifacts/Release
+          if-no-files-found: error
 
-      - name: Publish new releases
-        shell: bash
+  portable-release:
+    needs: build
+    if: needs.build.outputs.publish == 'true'
+    runs-on: windows-2025
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: portable
+          path: Releases
+      - shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          BEFORE: ${{ github.event.before }}
-          AFTER: ${{ github.sha }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.build.outputs.version }}
+          TARGET: ${{ github.sha }}
+        run: ./Packaging/Publish-Release.ps1 -Version $env:VERSION -Directory Releases -Target $env:TARGET -Distribution Portable
+
+  installer:
+    needs: build
+    if: needs.build.outputs.publish == 'true' && (inputs.installer || vars.ENABLE_MSIX_RELEASE == 'true')
+    runs-on: windows-2025
+    environment: windows-signing
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: shared-payload
+          path: artifacts/Release
+      - name: Protected signing and installer creation
+        shell: pwsh
+        env:
+          PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
+          PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
+          PUBLISHER: ${{ vars.WINDOWS_PACKAGE_PUBLISHER }}
+          EXPECTED_THUMBPRINT: ${{ vars.WINDOWS_SIGNING_THUMBPRINT }}
+          TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL }}
+          VERSION: ${{ needs.build.outputs.version }}
+          WIN11_GATE: ${{ vars.WINDOWS11_LIFECYCLE_ENABLED }}
         run: |
-          if [[ "$BEFORE" =~ ^0+$ ]]; then
-            files=$(git ls-files 'Releases/chathappey-*.zip')
-          else
-            files=$(git diff --name-only --diff-filter=A \
-              "$BEFORE" "$AFTER" -- Releases/)
-          fi
+          $ErrorActionPreference='Stop'
+          if (-not $env:PFX_BASE64 -or -not $env:PFX_PASSWORD -or -not $env:PUBLISHER -or -not $env:EXPECTED_THUMBPRINT -or $env:WIN11_GATE -ne 'true') { throw 'Production MSIX is blocked: signing inputs and Windows 11 lifecycle runner must be configured. Portable ZIP publication is independent.' }
+          $pfx = Join-Path $env:RUNNER_TEMP ([guid]::NewGuid().ToString('N') + '.pfx')
+          $certificate=$null
+          try {
+            [IO.File]::WriteAllBytes($pfx,[Convert]::FromBase64String($env:PFX_BASE64))
+            $certificate = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:/CurrentUser/My -Password (ConvertTo-SecureString $env:PFX_PASSWORD -AsPlainText -Force)
+            if ($certificate.Thumbprint -ne $env:EXPECTED_THUMBPRINT) { throw 'Unexpected signing certificate' }
+            foreach ($hostName in @('HeaderAuth','AzureAuth')) {
+              $appName = (Get-Content "artifacts/Release/$hostName/release-metadata.json" -Raw | ConvertFrom-Json).appName
+              ./Packaging/New-Msix.ps1 -HostName $hostName -PublishedOutput "artifacts/Release/$hostName" -AppName $appName -ReleaseVersion $env:VERSION -Publisher $env:PUBLISHER -CertificateThumbprint $certificate.Thumbprint -TimestampUrl $env:TIMESTAMP_URL
+              $upgradeVersion = [datetime]::ParseExact($env:VERSION,'yyMMdd.HHmm',[Globalization.CultureInfo]::InvariantCulture).AddMinutes(1).ToString('yyMMdd.HHmm')
+              ./Packaging/New-Msix.ps1 -HostName $hostName -PublishedOutput "artifacts/Release/$hostName" -AppName $appName -ReleaseVersion $upgradeVersion -Publisher $env:PUBLISHER -CertificateThumbprint $certificate.Thumbprint -TimestampUrl $env:TIMESTAMP_URL -OutputDirectory artifacts/upgrade-fixtures
+            }
+          } finally {
+            if ($certificate) { Remove-Item "Cert:/CurrentUser/My/$($certificate.Thumbprint)" -DeleteKey -Force }
+            Remove-Item $pfx -Force -ErrorAction SilentlyContinue
+            $env:PFX_BASE64=$null; $env:PFX_PASSWORD=$null
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: signed-installer
+          path: |
+            Releases/*.msix*
+            artifacts/native/**/Release/ExplorerProbe.exe
+            artifacts/upgrade-fixtures/*.msix*
+          if-no-files-found: error
 
-          while IFS= read -r file; do
-            [[ -n "$file" ]] || continue
+  installer-lifecycle:
+    needs: installer
+    if: github.event_name != 'pull_request'
+    runs-on: [self-hosted, Windows, X64, disposable-windows11]
+    environment: windows11-lifecycle
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: signed-installer
+          path: installer-test
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: native-ui-tests
+          path: artifacts/Debug/UiTests
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - shell: pwsh
+        run: |
+          ./Tests/run-ui-tests.ps1 -SkipBuild -ExplorerOnly
+          foreach ($package in Get-ChildItem installer-test/Releases -Filter *.msix) {
+            $probe = Get-ChildItem installer-test -Filter ExplorerProbe.exe -Recurse | Where-Object { $_.FullName.Contains((Get-Content ($package.FullName + '.json') -Raw | ConvertFrom-Json).identity) } | Select-Object -First 1
+            $identity = (Get-Content ($package.FullName + '.json') -Raw | ConvertFrom-Json).identity
+            $upgrade = Get-ChildItem installer-test/artifacts/upgrade-fixtures -Filter *.msix | Where-Object { (Get-Content ($_.FullName + '.json') -Raw | ConvertFrom-Json).identity -eq $identity } | Select-Object -First 1
+            ./Tests/run-installer-tests.ps1 -Package $package.FullName -Probe $probe.FullName -UpgradePackage $upgrade.FullName -DisposableEnvironment
+          }
 
-            if [[ ! "$file" =~ ^Releases/chathappey-([0-9]{6}\.[0-9]{4})-win-x64\.zip$ ]]; then
-              continue
-            fi
-
-            version="${BASH_REMATCH[1]}"
-            tag="$version"
-
-            if git show-ref --verify --quiet "refs/tags/$tag"; then
-              echo "Tag $tag already exists. Skipping."
-              continue
-            fi
-
-            echo "Publishing chathappey $version"
-
-            gh release create "$tag" "$file" \
-              --target "$AFTER" \
-              --title "chathappey $version" \
-              --notes "Self-contained Windows x64 release."
-
-          done <<< "$files"
+  installer-release:
+    needs: [build, portable-release, installer-lifecycle]
+    runs-on: windows-2025
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: signed-installer
+          path: installer-release
+      - shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.build.outputs.version }}
+          TARGET: ${{ github.sha }}
+        run: |
+          $directory = 'installer-release/Releases'
+          ./Packaging/Publish-Release.ps1 -Version $env:VERSION -Directory $directory -Target $env:TARGET -Distribution Installer

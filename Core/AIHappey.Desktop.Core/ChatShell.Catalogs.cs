@@ -28,7 +28,8 @@ public sealed partial class ChatShell
     private HashSet<string> favorites = new(StringComparer.Ordinal);
     private string? catalogPartition;
     private DesktopPage activePage;
-    private CatalogDetailsDialog? catalogDialog;
+    private CatalogDetailsDialog? catalogDialogActive;
+    private CatalogDetailsDialog? catalogDialog { get => catalogDialogActive; set { catalogDialogActive = value; if (value is null) ScheduleExplorerDrain(); } }
     private CancellationTokenSource? catalogDialogLoad;
     private OverviewPage ActiveOverview => activePage == DesktopPage.Agents ? agentsOverview : skillsOverview;
 

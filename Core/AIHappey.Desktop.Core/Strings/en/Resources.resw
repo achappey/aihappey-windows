@@ -1329,4 +1329,9 @@
   <data name="PluginAgentConverted" xml:space="preserve">
     <value>Created plugin {0}.</value>
   </data>
+  <data name="ExplorerDeliveryFailed" xml:space="preserve"><value>The selected files could not be attached. Try again. No message was sent.</value></data>
+  <data name="ExplorerPendingFiles" xml:space="preserve"><value>{0} files from Explorer are waiting to be attached.</value></data>
+  <data name="ExplorerAccountTitle" xml:space="preserve"><value>Attach files to this account?</value></data>
+  <data name="ExplorerAccountConfirm" xml:space="preserve"><value>Your account changed while files were waiting. Attach them to the current chat account? Nothing will be sent automatically.</value></data>
+  <data name="ExplorerContextChanged" xml:space="preserve"><value>The chat changed while files were waiting. The pending selection was canceled. Select the files again to attach them here.</value></data>
 </root>

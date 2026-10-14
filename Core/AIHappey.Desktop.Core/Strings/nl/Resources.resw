@@ -1324,4 +1324,9 @@
   <data name="PluginAgentConverted" xml:space="preserve">
     <value>Plugin {0} gemaakt.</value>
   </data>
+  <data name="ExplorerDeliveryFailed" xml:space="preserve"><value>De geselecteerde bestanden konden niet worden toegevoegd. Probeer het opnieuw. Er is geen bericht verzonden.</value></data>
+  <data name="ExplorerPendingFiles" xml:space="preserve"><value>{0} bestanden uit Verkenner wachten om te worden toegevoegd.</value></data>
+  <data name="ExplorerAccountTitle" xml:space="preserve"><value>Bestanden aan dit account toevoegen?</value></data>
+  <data name="ExplorerAccountConfirm" xml:space="preserve"><value>Uw account is gewijzigd terwijl bestanden wachtten. Wilt u ze aan het huidige chataccount toevoegen? Er wordt niets automatisch verzonden.</value></data>
+  <data name="ExplorerContextChanged" xml:space="preserve"><value>De chat is gewijzigd terwijl bestanden wachtten. De selectie is geannuleerd. Selecteer de bestanden opnieuw om ze hier toe te voegen.</value></data>
 </root>

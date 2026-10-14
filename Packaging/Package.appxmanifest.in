@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+ xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+ xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+ xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+ xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+ xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+ IgnorableNamespaces="uap uap10 desktop4 com rescap">
+ <Identity Name="@IDENTITY@" Publisher="@PUBLISHER@" Version="@VERSION@" ProcessorArchitecture="x64" />
+ <Properties><DisplayName>@APPNAME@</DisplayName><PublisherDisplayName>@PUBLISHERNAME@</PublisherDisplayName><Logo>Assets\StoreLogo.png</Logo></Properties>
+ <Dependencies><TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.26100.0" /></Dependencies>
+ <Resources><Resource Language="en" /><Resource Language="nl" /></Resources>
+ <Applications>
+  <Application Id="App" Executable="aihappey.exe" EntryPoint="Windows.FullTrustApplication"
+   uap10:RuntimeBehavior="packagedClassicApp" uap10:TrustLevel="mediumIL">
+   <uap:VisualElements DisplayName="@APPNAME@" Description="Native AI chat and file attachments" BackgroundColor="transparent"
+    Square150x150Logo="Assets\Square150x150Logo.scale-200.png" Square44x44Logo="Assets\Square44x44Logo.scale-200.png" />
+   <Extensions>
+    <com:Extension Category="windows.comServer">
+     <com:ComServer><com:SurrogateServer DisplayName="@APPNAME@ Explorer command">
+      <com:Class Id="@CLSID@" Path="AIHappey.Explorer.dll" ThreadingModel="STA" />
+     </com:SurrogateServer></com:ComServer>
+    </com:Extension>
+    <desktop4:Extension Category="windows.fileExplorerContextMenus">
+     <desktop4:FileExplorerContextMenus><desktop4:ItemType Type="*">
+      <desktop4:Verb Id="AttachToAIHappey" Clsid="@CLSID@" />
+     </desktop4:ItemType></desktop4:FileExplorerContextMenus>
+    </desktop4:Extension>
+   </Extensions>
+  </Application>
+ </Applications>
+ <Capabilities><rescap:Capability Name="runFullTrust" /><DeviceCapability Name="microphone" /></Capabilities>
+</Package>

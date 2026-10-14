@@ -7,6 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Compile the production non-visual boundary without loading WinUI in the test runner. -->
+    <Compile Include="../../Core/AIHappey.Desktop.Core/DesktopPaths.cs" Link="Core/DesktopPaths.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ExplorerRequests.cs" Link="Core/ExplorerRequests.cs" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/en/Resources.resw" LogicalName="Desktop.Resources.en" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/nl/Resources.resw" LogicalName="Desktop.Resources.nl" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RelativeTime.cs" Link="Core/RelativeTime.cs" />

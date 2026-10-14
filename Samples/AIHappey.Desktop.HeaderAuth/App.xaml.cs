@@ -7,7 +7,6 @@ namespace AIHappey_Desktop_HeaderAuth;
 public partial class App : Application
 {
     private Window? window;
-    private readonly Mutex instance = new(false, "Local\\AIHappey.Desktop.HeaderAuth");
 
     public App()
     {
@@ -17,12 +16,10 @@ public partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        try { if (!instance.WaitOne(0)) { Exit(); return; } }
-        catch (AbandonedMutexException) { }
         try
         {
             var host = new HeaderAuthentication();
-            var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIHappey", "Desktop", host.ProfileId);
+            var directory = DesktopPaths.ProfileDirectory(host.ProfileId);
             var session = new DesktopSession(host, new ManagedLocalRuntime(Path.Combine(AppContext.BaseDirectory, "runtimes"), directory), new DesktopSettings());
             session.ContextOptions = DesktopContextOptions.Load(Path.Combine(AppContext.BaseDirectory, "chat-context.json"));
             session.ContextOptions.AppName ??= DesktopBranding.AppName;

@@ -17,6 +17,7 @@
     <SelfContained>true</SelfContained>
     <EnableMsixTooling>false</EnableMsixTooling>
     <EnableWinAppRunSupport>false</EnableWinAppRunSupport>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <PublishTrimmed>false</PublishTrimmed>
     <PublishReadyToRun>false</PublishReadyToRun>
     <ImplicitUsings>enable</ImplicitUsings>

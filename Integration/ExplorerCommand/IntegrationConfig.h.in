@@ -1,0 +1,4 @@
+#pragma once
+#define COMMAND_CLSID "@COMMAND_CLSID@"
+#define HOST_NAME L"@HOST_NAME@"
+#define APP_NAME L"@APP_NAME@"

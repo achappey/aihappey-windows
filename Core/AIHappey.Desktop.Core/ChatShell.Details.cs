@@ -22,7 +22,8 @@ public sealed partial class ChatShell
     private string? detailsKind;
     private string? sourceHost;
     private Button? detailsOwner;
-    private bool downloading;
+    private bool downloadActive;
+    private bool downloading { get => downloadActive; set { downloadActive = value; if (!value) ScheduleExplorerDrain(); } }
     private readonly CancellationTokenSource downloadLifetime = new();
 
     private UIElement BuildDetailsLayout(UIElement content)

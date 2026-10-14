@@ -20,7 +20,9 @@ public sealed class EnterpriseConfiguration
 
     public static EnterpriseConfiguration Load()
     {
-        try { return JsonSerializer.Deserialize<EnterpriseConfiguration>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "desktop.json")), JsonSerializerOptions.Web) ?? new(); }
+        var overridePath = Path.Combine(DesktopPaths.ProfileDirectory("AzureAuth"), "desktop.json");
+        var path = File.Exists(overridePath) ? overridePath : Path.Combine(AppContext.BaseDirectory, "desktop.json");
+        try { return JsonSerializer.Deserialize<EnterpriseConfiguration>(File.ReadAllText(path), JsonSerializerOptions.Web) ?? new(); }
         catch (Exception e) when (e is IOException or JsonException) { return new(); }
     }
 
@@ -34,7 +36,7 @@ public sealed class EnterpriseConfiguration
 /// <summary>Public-client OAuth and encrypted token cache live in this host, never in Core.</summary>
 public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDesktopHost
 {
-    private readonly string cachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AIHappey", "Desktop", "AzureAuth", "tokens.bin");
+    private readonly string cachePath = Path.Combine(DesktopPaths.ProfileDirectory("AzureAuth"), "tokens.bin");
     private static readonly byte[] Entropy = "AIHappey.Desktop.AzureAuth.v1"u8.ToArray();
     private IPublicClientApplication? app;
     private IAccount? account;

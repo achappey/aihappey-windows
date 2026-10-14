@@ -2,14 +2,25 @@
 param(
     [ValidateSet('All', 'HeaderAuth', 'AzureAuth')][string]$HostName = 'All',
     [ValidateSet('Debug', 'Release')][string]$Configuration = 'Release',
-    [string]$AppName
+    [string]$AppName,
+    [ValidateSet('Portable', 'Installer', 'All')][string]$Distribution = 'Portable',
+    [string]$ReleaseVersion = (Get-Date).ToUniversalTime().ToString('yyMMdd.HHmm'),
+    [string]$Publisher,
+    [string]$CertificateThumbprint,
+    [string]$TimestampUrl,
+    [switch]$DevelopmentInstaller,
+    [switch]$UnsignedInstaller,
+    [switch]$SkipPublish
 )
 
 $ErrorActionPreference = 'Stop'
 $repo = $PSScriptRoot
 $workspace = Split-Path $repo -Parent
 $hosts = if ($HostName -eq 'All') { @('HeaderAuth', 'AzureAuth') } else { @($HostName) }
-$timestamp = Get-Date -Format 'yyMMdd.HHmm'
+$timestamp = $ReleaseVersion
+. (Join-Path $repo 'Packaging\Tools.ps1')
+$null = Get-PackageVersion $ReleaseVersion
+if ($Distribution -ne 'Portable' -and $Configuration -ne 'Release') { throw 'Installer packaging requires Release configuration.' }
 
 # Publishing must never silently fall back to an old snapshot.
 & (Join-Path $repo 'Tests/sync-provider-catalog.ps1') -RequireSource
@@ -119,7 +130,7 @@ if ($running) {
 foreach ($name in $hosts) {
     $output = Join-Path $repo "artifacts\$Configuration\$name"
 
-    if (Test-Path $output) {
+    if (-not $SkipPublish -and (Test-Path $output)) {
         Remove-Item $output -Recurse -Force
     }
 
@@ -127,9 +138,9 @@ foreach ($name in $hosts) {
 
     Write-Host "Building $name $Configuration (unpackaged Windows x64)..."
 
-    Invoke-Publish $projects[$name] $output $Configuration -Desktop
+    if (-not $SkipPublish) { Invoke-Publish $projects[$name] $output $Configuration -Desktop }
 
-    if ($name -eq 'HeaderAuth') {
+    if ($name -eq 'HeaderAuth' -and -not $SkipPublish) {
         $ai = Join-Path $output 'runtimes\ai'
         $agents = Join-Path $output 'runtimes\agents'
 
@@ -155,7 +166,7 @@ foreach ($name in $hosts) {
 
         Assert-File (Join-Path $agents 'Agents\OpenAIAgent\Agent.json')
     }
-    else {
+    elseif ($name -eq 'AzureAuth') {
         Assert-File (Join-Path $output 'desktop.json')
     }
 
@@ -166,8 +177,10 @@ foreach ($name in $hosts) {
     Assert-File (Join-Path $output 'Microsoft.UI.Xaml.dll')
     Assert-File (Join-Path $output 'coreclr.dll')
     Assert-File (Join-Path $output 'Assets\AppIcon.ico')
+    @{ host=$name; appName=(Get-DesktopAppName $projects[$name]); releaseVersion=$ReleaseVersion; packageVersion=(Get-PackageVersion $ReleaseVersion) } |
+        ConvertTo-Json | Set-Content (Join-Path $output 'release-metadata.json') -Encoding UTF8
 
-    if ($Configuration -eq 'Release') {
+    if ($Configuration -eq 'Release' -and $Distribution -ne 'Installer') {
         Add-Type -AssemblyName System.IO.Compression.FileSystem
 
        $releases = Join-Path $repo 'Releases'
@@ -187,6 +200,14 @@ foreach ($name in $hosts) {
         )
 
         Write-Host "Release ZIP: $zip"
+        Write-Checksum $zip
+    }
+
+    if ($Distribution -ne 'Portable') {
+        & (Join-Path $repo 'Packaging\New-Msix.ps1') -HostName $name -PublishedOutput $output `
+            -AppName (Get-DesktopAppName $projects[$name]) -ReleaseVersion $ReleaseVersion -Publisher $Publisher `
+            -CertificateThumbprint $CertificateThumbprint -TimestampUrl $TimestampUrl `
+            -Development:$DevelopmentInstaller -Unsigned:$UnsignedInstaller
     }
 
     Write-Host "Complete $name $Configuration output: $output"

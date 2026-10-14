@@ -38,6 +38,11 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--explorer-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckExplorerAsync(theme);
+                results.Add("All Explorer composer UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--icons-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckIconsAsync(theme);
@@ -934,7 +939,8 @@ public partial class App : Application
     }
 
     private static void InvokeButton(Button button) => ((IInvokeProvider)new ButtonAutomationPeer(button).GetPattern(PatternInterface.Invoke)).Invoke();
-    private static T Field<T>(object target, string name) => (T)target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(target)!;
+    private static T Field<T>(object target, string name) => (T)(target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(target)
+        ?? target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(target))!;
     private static bool Readable(Brush foreground, Brush background, ElementTheme theme)
     {
         if (foreground is not SolidColorBrush text || background is not SolidColorBrush fill) return false;
