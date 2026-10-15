@@ -816,7 +816,7 @@
   <data name="SpeechImport" xml:space="preserve"><value>Documenttekst importeren</value></data>
   <data name="SpeechImportFailed" xml:space="preserve"><value>Sommige bestanden konden niet worden geconverteerd: {0}</value></data>
   <data name="SpeechDictate" xml:space="preserve"><value>Tekst dicteren</value></data>
-  <data name="SpeechDictationWindowsHint" xml:space="preserve"><value>Druk op Windows+H om Windows-spraakinvoer in de spraakprompt te gebruiken.</value></data>
+  <data name="VoiceTypingFailed" xml:space="preserve"><value>Windows-spraakinvoer kon niet worden geopend. Selecteer het tekstveld en druk op Windows+H om het opnieuw te proberen.</value></data>
   <data name="SpeechOpenFolder" xml:space="preserve"><value>Map openen</value></data>
   <data name="SpeechPlay" xml:space="preserve"><value>Spraak afspelen</value></data>
   <data name="SpeechDetails" xml:space="preserve"><value>Spraakdetails</value></data>

@@ -820,7 +820,7 @@
   <data name="SpeechImport" xml:space="preserve"><value>Import document text</value></data>
   <data name="SpeechImportFailed" xml:space="preserve"><value>Some files could not be converted: {0}</value></data>
   <data name="SpeechDictate" xml:space="preserve"><value>Dictate text</value></data>
-  <data name="SpeechDictationWindowsHint" xml:space="preserve"><value>Press Windows+H to use Windows voice typing in the speech prompt.</value></data>
+  <data name="VoiceTypingFailed" xml:space="preserve"><value>Windows voice typing could not be opened. Focus the text field and press Windows+H to try again.</value></data>
   <data name="SpeechOpenFolder" xml:space="preserve"><value>Open folder</value></data>
   <data name="SpeechPlay" xml:space="preserve"><value>Play speech</value></data>
   <data name="SpeechDetails" xml:space="preserve"><value>Speech details</value></data>

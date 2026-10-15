@@ -33,6 +33,30 @@ public partial class App
         Check(!Descendants(userCard).OfType<Grid>().Any(g => g.Name == "ProviderLogo"), context + ": user messages do not get logos");
 
         var input = Field<TextBox>(shell, "input"); input.Text = "Unsent display-settings draft";
+        var dictate = Field<Button>(shell, "dictate");
+        Check(Descendants(shell).Contains(dictate) && dictate.IsEnabled
+            && AutomationProperties.GetName(dictate) == DesktopResources.Get("SpeechDictate")
+            && ToolTipService.GetToolTip(dictate) is ToolTip, context + ": chat composer has an accessible Dictate action");
+        input.Select(7, 4);
+        var voiceTyping = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.WindowsVoiceTyping")!;
+        var nativeInput = voiceTyping.GetNestedType("Input", System.Reflection.BindingFlags.NonPublic)!;
+        Check(System.Runtime.InteropServices.Marshal.SizeOf(nativeInput) == (IntPtr.Size == 8 ? 40 : 28)
+            && System.Runtime.InteropServices.Marshal.OffsetOf(nativeInput, "Data").ToInt32() == (IntPtr.Size == 8 ? 8 : 4),
+            context + ": voice typing uses the native SendInput union size and alignment");
+        var startDictation = voiceTyping.GetMethod("TryStart")!;
+        input.IsEnabled = false;
+        Check(!(bool)startDictation.Invoke(null, [input])!, context + ": disabled composer cannot launch global voice typing");
+        input.IsEnabled = true;
+        Call(shell, "SetBusy", true, true);
+        Check(!dictate.IsEnabled && !(bool)startDictation.Invoke(null, [input])!
+            && input.Text == "Unsent display-settings draft" && input.SelectionStart == 7 && input.SelectionLength == 4,
+            context + ": busy/read-only composer blocks dictation without altering its draft or selection");
+        Call(shell, "SetBusy", false, false);
+        Check(dictate.IsEnabled && !input.IsReadOnly, context + ": Dictate and editing return after inference");
+        var speechPage = new SpeechPage();
+        speechPage.ReplacePrompt("Unsent speech draft"); speechPage.SetBusy(true, true);
+        Check(!speechPage.StartDictation() && speechPage.PromptText == "Unsent speech draft",
+            context + ": speech dictation also respects the editable prompt boundary");
         var resolutions = ((UiRuntime)session.Runtime).Resolutions;
         async Task<SettingsDialog> OpenSettings()
         {
