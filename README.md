@@ -15,6 +15,7 @@ A native Windows AI client built with WinUI 3. Chat with AI models and agents, c
 - Native MCP form elicitation and human-in-the-loop tool approval
 - Skills discovery, native creation/editing, ZIP import/export, activation and resource access
 - File attachments, URL inputs and shared PDF/plain-text extraction
+- Dictate into the chat composer or speech prompt using Windows' native voice typing (Windows+H)
 - Local conversation history and configurable chat preferences
 - Toggleable built-in tools
 - Header-based/BYOK and Microsoft Entra authentication

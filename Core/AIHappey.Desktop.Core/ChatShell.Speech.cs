@@ -25,8 +25,12 @@ public sealed partial class ChatShell
         speechTarget.QuerySubmitted += (_, args) => { if (args.ChosenSuggestion is ChatTarget model) speechTarget.Text = model.Id; else { SpeechModelSuggestions(speechTarget.Text); speechTarget.IsSuggestionListOpen = true; } };
         speechPage.SendRequested = SendSpeechAsync; speechPage.StopRequested = () => operation?.Cancel(); speechPage.ImportRequested = PickSpeechDocumentsAsync; speechPage.FilesDropped = DropSpeechDocumentsAsync;
         speechPage.SettingsRequested = EditSpeechSettingsAsync; speechPage.FolderRequested = OpenSpeechFolderAsync; speechPage.PlayRequested = ViewSpeechAsync; speechPage.DetailsRequested = ViewSpeechAsync; speechPage.DownloadRequested = DownloadSpeechAsync; speechPage.DeleteRequested = DeleteSpeechAsync;
-        // Dictation uses the configured transcription model and the Windows voice-typing command as its native capture surface.
-        speechPage.DictationRequested = async () => { if (CanUseSpeech) { speechPage.Notice(DesktopResources.Get("SpeechDictationWindowsHint"), InfoBarSeverity.Informational); speechPage.Focus(FocusState.Programmatic); await Task.CompletedTask; } };
+        speechPage.DictationRequested = () =>
+        {
+            if (CanUseSpeech && !speechPage.StartDictation())
+                speechPage.Notice(DesktopResources.Get("VoiceTypingFailed"), InfoBarSeverity.Warning);
+            return Task.CompletedTask;
+        };
     }
     private void SpeechModelSuggestions(string query = "") => speechTarget.ItemsSource = speechModels.Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
     private void InvalidateSpeech() { speechModels = []; speechTarget.Text = ""; speechTarget.ItemsSource = null; librarySpeech = []; speechLibrary = null; speechPartition = null; pendingSpeech = 0; speechPage.ClearNotices(); speechPage.SetItems([]); speechPage.SetModelAvailable(false); }
