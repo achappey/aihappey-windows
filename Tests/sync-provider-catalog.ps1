@@ -23,20 +23,20 @@ function Read-Catalog([string]$Folder) {
         $provider = Get-Content $file -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($null -eq $provider -or $provider -is [array] -or $provider.name -isnot [string] -or [string]::IsNullOrWhiteSpace($provider.name)) { throw "Invalid provider metadata: $file" }
         foreach ($property in @('description', 'category', 'providerCountry')) {
-            if ($null -ne $provider.$property -and $provider.$property -isnot [string]) { throw "Invalid provider $property in $file" }
+            if ($provider.PSObject.Properties[$property] -and $null -ne $provider.$property -and $provider.$property -isnot [string]) { throw "Invalid provider $property in $file" }
         }
         if ($provider.PSObject.Properties['experimental'] -and $provider.experimental -isnot [bool]) { throw "Invalid experimental flag in $file" }
         foreach ($property in @('icons', 'inferenceRegions')) {
             if ($provider.PSObject.Properties[$property] -and $provider.$property -isnot [array]) { throw "Provider $property must be an array in $file" }
         }
-        foreach ($region in $provider.inferenceRegions) { if ($region -isnot [string]) { throw "Invalid inference region in $file" } }
-        foreach ($icon in $provider.icons) {
-            if ($null -eq $icon -or $icon.src -isnot [string] -or ($null -ne $icon.theme -and $icon.theme -isnot [string])) { throw "Invalid provider icon in $file" }
+        foreach ($region in $(if ($provider.PSObject.Properties["inferenceRegions"]) { $provider.inferenceRegions } else { @() })) { if ($region -isnot [string]) { throw "Invalid inference region in $file" } }
+        foreach ($icon in $(if ($provider.PSObject.Properties["icons"]) { $provider.icons } else { @() })) {
+            if ($null -eq $icon -or $icon.src -isnot [string] -or ($icon.PSObject.Properties["theme"] -and $null -ne $icon.theme -and $icon.theme -isnot [string])) { throw "Invalid provider icon in $file" }
         }
         if ($provider.PSObject.Properties['urls']) {
             if ($null -eq $provider.urls -or $provider.urls -isnot [PSCustomObject]) { throw "Provider urls must be an object in $file" }
             foreach ($property in @('homepage', 'pricing', 'console', 'docs', 'termsOfService', 'privacyPolicy')) {
-                if ($null -ne $provider.urls.$property -and $provider.urls.$property -isnot [string]) { throw "Invalid provider URL $property in $file" }
+                if ($provider.urls.PSObject.Properties[$property] -and $null -ne $provider.urls.$property -and $provider.urls.$property -isnot [string]) { throw "Invalid provider URL $property in $file" }
             }
         }
         $result[$entry.file] = [IO.File]::ReadAllBytes($file)
@@ -85,3 +85,4 @@ foreach ($file in $obsolete) { Remove-Item $file.FullName -Force }
 $stamp = Join-Path $Destination 'ProviderCatalog.sha256'
 if (-not (Test-Path $stamp) -or [IO.File]::ReadAllText($stamp).Trim() -cne $fingerprint) { [IO.File]::WriteAllText($stamp, $fingerprint) }
 Write-Output "Provider catalog synchronized ($($catalog.Count - 1) providers; $($changed.Count) updated, $($obsolete.Count) removed)."
+

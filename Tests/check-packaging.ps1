@@ -18,6 +18,11 @@ $publish = Get-Content (Join-Path $repo 'publish.ps1') -Raw
 Assert ($publish.Contains("`$Distribution = 'Portable'") -and -not $publish.Contains('Assert-SigningIdentity')) 'Default portable path does not require signing'
 $extension = Get-Content (Join-Path $repo 'Integration\ExplorerCommand\ExplorerCommand.cpp') -Raw
 Assert ($extension.Contains('ActivateApplication') -and -not $extension.Contains('CreateProcess') -and -not $extension.Contains('ShellExecute')) 'Package activation without executable guessing'
+Assert ($extension.Contains('return SHStrDupW(L"aihappey", title);')) 'Explorer menu label is exactly aihappey'
+$headerLaunch=Get-Content (Join-Path $repo 'Samples\AIHappey.Desktop.HeaderAuth\.vscode\launch.json') -Raw | ConvertFrom-Json
+$azureLaunch=Get-Content (Join-Path $repo 'Samples\AIHappey.Desktop.AzureAuth\.vscode\launch.json') -Raw | ConvertFrom-Json
+Assert ($headerLaunch.configurations[0].program.EndsWith('/aihappey.exe') -and $azureLaunch.configurations[0].program.EndsWith('/aihappey.exe')) 'Both F5 configurations target the published executable'
+Assert ($publish.Contains('$path.StartsWith($_, [StringComparison]::OrdinalIgnoreCase)')) 'Publish lock guard scoped to requested output paths'
 $delivery = Get-Content (Join-Path $repo 'Core\AIHappey.Desktop.Core\ChatShell.Explorer.cs') -Raw
 Assert (-not ($delivery -match 'SendAsync|StreamAsync|PrepareAsync')) 'Explorer admission cannot call submission path'
 foreach ($file in @((Get-ChildItem (Join-Path $repo 'Packaging') -Filter *.ps1)) + @((Get-Item (Join-Path $repo 'publish.ps1')), (Get-Item (Join-Path $repo 'Tests\run-installer-tests.ps1')))) {

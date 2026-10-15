@@ -56,7 +56,7 @@ function CheckPrimaryMenu {
     Start-Sleep -Milliseconds 1000
     $items=[Windows.Automation.AutomationElement]::RootElement.FindAll([Windows.Automation.TreeScope]::Descendants,
         [Windows.Automation.PropertyCondition]::new([Windows.Automation.AutomationElement]::ControlTypeProperty,[Windows.Automation.ControlType]::MenuItem))
-    $entry=$items | Where-Object { $_.Current.Name -match '^Attach to |^Toevoegen aan ' } | Select-Object -First 1
+    $entry=$items | Where-Object { $_.Current.Name -ceq 'aihappey' } | Select-Object -First 1
     Assert ($null -ne $entry) 'Command visible in primary menu without opening Show more options'
     ([Windows.Automation.InvokePattern]$entry.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern)).Invoke()
 }

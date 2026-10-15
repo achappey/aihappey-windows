@@ -133,7 +133,7 @@ void Deliver(IShellItemArray* items) {
 class __declspec(uuid(COMMAND_CLSID)) ExplorerCommand final : public RuntimeClass<RuntimeClassFlags<ClassicCom>, IExplorerCommand> {
 public:
     IFACEMETHODIMP GetTitle(IShellItemArray*, LPWSTR* title) override {
-        return SHStrDupW((std::wstring(Dutch() ? L"Toevoegen aan " : L"Attach to ") + APP_NAME).c_str(), title);
+        return SHStrDupW(L"aihappey", title);
     }
     IFACEMETHODIMP GetIcon(IShellItemArray*, LPWSTR* icon) override {
         HMODULE module = nullptr; wchar_t path[32768]{};

@@ -18,6 +18,10 @@ internal static class ExplorerRegressionTests
         }
         check(ExplorerRequest.Parse(Encode(request), id, request.Host, request.PackageFamily, now).Paths.SequenceEqual(request.Paths), "Explorer Unicode, spaces, UNC and ordered multi-selection");
         check(ExplorerRequest.ParseActivation("--shell-request " + id) == id && ExplorerRequest.ParseActivation("") is null, "Explorer identifier-only activation");
+        check(ExplorerRequest.ParseActivation("\"C:\\Program Files\\WindowsApps\\package\\aihappey.exe\" --shell-request " + id) == id, "Packaged command line with quoted executable");
+        check(ExplorerRequest.ParseActivation("C:\\portable\\aihappey.exe --shell-request " + id) == id, "Full desktop activation command line");
+        check(ExplorerRequest.ParseActivation("\"C:\\a folder\\aihappey.exe\"") is null, "Normal desktop/debug launch without request");
+        Reject(() => ExplorerRequest.ParseActivation("\"C:\\other.exe\" --shell-request " + id), "Reject foreign executable prefix");
         foreach (var invalid in new[] { "--shell-request ../bad", "--shell-request " + id + " extra", "C:\\file", "--submit", "--shell-request " + id.ToUpperInvariant() })
             Reject(() => ExplorerRequest.ParseActivation(invalid), "Reject malformed activation");
         foreach (var invalid in new[] { "relative.txt", @"C:\a\..\file", @"\\.\pipe\x", @"\\?\C:\x", @"C:\file:stream", @"C:\a\file" + '\0', "" })
@@ -36,6 +40,8 @@ internal static class ExplorerRegressionTests
         var state = Path.Combine(root, "package"); Directory.CreateDirectory(state);
         var store = new ExplorerRequestStore(state, request.Host, request.PackageFamily);
         var inbox = Path.Combine(state, "ShellRequests");
+        store.Signal(id);
+        check(store.TakeSignals().SequenceEqual([id]) && store.TakeSignals().Count == 0, "Argv-only redirected request signals consumed once");
         File.WriteAllBytes(Path.Combine(inbox, id + ".json"), Encode(request));
         check(store.Claim(id, now)?.Id == id && store.Claim(id, now) is null, "Atomic claim prevents duplicate activation");
         store.Complete(id, "attached");

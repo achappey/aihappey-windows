@@ -119,12 +119,16 @@ foreach ($name in $hosts) {
     }
 }
 
-# Both desktop hosts produce aihappey.exe.
-# Never overwrite or kill an app being debugged.
-$running = Get-Process -Name 'aihappey' -ErrorAction SilentlyContinue
-
-if ($running) {
-    throw "Close aihappey.exe (and stop debugging) before rebuilding."
+# Installed and other host/configuration instances do not lock this publish output.
+# Check every requested directory before changing any files; never kill a debugged app.
+if (-not $SkipPublish) {
+    $targets = @($hosts | ForEach-Object { [IO.Path]::GetFullPath((Join-Path $repo "artifacts\$Configuration\$_")) + [IO.Path]::DirectorySeparatorChar })
+    foreach ($process in @(Get-Process -Name 'aihappey' -ErrorAction SilentlyContinue)) {
+        $path = $process.Path
+        if ($path -and @($targets | Where-Object { $path.StartsWith($_, [StringComparison]::OrdinalIgnoreCase) }).Count -gt 0) {
+            throw "Close the application using this publish directory (PID $($process.Id)): $path"
+        }
+    }
 }
 
 foreach ($name in $hosts) {

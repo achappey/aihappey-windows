@@ -1,6 +1,7 @@
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text.Json;
+using System.Runtime.InteropServices;
 
 namespace AIHappey.Desktop.Core;
 
@@ -12,11 +13,25 @@ public sealed record ExplorerRequest(int Version, string Id, long CreatedUnixSec
     public static string? ParseActivation(string arguments)
     {
         if (string.IsNullOrWhiteSpace(arguments)) return null;
-        var parts = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length != 2 || parts[0] != "--shell-request" || !ValidId(parts[1]))
+        if (arguments.Length > 65536 || arguments.Contains('\0')) throw new InvalidOperationException("Invalid Explorer activation.");
+        var parts = CommandLineArguments(arguments);
+        // Desktop activation can expose the full command line, including argv[0].
+        var offset = parts.Length > 0 && Path.GetFileName(parts[0]).Equals("aihappey.exe", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        if (parts.Length == offset) return null;
+        if (parts.Length != offset + 2 || parts[offset] != "--shell-request" || !ValidId(parts[offset + 1]))
             throw new InvalidOperationException("Invalid Explorer activation.");
-        return parts[1];
+        return parts[offset + 1];
     }
+    private static string[] CommandLineArguments(string arguments)
+    {
+        var pointer = CommandLineToArgvW(arguments, out var count);
+        if (pointer == IntPtr.Zero) throw new InvalidOperationException("Invalid Explorer activation command line.");
+        try { return Enumerable.Range(0, count).Select(index => Marshal.PtrToStringUni(Marshal.ReadIntPtr(pointer, index * IntPtr.Size))!).ToArray(); }
+        finally { LocalFree(pointer); }
+    }
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr CommandLineToArgvW(string commandLine, out int count);
+    [DllImport("kernel32.dll")] private static extern IntPtr LocalFree(IntPtr pointer);
     public static bool ValidId(string value) => value.Length == 32 && value.All(c => c is >= '0' and <= '9' or >= 'a' and <= 'f');
     public static ExplorerRequest Parse(ReadOnlySpan<byte> bytes, string id, string host, string packageFamily, DateTimeOffset now)
     {
@@ -126,5 +141,24 @@ public sealed class ExplorerRequestStore
             recovered = true;
         }
         return recovered;
+    }
+    public void Signal(string id)
+    {
+        if (!ExplorerRequest.ValidId(id)) throw new InvalidOperationException("Invalid request identifier.");
+        CheckPrivate(new DirectoryInfo(directory));
+        using var file = new FileStream(Path.Combine(directory, id + ".signal"), FileMode.CreateNew, FileAccess.Write, FileShare.None);
+    }
+    public IReadOnlyList<string> TakeSignals()
+    {
+        var result = new List<string>();
+        foreach (var file in new DirectoryInfo(directory).EnumerateFiles("*.signal"))
+        {
+            var id = Path.GetFileNameWithoutExtension(file.Name);
+            if (!ExplorerRequest.ValidId(id)) continue;
+            CheckPrivate(file);
+            if (DateTimeOffset.UtcNow.UtcDateTime - file.LastWriteTimeUtc <= ExplorerRequest.Lifetime) result.Add(id);
+            file.Delete();
+        }
+        return result;
     }
 }

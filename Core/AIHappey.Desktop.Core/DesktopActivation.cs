@@ -27,20 +27,34 @@ public static class DesktopActivation
         try
         {
             var arguments = AppInstance.GetCurrent().GetActivatedEventArgs();
+            var initialText = LaunchText(arguments);
+            // For classic desktop activation the lifecycle payload can omit the process arguments.
+            // Replace only an empty/normal launch payload, before forwarding to another instance.
+            var processArguments = Environment.GetCommandLineArgs().Skip(1).ToArray();
+            if (processArguments.Length > 0 && ExplorerRequest.ParseActivation(initialText) is null)
+            {
+                var processText = string.Join(" ", processArguments.Select(argument => "\"" + argument.Replace("\"", "\\\"") + "\""));
+                if (ExplorerRequest.ParseActivation(processText) is not null)
+                {
+                    // GetActivatedEventArgs normally contains the complete desktop command line.
+                    // A startup fallback must also work when the OS only supplies it to argv.
+                    initialText = processText;
+                }
+            }
             var key = DesktopPaths.InstanceKey(profile, DesktopPaths.PackageFamily,
                 WindowsIdentity.GetCurrent().User!.Value, Process.GetCurrentProcess().SessionId);
             for (var attempt = 0; attempt < 3; attempt++)
             {
                 primary = AppInstance.FindOrRegisterForKey(key);
                 if (primary.IsCurrent) break;
-                try { Redirect(primary, arguments); return 0; }
+                try { Redirect(primary, arguments, initialText); return 0; }
                 catch when (attempt < 2 && !IsAlive(primary.ProcessId)) { Thread.Sleep(100); }
             }
             primary!.Activated += OnActivated;
             // AppInstance registration may be executable-scoped for unpackaged copies. Protect the shared profile too.
             var data = DesktopPaths.ProfileDirectory(profile); Directory.CreateDirectory(data);
             profileLock = new FileStream(Path.Combine(data, ".instance.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-            Queue(arguments);
+            Queue(initialText);
             Application.Start(parameters =>
             {
                 dispatcher = DispatcherQueue.GetForCurrentThread();
@@ -59,14 +73,22 @@ public static class DesktopActivation
     }
     private static bool IsAlive(uint pid)
     { try { return !Process.GetProcessById((int)pid).HasExited; } catch (ArgumentException) { return false; } }
-    private static void Redirect(AppInstance target, AppActivationArguments arguments)
+    private static void Redirect(AppInstance target, AppActivationArguments arguments, string launchText)
     {
         AllowSetForegroundWindow(target.ProcessId);
         using var signal = new ManualResetEvent(false);
         Exception? failure = null;
         _ = Task.Run(async () =>
         {
-            try { await target.RedirectActivationToAsync(arguments); }
+            try
+            {
+                // Persisted requests are already in the package inbox. The OS lifecycle payload is
+                // used for normal redirection; an argv-only request is delivered by a private signal.
+                var osText = LaunchText(arguments);
+                if (ExplorerRequest.ParseActivation(launchText) is { } requestId && ExplorerRequest.ParseActivation(osText) is null)
+                    WritePendingSignal(requestId);
+                await target.RedirectActivationToAsync(arguments);
+            }
             catch (Exception error) { failure = error; }
             finally { try { signal.Set(); } catch (ObjectDisposedException) { } }
         });
@@ -75,11 +97,15 @@ public static class DesktopActivation
         if (result != 0) Marshal.ThrowExceptionForHR(result);
         if (failure is not null) throw new InvalidOperationException("Activation redirection failed.", failure);
     }
-    private static void OnActivated(object? sender, AppActivationArguments arguments) => Queue(arguments);
-    private static void Queue(AppActivationArguments arguments)
+    private static void OnActivated(object? sender, AppActivationArguments arguments)
     {
-        var text = arguments.Kind == ExtendedActivationKind.Launch
-            && arguments.Data is Windows.ApplicationModel.Activation.ILaunchActivatedEventArgs launch ? launch.Arguments : "";
+        Queue(LaunchText(arguments));
+        dispatcher?.TryEnqueue(DrainPendingSignals);
+    }
+    private static string LaunchText(AppActivationArguments arguments) => arguments.Kind == ExtendedActivationKind.Launch
+        && arguments.Data is Windows.ApplicationModel.Activation.ILaunchActivatedEventArgs launch ? launch.Arguments : "";
+    private static void Queue(string text)
+    {
         lock (gate)
         {
             if (stopped) return;
@@ -87,6 +113,21 @@ public static class DesktopActivation
             pending.Enqueue(text);
         }
         dispatcher?.TryEnqueue(Drain);
+    }
+    private static void WritePendingSignal(string id)
+    {
+        var store = new ExplorerRequestStore(DesktopPaths.PackageState, host, DesktopPaths.PackageFamily!);
+        store.Signal(id);
+    }
+    private static void DrainPendingSignals()
+    {
+        if (DesktopPaths.PackageFamily is not { } family) return;
+        try
+        {
+            var store = new ExplorerRequestStore(DesktopPaths.PackageState, host, family);
+            foreach (var id in store.TakeSignals()) Queue("--shell-request " + id);
+        }
+        catch { shell?.ExplorerDeliveryFailed(); }
     }
     public static void Bind(Window target, ChatShell composer)
     {
@@ -103,6 +144,7 @@ public static class DesktopActivation
             catch { composer.ExplorerDeliveryFailed(); }
         }
         Drain();
+        DrainPendingSignals();
     }
     private static void Drain()
     {
