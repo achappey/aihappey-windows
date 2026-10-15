@@ -38,6 +38,7 @@ public sealed partial class ChatShell : UserControl
     private readonly MenuFlyoutItem settingsButton = new() { Text = DesktopResources.Get("Settings"), Icon = DesktopIcons.Create(Icon.Settings) };
     private readonly MenuFlyoutItem manageAccount = new() { Icon = DesktopIcons.Create(Icon.PersonAccounts) };
     private readonly Button send = new() { Content = DesktopIcons.Create(Icon.Send), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Right };
+    private readonly Button dictate = new() { Name = "Dictate", Content = DesktopIcons.Create(Icon.Mic), Width = 40, Height = 40, Padding = new Thickness(0) };
     private readonly Button stop = new() { Content = DesktopResources.Get("Stop"), Visibility = Visibility.Collapsed };
     private readonly Button newChat = new() { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(6) };
     private readonly ListView chats = new() { SelectionMode = ListViewSelectionMode.Single };
@@ -110,6 +111,8 @@ public sealed partial class ChatShell : UserControl
         UpdateMode(ServiceKind.Ai);
         ToolbarControls.Label(account, DesktopResources.Get("UserProfile"));
         ToolbarControls.Label(send, DesktopResources.Get("SendMessage"));
+        ToolbarControls.Subtle(dictate);
+        ToolbarControls.Label(dictate, DesktopResources.Get("SpeechDictate"));
         ToolbarControls.Label(target, DesktopResources.Get("SelectModel"));
         AutomationProperties.SetName(input, DesktopResources.Get("Message"));
         AutomationProperties.SetHelpText(input, DesktopResources.Get("InputHelp"));
@@ -138,6 +141,11 @@ public sealed partial class ChatShell : UserControl
         newChat.Click += (_, _) => NewConversation();
         refresh.Click += async (_, _) => await RunAsync(RefreshActivePageAsync);
         send.Click += async (_, _) => await SendAsync();
+        dictate.Click += (_, _) =>
+        {
+            if (!initialized || busy || closing || historyDialogOpen || catalogDialog is not null) return;
+            if (!WindowsVoiceTyping.TryStart(input)) Show(DesktopResources.Get("VoiceTypingFailed"), InfoBarSeverity.Warning);
+        };
         stop.Click += (_, _) => operation?.Cancel();
         settingsButton.Click += async (_, _) => await EditSettingsAsync();
         manageAccount.Click += async (_, _) => await RunAsync(async ct =>
@@ -318,7 +326,7 @@ public sealed partial class ChatShell : UserControl
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         var composerSettings = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        composerSettings.Children.Add(addContext); composerSettings.Children.Add(chatSettings);
+        composerSettings.Children.Add(addContext); composerSettings.Children.Add(chatSettings); composerSettings.Children.Add(dictate);
         actions.Children.Add(composerSettings);
         Grid.SetColumn(viewSystemContext, 1); actions.Children.Add(viewSystemContext);
         Grid.SetColumn(stop, 2); actions.Children.Add(stop); Grid.SetColumn(send, 3); actions.Children.Add(send);
@@ -813,6 +821,7 @@ public sealed partial class ChatShell : UserControl
         models.IsEnabled = agents.IsEnabled = target.IsEnabled = refresh.IsEnabled = account.IsEnabled = settingsButton.IsEnabled = manageAccount.IsEnabled = newChat.IsEnabled = searchChats.IsEnabled = chats.IsEnabled = send.IsEnabled = !value;
         addContext.IsEnabled = !value;
         chatSettings.IsEnabled = !value;
+        dictate.IsEnabled = !value;
         manageMcp.IsEnabled = !value; RenderMcpTags();
         modelFilters.IsEnabled = !value;
         providerFilters.IsEnabled = !value;
