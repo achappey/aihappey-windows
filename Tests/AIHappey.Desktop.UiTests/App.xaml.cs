@@ -38,6 +38,11 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--startup-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckStartupAsync(theme);
+                results.Add("All startup UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--explorer-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckExplorerAsync(theme);
@@ -119,6 +124,7 @@ public partial class App : Application
                 results.Add("All MCP presentation UI checks passed.");
                 File.WriteAllLines(report, results); window.Close(); Exit(); return;
             }
+            foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckStartupAsync(theme);
             foreach (var local in new[] { true, false })
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
                 {
@@ -138,6 +144,56 @@ public partial class App : Application
         {
             File.WriteAllLines(report, results.Append("FAILED: " + error));
             Environment.Exit(1);
+        }
+    }
+
+    private async Task CheckStartupAsync(ElementTheme theme)
+    {
+        foreach (var scenario in new[] { "discovery error", "host error", "close during startup" })
+        {
+            var host = new StartupHost(scenario == "host error");
+            var runtime = new StartupRuntime();
+            var session = new DesktopSession(host, runtime, new());
+            var shell = new ChatShell(session) { RequestedTheme = theme };
+            var context = $"Startup / {scenario} / {theme}";
+            var uiThread = Environment.CurrentManagedThreadId;
+            try
+            {
+                window!.Content = shell; window.Activate();
+                await host.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                shell.UpdateLayout();
+                var root = (Grid)shell.Content;
+                var loading = (StackPanel)root.Children[1];
+                var ring = loading.Children.OfType<ProgressRing>().Single();
+                Check(loading.Visibility == Visibility.Visible && ring.IsActive
+                    && root.Children[0].Visibility == Visibility.Collapsed, context + ": minimal animated loading view");
+                Check(host.InitializationThread != uiThread, context + ": host initialization runs off the UI thread");
+                var dispatched = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                shell.DispatcherQueue.TryEnqueue(() => dispatched.SetResult());
+                await dispatched.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                Check(!host.Release.Task.IsCompleted, context + ": dispatcher remains responsive while initialization is pending");
+                if (scenario == "close during startup")
+                {
+                    await shell.ShutdownAsync();
+                    Check(runtime.Disposed && !runtime.Entered.Task.IsCompleted, context + ": closing cancels startup without starting optional services");
+                    continue;
+                }
+                host.Release.SetResult();
+                await runtime.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                await HistoryIdleAsync(shell);
+                Check(loading.Visibility == Visibility.Collapsed && !ring.IsActive
+                    && root.Children[0].Visibility == Visibility.Visible, context + ": shell replaces loading view after an error");
+                Check(Field<InfoBar>(shell, "notice").IsOpen && Field<Button>(shell, "account").IsEnabled,
+                    context + ": startup error is visible and recovery controls are available");
+                Check(!runtime.Finished.Task.IsCompleted, context + ": optional Agents warm-up does not block the interface");
+            }
+            finally
+            {
+                if (!runtime.Disposed) await shell.ShutdownAsync();
+                window!.Content = null;
+                if (Directory.Exists(session.DataDirectory)) Directory.Delete(session.DataDirectory, true);
+            }
+            Check(runtime.Disposed && runtime.Finished.Task.IsCompleted, context + ": shutdown joins canceled optional startup before disposal");
         }
     }
 
@@ -977,5 +1033,42 @@ internal sealed class UiRuntime : IRuntimeResolver
         Resolutions++;
         throw new InvalidOperationException("Gateway access is intentionally disabled in native UI tests.");
     }
+
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+}
+
+internal sealed class StartupHost(bool fail) : IDesktopHost
+{
+    public string ProfileId { get; } = "StartupTests-" + Guid.NewGuid().ToString("N");
+    public bool AllowLocal => true;
+    public string AccountLabel => "Startup test";
+    public string HistoryIdentity => "ui-test";
+    public int InitializationThread { get; private set; }
+    public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public async Task InitializeAsync(CancellationToken ct)
+    {
+        InitializationThread = Environment.CurrentManagedThreadId;
+        Entered.SetResult();
+        await Release.Task.WaitAsync(ct);
+        if (fail) throw new InvalidOperationException("Startup test failure");
+    }
+    public Task AuthenticateAsync(HttpRequestMessage request, ServiceKind service, CancellationToken ct) =>
+        throw new InvalidOperationException("Startup tests must not contact a gateway.");
+    public Task ManageAccountAsync(object xamlRoot, CancellationToken ct) => Task.CompletedTask;
+}
+
+internal sealed class StartupRuntime : IRuntimeResolver
+{
+    public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public TaskCompletionSource Finished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public bool Disposed { get; private set; }
+    public async Task<Uri> ResolveAsync(ServiceKind service, DesktopSettings settings, CancellationToken ct)
+    {
+        if (service == ServiceKind.Ai) throw new InvalidOperationException("Startup discovery test failure");
+        Entered.TrySetResult();
+        try { await Task.Delay(Timeout.Infinite, ct); return new Uri("http://127.0.0.1/"); }
+        finally { Finished.TrySetResult(); }
+    }
+    public ValueTask DisposeAsync() { Disposed = true; return ValueTask.CompletedTask; }
 }

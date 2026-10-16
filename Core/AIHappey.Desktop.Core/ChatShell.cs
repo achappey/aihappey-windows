@@ -54,6 +54,8 @@ public sealed partial class ChatShell : UserControl
     private bool busy;
     private bool suppress;
     private bool initialized;
+    private Task runtimeWarmup = Task.CompletedTask;
+    private readonly CancellationTokenSource runtimeWarmupLifetime = new();
     private bool followBottom = true;
     private bool closing;
     private bool updatingMode;
@@ -90,7 +92,21 @@ public sealed partial class ChatShell : UserControl
         PrepareSystemContext();
         PrepareTranscript();
         PrepareSearchChats();
-        Content = BuildLayout();
+        var mainInterface = BuildLayout();
+        mainInterface.Visibility = Visibility.Collapsed;
+        var loading = new StackPanel
+        {
+            Name = "StartupLoading", Spacing = 16,
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center
+        };
+        var indicator = new ProgressRing { Name = "StartupProgress", IsActive = true, Width = 32, Height = 32 };
+        AutomationProperties.SetName(indicator, DesktopResources.Get("Working"));
+        loading.Children.Add(indicator);
+        loading.Children.Add(new TextBlock { Text = DesktopBranding.AppName, HorizontalAlignment = HorizontalAlignment.Center });
+        var root = new Grid();
+        root.Children.Add(mainInterface);
+        root.Children.Add(loading);
+        Content = root;
         PrepareAgentActions();
         PrepareSkillActions();
         PreparePlugins();
@@ -122,18 +138,27 @@ public sealed partial class ChatShell : UserControl
         {
             if (initialized) return;
             initialized = true;
-            await RunAsync(async ct =>
+            try
             {
-                session.Settings.Validate(session.Host.AllowLocal);
-                await session.Host.InitializeAsync(ct);
-                await LoadLocalAgentsAsync(ct);
-                await StartVideoJobsAsync(ct);
-                UpdateAccountMenu();
-                await LoadHistoryAsync(ct);
-                if (session.Host.AllowLocal && session.Settings.Agents.Location == RuntimeLocation.Local)
-                    await session.Runtime.ResolveAsync(ServiceKind.Agents, session.Settings, ct);
-                await DiscoverAsync(ct);
-            });
+                await RunAsync(async ct =>
+                {
+                    session.Settings.Validate(session.Host.AllowLocal);
+                    await Task.Run(() => session.Host.InitializeAsync(ct), ct);
+                    await LoadLocalAgentsAsync(ct);
+                    UpdateAccountMenu();
+                    await LoadHistoryAsync(ct, connectServices: false);
+                    await DiscoverAsync(ct);
+                });
+            }
+            finally
+            {
+                indicator.IsActive = false;
+                loading.Visibility = Visibility.Collapsed;
+                mainInterface.Visibility = Visibility.Visible;
+            }
+            if (closing) return;
+            // Optional services must not prevent model discovery or keep the loading view open.
+            runtimeWarmup = WarmupServicesAsync();
             appAgentsReady = true;
             explorerReady = true; ScheduleExplorerDrain();
             RefreshWelcome();
@@ -150,6 +175,8 @@ public sealed partial class ChatShell : UserControl
         settingsButton.Click += async (_, _) => await EditSettingsAsync();
         manageAccount.Click += async (_, _) => await RunAsync(async ct =>
         {
+            runtimeWarmupLifetime.Cancel();
+            await runtimeWarmup;
             accountTransition = true;
             try
             {
@@ -212,6 +239,26 @@ public sealed partial class ChatShell : UserControl
             if (args.NewSize.Width < split.OpenPaneLength + 360) split.IsPaneOpen = false;
         };
         RenderTranscript();
+    }
+
+    private async Task WarmupServicesAsync()
+    {
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(runtimeWarmupLifetime.Token);
+        lifetime.CancelAfter(TimeSpan.FromMinutes(2));
+        async Task AttemptAsync(string serviceName, Func<Task> start)
+        {
+            try { await start(); }
+            catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+            catch (Exception error) { Trace.WriteLine($"Optional {serviceName} startup failed: {error.GetType().Name}"); }
+        }
+        await Task.WhenAll(
+            AttemptAsync("Video", () => StartVideoJobsAsync(lifetime.Token)),
+            AttemptAsync("MCP", () => Task.Run(() => Mcp.ReconnectAsync(lifetime.Token), lifetime.Token)),
+            AttemptAsync("Agents", async () =>
+            {
+                if (!closing && session.Host.AllowLocal && session.Settings.Agents.Location == RuntimeLocation.Local)
+                    await Task.Run(() => session.Runtime.ResolveAsync(ServiceKind.Agents, session.Settings, lifetime.Token), lifetime.Token);
+            }));
     }
 
     private UIElement BuildLayout()
@@ -386,7 +433,8 @@ public sealed partial class ChatShell : UserControl
     private async Task DiscoverAsync(CancellationToken ct)
     {
         var selected = target.Text;
-        targets = Service == ServiceKind.Agents ? await AgentTargetsAsync(ct) : await client.ListAsync(Service, ct);
+        targets = Service == ServiceKind.Agents ? await AgentTargetsAsync(ct)
+            : await Task.Run(() => client.ListAsync(Service, ct), ct);
         if (Service == ServiceKind.Agents && !string.IsNullOrWhiteSpace(selected)) target.Text = DesktopAgentTargets.Restore(selected, targets);
         if (Service == ServiceKind.Ai) aiModelTargets = targets;
         UpdateAccountMenu();
@@ -653,11 +701,13 @@ public sealed partial class ChatShell : UserControl
         RenderTranscript();
     }
 
-    private async Task LoadHistoryAsync(CancellationToken ct)
+    private async Task LoadHistoryAsync(CancellationToken ct, bool connectServices = true)
     {
-        if (await Mcp.LoadAsync(session.McpPartition, ct)) Show(DesktopResources.Get("McpInvalidStoredEntries"), InfoBarSeverity.Warning);
-        await LoadPluginsAsync(ct);
-        conversations = await history.ListAsync(session.HistoryPartition, ct);
+        var mcpPartition = session.McpPartition;
+        if (await Task.Run(() => Mcp.LoadAsync(mcpPartition, ct, connectServices), ct)) Show(DesktopResources.Get("McpInvalidStoredEntries"), InfoBarSeverity.Warning);
+        await LoadPluginsAsync(ct, connectServices);
+        var partition = session.HistoryPartition;
+        conversations = await Task.Run(() => history.ListAsync(partition, ct), ct);
         FilterHistory();
     }
 
@@ -770,7 +820,11 @@ public sealed partial class ChatShell : UserControl
             var mcpSkillsChanged = session.Settings.ModelContext.EnableSkills != next.ModelContext.EnableSkills;
             var imageStorageChanged = !string.Equals(session.Settings.Images.EffectiveRoot, next.Images.EffectiveRoot, StringComparison.OrdinalIgnoreCase);
             var videoStorageChanged = !string.Equals(session.Settings.Videos.EffectiveRoot, next.Videos.EffectiveRoot, StringComparison.OrdinalIgnoreCase);
-            if (connectionsChanged) await StopVideoJobsAsync();
+            if (connectionsChanged)
+            {
+                await runtimeWarmup.WaitAsync(ct);
+                await StopVideoJobsAsync();
+            }
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
             RenderTranscript();
@@ -865,6 +919,9 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        runtimeWarmupLifetime.Cancel();
+        await runtimeWarmup;
+        runtimeWarmupLifetime.Dispose();
         explorerConfirmation?.Hide(); CancelExplorerBatches();
         appAgentLifetime.Cancel(); welcomeRequest?.Cancel();
         toolOutputDialog?.Hide();

@@ -256,7 +256,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
     private sealed class Entry(DesktopMcpServer server)
     {
         public DesktopMcpServer Server = server;
-        public McpConnectionState State;
+        public McpConnectionState State = server.Enabled ? McpConnectionState.Connecting : McpConnectionState.Disabled;
         public McpDiscovery? Discovery;
         public string? Error;
         public IDesktopMcpConnection? Connection;
@@ -274,7 +274,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         get { lock (sync) return entries.Values.Select(e => new McpConnectionView(e.Server.Clone(), e.State, e.Discovery, e.Error))
             .OrderBy(s => s.Server.Name, StringComparer.OrdinalIgnoreCase).ToArray(); }
     }
-    public async Task<bool> LoadAsync(string nextPartition, CancellationToken ct)
+    public async Task<bool> LoadAsync(string nextPartition, CancellationToken ct, bool connect = true)
     {
         await gate.WaitAsync(ct);
         try
@@ -285,7 +285,8 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
             var result = await store.LoadAsync(nextPartition, ct);
             lock (sync) { partition = nextPartition; foreach (var server in result.Servers) entries.Add(server.Id, new(server)); }
             Changed?.Invoke();
-            foreach (var entry in Entries().Where(e => e.Server.Enabled)) await ConnectAsync(entry, ct);
+            if (connect)
+                foreach (var entry in Entries().Where(e => e.Server.Enabled)) await ConnectAsync(entry, ct);
             return result.HasInvalidEntries;
         }
         finally { gate.Release(); }
@@ -342,7 +343,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         finally { gate.Release(); }
     }
     private Entry[] Entries() { lock (sync) return entries.Values.ToArray(); }
-    public async Task ReconcilePluginsAsync(IEnumerable<DesktopMcpServer> desired, CancellationToken ct)
+    public async Task ReconcilePluginsAsync(IEnumerable<DesktopMcpServer> desired, CancellationToken ct, bool connect = true)
     {
         var servers = desired.Select(s => s.Clone()).ToDictionary(s => s.Id, StringComparer.Ordinal);
         foreach (var server in servers.Values) { if (server.PluginId is null) throw new InvalidOperationException("Missing plugin ownership."); server.Validate(); }
@@ -362,7 +363,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
             {
                 ct.ThrowIfCancellationRequested();
                 var entry = new Entry(server); lock (sync) entries.Add(server.Id, entry);
-                if (server.Enabled) await ConnectAsync(entry, ct);
+                if (connect && server.Enabled) await ConnectAsync(entry, ct);
             }
         }
         finally { gate.Release(); Changed?.Invoke(); }
