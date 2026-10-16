@@ -1034,40 +1034,41 @@ internal sealed class UiRuntime : IRuntimeResolver
         throw new InvalidOperationException("Gateway access is intentionally disabled in native UI tests.");
     }
 
-    internal sealed class StartupHost(bool fail) : IDesktopHost
-    {
-        public string ProfileId { get; } = "StartupTests-" + Guid.NewGuid().ToString("N");
-        public bool AllowLocal => true;
-        public string AccountLabel => "Startup test";
-        public string HistoryIdentity => "ui-test";
-        public int InitializationThread { get; private set; }
-        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public async Task InitializeAsync(CancellationToken ct)
-        {
-            InitializationThread = Environment.CurrentManagedThreadId;
-            Entered.SetResult();
-            await Release.Task.WaitAsync(ct);
-            if (fail) throw new InvalidOperationException("Startup test failure");
-        }
-        public Task AuthenticateAsync(HttpRequestMessage request, ServiceKind service, CancellationToken ct) =>
-            throw new InvalidOperationException("Startup tests must not contact a gateway.");
-        public Task ManageAccountAsync(object xamlRoot, CancellationToken ct) => Task.CompletedTask;
-    }
-
-    internal sealed class StartupRuntime : IRuntimeResolver
-    {
-        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public TaskCompletionSource Finished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public bool Disposed { get; private set; }
-        public async Task<Uri> ResolveAsync(ServiceKind service, DesktopSettings settings, CancellationToken ct)
-        {
-            if (service == ServiceKind.Ai) throw new InvalidOperationException("Startup discovery test failure");
-            Entered.TrySetResult();
-            try { await Task.Delay(Timeout.Infinite, ct); return new Uri("http://127.0.0.1/"); }
-            finally { Finished.TrySetResult(); }
-        }
-        public ValueTask DisposeAsync() { Disposed = true; return ValueTask.CompletedTask; }
-    }
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+}
+
+internal sealed class StartupHost(bool fail) : IDesktopHost
+{
+    public string ProfileId { get; } = "StartupTests-" + Guid.NewGuid().ToString("N");
+    public bool AllowLocal => true;
+    public string AccountLabel => "Startup test";
+    public string HistoryIdentity => "ui-test";
+    public int InitializationThread { get; private set; }
+    public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public async Task InitializeAsync(CancellationToken ct)
+    {
+        InitializationThread = Environment.CurrentManagedThreadId;
+        Entered.SetResult();
+        await Release.Task.WaitAsync(ct);
+        if (fail) throw new InvalidOperationException("Startup test failure");
+    }
+    public Task AuthenticateAsync(HttpRequestMessage request, ServiceKind service, CancellationToken ct) =>
+        throw new InvalidOperationException("Startup tests must not contact a gateway.");
+    public Task ManageAccountAsync(object xamlRoot, CancellationToken ct) => Task.CompletedTask;
+}
+
+internal sealed class StartupRuntime : IRuntimeResolver
+{
+    public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public TaskCompletionSource Finished { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public bool Disposed { get; private set; }
+    public async Task<Uri> ResolveAsync(ServiceKind service, DesktopSettings settings, CancellationToken ct)
+    {
+        if (service == ServiceKind.Ai) throw new InvalidOperationException("Startup discovery test failure");
+        Entered.TrySetResult();
+        try { await Task.Delay(Timeout.Infinite, ct); return new Uri("http://127.0.0.1/"); }
+        finally { Finished.TrySetResult(); }
+    }
+    public ValueTask DisposeAsync() { Disposed = true; return ValueTask.CompletedTask; }
 }

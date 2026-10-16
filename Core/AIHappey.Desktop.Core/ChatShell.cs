@@ -822,8 +822,7 @@ public sealed partial class ChatShell : UserControl
             var videoStorageChanged = !string.Equals(session.Settings.Videos.EffectiveRoot, next.Videos.EffectiveRoot, StringComparison.OrdinalIgnoreCase);
             if (connectionsChanged)
             {
-                runtimeWarmupLifetime.Cancel();
-                await runtimeWarmup;
+                await runtimeWarmup.WaitAsync(ct);
                 await StopVideoJobsAsync();
             }
             await SettingsStore.SaveAsync(session.DataDirectory, next);
