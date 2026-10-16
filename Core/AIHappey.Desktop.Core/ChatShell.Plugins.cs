@@ -34,12 +34,13 @@ public sealed partial class ChatShell
         }
     }
     private bool CurrentPluginPartition(string partition) => !closing && session.PluginPartition == partition;
-    private async Task LoadPluginsAsync(CancellationToken ct)
+    private async Task LoadPluginsAsync(CancellationToken ct, bool connectServices = true)
     {
-        var partition = session.PluginPartition; var plugins = await pluginStore.ListAsync(partition, ct); ct.ThrowIfCancellationRequested();
+        var partition = session.PluginPartition; var plugins = await Task.Run(() => pluginStore.ListAsync(partition, ct), ct); ct.ThrowIfCancellationRequested();
         if (!CurrentPluginPartition(partition)) return;
         agentPlugins = plugins; pluginPartition = partition; pluginEpoch++;
-        await Mcp.ReconcilePluginsAsync(AgentPluginRuntime.Servers(EnabledPlugins(session.Settings.Chat), session.PluginExtensionNamespace), ct);
+        var servers = AgentPluginRuntime.Servers(EnabledPlugins(session.Settings.Chat), session.PluginExtensionNamespace);
+        await Task.Run(() => Mcp.ReconcilePluginsAsync(servers, ct, connectServices), ct);
         if (!CurrentPluginPartition(partition)) return;
         pluginsOverview.SetItems(agentPlugins); RenderContextTags();
     }

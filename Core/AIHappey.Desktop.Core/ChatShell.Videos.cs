@@ -70,7 +70,8 @@ public sealed partial class ChatShell
         videoJobs ??= new(Path.Combine(session.DataDirectory, "video-jobs"), new DesktopVideoClient(client, http), contextHttp,
             () => ImageLibraryStore.Partition(session), () => session.Settings.Videos.PollingIntervalSeconds);
         videoJobs.Changed -= VideoJobsChanged; videoJobs.Changed += VideoJobsChanged;
-        await videoJobs.StartAsync(ct);
+        var coordinator = videoJobs;
+        await Task.Run(() => coordinator.StartAsync(ct), ct);
     }
     private async Task StopVideoJobsAsync()
     {

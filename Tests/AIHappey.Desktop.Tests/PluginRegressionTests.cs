@@ -106,6 +106,17 @@ internal static class PluginRegressionTests
         var count = factory.Connections.Count; await manager.ReconcilePluginsAsync(desired, default); check(factory.Connections.Count == count, "unchanged reconciliation does not reconnect");
         await manager.ReconcilePluginsAsync([], default); check(manager.Servers.Single().Server.Id == "manual" && factory.Connections.Last().Disposed, "disable plugin disposes only owned connection");
         await manager.ReconcilePluginsAsync(desired, default); await manager.LoadAsync("other-account", default); check(manager.Servers.Count == 0, "account change clears plugin and manual runtime");
+        count = factory.Connections.Count;
+        await manager.LoadAsync("account", default, connect: false);
+        await manager.ReconcilePluginsAsync(desired, default, connect: false);
+        check(factory.Connections.Count == count && manager.Servers.Count == 2
+            && manager.Servers.All(s => s.State == McpConnectionState.Connecting),
+            "startup loads enabled manual and plugin configuration without contacting optional MCP services");
+        await manager.ReconnectAsync(default);
+        check(factory.Connections.Count == count + 2
+            && manager.Servers.All(s => s.State == McpConnectionState.Connected)
+            && manager.Capture().Tools.Count > 0,
+            "deferred startup connects manual and plugin services with normal discovery");
     }
     private sealed class Factory : IDesktopMcpClientFactory
     {

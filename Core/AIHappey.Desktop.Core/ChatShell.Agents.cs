@@ -29,7 +29,7 @@ public sealed partial class ChatShell
     private async Task LoadLocalAgentsAsync(CancellationToken ct)
     {
         var partition = session.AgentPartition;
-        var items = await agentStore.ListAsync(partition, session.DefaultAgents, ct);
+        var items = await Task.Run(() => agentStore.ListAsync(partition, session.DefaultAgents, ct), ct);
         ct.ThrowIfCancellationRequested(); if (session.AgentPartition != partition || closing) return;
         localAgents = items; localAgentPartition = partition;
         RefreshWelcome();

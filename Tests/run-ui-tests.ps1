@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly)
+param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -24,6 +24,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Published Fluent icon assets are missing.' }
 $report = Join-Path ([IO.Path]::GetTempPath()) ('AIHappey-ui-tests-' + [guid]::NewGuid().ToString('N') + '.txt')
 try {
     $arguments = @('"' + $report + '"')
+    if ($StartupOnly) { $arguments += '--startup-only' }
     if ($TranscriptOnly) { $arguments += '--transcript-only' }
     if ($McpPresentationOnly) { $arguments += '--mcp-presentation-only' }
     if ($ElicitationOnly) { $arguments += '--elicitation-only' }
