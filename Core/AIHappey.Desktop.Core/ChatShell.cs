@@ -546,11 +546,16 @@ public sealed partial class ChatShell : UserControl
         transcript.Children.Clear();
         messageTimes.Clear();
         var liveActivity = new HashSet<string>();
-        foreach (var projected in MessageDetails.Project(current.Messages))
+        var projectedMessages = MessageDetails.Project(current.Messages);
+        for (var projectedIndex = 0; projectedIndex < projectedMessages.Count; projectedIndex++)
         {
+            var projected = projectedMessages[projectedIndex];
             var message = projected.Message;
             var block = projected.Block;
             var user = message.Message.Role == Role.user;
+            var streaming = !user && message.Status == "streaming";
+            var lastMessageBlock = projectedIndex + 1 == projectedMessages.Count
+                || !ReferenceEquals(projectedMessages[projectedIndex + 1].Message, message);
             var content = new StackPanel { Spacing = 8 };
             var key = current.Id + ":" + block.Key;
             if (block.Activity) liveActivity.Add(key);
@@ -558,7 +563,14 @@ public sealed partial class ChatShell : UserControl
             var displayed = page >= 0 ? block.Parts[page] : null;
             var header = MessageHeader(message, user, block.Activity ? displayed : null);
             if (displayed is not null) RenderPart(content, displayed);
-            else content.Children.Add(SelectableText(block.Key.EndsWith(":details", StringComparison.Ordinal) ? DesktopResources.Get("AttachmentsSources") : DesktopResources.Get("Working")));
+            else if (!streaming || !block.Key.EndsWith(":pending", StringComparison.Ordinal))
+                content.Children.Add(SelectableText(block.Key.EndsWith(":details", StringComparison.Ordinal) ? DesktopResources.Get("AttachmentsSources") : DesktopResources.Get("Working")));
+            if (streaming && lastMessageBlock)
+            {
+                var indicator = new ProgressBar { Name = "AssistantStreamingProgress", IsIndeterminate = true, Height = 4 };
+                AutomationProperties.SetName(indicator, DesktopResources.Get("Working"));
+                content.Children.Add(indicator);
+            }
             string? tokenCount = null;
             string? price = null;
             if (!user && !block.Activity && message.Message.Metadata is not null)

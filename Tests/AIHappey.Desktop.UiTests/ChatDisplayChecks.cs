@@ -19,6 +19,38 @@ public partial class App
             totalTokens: 17, gateway: new FinishGatewayMetadata { Cost = .0123m }).ToDictionary()!;
         var original = PortableConversations.Write(conversation);
         Call(shell, "RenderTranscript"); await Task.Delay(100); shell.UpdateLayout();
+        var streamingMessage = conversation.Messages[1];
+        var originalParts = streamingMessage.Message.Parts.ToArray();
+        var originalStatus = streamingMessage.Status;
+        streamingMessage.Status = "streaming";
+        streamingMessage.Message.Parts.Clear();
+        Call(shell, "RenderTranscript"); await Task.Delay(60); shell.UpdateLayout();
+        var streamingCard = Descendants(transcript).OfType<Border>().Where(b => b.Name == "MessageCard").Last();
+        var streamingBody = Descendants(streamingCard).OfType<Border>().Single(b => b.Name == "MessageBody");
+        var streamingContent = (StackPanel)streamingBody.Child;
+        var indicator = streamingContent.Children.OfType<ProgressBar>().Single();
+        Check(indicator.Name == "AssistantStreamingProgress" && indicator.IsIndeterminate
+            && streamingContent.Children.Count == 1,
+            context + ": empty streaming answer shows only an indeterminate progress bar inside its message");
+        streamingMessage.Message.Parts.Add(new TextUIPart { Text = "Streaming answer fixture" });
+        Call(shell, "RenderTranscript"); await Task.Delay(60); shell.UpdateLayout();
+        streamingCard = Descendants(transcript).OfType<Border>().Where(b => b.Name == "MessageCard").Last();
+        streamingBody = Descendants(streamingCard).OfType<Border>().Single(b => b.Name == "MessageBody");
+        streamingContent = (StackPanel)streamingBody.Child;
+        Check(streamingContent.Children.OfType<ChatMarkdown>().Any(m => m.Text == "Streaming answer fixture")
+            && streamingContent.Children.Last() is ProgressBar { Name: "AssistantStreamingProgress", IsIndeterminate: true },
+            context + ": streaming progress remains below partial assistant content");
+        foreach (var status in new[] { "complete", "failed", "interrupted" })
+        {
+            streamingMessage.Status = status;
+            Call(shell, "RenderTranscript"); await Task.Delay(40);
+            Check(!Descendants(transcript).OfType<ProgressBar>().Any(b => b.Name == "AssistantStreamingProgress"),
+                context + ": streaming progress is removed when assistant status is " + status);
+        }
+        streamingMessage.Status = originalStatus;
+        streamingMessage.Message.Parts.Clear();
+        streamingMessage.Message.Parts.AddRange(originalParts);
+        Call(shell, "RenderTranscript"); await Task.Delay(60); shell.UpdateLayout();
         Grid[] Logos() => Descendants(transcript).OfType<Grid>().Where(g => g.Name == "ProviderLogo").ToArray();
         string[] Labels() => Descendants(transcript).OfType<TextBlock>().Where(t => t.Name == "MessageModel").Select(t => t.Text).ToArray();
         bool Tokens() => Descendants(transcript).OfType<Border>().Any(b => b.Name == "TokenUsage");
