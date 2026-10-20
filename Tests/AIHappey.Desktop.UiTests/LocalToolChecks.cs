@@ -14,7 +14,9 @@ public partial class App
     {
         var context = "Local tools / " + theme;
         var root = new Grid { RequestedTheme = theme }; window!.Content = root;
-        window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 900)); window.Activate(); await Task.Delay(100);
+        window.Activate(); await Task.Delay(100);
+        var scale = root.XamlRoot.RasterizationScale;
+        window.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(1200 * scale), (int)(900 * scale))); await Task.Delay(100);
         var original = new ChatPreferences(); ChatPreferences? saved = null;
         var dialog = new ChatSettingsDialog(original, "openai") { XamlRoot = root.XamlRoot, RequestedTheme = theme,
             SaveAsync = next => { saved = next; return Task.CompletedTask; } };
@@ -28,6 +30,7 @@ public partial class App
         Check(toggles.Select(AutomationProperties.GetName).SequenceEqual(DesktopLocalTools.Plugins.Select(p => DesktopResources.Get(p.ResourceKey)))
             && toggles.All(t => AutomationProperties.GetAutomationId(t) == "ChatPlugin_" + t.Tag), context + ": browser labels and stable accessible identities");
         var pluginGrid = Descendants(dialog).OfType<Grid>().Single(g => g.Name == "ChatPluginGrid");
+        await WaitForSkillUiAsync(() => pluginGrid.ColumnDefinitions.Count == 2);
         var pluginCards = pluginGrid.Children.Cast<FrameworkElement>().ToArray();
         Check(pluginGrid.ColumnDefinitions.Count == 2 && pluginGrid.RowDefinitions.Count == (pluginCount + 1) / 2
             && pluginCards.Select(Grid.GetColumn).SequenceEqual(Enumerable.Range(0, pluginCount).Select(i => i % 2))
@@ -40,14 +43,16 @@ public partial class App
         Check(original.ActivePlugins.Count == 0, context + ": toggles edit isolated draft");
         dialog.ShowSkillsTab(); await Task.Delay(60); dialog.ShowToolsTab(); await Task.Delay(60);
         Check(Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").All(t => t.IsOn), context + ": navigation retains draft selections");
-        window.AppWindow.Resize(new Windows.Graphics.SizeInt32(500, 900)); await Task.Delay(120); dialog.UpdateLayout();
+        window.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(500 * scale), (int)(900 * scale))); await Task.Delay(120); dialog.UpdateLayout();
+        await WaitForSkillUiAsync(() => pluginGrid.ColumnDefinitions.Count == 1);
         Check(pluginGrid.ColumnDefinitions.Count == 1 && pluginGrid.RowDefinitions.Count == pluginCount
             && pluginCards.All(c => Grid.GetColumn(c) == 0)
             && pluginCards.Select(Grid.GetRow).SequenceEqual(Enumerable.Range(0, pluginCount)) && toggles.All(t => Within(t, dialog)),
             context + ": narrow Tools tab switches to one column without clipping switches");
         Check(Descendants(dialog).OfType<ScrollViewer>().Where(s => s.HorizontalScrollMode == ScrollMode.Disabled).All(s => s.ScrollableWidth < 1),
             context + ": Tools cards fit narrow native viewport");
-        window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 900)); await Task.Delay(120); dialog.UpdateLayout();
+        window.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(1200 * scale), (int)(900 * scale))); await Task.Delay(120); dialog.UpdateLayout();
+        await WaitForSkillUiAsync(() => pluginGrid.ColumnDefinitions.Count == 2);
         Check(pluginGrid.ColumnDefinitions.Count == 2 && toggles.All(t => t.IsOn), context + ": widening restores two columns without rebuilding or resetting switches");
         InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
         Check(saved?.ActivePlugins.Count == pluginCount && dialog.Result?.ActivePlugins.Count == pluginCount, context + ": close saves all plugin selections");
