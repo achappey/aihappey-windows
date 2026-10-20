@@ -44,7 +44,7 @@ public sealed partial class ChatShell
         }
         catalogs.TryGetValue(CatalogKind.Skill, out var previous);
         var backend = (previous ?? (runtimeSkillPartition == partition ? runtimeSkillCatalog : [])).Where(i => i.Origin == CatalogOrigin.Backend).ToArray();
-        var items = backend.Concat(LocalSkillCatalog()).ToArray(); catalogs[CatalogKind.Skill] = items;
+        var items = LocalSkillCatalog().Concat(backend).DistinctBy(i => i.Id).ToArray(); catalogs[CatalogKind.Skill] = items;
         var config = session.Settings.Ai;
         skillsOverview.SetItems(items, favorites, config.Location == RuntimeLocation.Local ? "localhost" : DesktopSettings.RemoteUri(config.RemoteUrl).Host);
         RenderContextTags();

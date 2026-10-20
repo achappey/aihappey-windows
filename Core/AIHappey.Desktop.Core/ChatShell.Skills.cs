@@ -54,8 +54,8 @@ public sealed partial class ChatShell
         return new(AvailableSkillDescriptors(), runtimeSkillCatalog.Concat(LocalSkillCatalog()).Where(i => favorites.Contains(i.Key)).Select(i => i.Id).ToHashSet(StringComparer.Ordinal), source, warning);
     }
     private IReadOnlyList<DesktopSkill> AvailableSkillDescriptors() =>
-         (runtimeSkillPartition == session.HistoryPartition ? runtimeSkillCatalog.Select(i => new DesktopSkill(i.Id, i.Name, i.Description, "remote", i.LatestVersion ?? i.Version)) : [])
-        .Concat(localSkillPartition == session.HistoryPartition ? localSkills : [])
+         (localSkillPartition == session.HistoryPartition ? localSkills : [])
+        .Concat(runtimeSkillPartition == session.HistoryPartition ? runtimeSkillCatalog.Select(i => new DesktopSkill(i.Id, i.Name, i.Description, "remote", i.LatestVersion ?? i.Version)) : [])
         .Concat(Mcp.CaptureSkills().Select(s => s.Descriptor)).DistinctBy(s => s.Id).ToArray();
     private async Task PrefetchSkillAsync(string id, CancellationToken ct)
     {
@@ -78,7 +78,8 @@ public sealed partial class ChatShell
                 readers.Add((skill.Descriptor, ct => { ct.ThrowIfCancellationRequested(); if (closing || partition != session.HistoryPartition || pluginGeneration != pluginEpoch) throw new OperationCanceledException(ct); return Task.FromResult(plugin.Content(skill)); }));
             }
         if (runtimeSkillPartition == partition)
-            foreach (var item in runtimeSkillCatalog.Where(i => discover || selected.Contains(i.Id)))
+            foreach (var item in runtimeSkillCatalog.Where(i => (discover || selected.Contains(i.Id))
+                && !(localSkillPartition == partition && localSkills.Any(s => s.Id == i.Id))))
                 readers.Add((new DesktopSkill(item.Id, item.Name, item.Description, "remote", item.LatestVersion ?? item.Version)
                     { DefaultVersion = item.Version, LatestVersion = item.LatestVersion }, async ct =>
                 {

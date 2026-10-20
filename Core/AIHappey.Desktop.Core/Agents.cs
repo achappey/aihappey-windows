@@ -34,6 +34,16 @@ public sealed class DesktopAgent
         if (!IsValid) throw new InvalidDataException(DesktopResources.Get("AgentFieldsRequired"));
         if (Name.Any(char.IsControl)) throw new InvalidDataException(DesktopResources.Get("AgentNameInvalid"));
     }
+    internal void ValidateStored()
+    {
+        // Browser tools require these properties but allow empty descriptions/instructions.
+        // Keep native editor/import validation stricter without making such portable agents unreadable.
+        if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(ModelId)
+            || Definition["description"] is not JsonValue d || !d.TryGetValue<string>(out _)
+            || Definition["instructions"] is not JsonValue i || !i.TryGetValue<string>(out _))
+            throw new InvalidDataException(DesktopResources.Get("AgentFieldsRequired"));
+        if (Name.Any(char.IsControl)) throw new InvalidDataException(DesktopResources.Get("AgentNameInvalid"));
+    }
     public static DesktopAgent Parse(string json)
     {
         if (System.Text.Encoding.UTF8.GetByteCount(json) > MaxDocumentBytes) throw new InvalidDataException(DesktopResources.Get("ResponseSizeLimit"));
@@ -181,7 +191,7 @@ public sealed class DesktopAgentStore(string directory)
         foreach (var definition in array)
         {
             if (definition is not JsonObject obj) throw new InvalidDataException(DesktopResources.Get("InvalidCatalogDocument"));
-            var agent = new DesktopAgent(obj); agent.Validate(); agent.Normalize();
+            var agent = new DesktopAgent(obj); agent.ValidateStored(); agent.Normalize();
             if (!names.Add(agent.Name)) throw new InvalidDataException(DesktopResources.Get("AgentDuplicateName"));
             result.Add(agent);
         }
@@ -213,9 +223,11 @@ public sealed class DesktopAgentStore(string directory)
         }
         finally { gate.Release(); }
     }
-    public async Task SaveAsync(string partition, DesktopAgent agent, string? editingName, CancellationToken ct)
+    public async Task SaveAsync(string partition, DesktopAgent agent, string? editingName, CancellationToken ct, bool portableTool = false)
     {
-        var copy = agent.Clone(); copy.Definition["name"] = copy.Name.Trim(); copy.Validate(); copy.Normalize();
+        var copy = agent.Clone(); copy.Definition["name"] = copy.Name.Trim();
+        if (portableTool) copy.ValidateStored(); else copy.Validate();
+        copy.Normalize();
         var path = PathFor(partition); var gate = Gates.GetOrAdd(path, _ => new(1, 1)); await gate.WaitAsync(ct);
         try
         {

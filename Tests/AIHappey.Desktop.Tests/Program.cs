@@ -19,6 +19,11 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--authoring-tools-only"))
+    {
+        await AuthoringToolRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} authoring tool checks passed."); return;
+    }
     if (args.Contains("--agent-presentation-only"))
     {
         await AgentRegressionTests.RunAsync(Check, root);

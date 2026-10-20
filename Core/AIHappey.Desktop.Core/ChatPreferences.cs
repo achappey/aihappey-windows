@@ -13,6 +13,8 @@ public sealed class ChatPreferences
     public bool ShowTokens { get; set; }
     public bool ShowProviderLogo { get; set; } = true;
     public bool ApiDebugEnabled { get; set; }
+    // Match browser defaults: retain images in history/UI, but do not resend them in tool output unless opted in.
+    public bool SendToolOutputImages { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? MaxOutputTokens { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -71,6 +73,7 @@ public sealed class ChatPreferences
         ShowTokens = ShowTokens,
         ShowProviderLogo = ShowProviderLogo,
         ApiDebugEnabled = ApiDebugEnabled,
+        SendToolOutputImages = SendToolOutputImages,
         MaxOutputTokens = MaxOutputTokens,
         ToolChoice = NormalizedToolChoice,
         MaxToolCalls = MaxToolCalls is > 0 ? MaxToolCalls : null,
@@ -113,9 +116,18 @@ public sealed class ChatPreferences
         if (MaxOutputTokens is null) body.Remove("maxOutputTokens");
         if (request.ProviderMetadata is null) body.Remove("providerMetadata");
         var choice = EffectiveToolChoice(messages, mcp);
+        // SDK defaults must not turn client-side automatic/unlimited choices into wire policy.
+        body.Remove("toolChoice"); body.Remove("maxToolCalls"); body.Remove("stopTools"); body.Remove("toolAnnotations");
         if (choice is not null) body["toolChoice"] = choice;
         if (MaxToolCalls is > 0) body["maxToolCalls"] = MaxToolCalls.Value;
         if (mcp is not null) body["tools"] = new JsonArray(mcp.Tools.Where(ToolAnnotations.Allows).Select(t => JsonNode.Parse(t.GetRawText())).ToArray());
+        if (!SendToolOutputImages && body["messages"] is JsonArray requestMessages)
+            foreach (var message in requestMessages.OfType<JsonObject>())
+                foreach (var part in (message["parts"] as JsonArray ?? new()).OfType<JsonObject>())
+                    if ((OpenAIChatConfig.Text(part["type"])?.StartsWith("tool-", StringComparison.Ordinal) == true || OpenAIChatConfig.Text(part["type"]) == "dynamic-tool")
+                        && part["output"] is JsonObject toolOutput && toolOutput["content"] is JsonArray content)
+                        for (var i = content.Count - 1; i >= 0; i--)
+                            if (content[i] is JsonObject block && OpenAIChatConfig.Text(block["type"]) == "image") content.RemoveAt(i);
         return body;
     }
 

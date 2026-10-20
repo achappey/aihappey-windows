@@ -61,7 +61,7 @@ public sealed class ImagePreferences
 public static class ImageAttachments
 {
     public static readonly string[] Extensions = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tif", ".tiff"];
-    public static bool IsImage(string type) => type is "image/png" or "image/jpeg" or "image/webp" or "image/gif" or "image/bmp" or "image/tiff";
+    public static bool IsImage(string type) => type is "image/png" or "image/jpeg" or "image/webp" or "image/gif" or "image/bmp" or "image/tiff" or "image/avif";
     public static void Validate(ComposerAttachment file)
     {
         if (!IsImage(file.MediaType) || !file.IsLink && file.Content.IsEmpty)
@@ -77,21 +77,34 @@ public static class ImageAttachments
     public static string Extension(string type) => type switch
     {
         "image/png" => ".png", "image/jpeg" => ".jpg", "image/webp" => ".webp", "image/gif" => ".gif",
-        "image/bmp" => ".bmp", "image/tiff" => ".tiff", _ => throw new InvalidOperationException(DesktopResources.Get("ImageResponseInvalid"))
+        "image/bmp" => ".bmp", "image/tiff" => ".tiff", "image/avif" => ".avif", _ => throw new InvalidOperationException(DesktopResources.Get("ImageResponseInvalid"))
     };
+    public static string? Detect(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 })) return "image/png";
+        if (bytes.StartsWith(new byte[] { 255, 216, 255 })) return "image/jpeg";
+        if (bytes.StartsWith("GIF8"u8)) return "image/gif";
+        if (bytes.Length >= 12 && bytes[..4].SequenceEqual("RIFF"u8) && bytes.Slice(8, 4).SequenceEqual("WEBP"u8)) return "image/webp";
+        if (bytes.StartsWith("BM"u8)) return "image/bmp";
+        if (bytes.StartsWith(new byte[] { 73, 73, 42, 0 }) || bytes.StartsWith(new byte[] { 77, 77, 0, 42 })) return "image/tiff";
+        if (bytes.Length >= 12 && bytes.Slice(4, 4).SequenceEqual("ftyp"u8)
+            && (bytes.Slice(8, Math.Min(24, bytes.Length - 8)).IndexOf("avif"u8) >= 0 || bytes.Slice(8, Math.Min(24, bytes.Length - 8)).IndexOf("avis"u8) >= 0)) return "image/avif";
+        return null;
+    }
     public static (byte[] Bytes, string MediaType) Decode(string data)
     {
         var comma = data.IndexOf(',');
-        if (comma < 0 || !data.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase)
+        var dataUrl = comma >= 0;
+        if (dataUrl && (!data.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase)
             || !data[..comma].EndsWith(";base64", StringComparison.OrdinalIgnoreCase)
-            || data.Length - comma > (ComposerAttachments.MaximumFileBytes + 2L) / 3 * 4)
+            ) || (dataUrl ? data.Length - comma - 1 : data.Length) > (ComposerAttachments.MaximumFileBytes + 2L) / 3 * 4)
             throw new InvalidOperationException(DesktopResources.Get("ImageResponseInvalid"));
-        var type = data[5..(comma - 7)].ToLowerInvariant();
-        if (!IsImage(type)) throw new InvalidOperationException(DesktopResources.Get("ImageResponseInvalid"));
         byte[] bytes;
-        try { bytes = Convert.FromBase64String(data[(comma + 1)..]); }
+        try { bytes = Convert.FromBase64String(dataUrl ? data[(comma + 1)..] : data); }
         catch (FormatException) { throw new InvalidOperationException(DesktopResources.Get("ImageResponseInvalid")); }
         ComposerAttachments.ValidateSize(bytes.Length);
+        var type = dataUrl ? data[5..(comma - 7)].ToLowerInvariant() : Detect(bytes);
+        if (type is null || !IsImage(type)) throw new InvalidOperationException(DesktopResources.Get("ImageResponseInvalid"));
         if (bytes.Length == 0) throw new InvalidOperationException(DesktopResources.Get("ImageResponseInvalid"));
         return (bytes, type);
     }

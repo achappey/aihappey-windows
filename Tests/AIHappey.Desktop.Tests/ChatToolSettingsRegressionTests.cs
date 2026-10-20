@@ -115,7 +115,7 @@ internal static class ChatToolSettingsRegressionTests
         using var handler = new TestHandler(); using var http = new HttpClient(handler);
         await using var session = new DesktopSession(new TestHost(), new TestRuntime(), new());
         var client = new DesktopChatClient(session, http);
-        var agent = DesktopAgent.Parse("""{"name":"Fixture","instructions":"Remain unchanged","model":{"id":"openai/model"},"mcpClient":{"policy":{"openWorldHint":true,"future":7}},"futureField":42}""");
+        var agent = DesktopAgent.Parse("""{"name":"Fixture","description":"Isolation fixture","instructions":"Remain unchanged","model":{"id":"openai/model"},"mcpClient":{"policy":{"openWorldHint":true,"future":7}},"futureField":42}""");
         var definition = agent.Definition.ToJsonString();
         var disruptive = new ChatPreferences { ToolChoice = "none", MaxToolCalls = 1, StopTools = ["search"],
             ToolAnnotations = new() { ReadOnlyHint = true, IdempotentHint = true, OpenWorldHint = false, DestructiveHint = false } };

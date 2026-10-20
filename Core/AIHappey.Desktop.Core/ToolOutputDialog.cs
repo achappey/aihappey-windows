@@ -23,7 +23,7 @@ internal static class ToolOutputView
             {
                 var kind = PortableConversations.String(block, "type") ?? "unknown";
                 var view = kind == "text" && PortableConversations.String(block, "text") is { } text
-                    ? (UIElement)new ChatMarkdown { Text = text } : Value(block);
+                    ? (UIElement)new ChatMarkdown { Text = text } : kind == "image" ? ImageView(block) : Value(block);
                 var label = DesktopResources.Get(kind switch { "text" => "ToolContentText", "image" => "ToolContentImage",
                     "audio" => "ToolContentAudio", "resource" => "ToolContentResource", "resource_link" => "ToolContentLink", _ => "ToolContentOther" });
                 sections.Add($"{label} {++i}", view, "ToolOutputBlock");
@@ -36,6 +36,29 @@ internal static class ToolOutputView
     }
 
     public static TextBlock Text(string value) => new() { Text = value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+    private static UIElement ImageView(JsonElement block)
+    {
+        var panel = new StackPanel { Spacing = 8 };
+        var image = new Image { Name = "ToolOutputImage", MaxHeight = 420, Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform };
+        panel.Children.Add(image);
+        var notice = Text(PortableConversations.String(block, "mimeType") ?? ""); panel.Children.Add(notice);
+        image.Loaded += async (_, _) =>
+        {
+            if (image.Source is not null) return;
+            try
+            {
+                var data = PortableConversations.String(block, "data") ?? "";
+                if (data.Length > (ComposerAttachments.MaximumFileBytes + 2L) / 3 * 4) throw new InvalidDataException();
+                var bytes = Convert.FromBase64String(data); ComposerAttachments.ValidateSize(bytes.Length);
+                using var memory = new MemoryStream(bytes); using var stream = memory.AsRandomAccessStream();
+                var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage { DecodePixelWidth = 1200 };
+                await bitmap.SetSourceAsync(stream); if (image.IsLoaded) image.Source = bitmap;
+            }
+            catch (Exception e) when (e is not OutOfMemoryException) { notice.Text = DesktopResources.Get("ImageResponseInvalid"); }
+        };
+        image.Unloaded += (_, _) => image.Source = null;
+        return panel;
+    }
     public static UIElement Value(JsonElement value) => Text(value.ValueKind == JsonValueKind.String
         ? value.GetString() ?? "" : JsonSerializer.Serialize(value, PortableConversations.Json));
 }

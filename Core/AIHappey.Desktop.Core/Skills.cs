@@ -16,11 +16,12 @@ public sealed record DesktopSkill(string Id, string Name, string Description, st
     public string? DefaultVersion { get; init; }
     public string? LatestVersion { get; init; }
     public bool? IsDownloaded { get; init; }
+    public string? SourceId { get; init; }
 }
 
-public sealed record DesktopSkillFile(string Path, byte[] Data)
+public sealed record DesktopSkillFile(string Path, byte[] Data, string? MediaType = null)
 {
-    public string MimeType => SkillFiles.MimeType(Path);
+    public string MimeType => MediaType ?? SkillFiles.MimeType(Path);
 }
 
 public sealed record DesktopSkillContent(DesktopSkill Skill, string Body, IReadOnlyList<string> ResourcePaths,
@@ -46,6 +47,9 @@ public static class SkillFiles
         ".xml" or ".svg" => "application/xml", ".html" => "text/html", ".csv" => "text/csv",
         ".txt" or ".py" or ".js" or ".ts" or ".sh" or ".ps1" or ".css" or ".sql" or ".cs" or ".r" or ".toml" or ".ini" => "text/plain",
         ".png" => "image/png", ".jpg" or ".jpeg" => "image/jpeg", ".gif" => "image/gif", ".webp" => "image/webp",
+        ".bmp" => "image/bmp", ".tif" or ".tiff" => "image/tiff", ".avif" => "image/avif",
+        ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         ".pdf" => "application/pdf", _ => "application/octet-stream"
     };
     public static bool IsText(string mime) => mime.StartsWith("text/", StringComparison.Ordinal)
@@ -141,8 +145,60 @@ public static class SkillFiles
 /// <summary>Account/API-isolated archive cache. Failed/canceled downloads never replace a good cache.</summary>
 public sealed class DesktopSkillStore(string directory, Func<CatalogItem, string, CancellationToken, Task<byte[]>> download)
 {
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> gates = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> gates = new(StringComparer.OrdinalIgnoreCase);
     private string PartitionDirectory(string partition) => Path.Combine(directory, McpValidation.Hash(partition));
+    private async Task<List<DesktopSkill>> DownloadIndexAsync(string partition, CancellationToken ct)
+    {
+        var path = Path.Combine(PartitionDirectory(partition), "downloaded.json");
+        if (!File.Exists(path) || new FileInfo(path).Length > 8 * 1024 * 1024) return [];
+        try { return (JsonSerializer.Deserialize<List<DesktopSkill>>(await File.ReadAllBytesAsync(path, ct)) ?? [])
+            .Where(s => !string.IsNullOrWhiteSpace(s.Id) && !string.IsNullOrWhiteSpace(s.Version)).Take(10000).ToList(); }
+        catch (JsonException) { return []; }
+    }
+    private async Task RememberAsync(string partition, DesktopSkill skill, CancellationToken ct)
+    {
+        var path = Path.Combine(PartitionDirectory(partition), "downloaded.json"); var gate = gates.GetOrAdd(path, _ => new(1, 1)); await gate.WaitAsync(ct);
+        try
+        {
+            var items = await DownloadIndexAsync(partition, ct); items.RemoveAll(s => s.Id == skill.Id && s.Version == skill.Version); items.Add(skill);
+            await WriteAsync(path, JsonSerializer.SerializeToUtf8Bytes(items.TakeLast(10000)), ct);
+        }
+        finally { gate.Release(); }
+    }
+    public async Task<IReadOnlyList<DesktopSkillContent>> DownloadedAsync(string partition, CancellationToken ct, bool allVersions = false)
+    {
+        var result = new List<DesktopSkillContent>();
+        var candidates = (await DownloadIndexAsync(partition, ct)).Concat((await CatalogAsync(partition, ct))
+            .Select(i => new DesktopSkill(i.Id, i.Name, i.Description, "remote", i.LatestVersion ?? i.Version ?? "1")));
+        foreach (var item in candidates.DistinctBy(s => (s.Id, s.Version)))
+        {
+            var version = item.Version!;
+            var path = Path.Combine(PartitionDirectory(partition), McpValidation.Hash(item.Id + "|" + version) + ".zip");
+            if (!File.Exists(path)) continue;
+            try
+            {
+                if (new FileInfo(path).Length > DesktopCatalogClient.MaxDownloadBytes) continue;
+                result.Add(await SkillFiles.ArchiveAsync(item with { IsDownloaded = true, DefaultVersion = version, LatestVersion = version }, await File.ReadAllBytesAsync(path, ct), ct));
+            }
+            catch (Exception e) when (e is InvalidDataException or YamlDotNet.Core.YamlException or IOException) { }
+        }
+        return allVersions ? result : result.GroupBy(s => s.Skill.Id).Select(g => g.OrderByDescending(s => long.TryParse(s.Skill.Version, out var v) ? v : 0)
+            .ThenByDescending(s => s.Skill.Version, StringComparer.Ordinal).First()).ToArray();
+    }
+    public async Task DeleteDownloadedAsync(string partition, string id, string version, CancellationToken ct)
+    {
+        var versions = (await DownloadIndexAsync(partition, ct)).Where(s => s.Id == id).Select(s => s.Version!).Append(version).Distinct().ToArray();
+        foreach (var v in versions)
+        {
+            var archive = Path.Combine(PartitionDirectory(partition), McpValidation.Hash(id + "|" + v) + ".zip");
+            var gate = gates.GetOrAdd(archive, _ => new(1, 1)); await gate.WaitAsync(ct);
+            try { ct.ThrowIfCancellationRequested(); if (File.Exists(archive)) File.Delete(archive); }
+            finally { gate.Release(); }
+        }
+        var path = Path.Combine(PartitionDirectory(partition), "downloaded.json"); var indexGate = gates.GetOrAdd(path, _ => new(1, 1)); await indexGate.WaitAsync(ct);
+        try { var items = await DownloadIndexAsync(partition, ct); items.RemoveAll(s => s.Id == id); await WriteAsync(path, JsonSerializer.SerializeToUtf8Bytes(items), ct); }
+        finally { indexGate.Release(); }
+    }
     public async Task SaveCatalogAsync(string partition, IReadOnlyList<CatalogItem> items, CancellationToken ct)
     {
         var path = Path.Combine(PartitionDirectory(partition), "catalog.json");
@@ -168,12 +224,12 @@ public sealed class DesktopSkillStore(string directory, Func<CatalogItem, string
             var skill = new DesktopSkill(item.Id, item.Name, item.Description, "remote", version);
             if (File.Exists(path) && new FileInfo(path).Length <= DesktopCatalogClient.MaxDownloadBytes)
             {
-                try { return await SkillFiles.ArchiveAsync(skill, await File.ReadAllBytesAsync(path, ct), ct); }
+                try { var cached = await SkillFiles.ArchiveAsync(skill, await File.ReadAllBytesAsync(path, ct), ct); await RememberAsync(partition, cached.Skill, ct); return cached; }
                 catch (Exception e) when (e is InvalidDataException or YamlDotNet.Core.YamlException) { File.Delete(path); }
             }
             var bytes = await download(item, version, ct);
             var result = await SkillFiles.ArchiveAsync(skill, bytes, ct);
-            await WriteAsync(path, bytes, ct); return result;
+            await WriteAsync(path, bytes, ct); await RememberAsync(partition, result.Skill, ct); return result;
         }
         finally { gate.Release(); }
     }

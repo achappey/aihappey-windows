@@ -74,7 +74,7 @@ public partial class App : Application
                 }
                 results.Add("All chat settings UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
             }
-            if (Environment.GetCommandLineArgs().Contains("--local-tools-only"))
+            if (Environment.GetCommandLineArgs().Contains("--local-tools-only") || Environment.GetCommandLineArgs().Contains("--authoring-tools-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckLocalToolsAsync(theme);
                 results.Add("All local tools UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;

@@ -61,7 +61,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
         request.Content = service == ServiceKind.Ai
             ? JsonContent.Create(snapshot.RequestBody(target, conversationId, requestMessages, providerKey, mcp ?? session.Mcp?.Capture()), options: PortableConversations.Json)
             : localAgent is not null ? JsonContent.Create(LocalAgentRequest(localAgent, conversationId, requestMessages), options: PortableConversations.Json)
-            : JsonContent.Create(new AgentRequest { Id = conversationId, Model = target, Messages = requestMessages }, options: PortableConversations.Json);
+            : JsonContent.Create(new { id = conversationId, model = target, messages = requestMessages }, options: PortableConversations.Json);
         if (service == ServiceKind.Ai) snapshot.ApplyHeaders(request, providerKey);
         // The Chat preference owns this header, including overriding an injected host value.
         request.Headers.Remove("X-AIHappey-Debug");

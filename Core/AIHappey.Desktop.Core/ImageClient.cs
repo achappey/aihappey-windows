@@ -25,7 +25,7 @@ public sealed class DesktopImageClient(DesktopChatClient gateway, HttpClient htt
 {
     public async Task GenerateAsync(ChatTarget model, string prompt, ImagePreferences preferences,
         IReadOnlyList<ComposerAttachment> attachments, ComposerAttachment? mask,
-        Func<ImageGenerationBatch, Task> completed, CancellationToken ct)
+        Func<ImageGenerationBatch, Task> completed, CancellationToken ct, ChatPreferences? chatPreferences = null, Func<bool>? isCurrent = null)
     {
         var snapshot = preferences.Clone(); snapshot.Validate();
         var files = attachments.ToArray();
@@ -35,8 +35,11 @@ public sealed class DesktopImageClient(DesktopChatClient gateway, HttpClient htt
         for (var remaining = snapshot.N; remaining > 0; remaining -= limit)
         {
             ct.ThrowIfCancellationRequested();
+            if (isCurrent?.Invoke() == false) throw new OperationCanceledException(ct);
             var body = snapshot.Request(model, prompt, files, mask, Math.Min(limit, remaining));
             using var request = await gateway.RequestAsync(ServiceKind.Ai, HttpMethod.Post, "api/images", ct);
+            if (isCurrent?.Invoke() == false) throw new OperationCanceledException(ct);
+            chatPreferences?.ApplyHeaders(request, ChatPreferences.ResolveProvider(ServiceKind.Ai, model.Id, model.ProviderKey));
             request.Content = JsonContent.Create(body, options: JsonSerializerOptions.Web);
             using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
             DesktopChatClient.CheckResponse(response);

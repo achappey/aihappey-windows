@@ -23,14 +23,15 @@ public partial class App
         Check(tabs.Single(t => t.Name == "ChatToolsTab").IsChecked == true && tabs.Count(t => t.IsChecked == true) == 1,
             context + ": Tools tab navigation selects exactly one native tab");
         var toggles = Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").ToArray();
-        Check(toggles.Length == 5 && toggles.All(t => !t.IsOn), context + ": all five plugins initially off");
-        Check(toggles.Select(AutomationProperties.GetName).SequenceEqual(["Chat history", "Skill discovery", "Artificial Intelligence", "Windows Search", "Files"])
+        var pluginCount = DesktopLocalTools.Plugins.Count;
+        Check(toggles.Length == pluginCount && pluginCount == 10 && toggles.All(t => !t.IsOn), context + ": all ten plugins initially off");
+        Check(toggles.Select(AutomationProperties.GetName).SequenceEqual(DesktopLocalTools.Plugins.Select(p => DesktopResources.Get(p.ResourceKey)))
             && toggles.All(t => AutomationProperties.GetAutomationId(t) == "ChatPlugin_" + t.Tag), context + ": browser labels and stable accessible identities");
         var pluginGrid = Descendants(dialog).OfType<Grid>().Single(g => g.Name == "ChatPluginGrid");
         var pluginCards = pluginGrid.Children.Cast<FrameworkElement>().ToArray();
-        Check(pluginGrid.ColumnDefinitions.Count == 2 && pluginGrid.RowDefinitions.Count == 3
-            && pluginCards.Select(Grid.GetColumn).SequenceEqual([0, 1, 0, 1, 0])
-            && pluginCards.Select(Grid.GetRow).SequenceEqual([0, 0, 1, 1, 2]), context + ": wide Tools tab uses two columns in plugin order with an unpaired final card");
+        Check(pluginGrid.ColumnDefinitions.Count == 2 && pluginGrid.RowDefinitions.Count == (pluginCount + 1) / 2
+            && pluginCards.Select(Grid.GetColumn).SequenceEqual(Enumerable.Range(0, pluginCount).Select(i => i % 2))
+            && pluginCards.Select(Grid.GetRow).SequenceEqual(Enumerable.Range(0, pluginCount).Select(i => i / 2)), context + ": wide Tools tab uses two columns in plugin order");
         var first = (FrameworkElement)pluginGrid.Children[0]; var second = (FrameworkElement)pluginGrid.Children[1];
         var firstPoint = first.TransformToVisual(dialog).TransformPoint(new()); var secondPoint = second.TransformToVisual(dialog).TransformPoint(new());
         Check(Math.Abs(firstPoint.Y - secondPoint.Y) < 1 && secondPoint.X > firstPoint.X
@@ -40,16 +41,16 @@ public partial class App
         dialog.ShowSkillsTab(); await Task.Delay(60); dialog.ShowToolsTab(); await Task.Delay(60);
         Check(Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").All(t => t.IsOn), context + ": navigation retains draft selections");
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(500, 900)); await Task.Delay(120); dialog.UpdateLayout();
-        Check(pluginGrid.ColumnDefinitions.Count == 1 && pluginGrid.RowDefinitions.Count == 5
+        Check(pluginGrid.ColumnDefinitions.Count == 1 && pluginGrid.RowDefinitions.Count == pluginCount
             && pluginCards.All(c => Grid.GetColumn(c) == 0)
-            && pluginCards.Select(Grid.GetRow).SequenceEqual([0, 1, 2, 3, 4]) && toggles.All(t => Within(t, dialog)),
+            && pluginCards.Select(Grid.GetRow).SequenceEqual(Enumerable.Range(0, pluginCount)) && toggles.All(t => Within(t, dialog)),
             context + ": narrow Tools tab switches to one column without clipping switches");
         Check(Descendants(dialog).OfType<ScrollViewer>().Where(s => s.HorizontalScrollMode == ScrollMode.Disabled).All(s => s.ScrollableWidth < 1),
             context + ": Tools cards fit narrow native viewport");
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 900)); await Task.Delay(120); dialog.UpdateLayout();
         Check(pluginGrid.ColumnDefinitions.Count == 2 && toggles.All(t => t.IsOn), context + ": widening restores two columns without rebuilding or resetting switches");
         InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
-        Check(saved?.ActivePlugins.Count == 5 && dialog.Result?.ActivePlugins.Count == 5, context + ": close saves all plugin selections");
+        Check(saved?.ActivePlugins.Count == pluginCount && dialog.Result?.ActivePlugins.Count == pluginCount, context + ": close saves all plugin selections");
         var reopen = new ChatSettingsDialog(saved!, null) { XamlRoot = root.XamlRoot, RequestedTheme = theme };
         shown = reopen.ShowAsync(); await Task.Delay(100); reopen.ShowToolsTab(); await Task.Delay(100);
         Check(Descendants(reopen).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").All(t => t.IsOn), context + ": reopen restores enabled toggles");
@@ -63,6 +64,7 @@ public partial class App
         await CheckChatToolsSettingsAsync(theme);
         var context = "Local tools / " + theme;
         var session = new DesktopSession(new UiHost(true), new UiRuntime(), new());
+        session.Settings.Images.StorageRoot = Path.Combine(session.DataDirectory, "authoring-test-images");
         var shell = new ChatShell(session) { RequestedTheme = theme }; window.Content = shell; await Task.Delay(200); await HistoryIdleAsync(shell);
         try
         {
@@ -70,14 +72,35 @@ public partial class App
             Check(runtime.Tools.Count == 0, context + ": default Windows runtime has no plugin tools");
             var preferences = new ChatPreferences { ActivePlugins = DesktopLocalTools.Plugins.Select(p => p.Id).ToList() };
             runtime = (McpTurnSnapshot)Call(shell, "CaptureSkillRuntime", preferences)!;
-            Check(runtime.Tools.Count == 15 && runtime.Tools.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 15,
+            var toolCount = DesktopLocalTools.Plugins.Sum(p => p.Tools.Count);
+            Check(runtime.Tools.Count == toolCount && runtime.Tools.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == toolCount,
                 context + ": native shell captures all enabled plugin routes exactly once");
-            foreach (var plugin in DesktopLocalTools.Plugins.Where(p => p.Id is DesktopLocalTools.WindowsSearch or DesktopLocalTools.Files))
+            foreach (var plugin in DesktopLocalTools.Plugins.Where(p => p.Id is DesktopLocalTools.WindowsSearch or DesktopLocalTools.Files
+                or DesktopLocalTools.Images or DesktopLocalTools.AgentsEditor or DesktopLocalTools.AgentsRuntime or DesktopLocalTools.SkillEditor))
             {
                 var independent = (McpTurnSnapshot)Call(shell, "CaptureSkillRuntime", new ChatPreferences { ActivePlugins = [plugin.Id] })!;
-                Check(independent.Tools.Count == 1 && independent.Tools[0].GetProperty("name").GetString() == plugin.Tools[0].GetProperty("name").GetString(),
+                Check(independent.Tools.Count == plugin.Tools.Count && independent.Tools.Select(t => t.GetProperty("name").GetString()).SequenceEqual(plugin.Tools.Select(t => t.GetProperty("name").GetString())),
                     context + ": independently enabled " + plugin.Id + " registers only its own tool without executing native work");
             }
+            var suffix = Guid.NewGuid().ToString("N");
+            var skillCreated = await runtime.CallAsync("local_skill_editor_create", JsonSerializer.SerializeToElement(new { name = "ui-" + suffix, description = "UI tool fixture" }), "skill-create", "en", default);
+            Check(!skillCreated.GetProperty("isError").GetBoolean()
+                && ((IReadOnlyList<DesktopSkill>)typeof(ChatShell).GetField("localSkills", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(shell)!).Any(s => s.Name == "ui-" + suffix),
+                context + ": skill editor tool updates real native catalog state");
+            var agentCreated = await runtime.CallAsync("local_agents_create", JsonSerializer.SerializeToElement(new { agentName = "UI " + suffix, agentDescription = "UI tool fixture", agentInstructions = "Test", modelId = "p/model", modelTemperature = 0 }), "agent-create", "en", default);
+            Check(!agentCreated.GetProperty("isError").GetBoolean()
+                && ((IReadOnlyList<DesktopAgent>)typeof(ChatShell).GetField("localAgents", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(shell)!).Any(a => a.Name == "UI " + suffix),
+                context + ": agent editor tool updates real native catalog state");
+            var maskCreated = await runtime.CallAsync("local_mask_create", JsonSerializer.SerializeToElement(new { name = "ui-mask.png", width = 2, height = 2, boxes = Array.Empty<object>() }), "mask-create", "en", default);
+            var imageResult = await runtime.CallAsync("local_images_read", JsonSerializer.SerializeToElement(new { image = maskCreated.GetProperty("structuredContent").GetProperty("image") }), "image-read", "en", default);
+            Check(!imageResult.GetProperty("isError").GetBoolean(), context + ": image tools share mask Files references in real shell");
+            var outputDialog = new ToolOutputDialog("local_images_read", JsonSerializer.SerializeToElement(new { output = imageResult })) { XamlRoot = shell.XamlRoot };
+            var imageShown = outputDialog.ShowAsync(); await Task.Delay(150);
+            var outputTabs = Descendants(outputDialog).OfType<NavigationView>().Single(t => t.Name == "ToolOutputTabsNavigation");
+            outputTabs.SelectedItem = outputTabs.MenuItems[2]; await Task.Delay(180);
+            Check(Descendants(outputDialog).OfType<Image>().Any(i => i.Name == "ToolOutputImage" && i.Source is not null), context + ": tool-output PNG renders natively without exposing raw base64 as its preview");
+            outputDialog.Hide(); await imageShown;
+            if (Environment.GetCommandLineArgs().Contains("--authoring-tools-only")) return;
             Check(runtime.ConversationTools is not null, context + ": history runtime belongs to captured turn, not a context-preview side effect");
             var conversation = new Conversation { Id = "deleted-active" };
             typeof(ChatShell).GetField("current", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(shell, conversation);

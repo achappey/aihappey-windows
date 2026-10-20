@@ -363,5 +363,798 @@
         "openWorldHint": false
       }
     }
+  ],
+  "local-images": [
+    {
+      "name": "local_mask_create",
+      "title": "Create mask file",
+      "description": "Create a PNG alpha mask for image editing. Transparent = edit allowed, opaque = keep original.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Mask file name (e.g. mask.png)"
+          },
+          "width": {
+            "type": "number",
+            "description": "Image width in pixels"
+          },
+          "height": {
+            "type": "number",
+            "description": "Image height in pixels"
+          },
+          "boxes": {
+            "type": "array",
+            "description": "Rectangular edit regions (transparent holes). An empty array keeps the entire image opaque.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "w": {
+                  "type": "number"
+                },
+                "h": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "w",
+                "h"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name",
+          "width",
+          "height",
+          "boxes"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_images_list",
+      "title": "List saved images",
+      "description": "List Images library references and model/date metadata, without image data. Local files are discoverable with local_files_list. Use the references to read, ask questions about, or refine images.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "limit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Null or omitted defaults to 50."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_images_read",
+      "title": "Read saved image",
+      "description": "Read an image from the Images library or Local files. Image content sent back to AI respects the user's tool-output settings. Use local_images_ask to ask a vision model a specific question instead.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "object",
+            "description": "A real saved image, never a placeholder. Source 'images' uses an Images library item ID and zero-based imageIndex; source 'files' uses a Local file ID (or exact unique filename).",
+            "properties": {
+              "source": {
+                "type": "string",
+                "enum": [
+                  "images",
+                  "files"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "imageIndex": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "description": "Images library: zero-based index, null defaults to 0. Local files: use null (0 also accepted)."
+              }
+            },
+            "required": [
+              "source",
+              "id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "image"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_images_generate",
+      "title": "Generate or refine images",
+      "description": "Generate images through the dedicated images API, not Responses. For a NEW image use inputImages: [] and mask: null; never invent a mask/file ID. Saves results to the Images library (Local files fallback) and returns reusable references. To refine, supply saved inputImages; a PNG alpha mask is optional even when refining. Discover exact provider-qualified image model IDs with local_ai_models_search (type image). Null or omitted generation options use the user's image settings. Use local_images_ask on a returned reference to check the result, then call this tool again to refine it. Image tool output respects user settings.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact provider-qualified image model ID from the local model catalog, e.g. openai/gpt-image-1, not bare gpt-image-1."
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "n": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 100
+          },
+          "size": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[1-9][0-9]*x[1-9][0-9]*$"
+          },
+          "aspectRatio": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[1-9][0-9]*:[1-9][0-9]*$"
+          },
+          "seed": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "inputImages": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "object",
+              "description": "A real saved image, never a placeholder. Source 'images' uses an Images library item ID and zero-based imageIndex; source 'files' uses a Local file ID (or exact unique filename).",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "images",
+                    "files"
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "imageIndex": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "Images library: zero-based index, null defaults to 0. Local files: use null (0 also accepted)."
+                }
+              },
+              "required": [
+                "source",
+                "id"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 16,
+            "description": "Use [] or null to create a new image. Only provide actual saved references for editing."
+          },
+          "mask": {
+            "anyOf": [
+              {
+                "type": "object",
+                "description": "A real saved image, never a placeholder. Source 'images' uses an Images library item ID and zero-based imageIndex; source 'files' uses a Local file ID (or exact unique filename).",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "enum": [
+                      "images",
+                      "files"
+                    ]
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "imageIndex": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "description": "Images library: zero-based index, null defaults to 0. Local files: use null (0 also accepted)."
+                  }
+                },
+                "required": [
+                  "source",
+                  "id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Use null for no mask, especially for NEW images. Only supply a real PNG alpha mask reference for masked editing with inputImages. Never use an ID like 'none'."
+          }
+        },
+        "required": [
+          "model",
+          "prompt"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "local_images_ask",
+      "title": "Ask questions about images",
+      "description": "Ask a vision-capable language model a question about saved Images library or Local file images through the normal Responses API. Returns only the answer as text; does not generate images or invoke tools. Use to inspect a generated image before refining it. This explicitly sends selected images as model input, independently of the setting that filters images returned in tool output. Discover language models with local_ai_models_search.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact provider-qualified vision-capable language model ID from the catalog."
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "A real saved image, never a placeholder. Source 'images' uses an Images library item ID and zero-based imageIndex; source 'files' uses a Local file ID (or exact unique filename).",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "images",
+                    "files"
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "imageIndex": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "Images library: zero-based index, null defaults to 0. Local files: use null (0 also accepted)."
+                }
+              },
+              "required": [
+                "source",
+                "id"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 16
+          }
+        },
+        "required": [
+          "model",
+          "question",
+          "images"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    }
+  ],
+  "local-agents-editor": [
+    {
+      "name": "local_agents_create",
+      "title": "Create local Agent",
+      "description": "Create a new local Agent.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "agentName": {
+            "type": "string",
+            "description": "Name of the agent"
+          },
+          "agentDescription": {
+            "type": "string",
+            "description": "Description of the agent"
+          },
+          "agentInstructions": {
+            "type": "string",
+            "description": "Agent instructions"
+          },
+          "modelId": {
+            "type": "string",
+            "description": "Model ID to use for the agent. For example: 'openai/gpt-5-mini' or 'openai/gpt-5.2'"
+          },
+          "modelTemperature": {
+            "type": "number",
+            "description": "Temperature setting for the model"
+          },
+          "mcpServerUrls": {
+            "type": "array",
+            "description": "List of MCP servers attached to this agent",
+            "items": {
+              "type": "string"
+            }
+          },
+          "policyReadOnly": {
+            "type": "boolean",
+            "description": "Whether the agent is restricted to read-only operations"
+          },
+          "policyIdempotent": {
+            "type": "boolean",
+            "description": "Whether the agent is idempotent"
+          },
+          "policyOpenWorld": {
+            "type": "boolean",
+            "description": "Whether the agent can query external/unknown resources"
+          },
+          "policyDestructive": {
+            "type": "boolean",
+            "description": "Whether the agent can make destructive changes"
+          }
+        },
+        "required": [
+          "agentName",
+          "agentDescription",
+          "agentInstructions",
+          "modelId",
+          "modelTemperature"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_agents_delete",
+      "title": "Delete local Agent",
+      "description": "Delete a local Agent.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "agentName": {
+            "type": "string",
+            "description": "Name of the agent"
+          }
+        },
+        "required": [
+          "agentName"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_agents_list",
+      "title": "List local Agents",
+      "description": "List the names and descriptions of all local AI Agents available. Local agents are Microsoft Agent Framework agents that the user can run in this chat app.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_agents_get",
+      "title": "Get local Agent",
+      "description": "Get the complete configuration of one local AI Agent by its exact name.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "agentName": {
+            "type": "string",
+            "description": "Exact name of the agent"
+          }
+        },
+        "required": [
+          "agentName"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ],
+  "local-agents-runtime": [
+    {
+      "name": "local_agents_run",
+      "title": "Run Agent Framework agent",
+      "description": "Call a local or remote Agent Framework agent through the OpenAI-compatible Responses API.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string",
+            "description": "Local agent name or remote agent model ID."
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Prompt to send to the agent."
+          },
+          "filename": {
+            "type": "string",
+            "description": "Optional exact name of a file in local file storage to attach."
+          },
+          "background": {
+            "type": "boolean",
+            "description": "Run asynchronously and return the background response object."
+          }
+        },
+        "required": [
+          "agentId",
+          "prompt"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    }
+  ],
+  "local-skill-editor": [
+    {
+      "name": "local_skill_editor_list",
+      "title": "List local skills for editing",
+      "description": "List local Agent Skills that can be edited by the Skill Editor plugin.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_skill_editor_inspect",
+      "title": "Inspect local skill package",
+      "description": "Inspect a local Agent Skill manifest, files, versions, diagnostics, and body instructions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "description": "Local skill id or skill name."
+          },
+          "version": {
+            "type": "string",
+            "description": "Optional exact version."
+          }
+        },
+        "required": [
+          "skillId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_skill_editor_create",
+      "title": "Create local skill",
+      "description": "Create a new local spec-compliant Agent Skill from scratch with a SKILL.md manifest.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Skill folder/name. Lowercase letters, numbers, and hyphens only."
+          },
+          "description": {
+            "type": "string",
+            "description": "What the skill does and when to use it."
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Markdown body instructions for SKILL.md."
+          },
+          "license": {
+            "type": "string"
+          },
+          "compatibility": {
+            "type": "string"
+          },
+          "allowedTools": {
+            "type": "string",
+            "description": "Optional allowed-tools field."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_skill_editor_update_manifest",
+      "title": "Update local skill manifest",
+      "description": "Update SKILL.md metadata and/or instructions. This creates a new incremented skill version and keeps previous versions readable/restorable.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "description": "Local skill id or skill name."
+          },
+          "description": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          },
+          "compatibility": {
+            "type": "string"
+          },
+          "allowedTools": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "skillId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_skill_editor_upsert_file",
+      "title": "Upsert local skill text file",
+      "description": "Create or update a UTF-8 text file inside a local skill package in place. Use update_manifest for SKILL.md.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "description": "Local skill id or skill name."
+          },
+          "relativePath": {
+            "type": "string",
+            "description": "Path inside skill, e.g. references/REFERENCE.md."
+          },
+          "content": {
+            "type": "string",
+            "description": "UTF-8 text content to write."
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "Optional MIME type; defaults to text/plain."
+          }
+        },
+        "required": [
+          "skillId",
+          "relativePath",
+          "content"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_skill_editor_import_local_file",
+      "title": "Import local file into skill",
+      "description": "Copy an existing locally stored file, including PDFs or Office files, into a local skill package in place without conversion.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "description": "Local skill id or skill name."
+          },
+          "localFileName": {
+            "type": "string",
+            "description": "Exact local file name from the local files plugin."
+          },
+          "relativePath": {
+            "type": "string",
+            "description": "Destination path inside the skill package."
+          }
+        },
+        "required": [
+          "skillId",
+          "localFileName",
+          "relativePath"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_skill_editor_delete_file",
+      "title": "Delete local skill file",
+      "description": "Delete a file from the current default version of a local skill package. SKILL.md cannot be deleted.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "description": "Local skill id or skill name."
+          },
+          "relativePath": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "skillId",
+          "relativePath"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_skill_editor_restore_version",
+      "title": "Restore local skill version",
+      "description": "Restore a previous local skill version by copying it into a new incremented version and making it default.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "description": "Local skill id or skill name."
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "skillId",
+          "version"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_skill_editor_delete_skill",
+      "title": "Delete local skill",
+      "description": "Delete an entire local skill package and all local versions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "description": "Local skill id or skill name."
+          }
+        },
+        "required": [
+          "skillId"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    }
   ]
 }

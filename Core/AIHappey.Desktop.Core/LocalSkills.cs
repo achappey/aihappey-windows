@@ -19,7 +19,7 @@ public sealed class DesktopSkillDraft
     public string Instructions { get; set; } = "";
     public List<DesktopSkillFile> Files { get; set; } = [];
     public DesktopSkillDraft Clone() => new() { Frontmatter = (JsonObject)Frontmatter.DeepClone(), Instructions = Instructions,
-        Files = Files.Select(f => new DesktopSkillFile(f.Path, f.Data.ToArray())).ToList() };
+        Files = Files.Select(f => new DesktopSkillFile(f.Path, f.Data.ToArray(), f.MediaType)).ToList() };
 }
 
 public sealed record DesktopSkillImport(IReadOnlyList<DesktopSkillDraft> Skills, IReadOnlyList<string> Diagnostics);
@@ -99,7 +99,12 @@ public static class DesktopSkillPackages
         {
             void Add(string path, byte[] data) { using var output = zip.CreateEntry(draft.Name + "/" + path).Open(); output.Write(data); }
             Add("SKILL.md", Utf8.GetBytes(Markdown(draft)));
-            foreach (var file in draft.Files.OrderBy(f => f.Path, StringComparer.Ordinal)) Add(ResourcePath(file.Path), file.Data);
+            foreach (var file in draft.Files.OrderBy(f => f.Path, StringComparer.Ordinal))
+            {
+                var entry = zip.CreateEntry(draft.Name + "/" + ResourcePath(file.Path));
+                if (file.MediaType is { Length: > 0 } mime) entry.Comment = "Content-Type: " + mime;
+                using var output = entry.Open(); output.Write(file.Data);
+            }
         }
         return stream.ToArray();
     }
@@ -141,7 +146,8 @@ public static class DesktopSkillPackages
                 if (root.Length > 0 && root.TrimEnd('/').Split('/').Last() != draft.Name)
                     throw new InvalidDataException(DesktopResources.Get("SkillDirectoryMismatch"));
                 foreach (var (path, entry) in entries.Where(p => p.Key.StartsWith(root, StringComparison.OrdinalIgnoreCase) && p.Key != manifest))
-                    draft.Files.Add(new(ResourcePath(path[root.Length..]), await Read(entry)));
+                    draft.Files.Add(new(ResourcePath(path[root.Length..]), await Read(entry),
+                        entry.Comment.StartsWith("Content-Type: ", StringComparison.Ordinal) ? entry.Comment[14..] : null));
                 Validate(draft);
                 if (!names.Add(draft.Name)) throw new InvalidDataException(DesktopResources.Get("SkillAlreadyExists"));
                 skills.Add(draft);
@@ -167,7 +173,7 @@ public static class DesktopSkillPackages
 /// <summary>Immutable version archives plus an atomically replaced head. Orphaned staged versions are never published.</summary>
 public sealed class DesktopLocalSkillStore(string directory)
 {
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> gates = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> gates = new(StringComparer.OrdinalIgnoreCase);
     private string Partition(string partition) => Path.Combine(directory, McpValidation.Hash(partition));
     private string DirectoryFor(string partition, string id) => Path.Combine(Partition(partition), McpValidation.Hash(id));
     private async Task<DesktopSkill?> HeadAsync(string path, CancellationToken ct)
@@ -175,7 +181,7 @@ public sealed class DesktopLocalSkillStore(string directory)
         if (!File.Exists(path)) return null;
         if (new FileInfo(path).Length > 16384) throw new InvalidDataException(DesktopResources.Get("SkillPackageTooLarge"));
         var skill = JsonSerializer.Deserialize<DesktopSkill>(await File.ReadAllBytesAsync(path, ct));
-        if (skill is null || skill.Origin != "local" || !skill.Id.StartsWith("local:", StringComparison.Ordinal)
+        if (skill is null || skill.Origin != "local" || string.IsNullOrWhiteSpace(skill.Id) || !(skill.Id.StartsWith("local:", StringComparison.Ordinal) || skill.SourceId == skill.Id)
             || !DesktopSkillPackages.ValidName(skill.Name) || !long.TryParse(skill.Version, NumberStyles.None, CultureInfo.InvariantCulture, out var version) || version < 1)
             throw new InvalidDataException(DesktopResources.Get("SkillStoredInvalid"));
         return skill;
@@ -208,9 +214,74 @@ public sealed class DesktopLocalSkillStore(string directory)
             throw new InvalidDataException(DesktopResources.Get("SkillStoredInvalid"));
         return parsed.Skills[0];
     }
+    public async Task<(DesktopSkill Skill, DesktopSkillDraft Draft)> InspectAsync(string partition, DesktopSkill head, string? version, CancellationToken ct)
+    {
+        var selected = head with { Version = version ?? head.Version };
+        var draft = await ReadAsync(partition, selected, ct);
+        return (selected with { Description = draft.Description, DefaultVersion = head.Version, LatestVersion = head.Version, IsDownloaded = true }, draft);
+    }
+    /// <summary>Serializes read/modify/commit against native editor saves. Resource edits replace only the current archive atomically.</summary>
+    public async Task<DesktopSkill> EditAsync(string partition, string id, Action<DesktopSkillDraft> edit, bool newVersion,
+        string? restoreVersion, CancellationToken ct)
+    {
+        var gate = gates.GetOrAdd(Partition(partition), _ => new(1, 1)); await gate.WaitAsync(ct);
+        try
+        {
+            var head = (await ListAsync(partition, ct)).FirstOrDefault(s => s.Id == id)
+                ?? throw new InvalidDataException(DesktopResources.Get("SkillUnavailableHint"));
+            var draft = await ReadAsync(partition, head with { Version = restoreVersion ?? head.Version }, ct); edit(draft);
+            if (draft.Name != head.Name) throw new InvalidDataException(DesktopResources.Get("SkillNameLocked"));
+            var next = newVersion ? head with { Version = checked(long.Parse(head.Version!, CultureInfo.InvariantCulture) + 1).ToString(CultureInfo.InvariantCulture), Description = draft.Description } : head;
+            await CommitAsync(partition, next, draft, ct); return next;
+        }
+        finally { gate.Release(); }
+    }
+    /// <summary>Downloaded remote packages become account-local editable copies, retaining their catalog identity and numeric version.</summary>
+    public async Task<DesktopSkill> ImportDownloadedAsync(string partition, DesktopSkill source, DesktopSkillDraft draft, CancellationToken ct)
+    {
+        var gate = gates.GetOrAdd(Partition(partition), _ => new(1, 1)); await gate.WaitAsync(ct);
+        try
+        {
+            var items = await ListAsync(partition, ct);
+            if (items.FirstOrDefault(s => s.Id == source.Id) is { } existing)
+            {
+                if (long.TryParse(source.Version, NumberStyles.None, CultureInfo.InvariantCulture, out var oldVersion) && oldVersion > 0
+                    && oldVersion < long.Parse(existing.Version!, CultureInfo.InvariantCulture))
+                {
+                    var archive = Path.Combine(DirectoryFor(partition, existing.Id), oldVersion.ToString(CultureInfo.InvariantCulture) + ".zip");
+                    if (!File.Exists(archive))
+                    {
+                        var temporary = archive + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                        try { await File.WriteAllBytesAsync(temporary, DesktopSkillPackages.Export(draft), ct); ct.ThrowIfCancellationRequested(); File.Move(temporary, archive); }
+                        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+                    }
+                }
+                return existing;
+            }
+            if (items.Any(s => s.Name == draft.Name)) throw new InvalidDataException(DesktopResources.Get("SkillAlreadyExists"));
+            var version = long.TryParse(source.Version, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n > 0 ? source.Version! : "1";
+            var skill = new DesktopSkill(source.Id, draft.Name, draft.Description, "local", version) { SourceId = source.Id };
+            await CommitAsync(partition, skill, draft, ct); return skill;
+        }
+        finally { gate.Release(); }
+    }
+    private async Task CommitAsync(string partition, DesktopSkill skill, DesktopSkillDraft draft, CancellationToken ct)
+    {
+        var bytes = DesktopSkillPackages.Export(draft);
+        var folder = DirectoryFor(partition, skill.Id); Directory.CreateDirectory(folder);
+        var archive = Path.Combine(folder, skill.Version + ".zip"); var head = Path.Combine(folder, "head.json");
+        var suffix = "." + Guid.NewGuid().ToString("N") + ".tmp"; var staged = archive + suffix; var temporary = head + suffix;
+        try
+        {
+            await File.WriteAllBytesAsync(staged, bytes, ct);
+            await File.WriteAllBytesAsync(temporary, JsonSerializer.SerializeToUtf8Bytes(skill), ct);
+            ct.ThrowIfCancellationRequested(); File.Move(staged, archive, true); File.Move(temporary, head, true);
+        }
+        finally { if (File.Exists(staged)) File.Delete(staged); if (File.Exists(temporary)) File.Delete(temporary); }
+    }
     public async Task<DesktopSkill> SaveAsync(string partition, DesktopSkillDraft draft, string? existingId, CancellationToken ct)
     {
-        var copy = draft.Clone(); var bytes = DesktopSkillPackages.Export(copy);
+        var copy = draft.Clone(); DesktopSkillPackages.Validate(copy);
         var gate = gates.GetOrAdd(Partition(partition), _ => new(1, 1)); await gate.WaitAsync(ct);
         try
         {
@@ -220,17 +291,8 @@ public sealed class DesktopLocalSkillStore(string directory)
             if (items.Any(s => s.Name == copy.Name && s.Id != existingId)) throw new InvalidDataException(DesktopResources.Get("SkillAlreadyExists"));
             var version = previous is null ? 1L : checked(long.Parse(previous.Version!, CultureInfo.InvariantCulture) + 1);
             var skill = new DesktopSkill(previous?.Id ?? "local:" + Guid.NewGuid().ToString("N"), copy.Name, copy.Description, "local", version.ToString(CultureInfo.InvariantCulture));
-            var folder = DirectoryFor(partition, skill.Id); Directory.CreateDirectory(folder);
-            var archive = Path.Combine(folder, skill.Version + ".zip"); var head = Path.Combine(folder, "head.json");
-            var temporary = head + "." + Guid.NewGuid().ToString("N") + ".tmp";
-            try
-            {
-                // A previous interrupted commit may leave this unpublished version; replacing it is safe under the partition gate.
-                await File.WriteAllBytesAsync(archive, bytes, ct);
-                await File.WriteAllBytesAsync(temporary, JsonSerializer.SerializeToUtf8Bytes(skill), ct);
-                ct.ThrowIfCancellationRequested(); File.Move(temporary, head, true); return skill;
-            }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            skill = skill with { SourceId = previous?.SourceId };
+            await CommitAsync(partition, skill, copy, ct); return skill;
         }
         finally { gate.Release(); }
     }

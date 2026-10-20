@@ -236,7 +236,7 @@ public sealed partial class ChatShell
             if (page.Kind == CatalogKind.Skill)
             {
                 await LoadLocalSkillsAsync(ct);
-                items = items.Where(i => i.Origin == CatalogOrigin.Backend).Concat(LocalSkillCatalog()).ToArray();
+                items = LocalSkillCatalog().Concat(items.Where(i => i.Origin == CatalogOrigin.Backend)).DistinctBy(i => i.Id).ToArray();
             }
             ct.ThrowIfCancellationRequested();
             if (closing || session.HistoryPartition != partition) return;

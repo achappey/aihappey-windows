@@ -24,6 +24,10 @@ public sealed record LibraryImage(StoredImageGeneration Generation, StoredImageO
 {
     public string Model => Generation.Model;
     public double? Cost => Output.Cost;
+    // File numbers stay stable when another image in this generation is deleted.
+    public int ImageIndex => Output.File.StartsWith("image-", StringComparison.Ordinal)
+        && int.TryParse(System.IO.Path.GetFileNameWithoutExtension(Output.File).AsSpan(6), out var number) && number > 0
+        ? number - 1 : Generation.Outputs.IndexOf(Output);
 }
 
 /// <summary>Ordinary files plus a versioned manifest. All paths in manifests are app-generated leaves.</summary>
@@ -66,7 +70,7 @@ public sealed class ImageLibraryStore(string root, string partition)
         }
         return items.OrderByDescending(i => i.Generation.CreatedAt).ToArray();
     }
-    public async Task SaveAsync(ImageGenerationBatch batch, IReadOnlyList<ComposerAttachment> inputs, ComposerAttachment? mask)
+    public async Task<StoredImageGeneration> SaveAsync(ImageGenerationBatch batch, IReadOnlyList<ComposerAttachment> inputs, ComposerAttachment? mask)
     {
         Directory.CreateDirectory(Folder);
         var id = Guid.NewGuid().ToString("N");
@@ -113,6 +117,7 @@ public sealed class ImageLibraryStore(string root, string partition)
             }
             await File.WriteAllTextAsync(Path.Combine(stage, "generation.json"), JsonSerializer.Serialize(generation, Json));
             Directory.Move(stage, GenerationFolder(id));
+            return generation;
         }
         finally { if (Directory.Exists(stage)) Directory.Delete(stage, true); }
     }

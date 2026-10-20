@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly)
+param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly, [switch]$AuthoringToolsOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -36,6 +36,7 @@ try {
     if ($AgentsOnly) { $arguments += '--agents-only' }
     if ($ProvidersOnly) { $arguments += '--providers-only' }
     if ($LocalToolsOnly) { $arguments += '--local-tools-only' }
+    if ($AuthoringToolsOnly) { $arguments += '--authoring-tools-only' }
     if ($ChatSettingsOnly) { $arguments += '--chat-settings-only' }
     if ($SidebarOnly) { $arguments += '--sidebar-only' }
     if ($IconsOnly) { $arguments += '--icons-only' }
