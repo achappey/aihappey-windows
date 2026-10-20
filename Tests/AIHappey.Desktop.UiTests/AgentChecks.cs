@@ -1,8 +1,10 @@
 using System.IO.Compression;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Nodes;
 using AIHappey.Desktop.Core;
+using AIHappey.Vercel.Models;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -133,9 +135,82 @@ public partial class App
                 Call(shell, "ShowPage", Enum.Parse(pageType, page));
                 Check(add.Visibility == Visibility.Collapsed, $"Agents / {theme}: header plus hidden on {page}");
             }
+            Call(shell, "ShowPage", Enum.Parse(pageType, "Chat"));
+            await CheckAgentPresentationAsync(shell, session, $"Agent presentation / {theme}");
         }
         finally { await shell.ShutdownAsync(); window!.Content = null; }
     }
+
+    private async Task CheckAgentPresentationAsync(ChatShell shell, DesktopSession session, string context)
+    {
+        var catalog = DesktopAgentTargets.Project([
+            new CatalogItem(CatalogKind.Agent, "backend-id", "OpenAIAgent", "") { Model = "openai/fixture" },
+            new CatalogItem(CatalogKind.Agent, "OpenAIAgent", "OpenAIAgent", "") { Origin = CatalogOrigin.Local, Model = "echo/fixture" }]);
+        typeof(ChatShell).GetField("targets", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(shell, catalog);
+        Call(shell, "UpdateMode", ServiceKind.Agents);
+        var selected = typeof(ChatShell).GetProperty("TargetId", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var picker = Field<AutoSuggestBox>(shell, "target");
+        selected.SetValue(shell, "remote:backend-id"); Call(shell, "UpdateTargetSuggestions", "");
+        Check(picker.Text == "OpenAIAgent" && (string)selected.GetValue(shell)! == "remote:backend-id"
+            && ((IEnumerable<ChatTarget>)picker.ItemsSource).Count() == 2,
+            context + ": remote picker displays the name while preserving its distinct routing key");
+        selected.SetValue(shell, "local:OpenAIAgent");
+        Check(picker.Text == catalog.Single(t => t.LocalAgentName is not null).Label
+            && (string)selected.GetValue(shell)! == "local:OpenAIAgent",
+            context + ": same-name local selection retains its own identity and readable local qualifier");
+        selected.SetValue(shell, "backend-id");
+        Check(picker.Text == "OpenAIAgent" && (string)selected.GetValue(shell)! == "remote:backend-id",
+            context + ": restoring a legacy backend ID shows its catalog name, not the key");
+        picker.Text = "not-an-agent";
+        Check((string)selected.GetValue(shell)! == "not-an-agent", context + ": editing the label cannot send to the stale selected agent");
+        selected.SetValue(shell, "remote:deleted-agent");
+        Check(picker.Text == "deleted-agent" && (string)selected.GetValue(shell)! == "remote:deleted-agent",
+            context + ": missing historical selections stay unavailable without exposing the prefix");
+        selected.SetValue(shell, "remote:backend-id");
+
+        var output = new ConversationMessage { Status = "streaming", Message = new UIMessage { Role = Role.assistant,
+            Metadata = new() { ["model"] = "remote:backend-id", ["agentModel"] = "openai/fixture" },
+            Parts = [new ReasoningUIPart { Text = "Reasoning fixture" }, new TextUIPart { Text = "Partial answer" }] } };
+        var conversation = new Conversation { Service = ServiceKind.Agents, Target = "remote:backend-id", Messages = [
+            new() { Message = new UIMessage { Role = Role.user, Parts = [new TextUIPart { Text = "Test" }] } }, output] };
+        typeof(ChatShell).GetField("current", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(shell, conversation);
+        var transcript = Field<StackPanel>(shell, "transcript");
+        string[] Labels() => Descendants(transcript).OfType<TextBlock>().Where(t => t.Name == "MessageModel").Select(t => t.Text).ToArray();
+        Grid[] Logos() => Descendants(transcript).OfType<Grid>().Where(g => g.Name == "ProviderLogo").ToArray();
+        session.Settings.Chat.ShowProviderLogo = true;
+        foreach (var status in new[] { "streaming", "interrupted", "complete" })
+        {
+            output.Status = status;
+            if (status == "complete") output.Message.Metadata!["model"] = "OpenAIAgent";
+            Call(shell, "RenderTranscript"); await Task.Delay(70); shell.UpdateLayout();
+            Check(Labels().Length == 2 && Labels().All(l => l == "OpenAIAgent") && Logos().Length == 2,
+                context + ": answer and activity headers have clean names and known provider logos when " + status);
+        }
+        var before = PortableConversations.Write(conversation);
+        session.Settings.Chat.ShowProviderLogo = false;
+        Call(shell, "RenderTranscript"); await Task.Delay(70);
+        Check(Logos().Length == 0 && Labels().All(l => l == "OpenAIAgent") && PortableConversations.Write(conversation) == before,
+            context + ": disabling logos keeps clean agent names and does not mutate saved metadata");
+        session.Settings.Chat.ShowProviderLogo = true;
+        output.Message.Metadata!["providerKey"] = "unknown-provider";
+        Call(shell, "RenderTranscript"); await Task.Delay(70);
+        Check(Logos().Length == 0 && Labels().All(l => l == "OpenAIAgent"),
+            context + ": unknown explicit provider metadata does not borrow a catalog logo");
+        output.Message.Metadata!["providerKey"] = "echo";
+        output.Message.Metadata!["model"] = "openai/AgentWithSlash";
+        Call(shell, "RenderTranscript"); await Task.Delay(150);
+        Check(Logos().Length == 2 && Labels().All(l => l == "openai/AgentWithSlash")
+            && Logos().All(l => l.Children.OfType<Image>().Single().Visibility == Visibility.Visible),
+            context + ": an explicit provider logo renders without interpreting or shortening the agent's own name");
+        output.Message.Metadata!.Clear(); output.Message.Metadata["model"] = "openai/AgentWithSlash";
+        Call(shell, "RenderTranscript"); await Task.Delay(70);
+        Check(Logos().Length == 0 && Labels().All(l => l == "openai/AgentWithSlash"),
+            context + ": provider-looking agent names alone never imply a logo");
+        Call(shell, "UpdateMode", ServiceKind.Ai); selected.SetValue(shell, "openai/fixture");
+        Check(picker.Text == "openai/fixture" && (string)selected.GetValue(shell)! == "openai/fixture",
+            context + ": normal chat model picker retains its full model ID");
+    }
+
     private static bool Within(FrameworkElement control, FrameworkElement surface)
     {
         var point = control.TransformToVisual(surface).TransformPoint(new Windows.Foundation.Point(0, 0));

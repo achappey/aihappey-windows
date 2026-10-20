@@ -187,7 +187,7 @@ public sealed partial class ChatShell : UserControl
             UpdateAccountMenu();
             current = new() { Service = Service };
             input.Text = ""; ResetContext();
-            targets = []; target.Text = "";
+            targets = []; TargetId = "";
             aiModelTargets = null;
             InvalidateCatalogs();
             RenderTranscript();
@@ -204,7 +204,7 @@ public sealed partial class ChatShell : UserControl
         target.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
         target.QuerySubmitted += (_, args) =>
         {
-            if (args.ChosenSuggestion is ChatTarget selected) target.Text = selected.Id;
+            if (args.ChosenSuggestion is ChatTarget selected) TargetId = selected.Id;
             else
             {
                 UpdateTargetSuggestions();
@@ -214,9 +214,10 @@ public sealed partial class ChatShell : UserControl
         target.TextChanged += (_, args) =>
         {
             if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
+            selectedAgentTarget = null;
             UpdateTargetSuggestions(target.Text);
         };
-        target.SuggestionChosen += (_, args) => target.Text = ((ChatTarget)args.SelectedItem).Id;
+        target.SuggestionChosen += (_, args) => TargetId = ((ChatTarget)args.SelectedItem).Id;
         target.GotFocus += (_, _) => { UpdateTargetSuggestions(); target.IsSuggestionListOpen = true; };
         chats.SelectionChanged += async (_, _) =>
         {
@@ -427,35 +428,36 @@ public sealed partial class ChatShell : UserControl
             return;
         }
         UpdateMode(selected);
-        target.Text = ""; targets = []; target.ItemsSource = null; target.IsSuggestionListOpen = false;
+        TargetId = ""; targets = []; target.ItemsSource = null; target.IsSuggestionListOpen = false;
         NewConversation();
         await RunAsync(DiscoverAsync);
     }
 
     private async Task DiscoverAsync(CancellationToken ct)
     {
-        var selected = target.Text;
+        var selected = TargetId;
         targets = Service == ServiceKind.Agents ? await AgentTargetsAsync(ct)
             : await Task.Run(() => client.ListAsync(Service, ct), ct);
-        if (Service == ServiceKind.Agents && !string.IsNullOrWhiteSpace(selected)) target.Text = DesktopAgentTargets.Restore(selected, targets);
+        if (Service == ServiceKind.Agents && !string.IsNullOrWhiteSpace(selected)) TargetId = DesktopAgentTargets.Restore(selected, targets);
         if (Service == ServiceKind.Ai) aiModelTargets = targets;
         UpdateAccountMenu();
         UpdateTargetSuggestions();
         if (string.IsNullOrWhiteSpace(selected))
         {
             if (Service == ServiceKind.Ai) SelectNewChatModel();
-            else target.Text = targets.FirstOrDefault()?.Id ?? "";
+            else TargetId = targets.FirstOrDefault()?.Id ?? "";
         }
         if (targets.Count == 0 || Service == ServiceKind.Ai && AiModelCatalog.ChatSuggestions(targets, session.Settings.AiModels).Count == 0)
             Show(DesktopResources.Get("NoTargets"), InfoBarSeverity.Warning);
         RefreshWelcome();
+        if (Service == ServiceKind.Agents) RenderTranscript();
     }
 
     private async Task SendAsync(McpSelectedPrompt? selectedPrompt = null)
     {
         if (busy || closing || historyDialogOpen || catalogDialog is not null
             || selectedPrompt is null && string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
-        var selected = target.Text.Trim();
+        var selected = TargetId;
         if (!targets.Any(x => x.Id == selected)) { Show(DesktopResources.Get("SelectTarget"), InfoBarSeverity.Warning); return; }
         var prompt = selectedPrompt is null ? input.Text.Trim() : "";
         var snapshot = contextAttachments.ToArray();
@@ -494,8 +496,11 @@ public sealed partial class ChatShell : UserControl
             var initialTitle = current.Title;
             current.Messages.Add(new() { Message = prepared.Message });
             var output = new ConversationMessage { Message = new UIMessage { Id = Guid.NewGuid().ToString("N"), Role = Role.assistant,
-                Metadata = new Dictionary<string, object> { ["model"] = selected, ["timestamp"] = DateTimeOffset.UtcNow.ToString("O") } }, Status = "streaming" };
-            if (Service == ServiceKind.Ai && ChatPreferences.ResolveProvider(Service, selected, selectedProvider) is { } providerKey)
+                Metadata = new Dictionary<string, object> { ["model"] = Service == ServiceKind.Agents ? agentTarget.LocalAgentName ?? agentTarget.Label : selected,
+                    ["timestamp"] = DateTimeOffset.UtcNow.ToString("O") } }, Status = "streaming" };
+            if (Service == ServiceKind.Agents && !string.IsNullOrWhiteSpace(agentTarget.AgentModelId))
+                output.Message.Metadata!["agentModel"] = agentTarget.AgentModelId;
+            if (ChatPreferences.ResolveProvider(ServiceKind.Ai, Service == ServiceKind.Agents ? agentTarget.AgentModelId ?? "" : selected, selectedProvider) is { } providerKey)
                 output.Message.Metadata!["providerKey"] = providerKey;
             current.Messages.Add(output);
             if (selectedPrompt is null) input.Text = "";
@@ -751,7 +756,7 @@ public sealed partial class ChatShell : UserControl
             }
             await session.Runtime.DisposeAsync();
             await StartVideoJobsAsync(ct);
-            current = new() { Service = Service }; targets = []; target.Text = "";
+            current = new() { Service = Service }; targets = []; TargetId = "";
             aiModelTargets = null;
             input.Text = ""; ResetContext();
             InvalidateCatalogs();

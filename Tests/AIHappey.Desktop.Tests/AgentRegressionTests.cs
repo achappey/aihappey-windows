@@ -31,6 +31,30 @@ internal static class AgentRegressionTests
             && targets.Single(t => t.RemoteAgentId is not null).Id == "remote:PortableAgent", "local/backend name collisions have separate browser-compatible selection identities");
         check(DesktopAgentTargets.Restore("PortableAgent", targets) == "remote:PortableAgent" && DesktopAgentTargets.Restore("local:PortableAgent", targets) == "local:PortableAgent"
             && DesktopAgentTargets.Restore("deleted", targets) == "deleted", "conversation restore migrates legacy backend IDs without redirecting local or missing selections");
+        var localTarget = targets.Single(t => t.LocalAgentName is not null);
+        var remoteTarget = targets.Single(t => t.RemoteAgentId is not null);
+        check(localTarget is { AgentModelId: "openai/fixture", ProviderKey: "openai" }
+            && remoteTarget.ProviderKey is null, "agent provider identity comes from the underlying model, not its name or routing key");
+        check(remoteTarget.Label == "PortableAgent" && !localTarget.Label.StartsWith("local:", StringComparison.Ordinal),
+            "agent picker labels never contain internal routing prefixes");
+        check(DesktopAgentTargets.Selection(localTarget.Label, localTarget.Id, targets) == localTarget
+            && DesktopAgentTargets.Selection(remoteTarget.Label, remoteTarget.Id, targets) == remoteTarget,
+            "displaying a label preserves the selected local/remote identity for same-name agents");
+        check(DesktopAgentTargets.Selection("PortableAgent", null, targets) == remoteTarget
+            && DesktopAgentTargets.Selection("remote:PortableAgent", null, targets) == remoteTarget
+            && DesktopAgentTargets.Selection(localTarget.Label, null, targets) == localTarget,
+            "typed labels, explicit keys and legacy backend IDs resolve to their existing routes");
+        var duplicateLabels = new ChatTarget[] { new("remote:one", "Same") { RemoteAgentId = "one" }, new("remote:two", "Same") { RemoteAgentId = "two" } };
+        check(DesktopAgentTargets.Selection("Same", null, duplicateLabels) is null
+            && DesktopAgentTargets.Selection("Same", "remote:two", duplicateLabels)?.Id == "remote:two"
+            && DesktopAgentTargets.Selection("unknown", "remote:two", duplicateLabels) is null,
+            "ambiguous or edited labels never silently select a different agent");
+        check(DesktopAgentTargets.DisplayName("remote:OpenAIAgent") == "OpenAIAgent"
+            && DesktopAgentTargets.DisplayName("local:Agent") == "Agent"
+            && DesktopAgentTargets.DisplayName("remote:openai/Agent") == "openai/Agent"
+            && DesktopAgentTargets.DisplayName("Agent:With:Colons") == "Agent:With:Colons"
+            && DesktopAgentTargets.DisplayName("remote:") == "remote:",
+            "legacy display fallback strips exactly one nonempty routing prefix without damaging names");
         draft.ToggleTool("resource_search", true); draft.ToggleTool("tool_search", true);
         check((draft.Definition["tools"] as JsonArray)!.Count == 3 && draft.Definition["tools"]![1]!["future"]!.ToJsonString() == "7", "tool toggles preserve existing options and avoid duplicate enablement");
         draft.ToggleTool("resource_search", false);

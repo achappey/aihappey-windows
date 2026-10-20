@@ -154,7 +154,7 @@ public sealed partial class ChatShell
             else { Grid.SetColumn(view.Sections, 0); view.Card.Child = view.Sections; }
             view.Activity = block.Activity;
         }
-        var headerKey = (ChatMessagePresentation.Resolve(message.Message, current.Service, current.Target, session.Settings.Chat.ShowProviderLogo),
+        var headerKey = (MessagePresentation(message),
             message.Timestamp, block.Activity ? view.Displayed?.Type : null);
         if (view.HeaderKey != headerKey)
         {

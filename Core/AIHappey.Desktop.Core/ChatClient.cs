@@ -19,6 +19,7 @@ public sealed record ChatTarget(string Id, string Label)
     public string? OwnedBy { get; init; }
     public string? LocalAgentName { get; init; }
     public string? RemoteAgentId { get; init; }
+    public string? AgentModelId { get; init; }
     public IReadOnlyList<string> Tags { get; init; } = [];
     public double? ContextWindow { get; init; }
     public double? MaxTokens { get; init; }

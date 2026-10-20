@@ -66,7 +66,10 @@ public sealed partial class ChatShell
         catalogs[CatalogKind.Agent] = items;
         var config = session.Settings.Agents;
         agentsOverview.SetItems(items, favorites, config.Location == RuntimeLocation.Local ? "localhost" : DesktopSettings.RemoteUri(config.RemoteUrl).Host);
-        if (Service == ServiceKind.Agents) { targets = ProjectAgentTargets(items); UpdateTargetSuggestions(); }
+        if (Service == ServiceKind.Agents)
+        {
+            var selected = TargetId; targets = ProjectAgentTargets(items); TargetId = selected; UpdateTargetSuggestions();
+        }
     }
     private async Task EditAgentAsync(CatalogItem? item, Button owner)
     {

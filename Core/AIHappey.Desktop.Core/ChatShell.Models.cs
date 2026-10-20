@@ -18,6 +18,26 @@ public sealed partial class ChatShell
     private CatalogFavoritesStore modelFavoritesStore = null!;
     private HashSet<string> modelFavorites = new(StringComparer.Ordinal);
     private string? modelFavoritesPartition;
+    private string? selectedAgentTarget;
+
+    // The editable picker displays agent labels, never routing/storage keys.
+    private string TargetId
+    {
+        get
+        {
+            if (Service != ServiceKind.Agents) return target.Text.Trim();
+            if (selectedAgentTarget is { } id && target.Text ==
+                (targets.FirstOrDefault(t => t.Id == id)?.Label ?? DesktopAgentTargets.DisplayName(id))) return id;
+            return DesktopAgentTargets.Selection(target.Text, null, targets)?.Id ?? target.Text.Trim();
+        }
+        set
+        {
+            selectedAgentTarget = Service == ServiceKind.Agents ? DesktopAgentTargets.Restore(value, targets) : null;
+            target.Text = Service == ServiceKind.Agents
+                ? targets.FirstOrDefault(t => t.Id == selectedAgentTarget)?.Label ?? DesktopAgentTargets.DisplayName(value)
+                : value;
+        }
+    }
 
     private void PrepareModelsOverview()
     {
@@ -130,7 +150,7 @@ public sealed partial class ChatShell
             }
             else
             {
-                UpdateMode(ServiceKind.Ai); targets = available; UpdateTargetSuggestions(); target.Text = selected.Id;
+                UpdateMode(ServiceKind.Ai); targets = available; UpdateTargetSuggestions(); TargetId = selected.Id;
                 current = new() { Service = ServiceKind.Ai, Target = selected.Id }; input.Text = ""; ResetContext();
                 suppress = true; chats.SelectedItem = null; suppress = false;
                 ShowPage(DesktopPage.Chat); RenderTranscript(); input.Focus(FocusState.Programmatic);
@@ -149,8 +169,8 @@ public sealed partial class ChatShell
     private void SelectNewChatModel()
     {
         if (Service != ServiceKind.Ai) return;
-        target.Text = AiModelCatalog.NewChatModel(targets, session.Settings.AiModels);
-        current.Target = target.Text;
+        TargetId = AiModelCatalog.NewChatModel(targets, session.Settings.AiModels);
+        current.Target = TargetId;
         UpdateTargetSuggestions();
     }
 }

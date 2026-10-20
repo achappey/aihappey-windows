@@ -137,8 +137,26 @@ public sealed class DesktopAgent
 public static class DesktopAgentTargets
 {
     public static IReadOnlyList<ChatTarget> Project(IEnumerable<CatalogItem> items) => items.Select(i =>
-        i.Origin == CatalogOrigin.Local ? new ChatTarget("local:" + i.Id, i.Name + " (" + DesktopResources.Get("Local") + ")") { LocalAgentName = i.Id }
-            : new ChatTarget("remote:" + i.Id, i.Name) { RemoteAgentId = i.Id }).ToArray();
+        (i.Origin == CatalogOrigin.Local ? new ChatTarget("local:" + i.Id, i.Name + " (" + DesktopResources.Get("Local") + ")") { LocalAgentName = i.Id }
+            : new ChatTarget("remote:" + i.Id, i.Name) { RemoteAgentId = i.Id }) with
+        { AgentModelId = i.Model, ProviderKey = ChatPreferences.ResolveProvider(ServiceKind.Ai, i.Model ?? "") }).ToArray();
+
+    public static string DisplayName(string value)
+    {
+        var prefix = value.StartsWith("remote:", StringComparison.Ordinal) ? 7 : value.StartsWith("local:", StringComparison.Ordinal) ? 6 : 0;
+        return prefix > 0 && value.Length > prefix ? value[prefix..] : value;
+    }
+
+    public static ChatTarget? Selection(string text, string? selectedId, IReadOnlyList<ChatTarget> targets)
+    {
+        // A chosen item's identity wins over its label, which need not be unique.
+        if (targets.FirstOrDefault(t => t.Id == selectedId) is { } selected && text == selected.Label) return selected;
+        var id = Restore(text.Trim(), targets);
+        if (targets.FirstOrDefault(t => t.Id == id) is { } exact) return exact;
+        var matches = targets.Where(t => t.Label.Equals(text.Trim(), StringComparison.Ordinal)).Take(2).ToArray();
+        return matches.Length == 1 ? matches[0] : null;
+    }
+
     public static string Restore(string value, IReadOnlyList<ChatTarget> targets)
     {
         if (targets.Any(t => t.Id == value)) return value;

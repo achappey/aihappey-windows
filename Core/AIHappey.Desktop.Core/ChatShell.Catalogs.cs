@@ -285,7 +285,7 @@ public sealed partial class ChatShell
             var available = await AgentTargetsAsync(ct);
             var key = item.Origin == CatalogOrigin.Local ? "local:" + item.Id : "remote:" + item.Id;
             if (!available.Any(candidate => candidate.Id == key)) throw new GatewayException(DesktopResources.Get("AgentUnavailable"));
-            UpdateMode(ServiceKind.Agents); targets = available; target.ItemsSource = available.Take(100).ToArray(); target.Text = key;
+            UpdateMode(ServiceKind.Agents); targets = available; target.ItemsSource = available.Take(100).ToArray(); TargetId = key;
             current = new() { Service = ServiceKind.Agents, Target = key }; input.Text = "";
             suppress = true; chats.SelectedItem = null; suppress = false;
             ShowPage(DesktopPage.Chat); RenderTranscript();

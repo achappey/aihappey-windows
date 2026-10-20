@@ -26,6 +26,39 @@ internal static class TranscriptRegressionTests
         foreach (var role in new[] { Role.user, Role.system })
             check(Present("openai/model", role: role) is { Model: "openai/model", Provider: null }, "assistant header: user/system never get logos or shortened labels");
         check(Present("openai/agent", service: ServiceKind.Agents) is { Model: "openai/agent", Provider: null }, "assistant header: agent path is not treated as a provider prefix");
+        var agents = DesktopAgentTargets.Project([
+            new CatalogItem(CatalogKind.Agent, "backend-id", "OpenAIAgent", "") { Model = "openai/gpt-fixture" },
+            new CatalogItem(CatalogKind.Agent, "LocalAgent", "LocalAgent", "") { Origin = CatalogOrigin.Local, Model = "anthropic/claude" }]);
+        ChatMessagePresentation AgentPresent(string json, bool enabled = true, IReadOnlyList<ChatTarget>? catalog = null)
+            => ChatMessagePresentation.Resolve(new UIMessage { Role = Role.assistant, Metadata = Metadata(json) },
+                ServiceKind.Agents, "remote:backend-id", enabled, catalog);
+        check(AgentPresent("{}", catalog: agents) is { Model: "OpenAIAgent", Provider.Id: "openai" }
+            && AgentPresent("""{"model":"remote:backend-id"}""", catalog: agents) is { Model: "OpenAIAgent", Provider.Id: "openai" },
+            "agent headers: streaming/missing metadata resolve catalog names and known model identity");
+        check(AgentPresent("""{"model":"local:LocalAgent"}""", catalog: agents) is { Model: "LocalAgent", Provider.Id: "anthropic" },
+            "agent headers: local agent author omits routing prefix and picker-only local qualifier");
+        check(AgentPresent("""{"model":"remote:OpenAIAgent"}""") is { Model: "OpenAIAgent", Provider: null }
+            && AgentPresent("""{"model":"remote:OpenAIAgent"}""", false) is { Model: "OpenAIAgent", Provider: null },
+            "agent headers: interrupted legacy history hides routing prefix even without a catalog or logos");
+        check(AgentPresent("""{"model":"OpenAIAgent","agentModel":"openai/gpt-fixture"}""") is { Model: "OpenAIAgent", Provider.Id: "openai" }
+            && AgentPresent("""{"model":"OpenAIAgent","agentModel":"openai/gpt-fixture"}""", false) is { Model: "OpenAIAgent", Provider: null },
+            "agent headers: persisted underlying model supplies an optional logo but never replaces the agent name");
+        check(AgentPresent("""{"model":"openai/Agent","providerKey":" OPENAI "}""") is { Model: "openai/Agent", Provider.Id: "openai" },
+            "agent headers: explicit provider identity leaves provider-like agent names intact");
+        check(AgentPresent("""{"model":"OpenAIAgent","agentModel":"openai/gpt-fixture","providerKey":"unknown"}""") is { Model: "OpenAIAgent", Provider: null }
+            && AgentPresent("""{"model":"OpenAIAgent","agentModel":"unknown/model"}""", catalog: agents) is { Model: "OpenAIAgent", Provider: null },
+            "agent headers: unknown message identity never borrows a known catalog provider");
+        var agentOutput = new ConversationMessage { Message = new UIMessage { Role = Role.assistant,
+            Metadata = Metadata("""{"model":"OpenAIAgent","agentModel":"openai/gpt-fixture","providerKey":"openai"}""") } };
+        new MessageAssembler(agentOutput).Apply(new StreamEvent("finish", JsonSerializer.SerializeToElement(new
+            { type = "finish", messageMetadata = new { model = "FinalAgentName" } }), null));
+        var agentHistory = new Conversation { Service = ServiceKind.Agents, Target = "remote:backend-id", Messages = [agentOutput] };
+        var agentJson = PortableConversations.Write(agentHistory);
+        check(ChatMessagePresentation.Resolve(agentOutput.Message, ServiceKind.Agents, agentHistory.Target, true, agents)
+            is { Model: "FinalAgentName", Provider.Id: "openai" },
+            "agent headers: server completion label wins while the turn's provider snapshot survives metadata merging");
+        check(PortableConversations.Write(agentHistory) == agentJson && agentHistory.Target == "remote:backend-id",
+            "agent header presentation leaves portable metadata and stored routing identity unchanged");
         var historical = new Conversation { Target = "anthropic/current", Messages = [new() { Message = new UIMessage
             { Role = Role.assistant, Metadata = Metadata("""{"model":"openai/historical"}""") } }] };
         var beforePresentation = PortableConversations.Write(historical);

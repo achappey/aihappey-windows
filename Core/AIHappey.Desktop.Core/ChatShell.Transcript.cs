@@ -36,7 +36,7 @@ public sealed partial class ChatShell
         var items = new MessageHeaderPanel();
         if (!user)
         {
-            var presentation = ChatMessagePresentation.Resolve(message.Message, current.Service, current.Target, session.Settings.Chat.ShowProviderLogo);
+            var presentation = MessagePresentation(message);
             if (presentation.Provider is { } provider)
             {
                 var logo = new ProviderLogo(provider, 20) { VerticalAlignment = VerticalAlignment.Center };
@@ -88,4 +88,7 @@ public sealed partial class ChatShell
             BorderThickness = new Thickness(0, 0, 0, 1), Style = TranscriptStyle("TranscriptSeparatorStyle")
         };
     }
+
+    private ChatMessagePresentation MessagePresentation(ConversationMessage message) => ChatMessagePresentation.Resolve(
+        message.Message, current.Service, current.Target, session.Settings.Chat.ShowProviderLogo, targets);
 }
