@@ -15,6 +15,31 @@ public sealed class ChatPreferences
     public bool ApiDebugEnabled { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? MaxOutputTokens { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ToolChoice { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? MaxToolCalls { get; set; }
+    private List<string> stopTools = [];
+    public List<string> StopTools
+    {
+        get => stopTools;
+        set => stopTools = value?.Where(name => !string.IsNullOrWhiteSpace(name)).Select(name => name.Trim())
+            .Distinct(StringComparer.Ordinal).ToList() ?? [];
+    }
+    private ChatToolPolicy toolAnnotations = new();
+    public ChatToolPolicy ToolAnnotations { get => toolAnnotations; set => toolAnnotations = value ?? new(); }
+    [JsonIgnore] public bool CanRequireTools => MaxToolCalls is > 0 || StopTools.Count > 0;
+    [JsonIgnore] public string? NormalizedToolChoice => ToolChoice switch
+    {
+        "none" => "none",
+        "required" when CanRequireTools => "required",
+        _ => null
+    };
+    public void NormalizeTools()
+    {
+        if (MaxToolCalls is < 1) MaxToolCalls = null;
+        ToolChoice = NormalizedToolChoice;
+    }
     private List<string> activePlugins = [];
     public List<string> ActivePlugins
     {
@@ -47,6 +72,10 @@ public sealed class ChatPreferences
         ShowProviderLogo = ShowProviderLogo,
         ApiDebugEnabled = ApiDebugEnabled,
         MaxOutputTokens = MaxOutputTokens,
+        ToolChoice = NormalizedToolChoice,
+        MaxToolCalls = MaxToolCalls is > 0 ? MaxToolCalls : null,
+        StopTools = StopTools.ToList(),
+        ToolAnnotations = ToolAnnotations.Clone(),
         ActivePlugins = ActivePlugins.ToList(),
         EnabledSkillIds = EnabledSkillIds.ToList(),
         EnabledAgentPluginIds = EnabledAgentPluginIds.ToList(),
@@ -83,8 +112,30 @@ public sealed class ChatPreferences
         var body = JsonSerializer.SerializeToNode(request, PortableConversations.Json)!.AsObject();
         if (MaxOutputTokens is null) body.Remove("maxOutputTokens");
         if (request.ProviderMetadata is null) body.Remove("providerMetadata");
-        if (mcp is not null) body["tools"] = new JsonArray(mcp.Tools.Select(t => JsonNode.Parse(t.GetRawText())).ToArray());
+        var choice = EffectiveToolChoice(messages, mcp);
+        if (choice is not null) body["toolChoice"] = choice;
+        if (MaxToolCalls is > 0) body["maxToolCalls"] = MaxToolCalls.Value;
+        if (mcp is not null) body["tools"] = new JsonArray(mcp.Tools.Where(ToolAnnotations.Allows).Select(t => JsonNode.Parse(t.GetRawText())).ToArray());
         return body;
+    }
+
+    // Like the browser, only completed parts on the last assistant message count. A new
+    // user message resets the budget; a parallel batch finishes before the next request.
+    public string? EffectiveToolChoice(IReadOnlyList<UIMessage> messages, McpTurnSnapshot? mcp = null)
+    {
+        if (messages.LastOrDefault() is not { Role: Role.assistant } last) return NormalizedToolChoice;
+        var completed = last.Parts.Where(part => part.Type.StartsWith("tool-", StringComparison.Ordinal))
+            .Where(part => PortableConversations.String(PortableConversations.Element(part), "state")
+                is "output-available" or "output-error" or "approval-responded").ToArray();
+        if (MaxToolCalls is > 0 && completed.Length >= MaxToolCalls.Value) return "none";
+        var stops = StopTools.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (completed.Any(part =>
+        {
+            var name = PortableConversations.String(PortableConversations.Element(part), "toolName")
+                ?? DesktopToolApprovals.CanonicalName(part);
+            return stops.Contains(name) || stops.Contains(mcp?.OriginalToolName(name) ?? name);
+        })) return "none";
+        return NormalizedToolChoice;
     }
 
     public void ApplyHeaders(HttpRequestMessage request, string? providerKey)
@@ -104,6 +155,28 @@ public sealed class ChatPreferences
             if (!allowed || name.Any(char.IsControl) || value.Any(char.IsControl) || string.IsNullOrWhiteSpace(value) || request.Headers.Contains(name)) continue;
             request.Headers.TryAddWithoutValidation(name, value.Trim());
         }
+    }
+}
+
+/// <summary>Browser-compatible client tool annotation gates, not an approval policy.
+/// Provider-native tools and agent-owned policies are deliberately outside this boundary.</summary>
+public sealed class ChatToolPolicy
+{
+    public bool OpenWorldHint { get; set; } = true;
+    public bool DestructiveHint { get; set; } = true;
+    public bool ReadOnlyHint { get; set; }
+    public bool IdempotentHint { get; set; }
+    public ChatToolPolicy Clone() => new() { OpenWorldHint = OpenWorldHint, DestructiveHint = DestructiveHint,
+        ReadOnlyHint = ReadOnlyHint, IdempotentHint = IdempotentHint };
+    public bool Allows(JsonElement tool)
+    {
+        var annotations = tool.TryGetProperty("annotations", out var value) ? value : default;
+        bool Flag(string key) => annotations.ValueKind == JsonValueKind.Object
+            && annotations.TryGetProperty(key, out var flag) && flag.ValueKind == JsonValueKind.True;
+        var readOnly = Flag("readOnlyHint");
+        return (!ReadOnlyHint || readOnly)
+            && (readOnly || ((!IdempotentHint || Flag("idempotentHint")) && (DestructiveHint || !Flag("destructiveHint"))))
+            && (OpenWorldHint || !Flag("openWorldHint"));
     }
 }
 

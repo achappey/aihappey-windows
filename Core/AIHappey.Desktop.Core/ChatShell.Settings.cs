@@ -20,7 +20,8 @@ public sealed partial class ChatShell
         historyDialogOpen = true;
         var selected = targets.FirstOrDefault(t => t.Id == target.Text.Trim());
         var provider = selected is null ? null : ChatPreferences.ResolveProvider(Service, selected.Id, selected.ProviderKey);
-        var dialog = new ChatSettingsDialog(session.Settings.Chat, provider, LoadSkillSelectionAsync, PrefetchSkillAsync, agentPlugins) { XamlRoot = XamlRoot };
+        var dialog = new ChatSettingsDialog(session.Settings.Chat, provider, LoadSkillSelectionAsync, PrefetchSkillAsync, agentPlugins,
+            AvailableChatTools, Service) { XamlRoot = XamlRoot };
         chatSettingsDialog = dialog;
         dialog.SaveAsync = async preferences =>
         {
@@ -39,5 +40,14 @@ public sealed partial class ChatShell
             chatSettingsDialog = null; historyDialogOpen = false;
             if (!closing) chatSettings.Focus(FocusState.Programmatic);
         }
+    }
+
+    private IReadOnlyList<ChatToolOption> AvailableChatTools(ChatPreferences preferences)
+    {
+        var enabled = EnabledPlugins(preferences);
+        var selected = preferences.EnabledSkillIds.ToHashSet(StringComparer.Ordinal);
+        var hasSkills = AvailableSkillDescriptors().Any(skill => selected.Contains(skill.Id))
+            || enabled.Any(plugin => plugin.Skills().Any());
+        return Mcp.Capture().SettingsTools(preferences, hasSkills, enabled.Count > 0);
     }
 }

@@ -5,6 +5,8 @@ using AIHappey.Vercel.Models;
 
 namespace AIHappey.Desktop.Core;
 
+public sealed record ChatToolOption(string Name, string Label);
+
 public sealed class McpTurnSnapshot
 {
     private sealed record Route(string OriginalName, Func<string, JsonElement, string, string, CancellationToken, Task<JsonElement>> Call);
@@ -99,6 +101,43 @@ public sealed class McpTurnSnapshot
     }
 
     public bool Contains(string name) => routes.ContainsKey(name);
+    public string OriginalToolName(string name) => routes.TryGetValue(name, out var route) ? route.OriginalName : name;
+
+    /// <summary>Declaration-only settings preview: never constructs live local tool handlers,
+    /// reads skill files, or changes the active inference snapshot.</summary>
+    public IReadOnlyList<ChatToolOption> SettingsTools(ChatPreferences preferences, bool hasSkills = false, bool hasPlugins = false)
+    {
+        var definitions = tools.Concat(DesktopLocalTools.Plugins.Where(plugin => preferences.PluginEnabled(plugin.Id)).SelectMany(plugin => plugin.Tools));
+        if (hasSkills && !preferences.PluginEnabled(DesktopLocalTools.SkillSearch))
+            definitions = definitions.Concat([DesktopSkillTurn.ActivationDefinition, DesktopSkillTurn.ResourceDefinition]);
+        if (hasPlugins) definitions = definitions.Append(AgentPluginTools.ReadDefinition);
+        return definitions.Where(preferences.ToolAnnotations.Allows).DistinctBy(tool => CatalogProjection.Text(tool, "name"))
+            .Select(tool =>
+            {
+                var name = CatalogProjection.Text(tool, "name")!;
+                var original = OriginalToolName(name);
+                return new ChatToolOption(name, original == name ? name : original + " (" + name + ")");
+            }).OrderBy(tool => tool.Label, StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
+    // Apply only to a newly captured model-chat snapshot, after local tools are composed.
+    // Removing the route as well as the declaration prevents a blocked tool being called
+    // through a stale/malformed model response. Other snapshots (including agents) are untouched.
+    public void ApplyPolicy(ChatToolPolicy policy)
+    {
+        var blocked = tools.Where(tool => !policy.Allows(tool)).Select(tool => CatalogProjection.Text(tool, "name")!)
+            .ToHashSet(StringComparer.Ordinal);
+        tools.RemoveAll(tool => blocked.Contains(CatalogProjection.Text(tool, "name")!));
+        foreach (var name in blocked) routes.Remove(name);
+        for (var index = 0; index < context.Count; index++)
+        {
+            if (JsonNode.Parse(context[index].GetRawText()) is not JsonObject block || block["tools"] is not JsonArray declarations) continue;
+            block["tools"] = new JsonArray(declarations.Where(tool => !blocked.Contains(tool?["name"]?.ToString() ?? ""))
+                .Select(tool => tool?.DeepClone()).ToArray());
+            context[index] = JsonSerializer.SerializeToElement(block);
+        }
+    }
+
     public void AddLocal(JsonElement tool, Func<JsonElement, CancellationToken, Task<JsonElement>> call)
     {
         var name = CatalogProjection.Text(tool, "name") ?? throw new InvalidOperationException("Missing local tool name.");

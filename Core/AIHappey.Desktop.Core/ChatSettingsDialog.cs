@@ -15,6 +15,9 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private readonly TextBlock validation = new() { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private TextBox tokens = null!;
     private StackPanel general = null!;
+    private ChatToolSettingsView? toolSettings;
+    private readonly Func<ChatPreferences, IReadOnlyList<ChatToolOption>> availableTools;
+    private readonly bool modelChat;
     private IChatProviderForm? providerForm;
     private SkillsSettingsView? skillsView;
     private readonly Func<CancellationToken, Task<DesktopSkillSelection>>? loadSkills;
@@ -32,13 +35,18 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     public void ShowSkillsTab() => selectSkillsTab?.Invoke();
     public void ShowToolsTab() => selectToolsTab?.Invoke();
     public void ShowPluginsTab() => selectPluginsTab?.Invoke();
+    public void RefreshAvailableTools() => toolSettings?.RefreshAvailableTools();
 
     public ChatSettingsDialog(ChatPreferences preferences, string? provider,
         Func<CancellationToken, Task<DesktopSkillSelection>>? loadSkills = null,
-        Func<string, CancellationToken, Task>? prefetchSkill = null, IReadOnlyList<DesktopAgentPlugin>? plugins = null)
+        Func<string, CancellationToken, Task>? prefetchSkill = null, IReadOnlyList<DesktopAgentPlugin>? plugins = null,
+        Func<ChatPreferences, IReadOnlyList<ChatToolOption>>? availableTools = null, ServiceKind service = ServiceKind.Ai)
     {
         this.loadSkills = loadSkills; this.prefetchSkill = prefetchSkill;
         this.plugins = plugins ?? [];
+        modelChat = service == ServiceKind.Ai;
+        this.availableTools = availableTools ?? (draft => McpTurnSnapshot.Empty.SettingsTools(draft,
+            draft.EnabledSkillIds.Count > 0, this.plugins.Any(plugin => draft.EnabledAgentPluginIds.Contains(plugin.Id))));
         Name = "ChatSettingsDialog"; this.provider = provider; draft = preferences.Clone();
         Title = DesktopResources.Get("ChatSettings"); CloseButtonText = DesktopResources.Get("Close");
         PrimaryButtonText = DesktopResources.Get("ChatRestoreDefaults");
@@ -71,6 +79,8 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         ControlAppearance.Stock(tokens); AutomationProperties.SetName(tokens, DesktopResources.Get("ChatMaxOutputTokens")); body.Children.Add(tokens);
         var tokenError = new TextBlock { Text = DesktopResources.Get("ChatTokensInvalid"), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed }; body.Children.Add(tokenError);
         tokens.TextChanged += (_, _) => tokenError.Visibility = ChatPreferences.TryTokenLimit(tokens.Text, out _) ? Visibility.Collapsed : Visibility.Visible;
+        toolSettings = modelChat ? new ChatToolSettingsView(draft, availableTools) : null;
+        if (toolSettings is not null) general.Children.Add(toolSettings);
         providerForm = ChatProviderForms.Create(provider, draft);
         var generalTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatGeneralTab", Content = DesktopResources.Get("General"), IsChecked = true };
         ControlAppearance.Stock(generalTab); tabs.Children.Add(generalTab);
@@ -94,7 +104,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
             selectProviderTab = () => { generalTab.IsChecked = skillsTab.IsChecked = toolsTab.IsChecked = false; providerTab.IsChecked = true; page.Content = providerForm.View; page.ChangeView(null, 0, null, true); };
             providerTab.Click += (_, _) => selectProviderTab();
         }
-        selectGeneralTab = () => { generalTab.IsChecked = true; skillsTab.IsChecked = toolsTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false; page.Content = general; page.ChangeView(null, 0, null, true); };
+        selectGeneralTab = () => { generalTab.IsChecked = true; skillsTab.IsChecked = toolsTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false; RefreshAvailableTools(); page.Content = general; page.ChangeView(null, 0, null, true); };
         generalTab.Click += (_, _) => selectGeneralTab();
         selectSkillsTab = () => { skillsTab.IsChecked = true; generalTab.IsChecked = toolsTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false;
             page.Content = skillsView; page.ChangeView(null, 0, null, true); };
@@ -108,13 +118,14 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private async void CommitOnClose(ContentDialog sender, ContentDialogClosingEventArgs args)
     {
         if (DiscardOnShutdown) return;
-        if (!ChatPreferences.TryTokenLimit(tokens.Text, out var limit) || providerForm?.IsValid == false)
+        if (!ChatPreferences.TryTokenLimit(tokens.Text, out var limit) || toolSettings?.IsValid == false || providerForm?.IsValid == false)
         {
             args.Cancel = true; validation.Text = DesktopResources.Get("ChatSettingsInvalid"); validation.Visibility = Visibility.Visible;
             if (!ChatPreferences.TryTokenLimit(tokens.Text, out _))
             {
                 selectGeneralTab?.Invoke(); layout.UpdateLayout(); tokens.Focus(FocusState.Programmatic); tokens.StartBringIntoView();
             }
+            else if (toolSettings?.IsValid == false) { selectGeneralTab?.Invoke(); layout.UpdateLayout(); toolSettings.FocusInvalid(); }
             else { selectProviderTab?.Invoke(); layout.UpdateLayout(); providerForm?.FocusInvalid(); }
             return;
         }
@@ -122,6 +133,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         try
         {
             draft.MaxOutputTokens = limit; providerForm?.Commit(draft);
+            if (modelChat) draft.NormalizeTools();
             if (SaveAsync is not null) await SaveAsync(draft.Clone());
             Result = draft.Clone();
         }

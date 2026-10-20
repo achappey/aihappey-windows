@@ -624,7 +624,7 @@
   <data name="ChatForm_openai_realtimeTurnDetectionType" xml:space="preserve"><value>Turn detection type</value></data>
   <data name="ChatForm_openai_realtimeTurnCreateResponse" xml:space="preserve"><value>Auto-create response on speech stop</value></data>
   <data name="ChatForm_openai_realtimeTurnInterruptResponse" xml:space="preserve"><value>Interrupt ongoing response on speech start</value></data>
-  <data name="ChatForm_openai_realtimeVadThreshold" xml:space="preserve"><value>VAD threshold (0.0ΓÇô1.0)</value></data>
+  <data name="ChatForm_openai_realtimeVadThreshold" xml:space="preserve"><value>VAD threshold (0.0–1.0)</value></data>
   <data name="ChatForm_openai_realtimeVadPrefixPaddingMs" xml:space="preserve"><value>Prefix padding (ms)</value></data>
   <data name="ChatForm_openai_realtimeVadSilenceDurationMs" xml:space="preserve"><value>Silence duration (ms)</value></data>
   <data name="ChatForm_openai_realtimeVadIdleTimeoutMs" xml:space="preserve"><value>Idle timeout (ms)</value></data>
@@ -1339,4 +1339,18 @@
   <data name="ExplorerAccountTitle" xml:space="preserve"><value>Attach files to this account?</value></data>
   <data name="ExplorerAccountConfirm" xml:space="preserve"><value>Your account changed while files were waiting. Attach them to the current chat account? Nothing will be sent automatically.</value></data>
   <data name="ExplorerContextChanged" xml:space="preserve"><value>The chat changed while files were waiting. The pending selection was canceled. Select the files again to attach them here.</value></data>
+  <data name="ChatToolRequiredHint" xml:space="preserve"><value>Required is available when a maximum tool-call count or a tool that ends the turn is configured.</value></data>
+  <data name="ChatNoAvailableTools" xml:space="preserve"><value>No client tools are available with the current selections and policy.</value></data>
+  <data name="ChatToolUnavailable" xml:space="preserve"><value>Currently unavailable</value></data>
+  <data name="ChatForm_toolChoice" xml:space="preserve"><value>Tool choice</value></data>
+  <data name="ChatForm_maxToolCalls" xml:space="preserve"><value>Maximum tool calls</value></data>
+  <data name="ChatForm_stopTools" xml:space="preserve"><value>Tools that end the chat turn</value></data>
+  <data name="ChatForm_none" xml:space="preserve"><value>None</value></data>
+  <data name="ChatForm_auto" xml:space="preserve"><value>Auto</value></data>
+  <data name="ChatForm_required" xml:space="preserve"><value>Required</value></data>
+  <data name="ChatForm_mcpPage_policy" xml:space="preserve"><value>Model Context policy</value></data>
+  <data name="ChatForm_annotations_openWorld" xml:space="preserve"><value>Open world</value></data>
+  <data name="ChatForm_annotations_destructive" xml:space="preserve"><value>Destructive</value></data>
+  <data name="ChatForm_annotations_readOnly" xml:space="preserve"><value>Read-only</value></data>
+  <data name="ChatForm_annotations_idempotent" xml:space="preserve"><value>Idempotent</value></data>
 </root>

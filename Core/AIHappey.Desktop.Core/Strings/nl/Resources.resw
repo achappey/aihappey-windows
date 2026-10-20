@@ -475,7 +475,7 @@
   <data name="ChatForm_openai_sessionAgent_programmaticEnabled" xml:space="preserve"><value>Aanroepen vanuit gegenereerde code inschakelen</value></data>
   <data name="ChatForm_openai_sessionAgent_searchMode" xml:space="preserve"><value>Webzoekmodus</value></data>
   <data name="ChatForm_openai_sessionAgent_searchContext" xml:space="preserve"><value>Grootte van zoekcontext</value></data>
-  <data name="ChatForm_openai_sessionAgent_allowedDomains" xml:space="preserve"><value>Toegestane zoekdomeinen (├⌐├⌐n per regel)</value></data>
+  <data name="ChatForm_openai_sessionAgent_allowedDomains" xml:space="preserve"><value>Toegestane zoekdomeinen (één per regel)</value></data>
   <data name="ChatForm_openai_sessionAgent_city" xml:space="preserve"><value>Plaats</value></data>
   <data name="ChatForm_openai_sessionAgent_country" xml:space="preserve"><value>Land</value></data>
   <data name="ChatForm_openai_sessionAgent_region" xml:space="preserve"><value>Regio</value></data>
@@ -497,8 +497,8 @@
   <data name="ChatForm_openai_sessionEnvironment_disabled" xml:space="preserve"><value>Uitgeschakeld</value></data>
   <data name="ChatForm_openai_sessionEnvironment_restricted" xml:space="preserve"><value>Beperkt</value></data>
   <data name="ChatForm_openai_sessionEnvironment_domainHelp" xml:space="preserve"><value>Gebruik toegestane of geblokkeerde domeinen, niet beide. Jokertekens worden niet ondersteund.</value></data>
-  <data name="ChatForm_openai_sessionEnvironment_allowedDomains" xml:space="preserve"><value>Toegestane domeinen (├⌐├⌐n per regel)</value></data>
-  <data name="ChatForm_openai_sessionEnvironment_blockedDomains" xml:space="preserve"><value>Geblokkeerde domeinen (├⌐├⌐n per regel)</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_allowedDomains" xml:space="preserve"><value>Toegestane domeinen (één per regel)</value></data>
+  <data name="ChatForm_openai_sessionEnvironment_blockedDomains" xml:space="preserve"><value>Geblokkeerde domeinen (één per regel)</value></data>
   <data name="ChatForm_openai_sessionEnvironment_workspaceDirectory" xml:space="preserve"><value>Absoluut werkmap-pad</value></data>
   <data name="ChatForm_openai_topP" xml:space="preserve"><value>Top-p</value></data>
   <data name="ChatForm_openai_serviceTier_title" xml:space="preserve"><value>Servicelaag</value></data>
@@ -605,7 +605,7 @@
   <data name="ChatForm_openai_knownSpeakersDescription" xml:space="preserve"><value>Voeg maximaal 4 sprekersnamen toe en upload een korte stem-voorbeeld per spreker om herkenning te verbeteren.</value></data>
   <data name="ChatForm_openai_knownSpeakersAdd" xml:space="preserve"><value>Spreker toevoegen</value></data>
   <data name="ChatForm_openai_knownSpeakersNamePlaceholder" xml:space="preserve"><value>bijv. Alice</value></data>
-  <data name="ChatForm_openai_knownSpeakersSampleMissing" xml:space="preserve"><value>Geen sample ge├╝pload</value></data>
+  <data name="ChatForm_openai_knownSpeakersSampleMissing" xml:space="preserve"><value>Geen sample geüpload</value></data>
   <data name="ChatForm_openai_knownSpeakersNameExists" xml:space="preserve"><value>Deze naam bestaat al.</value></data>
   <data name="ChatForm_openai_knownSpeakersMax" xml:space="preserve"><value>Je kunt maximaal 4 sprekers toevoegen.</value></data>
   <data name="ChatForm_openai_knownSpeakersDeleteConfirm" xml:space="preserve"><value>Deze spreker heeft een opgeslagen sample. Spreker en sample verwijderen?</value></data>
@@ -620,7 +620,7 @@
   <data name="ChatForm_openai_realtimeTurnDetectionType" xml:space="preserve"><value>Type turn-detectie</value></data>
   <data name="ChatForm_openai_realtimeTurnCreateResponse" xml:space="preserve"><value>Automatisch response maken bij einde spraak</value></data>
   <data name="ChatForm_openai_realtimeTurnInterruptResponse" xml:space="preserve"><value>Lopende response onderbreken bij start spraak</value></data>
-  <data name="ChatForm_openai_realtimeVadThreshold" xml:space="preserve"><value>VAD-drempel (0.0ΓÇô1.0)</value></data>
+  <data name="ChatForm_openai_realtimeVadThreshold" xml:space="preserve"><value>VAD-drempel (0.0–1.0)</value></data>
   <data name="ChatForm_openai_realtimeVadPrefixPaddingMs" xml:space="preserve"><value>Prefix padding (ms)</value></data>
   <data name="ChatForm_openai_realtimeVadSilenceDurationMs" xml:space="preserve"><value>Stilte-duur (ms)</value></data>
   <data name="ChatForm_openai_realtimeVadIdleTimeoutMs" xml:space="preserve"><value>Idle timeout (ms)</value></data>
@@ -1142,7 +1142,7 @@
   <data name="ChatForm_openai_transcriptionLanguages" xml:space="preserve"><value>Mogelijke talen</value></data>
   <data name="ChatForm_openai_transcriptionLanguagesPlaceholder" xml:space="preserve"><value>ISO-639-1-codes gescheiden door komma's, bijvoorbeeld nl, en</value></data>
   <data name="ChatForm_openai_transcriptionKeywords" xml:space="preserve"><value>Trefwoorden</value></data>
-  <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>E├⌐n woord of uitdrukking per regel om de transcriptie te sturen</value></data>
+  <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>Eén woord of uitdrukking per regel om de transcriptie te sturen</value></data>
   <data name="ChatForm_openai_transcriptionResponseFormat" xml:space="preserve"><value>Antwoordformaat</value></data>
   <data name="Files" xml:space="preserve"><value>Bestanden</value></data>
   <data name="FilesDescription" xml:space="preserve"><value>Deel bestanden en mappen met AI. Alleen verwijzingen worden opgeslagenΓÇöje bestanden blijven op hun plek. Met een gedeelde map kan AI de inhoud en submappen lezen en daar nieuwe bestanden maken wanneer de Bestanden-plug-in aanstaat. Bestaande bestanden worden nooit overschreven. Bestandstools worden uitgevoerd voordat de resultaten worden beoordeeld.</value></data>
@@ -1334,4 +1334,18 @@
   <data name="ExplorerAccountTitle" xml:space="preserve"><value>Bestanden aan dit account toevoegen?</value></data>
   <data name="ExplorerAccountConfirm" xml:space="preserve"><value>Uw account is gewijzigd terwijl bestanden wachtten. Wilt u ze aan het huidige chataccount toevoegen? Er wordt niets automatisch verzonden.</value></data>
   <data name="ExplorerContextChanged" xml:space="preserve"><value>De chat is gewijzigd terwijl bestanden wachtten. De selectie is geannuleerd. Selecteer de bestanden opnieuw om ze hier toe te voegen.</value></data>
+  <data name="ChatToolRequiredHint" xml:space="preserve"><value>Verplicht is beschikbaar wanneer een maximaal aantal tool-aanroepen of een tool die de beurt beëindigt is ingesteld.</value></data>
+  <data name="ChatNoAvailableTools" xml:space="preserve"><value>Er zijn geen clienttools beschikbaar met de huidige selecties en het huidige beleid.</value></data>
+  <data name="ChatToolUnavailable" xml:space="preserve"><value>Momenteel niet beschikbaar</value></data>
+  <data name="ChatForm_toolChoice" xml:space="preserve"><value>Toolkeuze</value></data>
+  <data name="ChatForm_maxToolCalls" xml:space="preserve"><value>Maximaal aantal tool-aanroepen</value></data>
+  <data name="ChatForm_stopTools" xml:space="preserve"><value>Tools die de chatbeurt beëindigen </value></data>
+  <data name="ChatForm_none" xml:space="preserve"><value>Niet</value></data>
+  <data name="ChatForm_auto" xml:space="preserve"><value>Automatisch</value></data>
+  <data name="ChatForm_required" xml:space="preserve"><value>Verplicht</value></data>
+  <data name="ChatForm_mcpPage_policy" xml:space="preserve"><value>Model Context beleid</value></data>
+  <data name="ChatForm_annotations_openWorld" xml:space="preserve"><value>Open wereld</value></data>
+  <data name="ChatForm_annotations_destructive" xml:space="preserve"><value>Destructief</value></data>
+  <data name="ChatForm_annotations_readOnly" xml:space="preserve"><value>Alleen-lezen</value></data>
+  <data name="ChatForm_annotations_idempotent" xml:space="preserve"><value>Herhaalbaar zonder effect</value></data>
 </root>

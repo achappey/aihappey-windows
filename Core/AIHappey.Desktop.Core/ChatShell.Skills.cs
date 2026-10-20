@@ -106,7 +106,9 @@ public sealed partial class ChatShell
             && (skill.Origin != "plugin" || pluginGeneration == pluginEpoch)
             && (skill.Origin != "mcp" || session.Settings.ModelContext.EnableSkills && Mcp.CaptureSkills().Any(s => s.Descriptor.Id == skill.Id)))
             .Register(snapshot);
-        RegisterLocalPlugins(snapshot, preferences, partition); return snapshot;
+        RegisterLocalPlugins(snapshot, preferences, partition);
+        snapshot.ApplyPolicy(preferences.ToolAnnotations);
+        return snapshot;
     }
     private void RenderSkillTags()
     {
