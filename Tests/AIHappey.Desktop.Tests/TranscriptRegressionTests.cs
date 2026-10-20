@@ -99,9 +99,13 @@ internal static class TranscriptRegressionTests
                 "SettingsShowTokens.Header", "SettingsShowTokens.OnContent", "SettingsShowTokens.OffContent",
                 "SettingsShowTokens.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name", "SettingsShowProviderLogo.Header",
                 "SettingsShowProviderLogo.OnContent", "SettingsShowProviderLogo.OffContent",
-                "SettingsShowProviderLogo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" })
+                "SettingsShowProviderLogo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name",
+                "SettingsApiDebug.Header", "SettingsApiDebug.OnContent", "SettingsApiDebug.OffContent",
+                "SettingsApiDebug.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" })
                 check(values.TryGetValue(key, out var text) && text.Length > 0, language + ": chat display setting is translated: " + key);
             check(values["MessagePrice"].Contains("{0}"), language + ": accessible price badge label translated");
+            check(values["MessagePriceWarning"] == (language == "en" ? "Indicative. Actual provider charges may vary."
+                : "Indicatief. Werkelijke kosten kunnen afwijken."), language + ": pricing warning matches browser");
             foreach (var key in new[] { "Activities", "ToggleActivities", "ToolsCount", "DataCount", "NoToolActivities", "NoDataActivities", "ExplainToolCall", "ToolExplanationFallback", "ToolOutputTitle" })
                 check(values.TryGetValue(key, out var translated) && translated.Length > 0, language + ": conversation activity resource present: " + key);
         }

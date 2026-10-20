@@ -24,6 +24,7 @@ try
     if (args.Contains("--plugins-only")) { await PluginRegressionTests.RunAsync(Check, root); Console.WriteLine($"All {tests} plugin checks passed."); return; }
     await PluginRegressionTests.RunAsync(Check, root);
     await ChatSettingsRegressionTests.RunAsync(Check, root);
+    await ChatDebugRegressionTests.RunAsync(Check, root);
     if (args.Contains("--chat-settings-only"))
     {
         Console.WriteLine($"All {tests} chat settings checks passed."); return;

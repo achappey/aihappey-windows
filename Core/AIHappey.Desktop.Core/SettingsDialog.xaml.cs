@@ -55,6 +55,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         DocumentTextExtraction.IsOn = settings.ConvertAttachmentsToText;
         ShowTokens.IsOn = chatPreferences.ShowTokens;
         ShowProviderLogo.IsOn = chatPreferences.ShowProviderLogo;
+        ApiDebugEnabled.IsOn = chatPreferences.ApiDebugEnabled;
         FormElicitation.IsOn = settings.ModelContext.EnableFormElicitation;
         ToolTimeout.Value = settings.ModelContext.ToolTimeoutMinutes;
         ResetTimeoutOnProgress.IsOn = settings.ModelContext.ResetTimeoutOnProgress;
@@ -111,6 +112,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         if (imageStorage.PickerOpen || videoStorage.PickerOpen) { args.Cancel = true; return; }
         chatPreferences.ShowTokens = ShowTokens.IsOn;
         chatPreferences.ShowProviderLogo = ShowProviderLogo.IsOn;
+        chatPreferences.ApiDebugEnabled = ApiDebugEnabled.IsOn;
         var next = new DesktopSettings
         {
             Language = (string)((ComboBoxItem)LanguageChoice.SelectedItem).Tag,

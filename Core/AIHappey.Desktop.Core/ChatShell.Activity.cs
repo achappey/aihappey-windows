@@ -21,7 +21,10 @@ public sealed partial class ChatShell
         Name = "ConversationActivityToggle", Content = DesktopIcons.Create(Icon.Wrench), Width = 40, Height = 40,
         Padding = new Thickness(0), CornerRadius = new CornerRadius(6), Visibility = Visibility.Collapsed
     };
-    private readonly StackPanel conversationActivityBody = new() { Name = "ConversationActivityBody" };
+    // Keep the tab content height bounded by the pane. A vertical StackPanel measures its
+    // children with infinite height, so the tab's ScrollViewer would expand instead of scroll.
+    private readonly Grid conversationActivityBody = new() { Name = "ConversationActivityBody" };
+    private readonly TransientConversationData transientConversationData = new();
     private readonly Dictionary<string, string> toolExplanations = new(StringComparer.Ordinal);
     private readonly HashSet<string> explainingTools = new(StringComparer.Ordinal);
     private ToolOutputDialog? toolOutputDialog;
@@ -60,6 +63,7 @@ public sealed partial class ChatShell
 
     private void RefreshConversationActivity()
     {
+        transientConversationData.SetScope(session.HistoryPartition, current.Id);
         var available = activePage == DesktopPage.Chat && current.Messages.Count > 0;
         activityToggle.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
         if (!available)
@@ -70,12 +74,20 @@ public sealed partial class ChatShell
             return;
         }
         if (!conversationActivity.IsPaneOpen) return;
-        var projected = ConversationActivityProjection.Project(current.Messages);
+        var selectedIndex = conversationActivityBody.Children.OfType<ToolReviewTabs>().FirstOrDefault()?.SelectedIndex ?? 0;
+        var projected = ConversationActivityProjection.Project(current.Messages, transientConversationData.Items);
         var tabs = new ToolReviewTabs("ConversationActivityTabs");
         tabs.Add(DesktopResources.Format("ToolsCount", projected.Tools.Count), ActivityList(projected.Tools, true), "ConversationActivityTools");
         tabs.Add(DesktopResources.Format("DataCount", projected.Data.Count), ActivityList(projected.Data, false), "ConversationActivityData");
-        tabs.SelectedIndex = 0;
+        tabs.SelectedIndex = Math.Clamp(selectedIndex, 0, tabs.Count - 1);
         conversationActivityBody.Children.Clear(); conversationActivityBody.Children.Add(tabs);
+    }
+
+    private void CaptureConversationData(long scope, StreamEvent item, ConversationMessage output)
+    {
+        // Refresh the scope before accepting a callback: an old stream cannot leak across accounts/chats.
+        transientConversationData.SetScope(session.HistoryPartition, current.Id);
+        transientConversationData.Add(scope, item, output);
     }
 
     private UIElement ActivityList(IReadOnlyList<ConversationActivityItem> items, bool tools)

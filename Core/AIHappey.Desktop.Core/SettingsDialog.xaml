@@ -55,6 +55,7 @@
                 <StackPanel x:Name="ChatPage" Spacing="16" Visibility="Collapsed">
                     <ToggleSwitch x:Name="ShowTokens" x:Uid="SettingsShowTokens" />
                     <ToggleSwitch x:Name="ShowProviderLogo" x:Uid="SettingsShowProviderLogo" />
+                    <ToggleSwitch x:Name="ApiDebugEnabled" x:Uid="SettingsApiDebug" />
                 </StackPanel>
                 <Grid x:Name="ArtificialIntelligencePage" Visibility="Collapsed" />
                 <Grid x:Name="AppAgentsPage" Visibility="Collapsed" />

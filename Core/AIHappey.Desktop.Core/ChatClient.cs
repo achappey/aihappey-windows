@@ -62,6 +62,9 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
             : localAgent is not null ? JsonContent.Create(LocalAgentRequest(localAgent, conversationId, requestMessages), options: PortableConversations.Json)
             : JsonContent.Create(new AgentRequest { Id = conversationId, Model = target, Messages = requestMessages }, options: PortableConversations.Json);
         if (service == ServiceKind.Ai) snapshot.ApplyHeaders(request, providerKey);
+        // The Chat preference owns this header, including overriding an injected host value.
+        request.Headers.Remove("X-AIHappey-Debug");
+        if (snapshot.ApiDebugEnabled) request.Headers.Add("X-AIHappey-Debug", "true");
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         await GatewayErrors.CheckResponseAsync(response, ct);
         if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")

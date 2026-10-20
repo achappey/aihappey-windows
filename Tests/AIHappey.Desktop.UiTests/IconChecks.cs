@@ -82,7 +82,7 @@ public partial class App
             && switchedIcon.Color == switchedPresenter.Color, context + ": inherited foreground survives runtime theme change");
         window.Content = null;
 
-        var shell = new ChatShell(new DesktopSession(new UiHost(true), new UiRuntime())) { RequestedTheme = theme };
+        var shell = new ChatShell(new DesktopSession(new UiHost(true), new UiRuntime(), new())) { RequestedTheme = theme };
         try
         {
             window.Content = shell; await Task.Delay(100); await HistoryIdleAsync(shell);

@@ -12,6 +12,7 @@ public sealed class ChatPreferences
 {
     public bool ShowTokens { get; set; }
     public bool ShowProviderLogo { get; set; } = true;
+    public bool ApiDebugEnabled { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? MaxOutputTokens { get; set; }
     private List<string> activePlugins = [];
@@ -44,6 +45,7 @@ public sealed class ChatPreferences
     {
         ShowTokens = ShowTokens,
         ShowProviderLogo = ShowProviderLogo,
+        ApiDebugEnabled = ApiDebugEnabled,
         MaxOutputTokens = MaxOutputTokens,
         ActivePlugins = ActivePlugins.ToList(),
         EnabledSkillIds = EnabledSkillIds.ToList(),

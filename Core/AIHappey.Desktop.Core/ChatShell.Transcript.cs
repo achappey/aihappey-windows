@@ -33,7 +33,7 @@ public sealed partial class ChatShell
 
     private Border MessageHeader(ConversationMessage message, bool user, UIMessagePart? activity)
     {
-        var items = new MessageFooterPanel(); // Reuse the existing wrapping, vertically centered layout.
+        var items = new MessageHeaderPanel();
         if (!user)
         {
             var presentation = ChatMessagePresentation.Resolve(message.Message, current.Service, current.Target, session.Settings.Chat.ShowProviderLogo);
@@ -43,15 +43,18 @@ public sealed partial class ChatShell
                 ToolTipService.SetToolTip(logo, new ToolTip { Content = provider.Name });
                 items.Children.Add(logo);
             }
-            items.Children.Add(new TextBlock
+            var model = new TextBlock
             {
                 Name = "MessageModel", Text = presentation.Model,
-                TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center
-            });
+                TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            ToolTipService.SetToolTip(model, new ToolTip { Content = presentation.Model });
+            items.Model = model; items.Children.Add(model);
             var badge = new Border
             {
                 Name = "AiGeneratedBadge", Style = TranscriptStyle("TranscriptBadgeStyle"),
-                Child = new TextBlock { Text = DesktopResources.Get("GeneratedByAi"), FontSize = 12, TextWrapping = TextWrapping.Wrap }
+                Child = new TextBlock { Text = DesktopResources.Get("GeneratedByAi"), FontSize = 12, TextWrapping = TextWrapping.NoWrap }
             };
             ToolbarControls.Label(badge, DesktopResources.Get("GeneratedByAi"));
             AutomationProperties.SetHelpText(badge, DesktopResources.Get("GeneratedByAiWarning"));
@@ -61,6 +64,7 @@ public sealed partial class ChatShell
         var time = new TextBlock
         {
             Name = "MessageTime", Style = TranscriptStyle("TranscriptMetadataStyle"),
+            TextWrapping = TextWrapping.NoWrap,
             Text = RelativeTime.Format(message.Timestamp, DateTimeOffset.UtcNow, DesktopResources.Get)
         };
         ToolTipService.SetToolTip(time, new ToolTip { Content = message.Timestamp.ToLocalTime().ToString("f") });

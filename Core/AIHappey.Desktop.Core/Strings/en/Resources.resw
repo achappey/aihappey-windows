@@ -300,6 +300,7 @@
   <data name="EnterpriseSignInFailed" xml:space="preserve"><value>Entra sign-in failed or was canceled. Check your desktop registration, consent, and tenant policy.</value></data>
   <data name="TokenUsage" xml:space="preserve"><value>Token usage: {0}</value></data>
   <data name="MessagePrice" xml:space="preserve"><value>Message price: {0}</value></data>
+  <data name="MessagePriceWarning" xml:space="preserve"><value>Indicative. Actual provider charges may vary.</value></data>
   <data name="ChatActionsFor" xml:space="preserve"><value>Chat actions for {0}</value></data>
   <data name="RemoveContext" xml:space="preserve"><value>Remove {0}</value></data>
   <data name="OpenConversation" xml:space="preserve"><value>Open conversation: {0}</value></data>
@@ -365,6 +366,10 @@
   <data name="SettingsShowProviderLogo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Show provider logo</value></data>
   <data name="SettingsShowProviderLogo.OnContent" xml:space="preserve"><value>On</value></data>
   <data name="SettingsShowProviderLogo.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="SettingsApiDebug.Header" xml:space="preserve"><value>Debug</value></data>
+  <data name="SettingsApiDebug.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Debug</value></data>
+  <data name="SettingsApiDebug.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="SettingsApiDebug.OffContent" xml:space="preserve"><value>Off</value></data>
   <data name="SettingsEndpoints.Text" xml:space="preserve"><value>Endpoints</value></data>
   <data name="SettingsAttachments.Text" xml:space="preserve"><value>Attachments</value></data>
   <data name="SettingsGeneralTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>General</value></data>

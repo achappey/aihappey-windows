@@ -11,7 +11,7 @@ public static class DesktopChatTurn
         Func<List<UIMessage>, CancellationToken, IAsyncEnumerable<StreamEvent>> stream,
         Func<PendingToolApproval, CancellationToken, Task<ToolApprovalDecision>> approve,
         Func<bool, CancellationToken, Task> changed, McpTurnSnapshot mcp, string locale, CancellationToken ct,
-        DesktopElicitationHandler? elicit = null)
+        DesktopElicitationHandler? elicit = null, Action<StreamEvent>? onTransientData = null)
     {
         var assembler = new MessageAssembler(output);
         var executed = new HashSet<string>(StringComparer.Ordinal);
@@ -25,7 +25,8 @@ public static class DesktopChatTurn
                 ct.ThrowIfCancellationRequested();
                 await foreach (var item in stream(messages, ct))
                 {
-                    assembler.Apply(item);
+                    if (TransientConversationData.IsTransient(item)) onTransientData?.Invoke(item);
+                    else assembler.Apply(item);
                     await changed(assembler.Finished, ct);
                     if (assembler.Finished) break;
                 }

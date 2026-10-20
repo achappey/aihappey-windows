@@ -300,6 +300,7 @@
   <data name="EnterpriseSignInFailed" xml:space="preserve"><value>Het inloggen bij Entra is mislukt of geannuleerd. Controleer je desktopregistratie, toestemming en tenantbeleid.</value></data>
   <data name="TokenUsage" xml:space="preserve"><value>Tokengebruik: {0}</value></data>
   <data name="MessagePrice" xml:space="preserve"><value>Berichtprijs: {0}</value></data>
+  <data name="MessagePriceWarning" xml:space="preserve"><value>Indicatief. Werkelijke kosten kunnen afwijken.</value></data>
   <data name="ChatActionsFor" xml:space="preserve"><value>Chatacties voor {0}</value></data>
   <data name="RemoveContext" xml:space="preserve"><value>{0} verwijderen</value></data>
   <data name="OpenConversation" xml:space="preserve"><value>Chat openen: {0}</value></data>
@@ -365,6 +366,10 @@
   <data name="SettingsShowProviderLogo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Toon providerlogo</value></data>
   <data name="SettingsShowProviderLogo.OnContent" xml:space="preserve"><value>Aan</value></data>
   <data name="SettingsShowProviderLogo.OffContent" xml:space="preserve"><value>Uit</value></data>
+  <data name="SettingsApiDebug.Header" xml:space="preserve"><value>Debug</value></data>
+  <data name="SettingsApiDebug.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Debug</value></data>
+  <data name="SettingsApiDebug.OnContent" xml:space="preserve"><value>Aan</value></data>
+  <data name="SettingsApiDebug.OffContent" xml:space="preserve"><value>Uit</value></data>
   <data name="SettingsEndpoints.Text" xml:space="preserve"><value>Endpoints</value></data>
   <data name="SettingsAttachments.Text" xml:space="preserve"><value>Bijlagen</value></data>
   <data name="SettingsGeneralTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Algemeen</value></data>

@@ -15,8 +15,11 @@ public partial class App
     {
         var transcript = Field<StackPanel>(shell, "transcript");
         conversation.Service = ServiceKind.Ai; conversation.Target = "anthropic/current-model";
-        conversation.Messages[1].Message.Metadata = FinishMessageMetadata.Create("openai/gpt-fixture", timestamp,
-            totalTokens: 17, gateway: new FinishGatewayMetadata { Cost = .0123m }).ToDictionary()!;
+        var metadata = conversation.Messages[1].Message.Metadata!;
+        metadata.Clear();
+        foreach (var entry in FinishMessageMetadata.Create("openai/gpt-fixture", timestamp,
+            totalTokens: 17, gateway: new FinishGatewayMetadata { Cost = .0123m }).ToDictionary())
+            metadata[entry.Key] = entry.Value!;
         var original = PortableConversations.Write(conversation);
         Call(shell, "RenderTranscript"); await Task.Delay(100); shell.UpdateLayout();
         var streamingMessage = conversation.Messages[1];
@@ -55,6 +58,9 @@ public partial class App
         string[] Labels() => Descendants(transcript).OfType<TextBlock>().Where(t => t.Name == "MessageModel").Select(t => t.Text).ToArray();
         bool Tokens() => Descendants(transcript).OfType<Border>().Any(b => b.Name == "TokenUsage");
         bool Price() => Descendants(transcript).OfType<Border>().Any(b => b.Name == "MessagePrice");
+        Check(Descendants(transcript).OfType<Border>().Where(b => b.Name == "MessagePrice").All(b =>
+            ToolTipService.GetToolTip(b) is ToolTip { Content: string warning } && warning == DesktopResources.Get("MessagePriceWarning")
+            && AutomationProperties.GetHelpText(b) == warning), context + ": pricing tooltip gives the localized indicative-charge warning");
         Check(!Tokens() && Price(), context + ": default tokens off leaves assistant pricing visible");
         Check(Logos().Length == 2 && Labels().All(label => label == "gpt-fixture"), context + ": answer and activity headers use each assistant's provider logo and abbreviated model");
         Check(Logos().All(logo => logo.Width == 20 && AutomationProperties.GetName(logo).Contains("OpenAI")
@@ -69,6 +75,9 @@ public partial class App
         Check(Descendants(shell).Contains(dictate) && dictate.IsEnabled
             && AutomationProperties.GetName(dictate) == DesktopResources.Get("SpeechDictate")
             && ToolTipService.GetToolTip(dictate) is ToolTip, context + ": chat composer has an accessible Dictate action");
+        var send = Field<Button>(shell, "send");
+        Check(VisualTreeHelper.GetParent(dictate) == VisualTreeHelper.GetParent(send)
+            && Grid.GetColumn(dictate) + 2 == Grid.GetColumn(send), context + ": Dictate is in the right-hand composer actions immediately before Stop/Send");
         input.Select(7, 4);
         var voiceTyping = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.WindowsVoiceTyping")!;
         var nativeInput = voiceTyping.GetNestedType("Input", System.Reflection.BindingFlags.NonPublic)!;
@@ -107,17 +116,18 @@ public partial class App
         }
         var cancelled = await OpenSettings();
         var controls = ((StackPanel)cancelled.FindName("ChatPage")).Children.OfType<ToggleSwitch>().ToArray();
-        Check(controls.Select(t => t.Name).SequenceEqual(["ShowTokens", "ShowProviderLogo"])
-            && !controls[0].IsOn && controls[1].IsOn && controls.All(t => AutomationProperties.GetName(t).Length > 0),
-            context + ": Chat has exactly two accessible toggles in the requested order and defaults");
-        controls[0].IsOn = true; controls[1].IsOn = false;
+        Check(controls.Select(t => t.Name).SequenceEqual(["ShowTokens", "ShowProviderLogo", "ApiDebugEnabled"])
+            && !controls[0].IsOn && controls[1].IsOn && !controls[2].IsOn && controls.All(t => AutomationProperties.GetName(t).Length > 0),
+            context + ": Chat has three accessible toggles with debug off by default");
+        controls[0].IsOn = true; controls[1].IsOn = false; controls[2].IsOn = true;
         InvokeButton(Descendants(cancelled).OfType<Button>().Single(b => b.Name == "CloseButton")); await (Task)cancelled.Tag;
-        Check(!session.Settings.Chat.ShowTokens && session.Settings.Chat.ShowProviderLogo && !Tokens() && Logos().Length == 2,
+        Check(!session.Settings.Chat.ShowTokens && session.Settings.Chat.ShowProviderLogo && !session.Settings.Chat.ApiDebugEnabled && !Tokens() && Logos().Length == 2,
             context + ": Cancel discards display draft and leaves transcript unchanged");
 
         var saved = await OpenSettings();
         ((ToggleSwitch)saved.FindName("ShowTokens")).IsOn = true;
         ((ToggleSwitch)saved.FindName("ShowProviderLogo")).IsOn = false;
+        ((ToggleSwitch)saved.FindName("ApiDebugEnabled")).IsOn = true;
         window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(520, 900)); await Task.Delay(100); saved.UpdateLayout();
         Check(((NavigationView)saved.FindName("Tabs")).IsPaneToggleButtonVisible
             && ((Grid)saved.FindName("Layout")).ActualWidth <= shell.XamlRoot.Size.Width,
@@ -129,21 +139,33 @@ public partial class App
             && Field<Conversation>(shell, "current") == conversation && PortableConversations.Write(conversation) == original,
             context + ": display Save preserves composer draft, runtime, current conversation and metadata");
         var persisted = await SettingsStore.LoadAsync(session.DataDirectory, new());
-        Check(persisted.Chat.ShowTokens && !persisted.Chat.ShowProviderLogo, context + ": native settings Save persists both choices");
+        Check(persisted.Chat.ShowTokens && !persisted.Chat.ShowProviderLogo && persisted.Chat.ApiDebugEnabled, context + ": native settings Save persists display and debug choices");
 
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); await Task.Delay(80);
         var restored = await OpenSettings();
-        Check(((ToggleSwitch)restored.FindName("ShowTokens")).IsOn && !((ToggleSwitch)restored.FindName("ShowProviderLogo")).IsOn,
+        Check(((ToggleSwitch)restored.FindName("ShowTokens")).IsOn && !((ToggleSwitch)restored.FindName("ShowProviderLogo")).IsOn
+            && ((ToggleSwitch)restored.FindName("ApiDebugEnabled")).IsOn,
             context + ": reopening settings restores saved display values");
         ((ToggleSwitch)restored.FindName("ShowTokens")).IsOn = false;
         ((ToggleSwitch)restored.FindName("ShowProviderLogo")).IsOn = true;
+        ((ToggleSwitch)restored.FindName("ApiDebugEnabled")).IsOn = false;
         InvokeButton(Descendants(restored).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await (Task)restored.Tag; await Task.Delay(80);
         Check(!Tokens() && Logos().Length == 2 && Labels().All(label => label == "gpt-fixture") && Price(),
             context + ": restoring defaults refreshes existing assistant cards without reopening history");
         foreach (var width in new[] { 520, 1280 })
         {
             window.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(80); shell.UpdateLayout();
-            Check(Field<ScrollViewer>(shell, "scroll").ScrollableWidth < 1, context + $": provider headers wrap without overflow at {width}px");
+            Check(Field<ScrollViewer>(shell, "scroll").ScrollableWidth < 1, context + $": provider headers stay within the viewport at {width}px");
+            foreach (var header in Descendants(transcript).OfType<Border>().Where(b => b.Name == "MessageHeader" && Descendants(b).OfType<Border>().Any(b => b.Name == "AiGeneratedBadge")))
+            {
+                var badge = Descendants(header).OfType<Border>().Single(b => b.Name == "AiGeneratedBadge");
+                var time = Descendants(header).OfType<TextBlock>().Single(t => t.Name == "MessageTime");
+                var badgeBounds = badge.TransformToVisual(header).TransformBounds(new(0, 0, badge.ActualWidth, badge.ActualHeight));
+                var timeBounds = time.TransformToVisual(header).TransformBounds(new(0, 0, time.ActualWidth, time.ActualHeight));
+                Check(Math.Abs((badgeBounds.Top + badgeBounds.Height / 2) - (timeBounds.Top + timeBounds.Height / 2)) < 2
+                    && timeBounds.Left >= badgeBounds.Right && timeBounds.Left - badgeBounds.Right < 10,
+                    context + $": timestamp is centered on the same row directly after the AI badge at {width}px");
+            }
         }
         conversation.Messages[1].Message.Metadata!["model"] = "unknown-provider/model";
         Call(shell, "RenderTranscript"); await Task.Delay(60);

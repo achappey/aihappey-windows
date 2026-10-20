@@ -21,6 +21,7 @@ internal static class ChatSettingsRegressionTests
             "chat display: old settings default to tokens off and provider logos on");
         check(!new ChatPreferences().ShowTokens && new ChatPreferences().ShowProviderLogo,
             "chat display: fresh preferences have browser-compatible defaults");
+        check(!loaded.Chat.ApiDebugEnabled && !new ChatPreferences().ApiDebugEnabled, "chat debug: fresh and legacy settings default off");
         check(loaded.Chat.MaxOutputTokens == 123 && loaded.Chat.EnabledSkillIds.SequenceEqual(["provider/sample"])
             && loaded.Chat.ActivePlugins.SequenceEqual(["files"]), "chat settings: legacy instruction option does not prevent loading other preferences");
         check(!JsonSerializer.Serialize(loaded.Chat.Clone(), JsonSerializerOptions.Web).Contains("systemInstructions"),
@@ -31,21 +32,29 @@ internal static class ChatSettingsRegressionTests
             && persisted["chat"]!["providerMetadata"]!["custom"]!["futureOption"]!.GetValue<bool>(),
             "chat settings: saving drops legacy instructions without discarding native provider options");
         loaded.Chat.ShowTokens = true; loaded.Chat.ShowProviderLogo = false;
+        loaded.Chat.ApiDebugEnabled = true;
         var clone = loaded.Clone();
+        check(clone.Chat.ApiDebugEnabled, "chat debug: settings cloning preserves enabled debug");
+        clone.Chat.ApiDebugEnabled = false;
+        check(loaded.Chat.ApiDebugEnabled, "chat debug: draft changes do not mutate live preferences");
         check(clone.Chat.ShowTokens && !clone.Chat.ShowProviderLogo, "chat display: settings cloning preserves both explicit values");
         clone.Chat.ShowTokens = false; clone.Chat.ShowProviderLogo = true;
         check(loaded.Chat.ShowTokens && !loaded.Chat.ShowProviderLogo, "chat display: editing a clone does not mutate saved choices");
         await SettingsStore.SaveAsync(directory, loaded);
         var reloaded = await SettingsStore.LoadAsync(directory, new());
+        check(reloaded.Chat.ApiDebugEnabled, "chat debug: enabled value survives restart");
         check(reloaded.Chat.ShowTokens && !reloaded.Chat.ShowProviderLogo, "chat display: tokens on and logos off survive settings persistence");
         var displayRequest = loaded.Chat.RequestBody("custom/model", "fixture", [], "custom");
         check(!displayRequest.ContainsKey("showTokens") && !displayRequest.ContainsKey("showProviderLogo"),
             "chat display: UI preferences are not inference request fields");
         loaded.Chat.ShowTokens = false; loaded.Chat.ShowProviderLogo = true;
+        loaded.Chat.ApiDebugEnabled = false;
+        check(!displayRequest.ContainsKey("apiDebugEnabled"), "chat debug: toggle is not an inference body field");
         check(JsonNode.DeepEquals(displayRequest, loaded.Chat.RequestBody("custom/model", "fixture", [], "custom")),
             "chat display: changing display preferences never changes inference requests");
         await SettingsStore.SaveAsync(directory, loaded);
         reloaded = await SettingsStore.LoadAsync(directory, new());
+        check(!reloaded.Chat.ApiDebugEnabled, "chat debug: explicit disabled value survives restart");
         check(!reloaded.Chat.ShowTokens && reloaded.Chat.ShowProviderLogo, "chat display: explicit default choices also round-trip");
 
         var mcp = McpTurnSnapshot.Empty;

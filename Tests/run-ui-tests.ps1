@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly)
+param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -26,6 +26,7 @@ try {
     $arguments = @('"' + $report + '"')
     if ($StartupOnly) { $arguments += '--startup-only' }
     if ($TranscriptOnly) { $arguments += '--transcript-only' }
+    if ($ActivityOnly) { $arguments += '--activity-only' }
     if ($McpPresentationOnly) { $arguments += '--mcp-presentation-only' }
     if ($ElicitationOnly) { $arguments += '--elicitation-only' }
     if ($SkillsOnly) { $arguments += '--skills-only' }

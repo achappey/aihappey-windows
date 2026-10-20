@@ -372,11 +372,13 @@ public sealed partial class ChatShell : UserControl
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         var composerSettings = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        composerSettings.Children.Add(addContext); composerSettings.Children.Add(chatSettings); composerSettings.Children.Add(dictate);
+        composerSettings.Children.Add(addContext); composerSettings.Children.Add(chatSettings);
         actions.Children.Add(composerSettings);
         Grid.SetColumn(viewSystemContext, 1); actions.Children.Add(viewSystemContext);
-        Grid.SetColumn(stop, 2); actions.Children.Add(stop); Grid.SetColumn(send, 3); actions.Children.Add(send);
+        Grid.SetColumn(dictate, 2); actions.Children.Add(dictate);
+        Grid.SetColumn(stop, 3); actions.Children.Add(stop); Grid.SetColumn(send, 4); actions.Children.Add(send);
         composer.Children.Add(actions);
         Grid.SetRow(disclaimer, 3); workspace.Children.Add(disclaimer);
         workspace.Children.Add(composer); split.Content = BuildConversationActivityLayout(BuildDetailsLayout(workspace));
@@ -503,6 +505,7 @@ public sealed partial class ChatShell : UserControl
             var saveAt = TimeSpan.Zero;
             var renderAt = TimeSpan.Zero;
             await SaveTurnHistoryAsync(partition, current, ct);
+            var activityScope = transientConversationData.SetScope(partition, current.Id);
             try
             {
                 await DesktopChatTurn.RunAsync(current, output,
@@ -514,7 +517,8 @@ public sealed partial class ChatShell : UserControl
                     { RenderTranscript(); renderAt = watch.Elapsed; }
                     if (force || watch.Elapsed - saveAt > TimeSpan.FromSeconds(1))
                     { await SaveTurnHistoryAsync(partition, current, token); saveAt = watch.Elapsed; }
-                }, mcpTurn, session.ActiveLanguage, ct, session.ElicitAsync);
+                }, mcpTurn, session.ActiveLanguage, ct, session.ElicitAsync,
+                    item => CaptureConversationData(activityScope, item, output));
                 if (output.Status is "interrupted" or "approval required") Show(DesktopResources.Get("StreamInterrupted"), InfoBarSeverity.Warning);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { /* The turn runner retains pending approvals on stop. */ }
@@ -616,6 +620,8 @@ public sealed partial class ChatShell : UserControl
                 pricing.Children.Add(new TextBlock { Text = price, VerticalAlignment = VerticalAlignment.Center });
                 var badge = new Border { Name = "MessagePrice", Child = pricing, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16), VerticalAlignment = VerticalAlignment.Center };
                 ToolbarControls.Label(badge, DesktopResources.Format("MessagePrice", price));
+                AutomationProperties.SetHelpText(badge, DesktopResources.Get("MessagePriceWarning"));
+                ToolTipService.SetToolTip(badge, new ToolTip { Content = DesktopResources.Get("MessagePriceWarning") });
                 badge.Style = TranscriptStyle("TranscriptSurfaceStyle");
                 footerActions.Children.Add(badge);
             }

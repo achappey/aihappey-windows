@@ -38,6 +38,12 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--activity-only"))
+            {
+                foreach (var local in new[] { true, false })
+                    foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckTranscriptAsync(local, theme);
+                results.Add("All activity scrolling UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--startup-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckStartupAsync(theme);
@@ -227,6 +233,12 @@ public partial class App : Application
                 ]
             };
             var open = typeof(ChatShell).GetMethod("OpenConversationAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            if (Environment.GetCommandLineArgs().Contains("--activity-only"))
+            {
+                await (Task)open.Invoke(shell, new object[] { conversation })!;
+                await CheckActivityScrollingAsync(shell, session, conversation, context);
+                File.WriteAllLines(report, results); return;
+            }
             for (var repeat = 0; repeat < 3; repeat++)
             {
                 await (Task)open.Invoke(shell, new object[] { new Conversation { Target = "test-agent", Service = ServiceKind.Agents } })!;
@@ -256,6 +268,7 @@ public partial class App : Application
                 foreach (var entry in metadata) target[entry.Key] = entry.Value!;
             }
             await CheckChatDisplayAsync(shell, session, conversation, timestamp, context);
+            await CheckActivityScrollingAsync(shell, session, conversation, context);
             session.Settings.Chat.ShowTokens = true; // Existing usage fixtures explicitly opt in.
             foreach (var (tokens, cost, expected) in new[] { (0, 0d, "0.00"), (0, .001d, "0.00>"), (17, .0123d, "0.01") })
             {
