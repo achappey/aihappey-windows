@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly, [switch]$AuthoringToolsOnly, [switch]$ToolOutputOnly, [switch]$ChatFilesOnly)
+param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly, [switch]$AuthoringToolsOnly, [switch]$ToolOutputOnly, [switch]$ChatFilesOnly, [switch]$ContextSearchOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -25,6 +25,7 @@ $report = Join-Path ([IO.Path]::GetTempPath()) ('AIHappey-ui-tests-' + [guid]::N
 try {
     $arguments = @('"' + $report + '"')
     if ($StartupOnly) { $arguments += '--startup-only' }
+    if ($ContextSearchOnly) { $arguments += '--context-search-only' }
     if ($TranscriptOnly) { $arguments += '--transcript-only' }
     if ($ActivityOnly) { $arguments += '--activity-only' }
     if ($McpPresentationOnly) { $arguments += '--mcp-presentation-only' }

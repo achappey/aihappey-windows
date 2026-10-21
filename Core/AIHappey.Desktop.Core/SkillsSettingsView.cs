@@ -16,10 +16,12 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
     private readonly TextBox search = new() { Name = "ChatSkillSearch", PlaceholderText = DesktopResources.Get("SearchSkills") };
     private readonly StackPanel cards = new() { Spacing = 12 };
     private readonly TextBlock feedback = new() { Name = "ChatSkillFeedback", TextWrapping = TextWrapping.Wrap };
+    private readonly ProgressBar loading = new() { Name = "ChatSkillsProgress", Height = 4, Visibility = Visibility.Collapsed };
     private readonly Button retry = new() { Name = "ChatSkillsRetry", Content = DesktopResources.Get("Retry"), Visibility = Visibility.Collapsed };
     private DesktopSkillSelection selection = new([], new HashSet<string>(), DesktopResources.Get("Skills"));
     private bool started;
     private bool disposed;
+    private bool loadingNow;
     public async Task RefreshAsync() { if (started && !disposed) await LoadAsync(); }
     public SkillsSettingsView(ChatPreferences draft, Func<CancellationToken, Task<DesktopSkillSelection>>? load,
         Func<string, CancellationToken, Task>? prefetch)
@@ -27,6 +29,7 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
         this.draft = draft; this.load = load; this.prefetch = prefetch;
         Name = "ChatSkillsView"; Spacing = 16;
         ControlAppearance.Stock(search); ToolbarControls.Label(search, DesktopResources.Get("SearchSkills")); Children.Add(search);
+        AutomationProperties.SetName(loading, DesktopResources.Get("Loading")); Children.Add(loading);
         AutomationProperties.SetLiveSetting(feedback, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         Children.Add(feedback); ControlAppearance.Stock(retry); Children.Add(retry); Children.Add(cards);
         search.TextChanged += (_, _) => Render(); retry.Click += async (_, _) => await LoadAsync();
@@ -34,8 +37,10 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
     }
     private async Task LoadAsync()
     {
-        if (disposed) return;
-        retry.Visibility = Visibility.Collapsed; feedback.Text = DesktopResources.Get("Working");
+        if (disposed || loadingNow) return;
+        loadingNow = true;
+        retry.Visibility = Visibility.Collapsed; feedback.Text = "";
+        loading.IsIndeterminate = true; loading.Visibility = Visibility.Visible;
         try
         {
             if (load is not null) selection = await load(lifetime.Token);
@@ -48,6 +53,7 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
             if (disposed) return;
             feedback.Text = DesktopResources.Get("SkillsCatalogFailed"); retry.Visibility = Visibility.Visible; Render();
         }
+        finally { loadingNow = false; loading.IsIndeterminate = false; loading.Visibility = Visibility.Collapsed; }
     }
     private void Render()
     {
@@ -96,5 +102,5 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
         var description = new TextBlock { Text = skill.Description, TextWrapping = TextWrapping.Wrap };
         NativeCardSurface.Secondary(description); body.Children.Add(description);
     }
-    public void Dispose() { disposed = true; lifetime.Cancel(); }
+    public void Dispose() { disposed = true; lifetime.Cancel(); loading.IsIndeterminate = false; loading.Visibility = Visibility.Collapsed; }
 }

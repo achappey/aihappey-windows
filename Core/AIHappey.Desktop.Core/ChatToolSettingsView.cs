@@ -10,8 +10,8 @@ public sealed class ChatToolSettingsView : StackPanel
 {
     private readonly ChatPreferences draft;
     private readonly Func<ChatPreferences, IReadOnlyList<ChatToolOption>> availableTools;
-    private readonly ComboBox choice = new() { Name = "ChatToolChoice", HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly TextBox limit = new() { Name = "ChatMaxToolCalls" };
+    private readonly ComboBox choice = new() { Name = "ChatToolChoice", MinWidth = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly TextBox limit = new() { Name = "ChatMaxToolCalls", MinWidth = 0 };
     private readonly ListView stops = new() { Name = "ChatStopTools", SelectionMode = ListViewSelectionMode.Multiple,
         MaxHeight = 220, HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock empty = new() { TextWrapping = TextWrapping.Wrap };
@@ -30,12 +30,15 @@ public sealed class ChatToolSettingsView : StackPanel
         this.draft = draft; this.availableTools = availableTools;
         Name = "ChatToolSettingsView"; Spacing = 16; draft.NormalizeTools();
         toolsSection = NativeSettingsSurface.Expander(this, "GeneralToolsCard", DesktopResources.Get("Tools"), null, out var tools);
+        var options = new Grid { Name = "ChatToolOptions", ColumnSpacing = 16 };
+        options.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        options.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        tools.Children.Add(options);
         choice.Header = ChatSettingsFields.L("toolChoice"); ControlAppearance.Stock(choice);
-        AutomationProperties.SetName(choice, ChatSettingsFields.L("toolChoice")); tools.Children.Add(choice);
-        tools.Children.Add(new TextBlock { Text = DesktopResources.Get("ChatToolRequiredHint"), TextWrapping = TextWrapping.Wrap });
+        AutomationProperties.SetName(choice, ChatSettingsFields.L("toolChoice")); options.Children.Add(choice);
         limit.Header = ChatSettingsFields.L("maxToolCalls"); limit.PlaceholderText = DesktopResources.Get("ChatOptional");
         limit.Text = draft.MaxToolCalls?.ToString() ?? ""; ControlAppearance.Stock(limit);
-        AutomationProperties.SetName(limit, ChatSettingsFields.L("maxToolCalls")); tools.Children.Add(limit);
+        AutomationProperties.SetName(limit, ChatSettingsFields.L("maxToolCalls")); Grid.SetColumn(limit, 1); options.Children.Add(limit);
         var error = new TextBlock { Text = DesktopResources.Get("ChatTokensInvalid"), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
         AutomationProperties.SetLiveSetting(error, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite); tools.Children.Add(error);
         limit.TextChanged += (_, _) =>

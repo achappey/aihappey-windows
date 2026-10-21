@@ -27,11 +27,6 @@ public sealed partial class ChatShell
         pluginsOverview.DeleteRequested = DeletePluginAsync;
         pluginsOverview.FavoriteRequested = plugin => RunAsync(async ct => { var partition = session.PluginPartition; await pluginStore.FavoriteAsync(partition, plugin.Id, !plugin.Favorite, ct); await LoadPluginsAsync(ct); });
         pluginsOverview.ImportRequested = ImportPluginsAsync;
-        if (addContext.Flyout is MenuFlyout context)
-        {
-            var select = new MenuFlyoutItem { Name = "SelectAgentPlugins", Text = DesktopResources.Get("PluginsTitle"), Icon = DesktopIcons.Create(Icon.PuzzlePiece) }; ControlAppearance.Native(select);
-            select.Click += async (_, _) => await SelectPluginsAsync(); context.Items.Add(select);
-        }
     }
     private bool CurrentPluginPartition(string partition) => !closing && session.PluginPartition == partition;
     private async Task LoadPluginsAsync(CancellationToken ct, bool connectServices = true)

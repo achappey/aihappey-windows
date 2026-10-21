@@ -36,6 +36,8 @@ public sealed partial class ChatShell
         RenderMcpTags(); mcpOverview.SetInstalled(Mcp.Servers);
         RenderContextTags();
         if (chatSettingsDialog is { } dialog) { _ = dialog.RefreshSkillsAsync(); dialog.RefreshAvailableTools(); }
+        contextSearchDialog?.RefreshInstalled();
+        if (contextSearchDialog is { } search) _ = search.RefreshSkillsAsync();
         resourcesDialog?.SetCatalog(Mcp.Capture().Resources);
         promptsDialog?.SetCatalog(Mcp.CapturePrompts());
     });

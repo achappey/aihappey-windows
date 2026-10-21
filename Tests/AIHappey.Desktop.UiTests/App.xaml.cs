@@ -38,6 +38,12 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--context-search-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
+                { await CheckContextSearchAsync(theme); await CheckToolLayoutAndSkillProgressAsync(theme); }
+                results.Add("All context search and composer polish UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--chat-files-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckChatFilesAsync(theme);
@@ -79,6 +85,7 @@ public partial class App : Application
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
                 {
+                    await CheckContextSearchAsync(theme); await CheckToolLayoutAndSkillProgressAsync(theme);
                     await CheckChatSkillsSettingsAsync(theme);
                     await CheckChatToolsSettingsAsync(theme);
                 }
@@ -142,6 +149,8 @@ public partial class App : Application
             }
             foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckStartupAsync(theme);
             foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckChatFilesAsync(theme);
+            foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
+            { await CheckContextSearchAsync(theme); await CheckToolLayoutAndSkillProgressAsync(theme); }
             foreach (var local in new[] { true, false })
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
                 {

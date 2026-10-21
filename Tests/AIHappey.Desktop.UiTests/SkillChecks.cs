@@ -28,9 +28,9 @@ public partial class App
         Check(Descendants(dialog).OfType<TextBox>().Any(t => t.Name == "MaxOutputTokens")
             && !Descendants(dialog).OfType<TextBox>().Any(t => t.Name == "SystemInstructions"), context + ": General retains token limit but has no custom-instructions field");
         var tabs = Descendants(dialog).OfType<ToggleButton>().Where(t => t.Name.StartsWith("Chat") && t.Name.EndsWith("Tab")).ToArray();
-        Check(tabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab", "ChatProviderTab"])
+        Check(tabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab", "ChatPluginsTab", "ChatProviderTab"])
             && tabs[0].IsChecked == true && tabs.Count(t => t.IsChecked == true) == 1,
-            context + ": chat tabs are General, Tools, Skills, provider with General selected by default");
+            context + ": chat tabs retain General, Tools, Skills, Plugins and provider with General selected by default");
         dialog.ShowToolsTab(); await Task.Delay(80);
         Check(tabs.Single(t => t.Name == "ChatToolsTab").IsChecked == true && tabs.Count(t => t.IsChecked == true) == 1,
             context + ": reordered Tools tab retains exclusive native navigation");
@@ -85,7 +85,7 @@ public partial class App
             { XamlRoot = root.XamlRoot, RequestedTheme = theme };
         shown = reset.ShowAsync(); await Task.Delay(100); InvokeButton(Descendants(reset).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80);
         var resetTabs = Descendants(reset).OfType<ToggleButton>().Where(t => t.Name.StartsWith("Chat") && t.Name.EndsWith("Tab")).ToArray();
-        Check(resetTabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab"])
+        Check(resetTabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab", "ChatPluginsTab"])
             && resetTabs[0].IsChecked == true && resetTabs.Count(t => t.IsChecked == true) == 1,
             context + ": restore defaults preserves General, Tools, Skills order without a provider form");
         InvokeButton(Descendants(reset).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;

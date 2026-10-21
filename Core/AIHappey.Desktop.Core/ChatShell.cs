@@ -46,7 +46,8 @@ public sealed partial class ChatShell : UserControl
     private readonly InfoBar notice = new() { Name = "ChatNotice", IsOpen = false, IsClosable = true,
         HorizontalAlignment = HorizontalAlignment.Stretch, Visibility = Visibility.Collapsed };
     private readonly TextBlock noticeMessage = new() { TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, VerticalAlignment = VerticalAlignment.Center };
-    private readonly TextBlock progress = new() { Text = DesktopResources.Get("Working"), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
+    private readonly ProgressRing progress = new() { Name = "HeaderActivityProgress", Width = 20, Height = 20, IsActive = false,
+        VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private IReadOnlyList<ChatTarget> targets = [];
     private IReadOnlyList<Conversation> conversations = [];
     private Conversation current = new();
@@ -334,6 +335,7 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(videoModelToolbar, 1); top.Children.Add(videoModelToolbar);
         Grid.SetColumn(speechTarget, 1); top.Children.Add(speechTarget);
         Grid.SetColumn(transcriptionTarget, 1); top.Children.Add(transcriptionTarget);
+        AutomationProperties.SetName(progress, DesktopResources.Get("Working"));
         Grid.SetColumn(progress, 3); top.Children.Add(progress);
         var profileMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
         profileMenu.Items.Add(settingsButton); profileMenu.Items.Add(manageAccount);
@@ -416,6 +418,7 @@ public sealed partial class ChatShell : UserControl
         target.PlaceholderText = label;
         ToolbarControls.Label(target, label);
         chatSettings.Visibility = selected == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
+        searchContext.Visibility = selected == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
         RenderMcpTags();
         RenderContextTags();
     }
@@ -804,6 +807,7 @@ public sealed partial class ChatShell : UserControl
         speechTarget.IsEnabled = !value;
         speechPage.SetBusy(value, inference && activePage == DesktopPage.Speech);
         transcriptionsPage.SetBusy(value, inference && activePage == DesktopPage.Transcriptions);
+        progress.IsActive = value;
         progress.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         stop.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         send.Visibility = inference ? Visibility.Collapsed : Visibility.Visible;
@@ -865,6 +869,7 @@ public sealed partial class ChatShell : UserControl
         systemContextDialog?.Hide();
         mcpDialog?.Shutdown(); Mcp.Changed -= McpChanged;
         if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.CancelSkillLoading(); chatSettingsDialog.Hide(); }
+        contextSearchDialog?.Shutdown();
         while (busy) await Task.Delay(20);
         await Task.WhenAll(appAgentTasks.ToArray());
         appAgentLifetime.Dispose();

@@ -28,7 +28,8 @@ public sealed partial class ChatShell
         var menu = new MenuFlyout { Placement = FlyoutPlacementMode.TopEdgeAlignedLeft };
         var files = new MenuFlyoutItem { Text = DesktopResources.Get("Attachments"), Icon = DesktopIcons.Create(Icon.Attach) };
         var link = new MenuFlyoutItem { Text = DesktopResources.Get("Link"), Icon = DesktopIcons.Create(Icon.Link) };
-        foreach (var item in new[] { files, link, selectResources, selectPrompts, manageMcp }) { ControlAppearance.Native(item); menu.Items.Add(item); }
+        foreach (var item in new[] { searchContext, files, link, selectResources, selectPrompts, manageMcp }) { ControlAppearance.Native(item); menu.Items.Add(item); }
+        searchContext.Click += async (_, _) => await SearchContextAsync();
         files.Click += async (_, _) => await PickAttachmentsAsync();
         link.Click += async (_, _) => await AddLinkAsync();
         selectResources.Click += async (_, _) => await SelectResourcesAsync();
