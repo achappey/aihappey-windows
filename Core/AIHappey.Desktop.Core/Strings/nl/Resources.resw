@@ -1376,4 +1376,9 @@
   <data name="ChatForm_annotations_destructive" xml:space="preserve"><value>Destructief</value></data>
   <data name="ChatForm_annotations_readOnly" xml:space="preserve"><value>Alleen-lezen</value></data>
   <data name="ChatForm_annotations_idempotent" xml:space="preserve"><value>Herhaalbaar zonder effect</value></data>
+  <data name="AgentModels" xml:space="preserve"><value>Modellen</value></data>
+  <data name="AgentDecisionRouter" xml:space="preserve"><value>Beslissingsrouter</value></data>
+  <data name="AgentModelRoutingHint" xml:space="preserve"><value>Selecteer antwoordmodellen en eventueel een beslissingsmodel om ertussen te kiezen. Zonder router wordt het eerste antwoordmodel gebruikt.</value></data>
+  <data name="AgentProviderMetadata" xml:space="preserve"><value>Providermetadata</value></data>
+  <data name="AgentProviderHeaders" xml:space="preserve"><value>Providerheaders</value></data>
 </root>

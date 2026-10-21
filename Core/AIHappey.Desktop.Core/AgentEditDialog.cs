@@ -30,6 +30,9 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
     private OpenAIChatSettingsForm? openAI;
     private ChatPreferences? providerPreferences;
     private JsonObject? providerBaseline;
+    private string? settingsModelId;
+    private JsonObject? settingsModel;
+    private ChatSettingsFields providerFields = new();
     private int pending;
     private bool saving;
     public DesktopAgent? Result { get; private set; }
@@ -88,7 +91,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         NativeSettingsSurface.Card(parent, "Agent_" + key.Replace('.', '_'), ChatSettingsFields.L(key), out var body); return body;
     }
     private void Message(string text) { feedback.Text = text; feedback.Visibility = Visibility.Visible; }
-    private void UpdateSave() => IsPrimaryButtonEnabled = draft.IsValid && fields.IsValid && pending == 0 && !saving;
+    private void UpdateSave() => IsPrimaryButtonEnabled = draft.IsValid && fields.IsValid && providerFields.IsValid && pending == 0 && !saving;
     private async Task WorkAsync(Func<CancellationToken, Task> work)
     {
         pending++; UpdateSave();
@@ -107,16 +110,50 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         var panel = Panel(); var body = Card(panel, "agent.general");
         var name = fields.Text(body, "agent.name", () => draft.Name, v => draft.Definition["name"] = v.Trim()); name.Name = "AgentName"; name.IsEnabled = !editing;
         fields.Text(body, "agent.description", () => draft.Description, v => draft.Definition["description"] = v).Name = "AgentDescription";
-        var modelOptions = models.Where(m => m.ModelType is null or "language").ToArray();
+        var modelOptions = models.Where(m => m.ModelType is null or "language" or "decision")
+            .Concat(draft.Models.Where(model => !models.Any(m => m.Id == DesktopAgent.Text(model["id"])))
+                .Select(model => new ChatTarget(DesktopAgent.Text(model["id"]), DesktopAgent.Text(model["id"])) { ModelType = DesktopAgent.Text(model["type"]) }))
+            .DistinctBy(model => model.Id).Select(model => model.ModelType == "decision"
+                ? model with { Label = model.Label + " (" + DesktopResources.Get("AgentDecisionRouter") + ")" } : model).ToArray();
+        var choices = new ListView { Name = "AgentModels", SelectionMode = ListViewSelectionMode.Multiple,
+            IsMultiSelectCheckBoxEnabled = true, Height = 200, ItemsSource = modelOptions,
+            HorizontalAlignment = HorizontalAlignment.Stretch };
+        AutomationProperties.SetName(choices, DesktopResources.Get("AgentModels"));
+        var updatingModels = false;
+        void RefreshChoices(string query = "")
+        {
+            updatingModels = true;
+            choices.ItemsSource = modelOptions.Where(m => draft.ModelIds.Contains(m.Id)
+                || (m.Id + " " + m.Label).Contains(query, StringComparison.OrdinalIgnoreCase)).ToArray();
+            foreach (var option in choices.Items.OfType<ChatTarget>())
+                if (draft.ModelIds.Contains(option.Id)) choices.SelectedItems.Add(option);
+            updatingModels = false;
+        }
+        RefreshChoices();
+        void SelectModels(IEnumerable<ChatTarget> next)
+        {
+            CommitProvider();
+            draft.SelectModels(next.Select(item => (item.Id, item.ModelType)));
+            BuildProvider(); fields.Refresh();
+        }
+        choices.SelectionChanged += (_, args) =>
+        {
+            if (updatingModels) return;
+            var removed = args.RemovedItems.OfType<ChatTarget>().Select(item => item.Id).ToHashSet();
+            var next = draft.Models.Where(item => !removed.Contains(DesktopAgent.Text(item["id"])))
+                .Select(item => modelOptions.First(m => m.Id == DesktopAgent.Text(item["id"])))
+                .Concat(args.AddedItems.OfType<ChatTarget>()).DistinctBy(item => item.Id);
+            SelectModels(next.ToArray());
+        };
         var model = new AutoSuggestBox { Name = "AgentModel", Header = ChatSettingsFields.L("model"), Text = draft.ModelId,
             ItemsSource = modelOptions.Take(100).ToArray(), DisplayMemberPath = "Label", TextMemberPath = "Id", PlaceholderText = DesktopResources.Get("SelectModel"),
             QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12), HorizontalAlignment = HorizontalAlignment.Stretch };
         ControlAppearance.Stock(model); AutomationProperties.SetName(model, ChatSettingsFields.L("model")); body.Children.Add(model);
         void SetModel(string id)
         {
-            if (id == draft.ModelId) return;
-            CommitProvider(); var previous = DesktopAgent.Provider(draft.ModelId); draft.ChangeModel(id);
-            if (previous != DesktopAgent.Provider(id)) BuildProvider(); fields.Refresh();
+            if (draft.ModelIds.Contains(id) || modelOptions.FirstOrDefault(item => item.Id == id) is not { } selected) return;
+            SelectModels(draft.Models.Select(item => modelOptions.First(m => m.Id == DesktopAgent.Text(item["id"]))).Append(selected).ToArray());
+            RefreshChoices();
         }
         void Suggestions(string query = "") => model.ItemsSource = modelOptions
             .Where(m => (m.Id + " " + m.Label).Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
@@ -127,7 +164,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
             // transition inside AutoSuggestBox's textbox/query-button template.
             if (modelOptions.Any(m => m.Id == model.Text.Trim())) SetModel(model.Text.Trim());
             if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
-            { Suggestions(model.Text); model.IsSuggestionListOpen = true; }
+            { Suggestions(model.Text); RefreshChoices(model.Text); model.IsSuggestionListOpen = true; }
         };
         model.SuggestionChosen += (_, args) => { if (args.SelectedItem is ChatTarget selected) { model.Text = selected.Id; SetModel(selected.Id); } };
         model.QuerySubmitted += (_, args) =>
@@ -136,29 +173,50 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
             else { Suggestions(); model.IsSuggestionListOpen = true; }
         };
         model.LostFocus += (_, _) => { model.IsSuggestionListOpen = false; SetModel(model.Text.Trim()); };
+        body.Children.Add(choices);
+        body.Children.Add(new TextBlock { Text = DesktopResources.Get("AgentModelRoutingHint"), TextWrapping = TextWrapping.Wrap });
         fields.Text(body, "agent.instructions", () => DesktopAgent.Text(draft.Definition["instructions"]), v => draft.Definition["instructions"] = v, multiline: true).Name = "AgentInstructions";
         fields.Text(body, "agent.argumentHint", () => DesktopAgent.Text(draft.Definition["argumentHint"]), v => draft.Definition["argumentHint"] = v).Name = "AgentArgumentHint";
         return panel;
     }
     private void BuildProvider()
     {
+        var wasSelected = (tabs.SelectedItem as NavigationViewItem)?.Tag as string == "providers";
         var old = tabs.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => i.Tag as string == "providers");
         if (old is not null) tabs.MenuItems.Remove(old);
-        var provider = DesktopAgent.Provider(draft.ModelId); var panel = Panel();
+        settingsModel = draft.Models.FirstOrDefault(model => DesktopAgent.Text(model["id"]) == settingsModelId) ?? draft.Models.FirstOrDefault();
+        settingsModelId = DesktopAgent.Text(settingsModel?["id"]);
+        var provider = DesktopAgent.Provider(settingsModelId); var panel = Panel();
+        providerFields = new();
         openAI = null; providerPreferences = null; providerBaseline = null;
-        if (provider.Equals("openai", StringComparison.OrdinalIgnoreCase))
+        var picker = new ComboBox { Name = "AgentSettingsModel", Header = DesktopResources.Get("AgentModels"), HorizontalAlignment = HorizontalAlignment.Stretch };
+        foreach (var configuration in draft.Models) picker.Items.Add(DesktopAgent.Text(configuration["id"]));
+        picker.SelectedItem = settingsModelId; ControlAppearance.Stock(picker); panel.Children.Add(picker);
+        picker.SelectionChanged += (_, _) =>
+        {
+            if (picker.SelectedItem is not string id || id == settingsModelId) return;
+            if (!providerFields.IsValid || openAI?.IsValid == false) { picker.SelectedItem = settingsModelId; return; }
+            CommitProvider(); settingsModelId = id; BuildProvider();
+        };
+        if (provider.Equals("openai", StringComparison.OrdinalIgnoreCase) && DesktopAgent.Text(settingsModel?["type"]) != "decision")
         {
             providerPreferences = new();
-            providerPreferences.ProviderMetadata["openai"] = draft.Definition["model"]?["providerMetadata"] as JsonObject ?? new();
-            if (draft.Definition["model"]?["providerHeaders"] is JsonObject headers)
+            providerPreferences.ProviderMetadata["openai"] = settingsModel?["providerMetadata"] as JsonObject ?? new();
+            if (settingsModel?["providerHeaders"] is JsonObject headers)
                 providerPreferences.ProviderHeaders["openai"] = headers.Where(p => p.Value is JsonValue).ToDictionary(p => p.Key, p => DesktopAgent.Text(p.Value), StringComparer.OrdinalIgnoreCase);
             openAI = new(providerPreferences); openAI.Commit(providerPreferences);
             providerBaseline = (JsonObject)providerPreferences.ProviderMetadata["openai"].DeepClone();
             providerBaseline["__headers"] = JsonSerializer.SerializeToNode(providerPreferences.ProviderHeaders.GetValueOrDefault("openai") ?? []);
             panel.Children.Add(openAI.View);
         }
-        else panel.Children.Add(new TextBlock { Text = DesktopResources.Get("AgentProviderDeferred"), TextWrapping = TextWrapping.Wrap });
+        else if (settingsModel is { } configuration)
+        {
+            providerFields.Json(panel, "providerMetadata", () => configuration["providerMetadata"], node => configuration["providerMetadata"] = node).Header = DesktopResources.Get("AgentProviderMetadata");
+            providerFields.Json(panel, "providerHeaders", () => configuration["providerHeaders"], node => configuration["providerHeaders"] = node).Header = DesktopResources.Get("AgentProviderHeaders");
+        }
         AddTab("providers", provider.Equals("openai", StringComparison.OrdinalIgnoreCase) ? "OpenAI" : provider.Length > 0 ? provider : DesktopResources.Get("AgentProvider"), panel);
+        providerFields.Watch(UpdateSave);
+        if (wasSelected) { tabs.SelectedItem = tabs.MenuItems.OfType<NavigationViewItem>().First(i => i.Tag as string == "providers"); page.Content = panel; }
     }
     private void CommitProvider()
     {
@@ -166,7 +224,8 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         openAI.Commit(providerPreferences);
         var after = (JsonObject)providerPreferences.ProviderMetadata["openai"].DeepClone();
         after["__headers"] = JsonSerializer.SerializeToNode(providerPreferences.ProviderHeaders.GetValueOrDefault("openai") ?? []);
-        var model = DesktopAgent.Object(draft.Definition, "model");
+        var model = settingsModel;
+        if (model is null) return;
         var target = model["providerMetadata"] as JsonObject ?? new();
         var before = (JsonObject)providerBaseline.DeepClone(); var oldHeaders = before["__headers"]?.DeepClone(); var newHeaders = after["__headers"]?.DeepClone();
         before.Remove("__headers"); after.Remove("__headers");
@@ -179,12 +238,12 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
     private async void Save(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         args.Cancel = true;
-        if (pending > 0 || saving || !fields.IsValid || openAI?.IsValid == false)
+        if (pending > 0 || saving || !fields.IsValid || !providerFields.IsValid || openAI?.IsValid == false)
         { Message(DesktopResources.Get("ChatSettingsInvalid")); if (openAI?.IsValid == false) { tabs.SelectedItem = tabs.MenuItems.OfType<NavigationViewItem>().First(i => i.Tag as string == "providers"); openAI.FocusInvalid(); } else fields.FirstInvalid?.Focus(FocusState.Programmatic); return; }
         var deferral = args.GetDeferral(); saving = true; UpdateSave();
         try
         {
-            CommitProvider(); draft.Validate(); lifetime.Token.ThrowIfCancellationRequested();
+            CommitProvider(); draft.SyncLegacyModel(); draft.Validate(); lifetime.Token.ThrowIfCancellationRequested();
             if (partition != session.AgentPartition) throw new OperationCanceledException();
             if (SaveAsync is not null) await SaveAsync(draft.Clone(), lifetime.Token);
             Result = draft.Clone(); args.Cancel = false;

@@ -1381,4 +1381,9 @@
   <data name="ChatForm_annotations_destructive" xml:space="preserve"><value>Destructive</value></data>
   <data name="ChatForm_annotations_readOnly" xml:space="preserve"><value>Read-only</value></data>
   <data name="ChatForm_annotations_idempotent" xml:space="preserve"><value>Idempotent</value></data>
+  <data name="AgentModels" xml:space="preserve"><value>Models</value></data>
+  <data name="AgentDecisionRouter" xml:space="preserve"><value>Decision router</value></data>
+  <data name="AgentModelRoutingHint" xml:space="preserve"><value>Select answer models and optionally a decision model to choose between them. Without a router, the first answer model is used.</value></data>
+  <data name="AgentProviderMetadata" xml:space="preserve"><value>Provider metadata</value></data>
+  <data name="AgentProviderHeaders" xml:space="preserve"><value>Provider headers</value></data>
 </root>

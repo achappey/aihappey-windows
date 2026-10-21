@@ -16,7 +16,19 @@ public sealed class DesktopAgent
     public JsonObject Definition { get; }
     public string Name => Text(Definition["name"]);
     public string Description => Text(Definition["description"]);
-    public string ModelId => Text(Definition["model"]?["id"]);
+    public IReadOnlyList<JsonObject> Models
+    {
+        get
+        {
+            var models = (Definition["models"] as JsonArray)?.OfType<JsonObject>()
+                .Where(model => !string.IsNullOrWhiteSpace(Text(model["id"])))
+                .DistinctBy(model => Text(model["id"]), StringComparer.Ordinal).ToArray() ?? [];
+            return models.Length > 0 ? models : Definition["model"] is JsonObject legacy
+                && !string.IsNullOrWhiteSpace(Text(legacy["id"])) ? [legacy] : [];
+        }
+    }
+    public string ModelId => Text(Models.FirstOrDefault(model => Text(model["type"]) != "decision")?["id"]);
+    public IReadOnlyList<string> ModelIds => Models.Select(model => Text(model["id"])).ToArray();
     public string SelectionKey => "local:" + Name;
     public DesktopAgent(JsonObject definition) => Definition = (JsonObject)definition.DeepClone();
     public DesktopAgent Clone() => new(Definition);
@@ -53,9 +65,14 @@ public sealed class DesktopAgent
     public const int MaxDocumentBytes = 96 * 1024 * 1024;
     public void Normalize()
     {
-        if (Definition["model"] is JsonObject model && model["providerHeaders"] is JsonObject headers)
+        if (Definition["models"] is JsonArray collection)
+            Definition["models"] = new JsonArray(collection.OfType<JsonObject>()
+                .Where(model => !string.IsNullOrWhiteSpace(Text(model["id"])))
+                .DistinctBy(model => Text(model["id"]), StringComparer.Ordinal).Select(model => model.DeepClone()).ToArray());
+        foreach (var model in Models.Concat(Definition["model"] is JsonObject legacyModel ? new[] { legacyModel } : []).Distinct())
         {
-            var provider = Provider(ModelId).ToLowerInvariant();
+            if (model["providerHeaders"] is not JsonObject headers) continue;
+            var provider = Provider(Text(model["id"])).ToLowerInvariant();
             if (headers[provider] is JsonObject legacy) headers = legacy;
             var cleaned = new JsonObject();
             foreach (var (key, value) in headers)
@@ -121,6 +138,27 @@ public sealed class DesktopAgent
             model["providerMetadata"] = ProviderDefaults.Value[Provider(id)]?.DeepClone() ?? new JsonObject(); model.Remove("providerHeaders");
         }
         model["id"] = id;
+    }
+    public void SelectModels(IEnumerable<(string Id, string? Type)> selected)
+    {
+        var previous = Models.ToDictionary(model => Text(model["id"]), StringComparer.Ordinal);
+        var next = selected.Where(item => !string.IsNullOrWhiteSpace(item.Id)).DistinctBy(item => item.Id, StringComparer.Ordinal)
+            .Select(item =>
+            {
+                var model = previous.TryGetValue(item.Id, out var existing) ? (JsonObject)existing.DeepClone()
+                    : new JsonObject { ["id"] = item.Id, ["providerMetadata"] = ProviderDefaults.Value[Provider(item.Id)]?.DeepClone() ?? new JsonObject() };
+                if (item.Type is not null) model["type"] = item.Type;
+                return model;
+            }).ToArray();
+        Definition["models"] = new JsonArray(next.Select(model => (JsonNode)model).ToArray());
+        if (Definition["model"] is not null)
+            Definition["model"] = next.FirstOrDefault(model => Text(model["type"]) != "decision")?.DeepClone();
+    }
+    public void SyncLegacyModel()
+    {
+        // Existing single-model agents remain readable by older clients; collection-only imports stay collection-only.
+        if (Definition["model"] is not null)
+            Definition["model"] = Models.FirstOrDefault(model => Text(model["type"]) != "decision")?.DeepClone();
     }
     public void ToggleTool(string type, bool enabled)
     {
