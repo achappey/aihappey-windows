@@ -20,15 +20,12 @@ public sealed class AppAgentsSettingsView : StackPanel
             var label = DesktopResources.Get("AppAgent" + role);
             NativeSettingsSurface.Card(this, "AppAgentCard_" + role, label, out var body);
             var hint = DesktopResources.Get("AppAgent" + role + "Hint");
-            body.Children.Add(new TextBlock { Text = hint, TextWrapping = TextWrapping.Wrap });
             var picker = new ComboBox { Name = "AppAgent_" + role, HorizontalAlignment = HorizontalAlignment.Stretch,
                 DisplayMemberPath = nameof(AgentChoice.Label) };
             ControlAppearance.Stock(picker); AutomationProperties.SetName(picker, label); AutomationProperties.SetHelpText(picker, hint);
             pickers[role] = picker; body.Children.Add(picker);
             var warning = new TextBlock { Text = DesktopResources.Get("AppAgentUnavailable"), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
             unavailable[role] = warning; body.Children.Add(warning);
-            if (role is AppAgentRole.ToolSearch or AppAgentRole.ResourceSearch)
-                body.Children.Add(new TextBlock { Text = DesktopResources.Get("AppAgentNotActive"), TextWrapping = TextWrapping.Wrap });
             picker.SelectionChanged += (_, _) =>
             {
                 if (hydrating || picker.SelectedItem is not AgentChoice choice) return;

@@ -16,13 +16,17 @@
                     <NavigationViewItem.Icon><ic:FluentIcon Icon="Settings" /></NavigationViewItem.Icon>
                     <TextBlock x:Uid="SettingsGeneral" />
                 </NavigationViewItem>
-                <NavigationViewItem x:Name="ChatTab" Tag="chat" x:Uid="SettingsChatTab">
-                    <NavigationViewItem.Icon><ic:FluentIcon Icon="Chat" /></NavigationViewItem.Icon>
-                    <TextBlock x:Uid="SettingsChat" />
-                </NavigationViewItem>
                 <NavigationViewItem x:Name="ArtificialIntelligenceTab" Tag="artificialIntelligence" x:Uid="SettingsArtificialIntelligenceTab">
                     <NavigationViewItem.Icon><ic:FluentIcon Icon="Brain" /></NavigationViewItem.Icon>
                     <TextBlock x:Uid="SettingsArtificialIntelligence" />
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="ModelContextTab" Tag="modelContext" x:Uid="SettingsModelContextTab">
+                    <NavigationViewItem.Icon><ic:FluentIcon Icon="Globe" /></NavigationViewItem.Icon>
+                    <TextBlock x:Uid="SettingsModelContext" />
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="ChatTab" Tag="chat" x:Uid="SettingsChatTab">
+                    <NavigationViewItem.Icon><ic:FluentIcon Icon="Chat" /></NavigationViewItem.Icon>
+                    <TextBlock x:Uid="SettingsChat" />
                 </NavigationViewItem>
                 <NavigationViewItem x:Name="AppAgentsTab" Tag="agents" x:Uid="SettingsAppAgentsTab">
                     <NavigationViewItem.Icon><ic:FluentIcon Icon="Bot" /></NavigationViewItem.Icon>
@@ -35,10 +39,6 @@
                 <NavigationViewItem x:Name="AttachmentsTab" Tag="attachments" x:Uid="SettingsAttachmentsTab">
                     <NavigationViewItem.Icon><ic:FluentIcon Icon="Attach" /></NavigationViewItem.Icon>
                     <TextBlock x:Uid="SettingsAttachments" />
-                </NavigationViewItem>
-                <NavigationViewItem x:Name="ModelContextTab" Tag="modelContext" x:Uid="SettingsModelContextTab">
-                    <NavigationViewItem.Icon><ic:FluentIcon Icon="Globe" /></NavigationViewItem.Icon>
-                    <TextBlock x:Uid="SettingsModelContext" />
                 </NavigationViewItem>
             </NavigationView.MenuItems>
         <ScrollViewer x:Name="PageScroll" VerticalScrollBarVisibility="Auto"
@@ -76,7 +76,6 @@
                 </StackPanel>
                 <StackPanel x:Name="AttachmentsPage" Spacing="16" Visibility="Collapsed">
                     <ToggleSwitch x:Name="DocumentTextExtraction" x:Uid="SettingsExtraction" />
-                    <TextBlock x:Uid="SettingsExtractionHint" TextWrapping="Wrap" />
                 </StackPanel>
                 <NavigationView x:Name="ModelContextPage" Visibility="Collapsed" PaneDisplayMode="Top"
                                 IsSettingsVisible="False" IsBackButtonVisible="Collapsed"
@@ -93,7 +92,6 @@
                                     <TextBlock x:Uid="SettingsMcpElicitation" FontWeight="SemiBold" />
                                     <ToggleSwitch x:Name="FormElicitation" x:Uid="SettingsMcpFormElicitation" />
                                     <ToggleSwitch x:Name="UrlElicitation" x:Uid="SettingsMcpUrlElicitation" IsOn="False" IsEnabled="False" />
-                                    <TextBlock x:Uid="SettingsMcpUrlHint" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Border>
                             <Border Padding="16" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
@@ -111,7 +109,6 @@
                                 <TextBlock x:Uid="SettingsMcpOfficialExtensions" FontWeight="SemiBold" />
                                 <ToggleSwitch x:Name="EnableMcpApps" x:Uid="SettingsMcpApps" />
                                 <ToggleSwitch x:Name="EnableMcpSkills" x:Uid="SettingsMcpSkills" />
-                                <TextBlock x:Uid="SettingsMcpExtensionsHint" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
                     </Grid>

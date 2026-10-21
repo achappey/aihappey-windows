@@ -15,8 +15,8 @@ public sealed partial class ChatShell
     private sealed class NavigationGroup(string name)
     {
         public string Name { get; } = name;
-        public StackPanel Panel { get; } = new() { Name = "NavigationGroup" + name, Spacing = 4 };
-        public StackPanel Hidden { get; } = new() { Name = "HiddenNavigation" + name, Spacing = 4 };
+        public StackPanel Panel { get; } = new() { Name = "NavigationGroup" + name, Spacing = 2 };
+        public StackPanel Hidden { get; } = new() { Name = "HiddenNavigation" + name, Spacing = 2 };
         public Button More { get; } = new() { Name = "NavigationMore" + name, HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(6) };
         public MenuFlyout CompactMenu { get; } = new();
@@ -113,7 +113,7 @@ public sealed partial class ChatShell
         {
             group.CompactMenu.Hide();
             group.Panel.Children.Clear(); group.Hidden.Children.Clear();
-            group.Panel.Spacing = open ? 4 : 8;
+            group.Panel.Spacing = open ? 2 : 8;
             group.Hidden.Margin = new Thickness(16, 0, 0, 0);
             foreach (var link in group.Links)
             {
@@ -139,7 +139,7 @@ public sealed partial class ChatShell
     {
         button.Width = open ? double.NaN : 32;
         button.Height = open ? double.NaN : 32;
-        button.MinHeight = open ? 40 : 32;
+        button.MinHeight = open ? 36 : 32;
         button.Padding = open ? new Thickness(12, 4, 12, 4) : new Thickness(0);
         button.HorizontalContentAlignment = open ? HorizontalAlignment.Left : HorizontalAlignment.Center;
         if (button.Content is not StackPanel content) return;

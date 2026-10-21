@@ -21,8 +21,8 @@ public sealed partial class ChatShell
     private readonly OverviewPage skillsOverview = new(CatalogKind.Skill);
     private readonly Grid overviewHost = new() { Visibility = Visibility.Collapsed };
     private readonly StackPanel chatModes = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
-    private readonly StackPanel pageNavigation = new() { Spacing = 4 };
-    private readonly StackPanel expandedPageNavigation = new() { Spacing = 4 };
+    private readonly StackPanel pageNavigation = new() { Spacing = 2 };
+    private readonly StackPanel expandedPageNavigation = new() { Spacing = 2 };
     private readonly Dictionary<DesktopPage, ToggleButton> pageButtons = [];
     private readonly Dictionary<CatalogKind, IReadOnlyList<CatalogItem>> catalogs = [];
     private HashSet<string> favorites = new(StringComparer.Ordinal);
@@ -67,7 +67,7 @@ public sealed partial class ChatShell
                 Grid.SetColumn(chevron, 2); header.Children.Add(chevron);
                 aiCategory = new Button { Name = "ArtificialIntelligenceCategory", Content = header,
                     HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                    MinHeight = 40, Padding = new Thickness(12, 4, 12, 4), CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(0) };
+                    MinHeight = 36, Padding = new Thickness(12, 4, 12, 4), CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(0) };
                 ToolbarControls.Subtle(aiCategory); ToolbarControls.Label(aiCategory, DesktopResources.Get("ArtificialIntelligence"));
                 void UpdateCategory() { aiNavigation.Visibility = aiCategoryExpanded ? Visibility.Visible : Visibility.Collapsed; chevron.Icon = aiCategoryExpanded ? Icon.ChevronUp : Icon.ChevronDown; }
                 aiCategory.Click += (_, _) => { aiCategoryExpanded = !aiCategoryExpanded; UpdateCategory(); };
@@ -77,7 +77,7 @@ public sealed partial class ChatShell
             content.Children.Add(icon); content.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center });
             var button = new ToggleButton { Name = "Navigate" + page, Content = content, IsChecked = page == DesktopPage.Chat,
                 HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left,
-                MinHeight = 40, Padding = new Thickness(12, 4, 12, 4), BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(6) };
+                MinHeight = 36, Padding = new Thickness(12, 4, 12, 4), BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(6) };
             ControlAppearance.Apply(button, ControlAppearance.NativeResources, palette =>
             { button.Background = new SolidColorBrush(activePage == page ? palette.Selected : palette.Background); button.Foreground = new SolidColorBrush(palette.Text); });
             ToolbarControls.Label(button, label);
@@ -338,13 +338,13 @@ public sealed partial class ChatShell
 
     private static Border SidebarSeparator(string name)
     {
-        var border = new Border { Name = name, Height = 1, Margin = new Thickness(0, 16, 0, 12) };
+        var border = new Border { Name = name, Height = 1, Margin = new Thickness(0, 8, 0, 6) };
         ControlAppearance.Apply(border, (_, _) => { }, palette => border.Background = new SolidColorBrush(palette.Stroke));
         return border;
     }
     private static TextBlock SidebarHeading(string title)
     {
-        var heading = new TextBlock { Name = "SectionHeading", Text = title, FontSize = 13, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(12, 0, 12, 8) };
+        var heading = new TextBlock { Name = "SectionHeading", Text = title, FontSize = 13, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(12, 0, 12, 4) };
         AutomationProperties.SetHeadingLevel(heading, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level2);
         return heading;
     }

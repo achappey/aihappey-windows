@@ -308,7 +308,7 @@ public sealed partial class ChatShell : UserControl
             sidebarHeader.ColumnDefinitions[0].Width = open ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
             sidebarHeader.ColumnSpacing = open ? 8 : 0;
             sidebarHeader.Margin = open ? new Thickness(0, 0, 0, 12) : new Thickness(0);
-            pageNavigation.Spacing = open ? 4 : 8;
+            pageNavigation.Spacing = open ? 2 : 8;
             appTitle.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
             chats.Visibility = expandedPageNavigation.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
             UpdateNavigationLayout();

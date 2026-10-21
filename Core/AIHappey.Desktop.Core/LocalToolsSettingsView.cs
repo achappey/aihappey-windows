@@ -17,7 +17,9 @@ public sealed class LocalToolsSettingsView : StackPanel
         Children.Add(new TextBlock { Text = DesktopResources.Get("BuiltInLocalTools"), FontSize = 20,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
         Children.Add(cards);
-        foreach (var plugin in DesktopLocalTools.Plugins)
+        foreach (var plugin in DesktopLocalTools.Plugins
+            .OrderBy(plugin => DesktopResources.Get(plugin.ResourceKey), StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(plugin => plugin.Id, StringComparer.Ordinal))
         {
             var title = DesktopResources.Get(plugin.ResourceKey);
             var toggle = new ToggleSwitch { Name = "ChatPluginToggle", Tag = plugin.Id, IsOn = draft.PluginEnabled(plugin.Id),
