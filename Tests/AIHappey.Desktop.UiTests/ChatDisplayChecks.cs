@@ -108,6 +108,7 @@ public partial class App
             dialog.Tag = task;
             var tabs = (NavigationView)dialog.FindName("Tabs");
             tabs.SelectedItem = tabs.MenuItems.OfType<NavigationViewItem>().Single(item => (string)item.Tag == "chat");
+            Descendants(dialog).OfType<CommunityToolkit.WinUI.Controls.SettingsExpander>().Single(e => e.Name == "ToolOutputContentCard").IsExpanded = true;
             await Task.Delay(80); dialog.UpdateLayout();
             Check(((StackPanel)dialog.FindName("ChatPage")).Visibility == Visibility.Visible
                 && ((StackPanel)dialog.FindName("GeneralPage")).Visibility == Visibility.Collapsed,
@@ -119,15 +120,25 @@ public partial class App
         Check(controls.Select(t => t.Name).SequenceEqual(["ShowTokens", "ShowProviderLogo", "ApiDebugEnabled"])
             && !controls[0].IsOn && controls[1].IsOn && !controls[2].IsOn && controls.All(t => AutomationProperties.GetName(t).Length > 0),
             context + ": Chat has three accessible toggles with debug off by default");
+        ToggleSwitch[] OutputToggles(SettingsDialog dialog) => ((StackPanel)dialog.FindName("ToolOutputContentPanel")).Children.OfType<ToggleSwitch>().ToArray();
+        var outputControls = OutputToggles(cancelled);
+        Check(outputControls.Select(t => t.Name).SequenceEqual(["ToolOutputText", "ToolOutputImages", "ToolOutputAudio", "ToolOutputVideo", "ToolOutputDocuments"])
+            && outputControls.Select(t => t.IsOn).SequenceEqual([true, false, false, false, false])
+            && outputControls.All(t => AutomationProperties.GetName(t).Length > 0), context + ": tool-output card has five localized accessible toggles with browser defaults");
+        foreach (var toggle in outputControls) toggle.IsOn = !toggle.IsOn;
         controls[0].IsOn = true; controls[1].IsOn = false; controls[2].IsOn = true;
         InvokeButton(Descendants(cancelled).OfType<Button>().Single(b => b.Name == "CloseButton")); await (Task)cancelled.Tag;
         Check(!session.Settings.Chat.ShowTokens && session.Settings.Chat.ShowProviderLogo && !session.Settings.Chat.ApiDebugEnabled && !Tokens() && Logos().Length == 2,
             context + ": Cancel discards display draft and leaves transcript unchanged");
+        Check(session.Settings.Chat.ToolOutputContentSettings.Text && !session.Settings.Chat.ToolOutputContentSettings.Images
+            && !session.Settings.Chat.ToolOutputContentSettings.Audio && !session.Settings.Chat.ToolOutputContentSettings.Video
+            && !session.Settings.Chat.ToolOutputContentSettings.Documents, context + ": Cancel discards all five tool-output draft values");
 
         var saved = await OpenSettings();
         ((ToggleSwitch)saved.FindName("ShowTokens")).IsOn = true;
         ((ToggleSwitch)saved.FindName("ShowProviderLogo")).IsOn = false;
         ((ToggleSwitch)saved.FindName("ApiDebugEnabled")).IsOn = true;
+        foreach (var toggle in OutputToggles(saved)) toggle.IsOn = !toggle.IsOn;
         window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(520, 900)); await Task.Delay(100); saved.UpdateLayout();
         Check(((NavigationView)saved.FindName("Tabs")).IsPaneToggleButtonVisible
             && ((Grid)saved.FindName("Layout")).ActualWidth <= shell.XamlRoot.Size.Width,
@@ -140,12 +151,17 @@ public partial class App
             context + ": display Save preserves composer draft, runtime, current conversation and metadata");
         var persisted = await SettingsStore.LoadAsync(session.DataDirectory, new());
         Check(persisted.Chat.ShowTokens && !persisted.Chat.ShowProviderLogo && persisted.Chat.ApiDebugEnabled, context + ": native settings Save persists display and debug choices");
+        Check(!persisted.Chat.ToolOutputContentSettings.Text && persisted.Chat.ToolOutputContentSettings.Images
+            && persisted.Chat.ToolOutputContentSettings.Audio && persisted.Chat.ToolOutputContentSettings.Video
+            && persisted.Chat.ToolOutputContentSettings.Documents, context + ": Save persists all five tool-output values");
 
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); await Task.Delay(80);
         var restored = await OpenSettings();
         Check(((ToggleSwitch)restored.FindName("ShowTokens")).IsOn && !((ToggleSwitch)restored.FindName("ShowProviderLogo")).IsOn
             && ((ToggleSwitch)restored.FindName("ApiDebugEnabled")).IsOn,
             context + ": reopening settings restores saved display values");
+        Check(OutputToggles(restored).Select(t => t.IsOn).SequenceEqual([false, true, true, true, true]), context + ": reopening restores all tool-output selections");
+        foreach (var toggle in OutputToggles(restored)) toggle.IsOn = !toggle.IsOn;
         ((ToggleSwitch)restored.FindName("ShowTokens")).IsOn = false;
         ((ToggleSwitch)restored.FindName("ShowProviderLogo")).IsOn = true;
         ((ToggleSwitch)restored.FindName("ApiDebugEnabled")).IsOn = false;

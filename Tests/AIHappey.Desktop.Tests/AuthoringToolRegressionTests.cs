@@ -231,14 +231,14 @@ internal static class AuthoringToolRegressionTests
     }
     private static void CheckImagePolicy(Action<bool, string> check)
     {
-        var part = PortableConversations.Part(JsonNode.Parse("""{"type":"tool-local_images_read","state":"output-available","toolCallId":"image","output":{"content":[{"type":"text","text":"saved"},{"type":"image","mimeType":"image/png","data":"retained"}],"structuredContent":{"image":{"source":"images","id":"reference"}}}}""")!.AsObject());
+        var part = PortableConversations.Part(JsonNode.Parse("""{"type":"tool-local_images_read","providerExecuted":false,"state":"output-available","toolCallId":"image","output":{"content":[{"type":"text","text":"saved"},{"type":"image","mimeType":"image/png","data":"retained"}],"structuredContent":{"image":{"source":"images","id":"reference"}}}}""")!.AsObject());
         var messages = new List<UIMessage> { new() { Id = "assistant", Role = Role.assistant, Parts = [part] } };
         var settings = new ChatPreferences();
         var filtered = settings.RequestBody("p/model", "chat", messages, "p");
-        check(filtered["messages"]![0]!["parts"]![0]!["output"]!["content"]!.AsArray().Count == 1
-            && PortableConversations.Element(part).GetProperty("output").GetProperty("content").GetArrayLength() == 2, "authoring policy: default request filtering removes image bytes without changing saved/UI results");
-        settings.SendToolOutputImages = true;
-        check(settings.Clone().SendToolOutputImages && settings.RequestBody("p/model", "chat", messages, "p")["messages"]![0]!["parts"]![0]!["output"]!["content"]!.AsArray().Count == 2,
+        check(filtered["messages"]![0]!["parts"]![0]!["output"]!["content"]![1]!["text"]!.GetValue<string>() == "Image content omitted by user settings."
+            && PortableConversations.Element(part).GetProperty("output").GetProperty("content")[1].GetProperty("data").GetString() == "retained", "authoring policy: default request filtering replaces image bytes without changing saved/UI results");
+        settings.ToolOutputContentSettings.Images = true;
+        check(settings.Clone().ToolOutputContentSettings.Images && settings.RequestBody("p/model", "chat", messages, "p")["messages"]![0]!["parts"]![0]!["output"]!["content"]![1]!["data"]!.GetValue<string>() == "retained",
             "authoring policy: explicit opt-in includes image content and survives cloning");
     }
     private sealed class ResponsesHandler : HttpMessageHandler

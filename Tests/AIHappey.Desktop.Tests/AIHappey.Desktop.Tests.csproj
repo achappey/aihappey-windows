@@ -67,6 +67,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatClient.cs" Link="Core/ChatClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/GatewayErrors.cs" Link="Core/GatewayErrors.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatPreferences.cs" Link="Core/ChatPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ToolOutputContentSettings.cs" Link="Core/ToolOutputContentSettings.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Catalog.cs" Link="Core/Catalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/CatalogClient.cs" Link="Core/CatalogClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/CatalogFavorites.cs" Link="Core/CatalogFavorites.cs" />

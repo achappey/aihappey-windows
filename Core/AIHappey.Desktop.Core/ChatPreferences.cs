@@ -13,8 +13,8 @@ public sealed class ChatPreferences
     public bool ShowTokens { get; set; }
     public bool ShowProviderLogo { get; set; } = true;
     public bool ApiDebugEnabled { get; set; }
-    // Match browser defaults: retain images in history/UI, but do not resend them in tool output unless opted in.
-    public bool SendToolOutputImages { get; set; }
+    private ToolOutputContentSettings toolOutputContentSettings = new();
+    public ToolOutputContentSettings ToolOutputContentSettings { get => toolOutputContentSettings; set => toolOutputContentSettings = value ?? new(); }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? MaxOutputTokens { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -73,7 +73,7 @@ public sealed class ChatPreferences
         ShowTokens = ShowTokens,
         ShowProviderLogo = ShowProviderLogo,
         ApiDebugEnabled = ApiDebugEnabled,
-        SendToolOutputImages = SendToolOutputImages,
+        ToolOutputContentSettings = ToolOutputContentSettings.Clone(),
         MaxOutputTokens = MaxOutputTokens,
         ToolChoice = NormalizedToolChoice,
         MaxToolCalls = MaxToolCalls is > 0 ? MaxToolCalls : null,
@@ -84,6 +84,13 @@ public sealed class ChatPreferences
         EnabledAgentPluginIds = EnabledAgentPluginIds.ToList(),
         ProviderMetadata = ProviderMetadata.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone()),
         ProviderHeaders = ProviderHeaders.ToDictionary(p => p.Key, p => new Dictionary<string, string>(p.Value, StringComparer.OrdinalIgnoreCase))
+    };
+
+    // Inference reset must not reset app-wide choices owned by user settings.
+    internal ChatPreferences InferenceDefaults() => new()
+    {
+        ShowTokens = ShowTokens, ShowProviderLogo = ShowProviderLogo, ApiDebugEnabled = ApiDebugEnabled,
+        ToolOutputContentSettings = ToolOutputContentSettings.Clone()
     };
 
     public static bool TryTokenLimit(string text, out int? value)
@@ -121,13 +128,7 @@ public sealed class ChatPreferences
         if (choice is not null) body["toolChoice"] = choice;
         if (MaxToolCalls is > 0) body["maxToolCalls"] = MaxToolCalls.Value;
         if (mcp is not null) body["tools"] = new JsonArray(mcp.Tools.Where(ToolAnnotations.Allows).Select(t => JsonNode.Parse(t.GetRawText())).ToArray());
-        if (!SendToolOutputImages && body["messages"] is JsonArray requestMessages)
-            foreach (var message in requestMessages.OfType<JsonObject>())
-                foreach (var part in (message["parts"] as JsonArray ?? new()).OfType<JsonObject>())
-                    if ((OpenAIChatConfig.Text(part["type"])?.StartsWith("tool-", StringComparison.Ordinal) == true || OpenAIChatConfig.Text(part["type"]) == "dynamic-tool")
-                        && part["output"] is JsonObject toolOutput && toolOutput["content"] is JsonArray content)
-                        for (var i = content.Count - 1; i >= 0; i--)
-                            if (content[i] is JsonObject block && OpenAIChatConfig.Text(block["type"]) == "image") content.RemoveAt(i);
+        ToolOutputContentSettings.ApplyToRequest(body);
         return body;
     }
 

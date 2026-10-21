@@ -181,6 +181,8 @@ public static class DesktopMcpToolExecution
             var id = PortableConversations.String(raw, "toolCallId") ?? throw new JsonException("Missing tool call ID.");
             if (executed.Count >= MaxCalls || !executed.Add(id)) throw new GatewayException(DesktopResources.Get("McpToolLimit"));
             var node = PortableConversations.Node(part);
+            // Local and MCP tools share this executor. Match the browser's explicit client-tool boundary.
+            node["providerExecuted"] = false;
             try
             {
                 if (!raw.TryGetProperty("input", out var input) || input.ValueKind != JsonValueKind.Object)

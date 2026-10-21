@@ -61,8 +61,8 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         Build();
         PrimaryButtonClick += (_, args) =>
         {
-            // This dialog restores inference options, not the display choices in user settings.
-            args.Cancel = true; draft = new ChatPreferences { ShowTokens = draft.ShowTokens, ShowProviderLogo = draft.ShowProviderLogo };
+            // Restore inference options, not the app-wide choices owned by user settings.
+            args.Cancel = true; draft = draft.InferenceDefaults();
             Result = null; validation.Visibility = Visibility.Collapsed; Build();
         };
         Closing += CommitOnClose;

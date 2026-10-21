@@ -33,6 +33,9 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         videoPreferences = settings.Videos.Clone();
         transcriptionPreferences = settings.Transcriptions.Clone();
         InitializeComponent();
+        ChatPage.Children.Remove(ToolOutputContentPanel);
+        NativeSettingsSurface.Expander(ChatPage, "ToolOutputContentCard", DesktopResources.Get("SettingsToolOutputContent"), null, out var outputContent);
+        outputContent.Children.Add(ToolOutputContentPanel);
         imageStorage = new(imagePreferences, catalogLifetime.Token);
         videoStorage = new(videoPreferences, catalogLifetime.Token);
         AiModelView = new(aiModelPreferences, aiModels, imageStorage, videoStorage);
@@ -56,6 +59,11 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         ShowTokens.IsOn = chatPreferences.ShowTokens;
         ShowProviderLogo.IsOn = chatPreferences.ShowProviderLogo;
         ApiDebugEnabled.IsOn = chatPreferences.ApiDebugEnabled;
+        ToolOutputText.IsOn = chatPreferences.ToolOutputContentSettings.Text;
+        ToolOutputImages.IsOn = chatPreferences.ToolOutputContentSettings.Images;
+        ToolOutputAudio.IsOn = chatPreferences.ToolOutputContentSettings.Audio;
+        ToolOutputVideo.IsOn = chatPreferences.ToolOutputContentSettings.Video;
+        ToolOutputDocuments.IsOn = chatPreferences.ToolOutputContentSettings.Documents;
         FormElicitation.IsOn = settings.ModelContext.EnableFormElicitation;
         ToolTimeout.Value = settings.ModelContext.ToolTimeoutMinutes;
         ResetTimeoutOnProgress.IsOn = settings.ModelContext.ResetTimeoutOnProgress;
@@ -113,6 +121,11 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         chatPreferences.ShowTokens = ShowTokens.IsOn;
         chatPreferences.ShowProviderLogo = ShowProviderLogo.IsOn;
         chatPreferences.ApiDebugEnabled = ApiDebugEnabled.IsOn;
+        chatPreferences.ToolOutputContentSettings.Text = ToolOutputText.IsOn;
+        chatPreferences.ToolOutputContentSettings.Images = ToolOutputImages.IsOn;
+        chatPreferences.ToolOutputContentSettings.Audio = ToolOutputAudio.IsOn;
+        chatPreferences.ToolOutputContentSettings.Video = ToolOutputVideo.IsOn;
+        chatPreferences.ToolOutputContentSettings.Documents = ToolOutputDocuments.IsOn;
         var next = new DesktopSettings
         {
             Language = (string)((ComboBoxItem)LanguageChoice.SelectedItem).Tag,

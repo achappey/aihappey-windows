@@ -58,10 +58,12 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
         var requestMessages = DesktopSystemContext.RequestMessages(service, messages,
             service == ServiceKind.Ai ? systemContext ?? session.CaptureSystemContext() : null);
         request.Headers.Accept.ParseAdd("text/event-stream");
-        request.Content = service == ServiceKind.Ai
-            ? JsonContent.Create(snapshot.RequestBody(target, conversationId, requestMessages, providerKey, mcp ?? session.Mcp?.Capture()), options: PortableConversations.Json)
-            : localAgent is not null ? JsonContent.Create(LocalAgentRequest(localAgent, conversationId, requestMessages), options: PortableConversations.Json)
-            : JsonContent.Create(new { id = conversationId, model = target, messages = requestMessages }, options: PortableConversations.Json);
+        var body = service == ServiceKind.Ai
+            ? snapshot.RequestBody(target, conversationId, requestMessages, providerKey, mcp ?? session.Mcp?.Capture())
+            : JsonSerializer.SerializeToNode(localAgent is not null ? LocalAgentRequest(localAgent, conversationId, requestMessages)
+                : new { id = conversationId, model = target, messages = requestMessages }, PortableConversations.Json)!.AsObject();
+        if (service != ServiceKind.Ai) snapshot.ToolOutputContentSettings.ApplyToRequest(body);
+        request.Content = JsonContent.Create(body, options: PortableConversations.Json);
         if (service == ServiceKind.Ai) snapshot.ApplyHeaders(request, providerKey);
         // The Chat preference owns this header, including overriding an injected host value.
         request.Headers.Remove("X-AIHappey-Debug");

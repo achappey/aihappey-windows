@@ -56,6 +56,13 @@
                     <ToggleSwitch x:Name="ShowTokens" x:Uid="SettingsShowTokens" />
                     <ToggleSwitch x:Name="ShowProviderLogo" x:Uid="SettingsShowProviderLogo" />
                     <ToggleSwitch x:Name="ApiDebugEnabled" x:Uid="SettingsApiDebug" />
+                    <StackPanel x:Name="ToolOutputContentPanel" Spacing="12">
+                        <ToggleSwitch x:Name="ToolOutputText" x:Uid="SettingsToolOutputText" />
+                        <ToggleSwitch x:Name="ToolOutputImages" x:Uid="SettingsToolOutputImages" />
+                        <ToggleSwitch x:Name="ToolOutputAudio" x:Uid="SettingsToolOutputAudio" />
+                        <ToggleSwitch x:Name="ToolOutputVideo" x:Uid="SettingsToolOutputVideo" />
+                        <ToggleSwitch x:Name="ToolOutputDocuments" x:Uid="SettingsToolOutputDocuments" />
+                    </StackPanel>
                 </StackPanel>
                 <Grid x:Name="ArtificialIntelligencePage" Visibility="Collapsed" />
                 <Grid x:Name="AppAgentsPage" Visibility="Collapsed" />

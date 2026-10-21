@@ -1128,8 +1128,27 @@
   <data name="LocalPluginWindowsSearch" xml:space="preserve"><value>Windows Search</value></data>
   <data name="LocalPluginFiles" xml:space="preserve"><value>Files</value></data>
   <data name="LocalPluginImages" xml:space="preserve"><value>Local images</value></data>
-  <data name="ToolOutputImages" xml:space="preserve"><value>Send tool-output images to AI</value></data>
-  <data name="ToolOutputImagesHint" xml:space="preserve"><value>Off by default. Images remain saved and visible locally. Asking a vision model a question explicitly sends the selected images, independently of this setting.</value></data>
+  <data name="SettingsToolOutputContent" xml:space="preserve"><value>Tool output types</value></data>
+  <data name="SettingsToolOutputText.Header" xml:space="preserve"><value>Text</value></data>
+  <data name="SettingsToolOutputText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text</value></data>
+  <data name="SettingsToolOutputText.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="SettingsToolOutputText.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="SettingsToolOutputImages.Header" xml:space="preserve"><value>Images</value></data>
+  <data name="SettingsToolOutputImages.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Images</value></data>
+  <data name="SettingsToolOutputImages.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="SettingsToolOutputImages.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="SettingsToolOutputAudio.Header" xml:space="preserve"><value>Audio</value></data>
+  <data name="SettingsToolOutputAudio.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Audio</value></data>
+  <data name="SettingsToolOutputAudio.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="SettingsToolOutputAudio.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="SettingsToolOutputVideo.Header" xml:space="preserve"><value>Video</value></data>
+  <data name="SettingsToolOutputVideo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Video</value></data>
+  <data name="SettingsToolOutputVideo.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="SettingsToolOutputVideo.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="SettingsToolOutputDocuments.Header" xml:space="preserve"><value>Documents</value></data>
+  <data name="SettingsToolOutputDocuments.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Documents</value></data>
+  <data name="SettingsToolOutputDocuments.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="SettingsToolOutputDocuments.OffContent" xml:space="preserve"><value>Off</value></data>
   <data name="LocalPluginAgentsEditor" xml:space="preserve"><value>Agent Framework editor</value></data>
   <data name="LocalPluginAgentsRuntime" xml:space="preserve"><value>Agent Framework runtime</value></data>
   <data name="LocalPluginSkillEditor" xml:space="preserve"><value>Skill editor</value></data>

@@ -70,12 +70,6 @@ public sealed class ChatToolSettingsView : StackPanel
             value => { draft.ToolAnnotations.ReadOnlyHint = value; RefreshAvailableTools(); }).Name = "ChatPolicyReadOnly";
         fields.Switch(policy, "annotations.idempotent", () => draft.ToolAnnotations.IdempotentHint,
             value => { draft.ToolAnnotations.IdempotentHint = value; RefreshAvailableTools(); }).Name = "ChatPolicyIdempotent";
-        NativeSettingsSurface.Expander(this, "ToolOutputImagesCard", DesktopResources.Get("ToolOutputImages"), null, out var output);
-        var imageOutput = new ToggleSwitch { Name = "SendToolOutputImages", Header = DesktopResources.Get("ToolOutputImages"), IsOn = draft.SendToolOutputImages };
-        ControlAppearance.Stock(imageOutput); ToolbarControls.Label(imageOutput, DesktopResources.Get("ToolOutputImages"));
-        imageOutput.Toggled += (_, _) => draft.SendToolOutputImages = imageOutput.IsOn;
-        output.Children.Add(imageOutput);
-        output.Children.Add(new TextBlock { Text = DesktopResources.Get("ToolOutputImagesHint"), TextWrapping = TextWrapping.Wrap });
         RefreshChoice(); RefreshAvailableTools();
     }
 

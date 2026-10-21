@@ -17,13 +17,14 @@ public partial class App
         window.Activate(); await Task.Delay(100);
         var scale = root.XamlRoot.RasterizationScale;
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(1200 * scale), (int)(900 * scale))); await Task.Delay(100);
-        var original = new ChatPreferences(); ChatPreferences? saved = null;
+        var original = new ChatPreferences { ApiDebugEnabled = true, ToolOutputContentSettings = new() { Text = false, Images = true, Audio = true, Video = true, Documents = true } }; ChatPreferences? saved = null;
         var dialog = new ChatSettingsDialog(original, "openai") { XamlRoot = root.XamlRoot, RequestedTheme = theme,
             SaveAsync = next => { saved = next; return Task.CompletedTask; } };
         SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(120); dialog.ShowToolsTab(); await Task.Delay(100); dialog.UpdateLayout();
         var tabs = Descendants(dialog).OfType<ToggleButton>().Where(t => t.Name.StartsWith("Chat") && t.Name.EndsWith("Tab")).ToArray();
         Check(tabs.Single(t => t.Name == "ChatToolsTab").IsChecked == true && tabs.Count(t => t.IsChecked == true) == 1,
             context + ": Tools tab navigation selects exactly one native tab");
+        Check(!Descendants(dialog).OfType<FrameworkElement>().Any(e => e.Name is "SendToolOutputImages" or "ToolOutputImagesCard"), context + ": obsolete image-output card is removed from inference tools");
         var toggles = Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").ToArray();
         var pluginCount = DesktopLocalTools.Plugins.Count;
         Check(toggles.Length == pluginCount && pluginCount == 10 && toggles.All(t => !t.IsOn), context + ": all ten plugins initially off");
@@ -62,6 +63,9 @@ public partial class App
         InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80); reopen.ShowToolsTab(); await Task.Delay(80);
         Check(Descendants(reopen).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").All(t => !t.IsOn), context + ": restore defaults clears plugins and rebuilds tools page");
         InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
+        Check(reopen.Result is { ApiDebugEnabled: true } reset && !reset.ToolOutputContentSettings.Text && reset.ToolOutputContentSettings.Images
+            && reset.ToolOutputContentSettings.Audio && reset.ToolOutputContentSettings.Video && reset.ToolOutputContentSettings.Documents,
+            context + ": inference reset preserves user-settings debug and all five tool-output choices");
     }
 
     private async Task CheckLocalToolsAsync(ElementTheme theme)
