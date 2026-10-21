@@ -12,6 +12,7 @@ public partial class App
 {
     private async Task CheckChatToolsSettingsAsync(ElementTheme theme)
     {
+        await CheckUserSettingsAppearanceAsync(theme);
         var context = "Local tools / " + theme;
         var root = new Grid { RequestedTheme = theme }; window!.Content = root;
         window.Activate(); await Task.Delay(100);
@@ -28,14 +29,18 @@ public partial class App
         var toggles = Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").ToArray();
         var pluginCount = DesktopLocalTools.Plugins.Count;
         Check(toggles.Length == pluginCount && pluginCount == 10 && toggles.All(t => !t.IsOn), context + ": all ten plugins initially off");
-        Check(toggles.Select(AutomationProperties.GetName).SequenceEqual(DesktopLocalTools.Plugins.Select(p => DesktopResources.Get(p.ResourceKey)))
+        var alphabeticalPlugins = DesktopLocalTools.Plugins
+            .OrderBy(p => DesktopResources.Get(p.ResourceKey), StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(p => p.Id, StringComparer.Ordinal).ToArray();
+        Check(toggles.Select(AutomationProperties.GetName).SequenceEqual(alphabeticalPlugins.Select(p => DesktopResources.Get(p.ResourceKey)))
+            && toggles.Select(t => (string)t.Tag).SequenceEqual(alphabeticalPlugins.Select(p => p.Id))
             && toggles.All(t => AutomationProperties.GetAutomationId(t) == "ChatPlugin_" + t.Tag), context + ": browser labels and stable accessible identities");
         var pluginGrid = Descendants(dialog).OfType<Grid>().Single(g => g.Name == "ChatPluginGrid");
         await WaitForSkillUiAsync(() => pluginGrid.ColumnDefinitions.Count == 2);
         var pluginCards = pluginGrid.Children.Cast<FrameworkElement>().ToArray();
         Check(pluginGrid.ColumnDefinitions.Count == 2 && pluginGrid.RowDefinitions.Count == (pluginCount + 1) / 2
             && pluginCards.Select(Grid.GetColumn).SequenceEqual(Enumerable.Range(0, pluginCount).Select(i => i % 2))
-            && pluginCards.Select(Grid.GetRow).SequenceEqual(Enumerable.Range(0, pluginCount).Select(i => i / 2)), context + ": wide Tools tab uses two columns in plugin order");
+            && pluginCards.Select(Grid.GetRow).SequenceEqual(Enumerable.Range(0, pluginCount).Select(i => i / 2)), context + ": wide Tools tab uses two columns in alphabetical row-major order");
         var first = (FrameworkElement)pluginGrid.Children[0]; var second = (FrameworkElement)pluginGrid.Children[1];
         var firstPoint = first.TransformToVisual(dialog).TransformPoint(new()); var secondPoint = second.TransformToVisual(dialog).TransformPoint(new());
         Check(Math.Abs(firstPoint.Y - secondPoint.Y) < 1 && secondPoint.X > firstPoint.X

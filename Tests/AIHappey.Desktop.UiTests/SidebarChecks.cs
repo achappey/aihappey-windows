@@ -17,6 +17,8 @@ public partial class App
             Ai = new() { Location = RuntimeLocation.Remote, RemoteUrl = "https://ui-test.invalid/ai/" },
             Agents = new() { Location = RuntimeLocation.Remote, RemoteUrl = "https://ui-test.invalid/agents/" }
         };
+        // Exercise every primary action, independently of the user's hide/show defaults.
+        settings.Navigation.HiddenItemKeys = [];
         var shell = new ChatShell(new DesktopSession(new UiHost(local), new UiRuntime(), settings)) { RequestedTheme = theme };
         try
         {
@@ -36,11 +38,12 @@ public partial class App
         var navigation = Field<StackPanel>(shell, "pageNavigation");
         var newChat = Field<Button>(shell, "newChat");
         var search = Field<Button>(shell, "searchChats");
-        var pages = navigation.Children.OfType<ToggleButton>().ToArray();
+        var primary = Descendants(navigation).OfType<StackPanel>().Single(panel => panel.Name == "NavigationGroupPrimary");
+        var pages = Descendants(primary).OfType<ToggleButton>().ToArray();
         var buttons = new ButtonBase[] { newChat, search }.Concat(pages).ToArray();
-        Check(buttons.Select(AutomationProperties.GetName).SequenceEqual(new[] { "New chat", "Search chats", "Images", "Videos", "Transcriptions" }),
+        Check(buttons.Select(AutomationProperties.GetName).SequenceEqual(new[] { "New chat", "Search chats", "Images", "Videos", "Speech", "Transcriptions" }),
             context + ": compact actions match primary navigation order");
-        var header = (Grid)toggle.Parent;
+        var header = Descendants(pane).OfType<Grid>().Single(grid => grid.Children.Contains(toggle));
         split.IsPaneOpen = false;
         await Task.Delay(250); shell.UpdateLayout();
         void CheckCompactBounds(string state)
@@ -108,7 +111,7 @@ public partial class App
             && Field<StackPanel>(shell, "composer").Visibility == Visibility.Visible && pages.All(button => button.IsChecked == false) && !split.IsPaneOpen,
             context + ": compact New chat starts a fresh chat and returns to the composer without expanding");
         Call(shell, "SetBusy", true, true);
-        Check(buttons.All(button => !button.IsEnabled), context + ": all five compact actions respect busy state");
+        Check(buttons.All(button => !button.IsEnabled), context + ": all compact actions respect busy state");
         Call(shell, "SetBusy", false, false);
         Check(buttons.All(button => button.IsEnabled), context + ": compact actions re-enable after busy state");
         shell.RequestedTheme = theme == ElementTheme.Light ? ElementTheme.Dark : ElementTheme.Light;
@@ -117,11 +120,20 @@ public partial class App
         await Task.Delay(100);
         InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();
         Check(split.IsPaneOpen && expanded.Visibility == Visibility.Visible && Field<ListView>(shell, "chats").Visibility == Visibility.Visible
-            && header.Margin == new Thickness(0, 0, 0, 12) && navigation.Spacing == 4
+            && header.Margin == new Thickness(0, 0, 0, 12) && navigation.Spacing == 2
             && buttons.All(button => double.IsNaN(button.Width) && double.IsNaN(button.Height)
-                && button.MinHeight == 40 && button.Padding == new Thickness(12, 4, 12, 4) && button.HorizontalContentAlignment == HorizontalAlignment.Left
+                && button.MinHeight == 36 && button.ActualHeight <= 36.5 && button.Padding == new Thickness(12, 4, 12, 4) && button.HorizontalContentAlignment == HorizontalAlignment.Left
                 && ((StackPanel)button.Content).Spacing == 12 && ((StackPanel)button.Content).Children.OfType<TextBlock>().Single().Visibility == Visibility.Visible),
             context + ": menu toggle restores expanded labels, dimensions, categories, and history");
+        Check(Descendants(expanded).OfType<Border>().Where(border => border.Name.EndsWith("Separator"))
+                .All(border => border.Margin == new Thickness(0, 8, 0, 6))
+            && Descendants(expanded).OfType<TextBlock>().Where(text => text.Name == "SectionHeading")
+                .All(text => text.Margin == new Thickness(12, 0, 12, 4))
+            && Descendants(navigation).OfType<StackPanel>().Where(panel => panel.Name.StartsWith("NavigationGroup"))
+                .All(panel => panel.Spacing == 2)
+            && Descendants(expanded).OfType<ToggleButton>().All(button => button.MinHeight == 36)
+            && Descendants(expanded).OfType<Button>().Single(button => button.Name == "ArtificialIntelligenceCategory").MinHeight == 36,
+            context + ": expanded navigation uses compact section gaps and 36px category/page rows");
         InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();
         CheckCompactBounds("repeated collapse");
         InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();

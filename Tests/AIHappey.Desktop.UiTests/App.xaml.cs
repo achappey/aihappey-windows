@@ -38,6 +38,12 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--settings-appearance-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckChatToolsSettingsAsync(theme);
+                results.Add("All user-settings appearance and alphabetical local-tool UI checks passed.");
+                File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--context-search-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
