@@ -38,6 +38,11 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--chat-files-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckChatFilesAsync(theme);
+                results.Add("All chat file UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--tool-output-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckToolOutputSettingsAsync(theme);
@@ -136,6 +141,7 @@ public partial class App : Application
                 File.WriteAllLines(report, results); window.Close(); Exit(); return;
             }
             foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckStartupAsync(theme);
+            foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckChatFilesAsync(theme);
             foreach (var local in new[] { true, false })
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
                 {

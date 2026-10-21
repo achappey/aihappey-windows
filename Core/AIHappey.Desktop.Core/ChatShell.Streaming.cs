@@ -181,7 +181,7 @@ public sealed partial class ChatShell
         var waiting = view.Projected.Message.Status == "streaming" && block.Key.EndsWith(":pending", StringComparison.Ordinal);
         var images = block.Images;
         var type = images?.Count > 0 ? "inline-images" : part?.Type;
-        var contentKey = images?.Count > 0 ? string.Join(":", images.Select(file => file.Identity))
+        var contentKey = images?.Count > 0 ? string.Join(":", images.Select(file => file.Identity + ":" + file.MediaType + ":" + file.Name))
             : part is null ? (waiting ? "" : block.Key.EndsWith(":details", StringComparison.Ordinal)
             ? DesktopResources.Get("AttachmentsSources") : DesktopResources.Get("Working"))
             : type is "text" or "reasoning" ? PortableConversations.Text(part) : PortableConversations.Element(part).GetRawText();
