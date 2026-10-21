@@ -275,7 +275,10 @@
   <data name="InvalidFavoritesPartition" xml:space="preserve"><value>Ongeldige partitie voor catalogusfavorieten.</value></data>
   <data name="InvalidModelCatalog" xml:space="preserve"><value>De service heeft een ongeldige modelcatalogus teruggegeven.</value></data>
   <data name="ChatStreamRequired" xml:space="preserve"><value>De service heeft geen chatgebeurtenisstream teruggegeven.</value></data>
-  <data name="StreamSizeLimit" xml:space="preserve"><value>Een streamgebeurtenis overschrijdt de ondersteunde grootte.</value></data>
+  <data name="StreamSizeLimit" xml:space="preserve"><value>Een streamgebeurtenis overschrijdt de veiligheidslimiet van {0:N0} tekens. Grote inlinebestanden of toolresultaten kunnen dit veroorzaken. Gedeeltelijke uitvoer is bewaard; er is geen verzoek herhaald.</value></data>
+  <data name="InvalidStreamEvent" xml:space="preserve"><value>De service gaf een ongeldige chatstreamgebeurtenis. Er wordt een JSON-object verwacht met een niet-lege tekenreeks voor type. Gedeeltelijke uitvoer is bewaard; er is geen verzoek herhaald.</value></data>
+  <data name="LoadImagePreview" xml:space="preserve"><value>Afbeeldingsvoorbeeld laden</value></data>
+  <data name="ImagePreviewFailed" xml:space="preserve"><value>Het afbeeldingsvoorbeeld kon niet worden geladen. De oorspronkelijke bijlage kan nog worden gedownload.</value></data>
   <data name="GenerationError" xml:space="preserve"><value>De service heeft een generatiefout gemeld. Controleer je inloggegevens en de beschikbaarheid van het model. Gedeeltelijke uitvoer is bewaard.</value></data>
   <data name="ApprovalUnsupported" xml:space="preserve"><value>Deze agent vereist toolgoedkeuring, die nog niet wordt ondersteund. Er is geen goedkeuring verzonden.</value></data>
   <data name="InvalidHistoryPartition" xml:space="preserve"><value>Ongeldige geschiedenisp artitie.</value></data>

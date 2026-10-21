@@ -179,8 +179,10 @@ public sealed partial class ChatShell
         var part = view.Displayed;
         var block = view.Projected.Block;
         var waiting = view.Projected.Message.Status == "streaming" && block.Key.EndsWith(":pending", StringComparison.Ordinal);
-        var type = part?.Type;
-        var contentKey = part is null ? (waiting ? "" : block.Key.EndsWith(":details", StringComparison.Ordinal)
+        var images = block.Images;
+        var type = images?.Count > 0 ? "inline-images" : part?.Type;
+        var contentKey = images?.Count > 0 ? string.Join(":", images.Select(file => file.Identity))
+            : part is null ? (waiting ? "" : block.Key.EndsWith(":details", StringComparison.Ordinal)
             ? DesktopResources.Get("AttachmentsSources") : DesktopResources.Get("Working"))
             : type is "text" or "reasoning" ? PortableConversations.Text(part) : PortableConversations.Element(part).GetRawText();
         if (view.ContentKey == contentKey && view.ContentType == type) return;
@@ -195,7 +197,9 @@ public sealed partial class ChatShell
             for (var index = view.Content.Children.Count - 1; index >= 0; index--)
                 if (view.Content.Children[index] is not ProgressBar) view.Content.Children.RemoveAt(index);
             var content = new StackPanel();
-            if (part is not null) RenderPart(content, part);
+            if (images?.Count > 0)
+                foreach (var file in images) content.Children.Add(ToolOutputView.ImageView(file));
+            else if (part is not null) RenderPart(content, part);
             else if (!waiting) content.Children.Add(SelectableText(contentKey));
             var children = content.Children.ToArray();
             content.Children.Clear();

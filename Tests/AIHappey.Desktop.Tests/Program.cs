@@ -19,6 +19,11 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--chat-files-only"))
+    {
+        await ChatFileRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} chat file checks passed."); return;
+    }
     if (args.Contains("--authoring-tools-only"))
     {
         await AuthoringToolRegressionTests.RunAsync(Check, root);
@@ -36,6 +41,7 @@ try
     await PluginRegressionTests.RunAsync(Check, root);
     await ChatSettingsRegressionTests.RunAsync(Check, root);
     await ChatDebugRegressionTests.RunAsync(Check, root);
+    await ChatFileRegressionTests.RunAsync(Check, root);
     if (args.Contains("--chat-settings-only"))
     {
         Console.WriteLine($"All {tests} chat settings checks passed."); return;

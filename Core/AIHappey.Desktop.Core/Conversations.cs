@@ -179,6 +179,11 @@ public sealed class HistoryStore(string root)
         foreach (var file in Directory.EnumerateFiles(directory, "*.json"))
         {
             ct.ThrowIfCancellationRequested();
+            // Only this store's SHA-256 filenames belong to the portable document format.
+            // Check before deserialization: legacy GUID-named wrapper documents otherwise
+            // throw a missing-message-ID exception on every fresh turn's history refresh.
+            var stem = Path.GetFileNameWithoutExtension(file);
+            if (stem.Length != 64 || !stem.All(Uri.IsHexDigit)) continue;
             try
             {
                 await using var stream = File.OpenRead(file);

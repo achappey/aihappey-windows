@@ -33,7 +33,8 @@ public static class MessageDetails
             var finalText = -1;
             foreach (var message in turn)
             {
-                foreach (var part in message.Message.Parts) attachments.AddRange(Attachments(part));
+                var superseded = SupersededImages(message.Message.Parts);
+                foreach (var part in message.Message.Parts.Where(part => !superseded.Contains(part))) attachments.AddRange(Attachments(part));
                 var blocks = TranscriptProjection.Project(message);
                 // Relate source positions to the original part indices, without changing message boundaries.
                 var sourceIndex = 0;
@@ -45,7 +46,7 @@ public static class MessageDetails
                         if (Source(message.Message.Parts[sourceIndex]) is { } source) pendingSources.Add(source);
                         sourceIndex++;
                     }
-                    var isText = !block.Activity && block.Parts.FirstOrDefault()?.Type == "text";
+                    var isText = !block.Activity && (block.Parts.FirstOrDefault()?.Type == "text" || block.Images?.Count > 0);
                     rows.Add(new(message, block, isText ? DistinctSources(pendingSources) : [], []));
                     if (isText) { pendingSources.Clear(); finalText = rows.Count - 1; }
                 }
@@ -76,7 +77,8 @@ public static class MessageDetails
             if (message.Message.Role == Role.user)
             {
                 var blocks = TranscriptProjection.Project(message);
-                var files = message.Message.Parts.SelectMany(Attachments).DistinctBy(a => a.Identity).ToArray();
+                var superseded = SupersededImages(message.Message.Parts);
+                var files = message.Message.Parts.Where(part => !superseded.Contains(part)).SelectMany(Attachments).DistinctBy(a => a.Identity).ToArray();
                 if (blocks.Count == 0 && files.Length > 0) blocks = new[] { new TranscriptBlock(message.Message.Id + ":details", false, []) };
                 for (var index = 0; index < blocks.Count; index++) result.Add(new(message, blocks[index], [], index == blocks.Count - 1 ? files : []));
             }
@@ -130,7 +132,50 @@ public static class MessageDetails
     private static MessageAttachment File(JsonElement item)
     {
         var url = PortableConversations.String(item, "url");
-        var mime = PortableConversations.String(item, "mediaType") ?? PortableConversations.String(item, "mimeType") ?? "application/octet-stream";
-        return new(PortableConversations.String(item, "filename") ?? PortableConversations.String(item, "name") ?? AttachmentDownloads.NameFromUri(url, mime), mime, url);
+        var binary = PortableConversations.String(item, "data");
+        if (url is null && binary?.StartsWith("data:", StringComparison.OrdinalIgnoreCase) == true)
+        { url = binary; binary = null; }
+        var mime = PortableConversations.String(item, "mediaType") ?? PortableConversations.String(item, "mimeType")
+            ?? ProviderString(item, "media_type") ?? DataMediaType(url) ?? "application/octet-stream";
+        var name = PortableConversations.String(item, "filename") ?? PortableConversations.String(item, "name")
+            ?? ProviderString(item, "filename") ?? AttachmentDownloads.NameFromUri(url, mime);
+        // The browser accepts plain base64 in file URLs too. Keep it as binary rather than
+        // interpreting '/' at the start (e.g. JPEG /9j/) as a filesystem/relative URL.
+        if (url is not null && !url.Contains(':')) { binary = url; url = null; }
+        return new(name, mime, url, Base64: binary);
+    }
+
+    public static bool IsImage(MessageAttachment file) => file.MediaType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+
+    private static string? DataMediaType(string? url) => url?.StartsWith("data:", StringComparison.OrdinalIgnoreCase) == true
+        && url.IndexOfAny([';', ','], 5) is var end && end > 5 ? url[5..end] : null;
+
+    private static string? ProviderString(JsonElement item, string name)
+    {
+        if (!item.TryGetProperty("providerMetadata", out var metadata) || metadata.ValueKind != JsonValueKind.Object) return null;
+        return metadata.EnumerateObject().Select(p => PortableConversations.String(p.Value, name)).FirstOrDefault(s => !string.IsNullOrWhiteSpace(s));
+    }
+
+    public static string? GeneratedImageKey(UIMessagePart part)
+    {
+        if (part.Type != "file") return null;
+        var raw = PortableConversations.Element(part);
+        if (!raw.TryGetProperty("providerMetadata", out var metadata) || metadata.ValueKind != JsonValueKind.Object) return null;
+        foreach (var scoped in metadata.EnumerateObject())
+        {
+            var id = PortableConversations.String(scoped.Value, "generated_image_id") ?? PortableConversations.String(scoped.Value, "generatedImageId");
+            if (!string.IsNullOrWhiteSpace(id)) return JsonSerializer.Serialize(new[] { scoped.Name, id });
+        }
+        return null;
+    }
+
+    public static HashSet<UIMessagePart> SupersededImages(IReadOnlyList<UIMessagePart> parts)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var result = new HashSet<UIMessagePart>();
+        for (var index = parts.Count - 1; index >= 0; index--)
+            if (parts[index].Type == "file" && Attachments(parts[index]).Any(IsImage)
+                && GeneratedImageKey(parts[index]) is { } key && !seen.Add(key)) result.Add(parts[index]);
+        return result;
     }
 }

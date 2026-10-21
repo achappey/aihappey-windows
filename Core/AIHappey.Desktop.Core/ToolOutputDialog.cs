@@ -37,26 +37,67 @@ internal static class ToolOutputView
 
     public static TextBlock Text(string value) => new() { Text = value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
     private static UIElement ImageView(JsonElement block)
+        => ImageView(new MessageAttachment(PortableConversations.String(block, "name") ?? DesktopResources.Get("ImagePreview"),
+            PortableConversations.String(block, "mimeType") ?? "image/png", Base64: PortableConversations.String(block, "data")), "ToolOutputImage");
+
+    // Shared with inline chat images. Decode embedded bytes locally; remote media is loaded
+    // only after an explicit click using the same anonymous, bounded download policy.
+    internal static UIElement ImageView(MessageAttachment file, string name = "ChatGeneratedImage")
     {
         var panel = new StackPanel { Spacing = 8 };
-        var image = new Image { Name = "ToolOutputImage", MaxHeight = 420, Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform };
+        var image = new Image { Name = name, MaxHeight = 420, Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(image, file.Name);
         panel.Children.Add(image);
-        var notice = Text(PortableConversations.String(block, "mimeType") ?? ""); panel.Children.Add(notice);
-        image.Loaded += async (_, _) =>
+        var notice = Text(file.MediaType); panel.Children.Add(notice);
+        var embedded = file.Base64 is not null || file.Text is not null || file.Url?.StartsWith("data:", StringComparison.OrdinalIgnoreCase) == true;
+        var load = new Button { Name = "LoadChatImagePreview", Content = DesktopResources.Get("LoadImagePreview"),
+            Visibility = embedded ? Visibility.Collapsed : Visibility.Visible, IsEnabled = AttachmentDownloads.RemoteUri(file.Url) is not null };
+        ControlAppearance.Native(load); panel.Children.Add(load);
+        CancellationTokenSource? lifetime = null;
+        var loading = false;
+        async Task LoadAsync()
         {
-            if (image.Source is not null) return;
+            var active = lifetime;
+            if (active is null || loading || image.Source is not null) return;
+            loading = true; load.IsEnabled = false;
             try
             {
-                var data = PortableConversations.String(block, "data") ?? "";
-                if (data.Length > (ComposerAttachments.MaximumFileBytes + 2L) / 3 * 4) throw new InvalidDataException();
-                var bytes = Convert.FromBase64String(data); ComposerAttachments.ValidateSize(bytes.Length);
+                var bytes = await Task.Run(() => AttachmentDownloads.EmbeddedBytes(file), active.Token);
+                if (bytes is null)
+                {
+                    using var timeout = CancellationTokenSource.CreateLinkedTokenSource(active.Token);
+                    timeout.CancelAfter(TimeSpan.FromSeconds(30));
+                    using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseDefaultCredentials = false });
+                    using var download = new MemoryStream();
+                    await AttachmentDownloads.WriteAsync(file, download, http, timeout.Token);
+                    bytes = download.ToArray();
+                }
                 using var memory = new MemoryStream(bytes); using var stream = memory.AsRandomAccessStream();
                 var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage { DecodePixelWidth = 1200 };
-                await bitmap.SetSourceAsync(stream); if (image.IsLoaded) image.Source = bitmap;
+                await bitmap.SetSourceAsync(stream).AsTask(active.Token);
+                if (ReferenceEquals(lifetime, active) && image.IsLoaded) { image.Source = bitmap; notice.Text = file.MediaType; }
             }
-            catch (Exception e) when (e is not OutOfMemoryException) { notice.Text = DesktopResources.Get("ImageResponseInvalid"); }
+            catch (OperationCanceledException) when (active.IsCancellationRequested) { }
+            catch (Exception e) when (e is not OutOfMemoryException)
+            { if (ReferenceEquals(lifetime, active)) notice.Text = DesktopResources.Get("ImagePreviewFailed"); }
+            finally
+            {
+                if (ReferenceEquals(lifetime, active))
+                { loading = false; load.IsEnabled = AttachmentDownloads.RemoteUri(file.Url) is not null; }
+            }
+        }
+        load.Click += async (_, _) => await LoadAsync();
+        image.Loaded += async (_, _) =>
+        {
+            lifetime ??= new CancellationTokenSource();
+            if (embedded) await LoadAsync();
         };
-        image.Unloaded += (_, _) => image.Source = null;
+        image.Unloaded += (_, _) =>
+        {
+            var previous = lifetime; lifetime = null;
+            previous?.Cancel(); previous?.Dispose();
+            loading = false; image.Source = null;
+        };
         return panel;
     }
     public static UIElement Value(JsonElement value) => Text(value.ValueKind == JsonValueKind.String

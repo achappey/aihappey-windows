@@ -117,26 +117,66 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
 
 public static class SseReader
 {
-    public static async IAsyncEnumerable<string> ReadAsync(Stream stream, [EnumeratorCancellation] CancellationToken ct = default)
+    // A 64 MiB downloadable file needs ~86 MiB of base64 text, plus JSON/tool metadata.
+    // Bound allocation while framing, not after ReadLineAsync has allocated an unbounded line.
+    public const int MaximumEventCharacters = 96 * 1024 * 1024;
+
+    public static async IAsyncEnumerable<string> ReadAsync(Stream stream, [EnumeratorCancellation] CancellationToken ct = default,
+        int maximumEventCharacters = MaximumEventCharacters)
     {
+        if (maximumEventCharacters <= 0 || maximumEventCharacters > MaximumEventCharacters)
+            throw new ArgumentOutOfRangeException(nameof(maximumEventCharacters));
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
         var data = new StringBuilder();
-        while (await reader.ReadLineAsync(ct) is { } line)
+        var line = new StringBuilder();
+        var buffer = new char[8192];
+        var skipLf = false;
+        string? ConsumeLine()
         {
-            if (line.Length > 2_000_000) throw new GatewayException(DesktopResources.Get("StreamSizeLimit"));
             if (line.Length == 0)
             {
-                if (data.Length > 0) { yield return data.ToString().TrimEnd('\n'); data.Clear(); }
-                continue;
+                if (data.Length == 0) return null;
+                var payload = data.ToString(0, data.Length - 1); // Remove only the framing newline.
+                data.Clear();
+                return payload;
             }
-            if (!line.StartsWith("data:", StringComparison.Ordinal)) continue;
-            var value = line[5..];
-            if (value.StartsWith(' ')) value = value[1..];
-            data.Append(value).Append('\n');
-            if (data.Length > 2_000_000) throw new GatewayException(DesktopResources.Get("StreamSizeLimit"));
+            if (line.Length >= 5 && line[0] == 'd' && line[1] == 'a' && line[2] == 't' && line[3] == 'a' && line[4] == ':')
+            {
+                var start = line.Length > 5 && line[5] == ' ' ? 6 : 5;
+                var length = line.Length - start;
+                if ((long)data.Length + length > maximumEventCharacters) throw SizeError(maximumEventCharacters);
+                data.Append(line, start, length).Append('\n');
+            }
+            line.Clear();
+            return null;
         }
-        if (data.Length > 0) yield return data.ToString().TrimEnd('\n');
+        while (await reader.ReadAsync(buffer.AsMemory(), ct) is var read && read > 0)
+        {
+            var offset = 0;
+            while (offset < read)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (skipLf)
+                {
+                    skipLf = false;
+                    if (buffer[offset] == '\n') { offset++; continue; }
+                }
+                var end = buffer.AsSpan(offset, read - offset).IndexOfAny('\r', '\n');
+                var length = end < 0 ? read - offset : end;
+                // Include the SSE prefix/optional space without reducing the payload budget.
+                if ((long)line.Length + length > (long)maximumEventCharacters + 6) throw SizeError(maximumEventCharacters);
+                line.Append(buffer, offset, length);
+                offset += length;
+                if (end < 0) break;
+                skipLf = buffer[offset++] == '\r';
+                if (ConsumeLine() is { } payload) yield return payload;
+            }
+        }
+        if (line.Length > 0) ConsumeLine();
+        if (data.Length > 0) yield return data.ToString(0, data.Length - 1);
     }
+
+    private static GatewayException SizeError(int limit) => new(DesktopResources.Format("StreamSizeLimit", limit));
 }
 
 /// <summary>Retains the wire payload for forward compatibility; known events use existing typed contracts.</summary>
@@ -144,9 +184,13 @@ public sealed record StreamEvent(string Type, JsonElement Raw, UIMessagePart? Pa
 {
     public static StreamEvent Parse(string payload)
     {
-        using var doc = JsonDocument.Parse(payload);
+        JsonDocument doc;
+        try { doc = JsonDocument.Parse(payload); }
+        catch (JsonException) { throw new GatewayException(DesktopResources.Get("InvalidStreamEvent")); }
+        using var document = doc;
         var raw = doc.RootElement.Clone();
-        var type = PortableConversations.String(raw, "type") ?? throw new JsonException("Missing event type.");
+        var type = PortableConversations.String(raw, "type");
+        if (string.IsNullOrWhiteSpace(type)) throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
         // Assembly uses the wire shape, not the server converter's narrower part union.
         // This also preserves arbitrary provider fields and newer SDK event kinds.
         return new(type, raw, new PortableUIPart(raw));

@@ -275,7 +275,10 @@
   <data name="InvalidFavoritesPartition" xml:space="preserve"><value>Invalid catalog favorites partition.</value></data>
   <data name="InvalidModelCatalog" xml:space="preserve"><value>The service returned an invalid model catalog.</value></data>
   <data name="ChatStreamRequired" xml:space="preserve"><value>The service did not return a chat event stream.</value></data>
-  <data name="StreamSizeLimit" xml:space="preserve"><value>A stream event exceeded the supported size.</value></data>
+  <data name="StreamSizeLimit" xml:space="preserve"><value>A stream event exceeded the safety limit of {0:N0} characters. Large inline files or tool results can cause this. Partial output has been kept; no request was retried.</value></data>
+  <data name="InvalidStreamEvent" xml:space="preserve"><value>The service returned an invalid chat stream event. Expected a JSON object with a non-empty string type. Partial output has been kept; no request was retried.</value></data>
+  <data name="LoadImagePreview" xml:space="preserve"><value>Load image preview</value></data>
+  <data name="ImagePreviewFailed" xml:space="preserve"><value>The image preview could not be loaded. The original attachment is still available for download.</value></data>
   <data name="GenerationError" xml:space="preserve"><value>The service reported a generation error. Check credentials and model availability. Partial output has been kept.</value></data>
   <data name="ApprovalUnsupported" xml:space="preserve"><value>This agent requires tool approval, which is not supported yet. No approval was sent.</value></data>
   <data name="InvalidHistoryPartition" xml:space="preserve"><value>Invalid history partition.</value></data>
