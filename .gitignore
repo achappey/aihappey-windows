@@ -6,3 +6,4 @@ ProviderCatalog/
 *.log
 *.user
 *.bin
+*.fakton.json

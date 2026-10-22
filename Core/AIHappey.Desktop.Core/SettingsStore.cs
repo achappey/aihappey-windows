@@ -4,19 +4,25 @@ namespace AIHappey.Desktop.Core;
 
 public static class SettingsStore
 {
-    public static async Task<DesktopSettings> LoadAsync(string directory, DesktopSettings defaults)
+    public static async Task<DesktopSettings> LoadAsync(string directory, DesktopSettings defaults,
+        Action<DesktopSettings>? applyHostPolicy = null)
     {
         var path = Path.Combine(directory, "settings.json");
-        if (!File.Exists(path)) return defaults;
-        try
+        var settings = defaults;
+        if (File.Exists(path))
         {
-            await using var stream = File.OpenRead(path);
-            return await JsonSerializer.DeserializeAsync<DesktopSettings>(stream, JsonSerializerOptions.Web) ?? defaults;
+            try
+            {
+                await using var stream = File.OpenRead(path);
+                settings = await JsonSerializer.DeserializeAsync<DesktopSettings>(stream, JsonSerializerOptions.Web) ?? defaults;
+            }
+            catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException)
+            {
+                throw new InvalidOperationException(DesktopResources.Get("SettingsReadFailed"));
+            }
         }
-        catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException)
-        {
-            throw new InvalidOperationException(DesktopResources.Get("SettingsReadFailed"));
-        }
+        applyHostPolicy?.Invoke(settings);
+        return settings;
     }
 
     public static async Task SaveAsync(string directory, DesktopSettings settings)

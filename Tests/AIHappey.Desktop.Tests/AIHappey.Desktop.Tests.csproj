@@ -84,6 +84,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/UrlAttachments.cs" Link="Core/UrlAttachments.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/DocumentTextExtraction.cs" Link="Core/DocumentTextExtraction.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SettingsStore.cs" Link="Core/SettingsStore.cs" />
+    <Compile Include="../../Samples/AIHappey.Desktop.AzureAuth/EnterpriseConfiguration.cs" Link="Host/EnterpriseConfiguration.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ImagePreferences.cs" Link="Core/ImagePreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ImageClient.cs" Link="Core/ImageClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ImageLibrary.cs" Link="Core/ImageLibrary.cs" />

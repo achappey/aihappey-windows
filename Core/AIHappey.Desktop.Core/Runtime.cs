@@ -80,7 +80,11 @@ public interface IDesktopHost
     bool AllowLocal { get; }
     string AccountLabel { get; }
     string HistoryIdentity { get; }
+    /// <summary>Whether interactive sign-in is needed before calling protected services. Read after initialization.</summary>
+    bool RequiresSignIn => false;
     DesktopUserContext? UserContext => null;
+    /// <summary>Reapply host-owned configuration after loading user preferences, before validation or saving.</summary>
+    void ApplySettingsPolicy(DesktopSettings settings) { }
     Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     Task AuthenticateAsync(HttpRequestMessage request, ServiceKind service, CancellationToken cancellationToken);
     Task ManageAccountAsync(object xamlRoot, CancellationToken cancellationToken);

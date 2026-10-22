@@ -1,37 +1,11 @@
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
-using System.Text.Json;
 using AIHappey.Desktop.Core;
 using Microsoft.Identity.Client;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 namespace AIHappey_Desktop_AzureAuth;
-
-public sealed class EnterpriseConfiguration
-{
-    public string TenantId { get; set; } = "";
-    public string ClientId { get; set; } = "";
-    public string AiUrl { get; set; } = "";
-    public string AgentsUrl { get; set; } = "";
-    public string[] AiScopes { get; set; } = [];
-    public string[] AgentsScopes { get; set; } = [];
-    public string? ChatbotInstructions { get; set; }
-
-    public static EnterpriseConfiguration Load()
-    {
-        var overridePath = Path.Combine(DesktopPaths.ProfileDirectory("AzureAuth"), "desktop.json");
-        var path = File.Exists(overridePath) ? overridePath : Path.Combine(AppContext.BaseDirectory, "desktop.json");
-        try { return JsonSerializer.Deserialize<EnterpriseConfiguration>(File.ReadAllText(path), JsonSerializerOptions.Web) ?? new(); }
-        catch (Exception e) when (e is IOException or JsonException) { return new(); }
-    }
-
-    public DesktopSettings Settings => new()
-    {
-        Ai = new() { Location = RuntimeLocation.Remote, RemoteUrl = AiUrl },
-        Agents = new() { Location = RuntimeLocation.Remote, RemoteUrl = AgentsUrl }
-    };
-}
 
 /// <summary>Public-client OAuth and encrypted token cache live in this host, never in Core.</summary>
 public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDesktopHost
@@ -41,8 +15,11 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
     private IPublicClientApplication? app;
     private IAccount? account;
     private DesktopUserContext? userContext;
+    private bool requiresSignIn = true;
     public string ProfileId => "AzureAuth";
     public bool AllowLocal => false;
+    public bool RequiresSignIn => requiresSignIn;
+    public void ApplySettingsPolicy(DesktopSettings settings) => config.ApplySettingsPolicy(settings);
     public string AccountLabel => account?.Username ?? DesktopResources.Get("SignIn");
     public string HistoryIdentity => account?.HomeAccountId.Identifier ?? "signed-out";
     public DesktopUserContext? UserContext => account is null ? null : userContext
@@ -91,9 +68,15 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
             finally { CryptographicOperations.ZeroMemory(plain); }
         });
         account = (await app.GetAccountsAsync()).FirstOrDefault();
+        requiresSignIn = account is null;
         if (account is not null)
         {
-            try { CaptureIdentity(await app.AcquireTokenSilent(config.AiScopes, account).ExecuteAsync(cancellationToken)); }
+            try
+            {
+                CaptureIdentity(await app.AcquireTokenSilent(config.AiScopes, account).ExecuteAsync(cancellationToken));
+                await app.AcquireTokenSilent(config.AgentsScopes, account).ExecuteAsync(cancellationToken);
+            }
+            catch (MsalUiRequiredException) { requiresSignIn = true; }
             catch (MsalException) { /* Cached account fields remain available; sign-in is handled explicitly. */ }
         }
         cancellationToken.ThrowIfCancellationRequested();
@@ -103,9 +86,7 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
     {
         await InitializeAsync();
         // Tokens may only go to the service configured by the enterprise distributor, never an arbitrary user-entered host.
-        var allowed = DesktopSettings.RemoteUri(service == ServiceKind.Ai ? config.AiUrl : config.AgentsUrl);
-        if (request.RequestUri is null || !allowed.IsBaseOf(request.RequestUri))
-            throw new InvalidOperationException(DesktopResources.Get("EnterpriseDestinationRejected"));
+        config.ValidateDestination(request.RequestUri, service);
         if (account is null) throw new InvalidOperationException(DesktopResources.Get("EnterpriseSignInRequired"));
         try
         {
@@ -113,7 +94,11 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
             CaptureIdentity(result);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
         }
-        catch (MsalUiRequiredException) { throw new InvalidOperationException(DesktopResources.Get("InteractiveSignInRequired")); }
+        catch (MsalUiRequiredException)
+        {
+            requiresSignIn = true;
+            throw new InvalidOperationException(DesktopResources.Get("InteractiveSignInRequired"));
+        }
         catch (MsalException) { throw new InvalidOperationException(DesktopResources.Get("TokenAcquisitionFailed")); }
     }
 
@@ -128,12 +113,15 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
             SecondaryButtonText = account is null ? "" : DesktopResources.Get("SignOut"), CloseButtonText = DesktopResources.Get("Cancel")
         };
         SystemAppearance.PrepareDialog(dialog);
+        using var registration = cancellationToken.Register(() => dialog.DispatcherQueue.TryEnqueue(() => dialog.Hide()));
         var choice = await dialog.ShowAsync();
+        cancellationToken.ThrowIfCancellationRequested();
         if (choice == ContentDialogResult.Secondary)
         {
             foreach (var cached in await app!.GetAccountsAsync()) await app.RemoveAsync(cached);
             account = null;
             userContext = null;
+            requiresSignIn = true;
             return;
         }
         if (choice != ContentDialogResult.Primary) return;
@@ -141,18 +129,21 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
         {
             var result = await app!.AcquireTokenInteractive(config.AiScopes)
                 .WithPrompt(Prompt.SelectAccount).WithUseEmbeddedWebView(false).ExecuteAsync(cancellationToken);
-            account = result.Account;
-            CaptureIdentity(result);
+            var signedInAccount = result.Account;
             // The second resource can require its own consent. Obtain it explicitly before starting inference.
-            try { await app.AcquireTokenSilent(config.AgentsScopes, account).ExecuteAsync(cancellationToken); }
+            try { await app.AcquireTokenSilent(config.AgentsScopes, signedInAccount).ExecuteAsync(cancellationToken); }
             catch (MsalUiRequiredException)
             {
-                var agentsResult = await app.AcquireTokenInteractive(config.AgentsScopes).WithAccount(account)
+                var agentsResult = await app.AcquireTokenInteractive(config.AgentsScopes).WithAccount(signedInAccount)
                     .WithUseEmbeddedWebView(false).ExecuteAsync(cancellationToken);
-                if (agentsResult.Account.HomeAccountId.Identifier != account.HomeAccountId.Identifier)
+                if (agentsResult.Account.HomeAccountId.Identifier != signedInAccount.HomeAccountId.Identifier)
                     throw new InvalidOperationException(DesktopResources.Get("SameEnterpriseAccount"));
             }
+            account = signedInAccount;
+            CaptureIdentity(result);
+            requiresSignIn = false;
         }
+        catch (MsalClientException e) when (e.ErrorCode == "authentication_canceled") { }
         catch (MsalException) { throw new InvalidOperationException(DesktopResources.Get("EnterpriseSignInFailed")); }
     }
 }

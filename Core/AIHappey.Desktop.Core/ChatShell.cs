@@ -145,10 +145,15 @@ public sealed partial class ChatShell : UserControl
                 {
                     session.Settings.Validate(session.Host.AllowLocal);
                     await Task.Run(() => session.Host.InitializeAsync(ct), ct);
-                    await LoadLocalAgentsAsync(ct);
-                    UpdateAccountMenu();
-                    await LoadHistoryAsync(ct, connectServices: false);
-                    await DiscoverAsync(ct);
+                    if (session.Host.RequiresSignIn)
+                    {
+                        // The loaded XamlRoot can host the modal; show the shell behind it rather than an error bar.
+                        indicator.IsActive = false;
+                        loading.Visibility = Visibility.Collapsed;
+                        mainInterface.Visibility = Visibility.Visible;
+                        await session.Host.ManageAccountAsync(XamlRoot, ct);
+                    }
+                    await ReloadAccountAsync(ct, connectServices: false);
                 });
             }
             finally
@@ -184,17 +189,7 @@ public sealed partial class ChatShell : UserControl
             await Mcp.ResetAsync(ct);
             await StopVideoJobsAsync();
             await session.Host.ManageAccountAsync(XamlRoot, ct);
-            await StartVideoJobsAsync(ct);
-            UpdateAccountMenu();
-            current = new() { Service = Service };
-            input.Text = ""; ResetContext();
-            targets = []; TargetId = "";
-            aiModelTargets = null;
-            InvalidateCatalogs();
-            RenderTranscript();
-            await LoadHistoryAsync(ct);
-            await DiscoverAsync(ct);
-            if (activePage != DesktopPage.Chat) await LoadActiveOverviewAsync(ct);
+            await ReloadAccountAsync(ct);
             }
             finally { accountTransition = false; ScheduleExplorerDrain(); }
         });
@@ -245,6 +240,7 @@ public sealed partial class ChatShell : UserControl
 
     private async Task WarmupServicesAsync()
     {
+        if (session.Host.RequiresSignIn) return;
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(runtimeWarmupLifetime.Token);
         lifetime.CancelAfter(TimeSpan.FromMinutes(2));
         async Task AttemptAsync(string serviceName, Func<Task> start)
@@ -404,6 +400,23 @@ public sealed partial class ChatShell : UserControl
             : session.Host.AccountLabel == DesktopResources.Get("SignIn") ? DesktopResources.Get("SignIn") : DesktopResources.Get("ManageAccount");
     }
 
+    private async Task ReloadAccountAsync(CancellationToken ct, bool connectServices = true)
+    {
+        var ready = !session.Host.RequiresSignIn;
+        if (ready && connectServices) await StartVideoJobsAsync(ct);
+        UpdateAccountMenu();
+        current = new() { Service = Service };
+        input.Text = ""; ResetContext();
+        targets = []; TargetId = "";
+        aiModelTargets = null;
+        InvalidateCatalogs();
+        RenderTranscript();
+        await LoadLocalAgentsAsync(ct);
+        await LoadHistoryAsync(ct, connectServices && ready);
+        await DiscoverAsync(ct);
+        if (ready && activePage != DesktopPage.Chat) await LoadActiveOverviewAsync(ct);
+    }
+
     private void UpdateMode(ServiceKind selected)
     {
         service = selected;
@@ -438,6 +451,13 @@ public sealed partial class ChatShell : UserControl
 
     private async Task DiscoverAsync(CancellationToken ct)
     {
+        // Canceling startup sign-in or explicitly signing out is a normal idle state, not a gateway failure.
+        if (session.Host.RequiresSignIn)
+        {
+            targets = []; TargetId = ""; aiModelTargets = null;
+            UpdateAccountMenu(); UpdateTargetSuggestions(); RefreshWelcome();
+            return;
+        }
         var selected = TargetId;
         targets = Service == ServiceKind.Agents ? await AgentTargetsAsync(ct)
             : await Task.Run(() => client.ListAsync(Service, ct), ct);

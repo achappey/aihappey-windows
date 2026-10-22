@@ -11,7 +11,7 @@ public static class DesktopStartup
         // Use the Windows display-language preference, not the number/date-format regional setting.
         var windowsLanguage = GlobalizationPreferences.Languages.FirstOrDefault() ?? "en";
         ApplyLanguage(DesktopLanguage.Resolve(null, windowsLanguage));
-        var settings = await SettingsStore.LoadAsync(session.DataDirectory, session.Settings);
+        var settings = await SettingsStore.LoadAsync(session.DataDirectory, session.Settings, session.Host.ApplySettingsPolicy);
         var language = DesktopLanguage.Resolve(settings.Language, windowsLanguage);
         var rememberInitialChoice = settings.Language != language;
         settings.Language = language;

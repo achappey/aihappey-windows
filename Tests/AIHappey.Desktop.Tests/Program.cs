@@ -19,6 +19,11 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    await EnterpriseSettingsRegressionTests.RunAsync(Check, root);
+    if (args.Contains("--enterprise-settings-only"))
+    {
+        Console.WriteLine($"All {tests} enterprise settings checks passed."); return;
+    }
     if (args.Contains("--chat-files-only"))
     {
         await ChatFileRegressionTests.RunAsync(Check, root);

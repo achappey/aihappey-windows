@@ -227,6 +227,7 @@ public partial class App : Application
             }
             Check(runtime.Disposed && runtime.Finished.Task.IsCompleted, context + ": shutdown joins canceled optional startup before disposal");
         }
+        await CheckStartupSignInAsync(theme);
     }
 
     private async Task CheckTranscriptAsync(bool local, ElementTheme theme)
