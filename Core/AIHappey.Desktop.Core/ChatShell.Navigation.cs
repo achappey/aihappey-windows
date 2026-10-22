@@ -95,12 +95,9 @@ public sealed partial class ChatShell
         group.CompactMenu.Items.Clear();
         foreach (var link in group.Links.Where(link => session.Settings.Navigation.IsHidden(link.Key)))
         {
-            var entry = new MenuFlyoutSubItem { Text = AutomationProperties.GetName(link.Button), Icon = DesktopIcons.Create(link.Icon), IsEnabled = link.Button.IsEnabled };
-            var open = new MenuFlyoutItem { Name = "NavigationOpen" + link.Key, Text = DesktopResources.Get("NavigationOpen"), IsEnabled = link.Button.IsEnabled };
-            open.Click += async (_, _) => { group.CompactMenu.Hide(); await link.Activate(); };
-            var show = new MenuFlyoutItem { Name = "NavigationShow" + link.Key, Text = DesktopResources.Get("NavigationShow"), Icon = DesktopIcons.Create(Icon.Eye), IsEnabled = link.Button.IsEnabled };
-            show.Click += async (_, _) => { group.CompactMenu.Hide(); await SetNavigationHiddenAsync(link.Key, false); };
-            foreach (var item in new[] { open, show }) { ControlAppearance.Native(item); item.RequestedTheme = ActualTheme; entry.Items.Add(item); }
+            var entry = new MenuFlyoutItem { Name = "NavigationOpen" + link.Key,
+                Text = AutomationProperties.GetName(link.Button), Icon = DesktopIcons.Create(link.Icon), IsEnabled = link.Button.IsEnabled };
+            entry.Click += async (_, _) => { group.CompactMenu.Hide(); await link.Activate(); };
             ControlAppearance.Native(entry); entry.RequestedTheme = ActualTheme;
             group.CompactMenu.Items.Add(entry);
         }

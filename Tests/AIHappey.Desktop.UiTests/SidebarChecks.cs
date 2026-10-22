@@ -145,5 +145,80 @@ public partial class App
         await Task.Delay(100);
         InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();
         Check(split.IsPaneOpen, context + ": expanded sidebar remains available after narrow-window collapse");
+        await CheckCompactHiddenNavigationAsync(shell, context);
+    }
+
+    private async Task CheckCompactHiddenNavigationAsync(ChatShell shell, string context)
+    {
+        var session = Field<DesktopSession>(shell, "session");
+        var original = session.Settings.Navigation.HiddenItemKeys.ToList();
+        var split = Field<SplitView>(shell, "split");
+        var group = Field<System.Collections.IEnumerable>(shell, "navigationGroups").Cast<object>()
+            .Single(value => (string)value.GetType().GetProperty("Name")!.GetValue(value)! == "Primary");
+        var primary = (StackPanel)group.GetType().GetProperty("Panel")!.GetValue(group)!;
+        var hidden = (StackPanel)group.GetType().GetProperty("Hidden")!.GetValue(group)!;
+        var more = (Button)group.GetType().GetProperty("More")!.GetValue(group)!;
+        var menu = (MenuFlyout)group.GetType().GetProperty("CompactMenu")!.GetValue(group)!;
+        var speech = Descendants(primary).OfType<ToggleButton>().Single(button => button.Name == "NavigateSpeech");
+        bool MenuVisible() => VisualTreeHelper.GetOpenPopupsForXamlRoot(shell.XamlRoot).Any(popup => Descendants(popup).OfType<MenuFlyoutPresenter>().Any());
+        try
+        {
+            split.IsPaneOpen = false;
+            session.Settings.Navigation.HiddenItemKeys = ["speech"];
+            Call(shell, "UpdateNavigationLayout"); await Task.Delay(100); shell.UpdateLayout();
+            Check(primary.Children.Contains(more) && hidden.Visibility == Visibility.Collapsed
+                && !primary.Children.OfType<Grid>().Any(row => row.Name == "NavigationRowspeech")
+                && more.Focus(FocusState.Keyboard), context + ": hidden Speech leaves the compact rail and More remains keyboard-accessible");
+
+            speech.IsEnabled = false;
+            Call(shell, "BuildCompactNavigationMenu", group);
+            Check(menu.Items.Single() is MenuFlyoutItem { IsEnabled: false }, context + ": compact hidden menu preserves the destination's disabled state");
+            speech.IsEnabled = true;
+            InvokeButton(more); await Task.Delay(100);
+            var entry = (MenuFlyoutItem)menu.Items.Single();
+            Check(entry.Name == "NavigationOpenspeech" && entry.Text == AutomationProperties.GetName(speech)
+                && entry.Icon is not null && entry.RequestedTheme == shell.ActualTheme && MenuVisible()
+                && entry.Focus(FocusState.Keyboard), context + ": hidden Speech is one native, labeled, themed, keyboard-accessible direct action without Open/Show submenus");
+            Invoke(entry); await Task.Delay(150); shell.UpdateLayout();
+            Check(Field<object>(shell, "activePage").ToString() == "Speech" && !split.IsPaneOpen && !MenuVisible()
+                && session.Settings.Navigation.HiddenItemKeys.SequenceEqual(["speech"])
+                && hidden.Visibility == Visibility.Collapsed, context + ": direct hidden action opens Speech, dismisses the menu, and preserves hidden preferences and compact mode");
+
+            split.IsPaneOpen = true; await Task.Delay(100);
+            InvokeButton(more); await Task.Delay(100);
+            Check(hidden.Visibility == Visibility.Visible && !MenuVisible(), context + ": expanded More still reveals hidden navigation rows instead of opening the compact menu");
+            var visibilityMenu = (MenuFlyout)speech.ContextFlyout;
+            visibilityMenu.ShowAt(speech); await Task.Delay(100);
+            Check(visibilityMenu.Items.Single() is MenuFlyoutItem { Name: "NavigationVisibilityspeech" } action
+                && action.Text == DesktopResources.Get("NavigationShow"), context + ": expanded hidden-row menu retains its Show control");
+            visibilityMenu.Hide();
+
+            split.IsPaneOpen = false;
+            session.Settings.Navigation.HiddenItemKeys = NavigationPreferences.PrimaryKeys.ToList();
+            Call(shell, "UpdateNavigationLayout"); await Task.Delay(100);
+            InvokeButton(more); await Task.Delay(100);
+            Check(!primary.Children.OfType<Grid>().Any() && primary.Children.Contains(more)
+                && menu.Items.OfType<MenuFlyoutItem>().Select(item => item.Name).SequenceEqual(NavigationPreferences.PrimaryKeys.Select(key => "NavigationOpen" + key)),
+                context + ": an entirely hidden primary category keeps every destination directly reachable through More");
+            var current = Field<Conversation>(shell, "current");
+            Invoke(menu.Items.OfType<MenuFlyoutItem>().Single(item => item.Name == "NavigationOpennew")); await Task.Delay(100);
+            Check(Field<Conversation>(shell, "current") != current && Field<object>(shell, "activePage").ToString() == "Chat"
+                && !split.IsPaneOpen && session.Settings.Navigation.HiddenItemKeys.SequenceEqual(NavigationPreferences.PrimaryKeys),
+                context + ": hidden New chat retains its original action without showing hidden icons");
+
+            Call(shell, "SetBusy", true, true);
+            Check(!more.IsEnabled && !MenuVisible(), context + ": compact overflow respects busy state and dismisses its menu");
+            Call(shell, "SetBusy", false, false);
+            session.Settings.Navigation.HiddenItemKeys = [];
+            Call(shell, "UpdateNavigationLayout");
+            Check(!primary.Children.Contains(more) && primary.Children.OfType<Grid>().Count() == NavigationPreferences.PrimaryKeys.Count,
+                context + ": no hidden items means no empty compact overflow menu");
+        }
+        finally
+        {
+            menu.Hide(); speech.IsEnabled = true;
+            session.Settings.Navigation.HiddenItemKeys = original;
+            Call(shell, "UpdateNavigationLayout");
+        }
     }
 }
