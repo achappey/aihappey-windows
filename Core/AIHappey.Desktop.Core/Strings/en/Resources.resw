@@ -1386,4 +1386,8 @@
   <data name="AgentModelRoutingHint" xml:space="preserve"><value>Select answer models and optionally a decision model to choose between them. Without a router, the first answer model is used.</value></data>
   <data name="AgentProviderMetadata" xml:space="preserve"><value>Provider metadata</value></data>
   <data name="AgentProviderHeaders" xml:space="preserve"><value>Provider headers</value></data>
+  <data name="ProviderTypeCount" xml:space="preserve"><value>{0} ({1}/{2})</value></data>
+  <data name="AiDefaultProviderDisabled" xml:space="preserve"><value>The saved default is retained, but its provider is disabled for this model type.</value></data>
+  <data name="ProviderKeysSaveFailed" xml:space="preserve"><value>Could not save API keys and provider preferences. Your previous settings are retained. Try saving again.</value></data>
+  <data name="ProviderSettingsSaveFailed" xml:space="preserve"><value>Could not save provider preferences. Your previous selection is retained. Try again.</value></data>
 </root>

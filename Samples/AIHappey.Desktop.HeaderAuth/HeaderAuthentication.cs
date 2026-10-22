@@ -13,6 +13,7 @@ public sealed class HeaderAuthentication : IDesktopHost
     private Dictionary<string, string>? headers;
     public string ProfileId => "HeaderAuth";
     public bool AllowLocal => true;
+    public bool HasProviderApiKeys => true;
     public string AccountLabel => DesktopResources.Get("ApiKeys");
     public string HistoryIdentity => "public-user";
 
@@ -48,32 +49,53 @@ public sealed class HeaderAuthentication : IDesktopHost
         }
     }
 
-    public async Task ManageAccountAsync(object xamlRoot, CancellationToken cancellationToken)
+    public Task ManageAccountAsync(object xamlRoot, CancellationToken cancellationToken) =>
+        ManageProviderApiKeysAsync(xamlRoot, _ => Task.CompletedTask, cancellationToken);
+
+    public async Task ManageProviderApiKeysAsync(object xamlRoot, Func<IReadOnlyDictionary<string, bool>, Task> savePreferences,
+        CancellationToken cancellationToken)
     {
         await LoadAsync(cancellationToken);
         var panel = new ProviderApiKeysView(headers!);
         var error = new TextBlock { TextWrapping = TextWrapping.Wrap }; panel.Children.Add(error);
         var dialog = new ContentDialog { XamlRoot = (XamlRoot)xamlRoot, Title = DesktopResources.Get("ProviderApiKeys"), Content = panel, PrimaryButtonText = DesktopResources.Get("Save"), CloseButtonText = DesktopResources.Get("Cancel") };
         SystemAppearance.PrepareDialog(dialog);
-        Dictionary<string, string>? next = null;
-        dialog.PrimaryButtonClick += (_, args) =>
+        var saving = false;
+        dialog.Closing += (_, args) => { if (saving && !cancellationToken.IsCancellationRequested) args.Cancel = true; };
+        dialog.PrimaryButtonClick += async (_, args) =>
         {
+            var deferral = args.GetDeferral();
+            saving = true; dialog.IsPrimaryButtonEnabled = false; error.Text = "";
             try
             {
-                next = panel.ReadHeaders();
+                var next = panel.ReadHeaders();
                 Validate(next);
+                cancellationToken.ThrowIfCancellationRequested();
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                var previous = File.Exists(path) ? await File.ReadAllBytesAsync(path, cancellationToken) : null;
+                var plain = JsonSerializer.SerializeToUtf8Bytes(next);
+                byte[] encrypted;
+                try { encrypted = ProtectedData.Protect(plain, Entropy, DataProtectionScope.CurrentUser); }
+                finally { CryptographicOperations.ZeroMemory(plain); }
+                await File.WriteAllBytesAsync(path + ".tmp", encrypted, cancellationToken);
+                File.Move(path + ".tmp", path, true);
+                try { await savePreferences(ProviderPreferences.CredentialChanges(headers!, next)); }
+                catch
+                {
+                    // Core publishes preferences only after its atomic settings save succeeds.
+                    // Restore credentials on failure so the open draft can be retried safely.
+                    if (previous is null) File.Delete(path);
+                    else { await File.WriteAllBytesAsync(path + ".tmp", previous); File.Move(path + ".tmp", path, true); }
+                    throw;
+                }
+                headers = next;
             }
             catch (ArgumentException e) { args.Cancel = true; error.Text = e.Message; }
+            catch (Exception) { args.Cancel = true; error.Text = DesktopResources.Get("ProviderKeysSaveFailed"); }
+            finally { saving = false; dialog.IsPrimaryButtonEnabled = true; deferral.Complete(); }
         };
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary || next is null) return;
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        var plain = JsonSerializer.SerializeToUtf8Bytes(next);
-        try
-        {
-            var encrypted = ProtectedData.Protect(plain, Entropy, DataProtectionScope.CurrentUser);
-            await File.WriteAllBytesAsync(path + ".tmp", encrypted, cancellationToken);
-            File.Move(path + ".tmp", path, true); headers = next;
-        }
-        finally { CryptographicOperations.ZeroMemory(plain); }
+        using var canceled = cancellationToken.Register(() => dialog.DispatcherQueue.TryEnqueue(() => dialog.Hide()));
+        await dialog.ShowAsync();
+        cancellationToken.ThrowIfCancellationRequested();
     }
 }

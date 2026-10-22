@@ -82,7 +82,7 @@ public sealed partial class ChatShell
             var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
             ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != partition) return;
             aiModelTargets = available; modelFavorites = saved; modelFavoritesPartition = partition;
-            modelsOverview.SetItems(available, saved);
+            modelsOverview.SetItems(ProviderPreferences.Filter(available, session.Settings), saved);
             if (Service == ServiceKind.Ai) { targets = available; UpdateTargetSuggestions(); }
         }
         catch (OperationCanceledException) { modelsOverview.Error(DesktopResources.Get("CatalogCanceled")); throw; }
@@ -161,7 +161,7 @@ public sealed partial class ChatShell
     private void UpdateTargetSuggestions(string query = "")
     {
         target.ItemsSource = (Service == ServiceKind.Ai
-            ? AiModelCatalog.ChatSuggestions(targets, session.Settings.AiModels, query)
+            ? AiModelCatalog.ChatSuggestions(PickerModels(targets), session.Settings.AiModels, query)
             : targets.Where(x => string.IsNullOrWhiteSpace(query) || x.Label.Contains(query, StringComparison.OrdinalIgnoreCase)
                 || x.Id.Contains(query, StringComparison.OrdinalIgnoreCase)).ToArray()).Take(100).ToArray();
     }
@@ -169,7 +169,7 @@ public sealed partial class ChatShell
     private void SelectNewChatModel()
     {
         if (Service != ServiceKind.Ai) return;
-        TargetId = AiModelCatalog.NewChatModel(targets, session.Settings.AiModels);
+        TargetId = AiModelCatalog.NewChatModel(PickerModels(targets), session.Settings.AiModels);
         current.Target = TargetId;
         UpdateTargetSuggestions();
     }

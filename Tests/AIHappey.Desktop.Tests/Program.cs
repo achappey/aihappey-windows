@@ -20,6 +20,8 @@ var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGu
 try
 {
     await EnterpriseSettingsRegressionTests.RunAsync(Check, root);
+    await ProviderSettingsRegressionTests.RunAsync(Check, root);
+    if (args.Contains("--provider-settings-only")) { Console.WriteLine($"All {tests} provider settings checks passed."); return; }
     if (args.Contains("--enterprise-settings-only"))
     {
         Console.WriteLine($"All {tests} enterprise settings checks passed."); return;

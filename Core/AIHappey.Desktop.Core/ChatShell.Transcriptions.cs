@@ -34,7 +34,7 @@ public sealed partial class ChatShell
         transcriptionsPage.StopRequested = () => operation?.Cancel(); transcriptionsPage.FilesDropped = DropTranscriptionFilesAsync;
         transcriptionsPage.FolderRequested = OpenTranscriptionsFolderAsync; transcriptionsPage.ViewRequested = ViewTranscriptionAsync; transcriptionsPage.DeleteRequested = DeleteTranscriptionAsync;
     }
-    private void TranscriptionModelSuggestions(string query = "") => transcriptionTarget.ItemsSource = transcriptionModels.Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
+    private void TranscriptionModelSuggestions(string query = "") => transcriptionTarget.ItemsSource = PickerModels(transcriptionModels).Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
     private void InvalidateTranscriptions()
     {
         transcriptionModels = []; transcriptionTarget.Text = ""; transcriptionTarget.ItemsSource = null; libraryTranscriptions = []; transcriptionLibrary = null; transcriptionPartition = null; pendingTranscriptions = 0;
@@ -51,8 +51,7 @@ public sealed partial class ChatShell
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != TranscriptionLibraryStore.Partition(session)) return;
         aiModelTargets = available; transcriptionModels = AiModelCatalog.OfType(available, "transcription");
-        if (SelectedTranscriptionModel is null) transcriptionTarget.Text = transcriptionModels.FirstOrDefault(m => m.Id == session.Settings.AiModels.TranscriptionModel)?.Id
-            ?? transcriptionModels.FirstOrDefault(m => m.Id == "openai/gpt-transcribe")?.Id ?? transcriptionModels.FirstOrDefault()?.Id ?? "";
+        if (SelectedTranscriptionModel is null) transcriptionTarget.Text = InitialModel(transcriptionModels, "transcription", "openai/gpt-transcribe");
         TranscriptionModelSuggestions(); transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null);
     }
     private async Task PickTranscriptionFilesAsync()

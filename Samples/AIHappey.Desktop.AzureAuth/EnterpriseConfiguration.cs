@@ -12,6 +12,7 @@ public sealed class EnterpriseConfiguration
     public string[] AiScopes { get; set; } = [];
     public string[] AgentsScopes { get; set; } = [];
     public string? ChatbotInstructions { get; set; }
+    public Dictionary<string, string[]>? DefaultProvidersByType { get; set; }
 
     public static EnterpriseConfiguration Load()
     {

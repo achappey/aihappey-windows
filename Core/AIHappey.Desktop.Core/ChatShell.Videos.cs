@@ -56,7 +56,7 @@ public sealed partial class ChatShell
         videosPage.LinkRequested = AddVideoLinkAsync; videosPage.AttachmentDataRequested = AdmitVideoDataAsync;
         videosPage.SettingsRequested = EditVideoSettingsAsync; videosPage.FolderRequested = OpenVideosFolderAsync; videosPage.PreviewRequested = PreviewVideoAsync;
     }
-    private void VideoModelSuggestions(string query = "") => videoTarget.ItemsSource = videoModels.Where(m => string.IsNullOrWhiteSpace(query)
+    private void VideoModelSuggestions(string query = "") => videoTarget.ItemsSource = PickerModels(videoModels).Where(m => string.IsNullOrWhiteSpace(query)
         || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
     private void UpdateVideoFavorite()
     {
@@ -98,7 +98,7 @@ public sealed partial class ChatShell
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != ImageLibraryStore.Partition(session)) return;
         aiModelTargets = available; videoModels = AiModelCatalog.OfType(available, "video");
-        if (SelectedVideoModel is null) videoTarget.Text = videoModels.FirstOrDefault(m => m.Id == session.Settings.AiModels.VideoModel)?.Id ?? videoModels.FirstOrDefault()?.Id ?? "";
+        if (SelectedVideoModel is null) videoTarget.Text = InitialModel(videoModels, "video");
         if (modelFavoritesPartition != session.HistoryPartition) { modelFavorites = await modelFavoritesStore.LoadAsync(session.HistoryPartition, ct); modelFavoritesPartition = session.HistoryPartition; }
         VideoModelSuggestions(); videosPage.SetModelAvailable(SelectedVideoModel is not null); UpdateVideoFavorite();
     }

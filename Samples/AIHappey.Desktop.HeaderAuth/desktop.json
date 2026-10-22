@@ -1,0 +1,6 @@
+{
+  "defaultProvidersByType": {
+    "language": ["Pollinations", "GTranslate", "Echo", "UncloseAI", "AndyAPI"],
+    "image": ["Pollinations"]
+  }
+}

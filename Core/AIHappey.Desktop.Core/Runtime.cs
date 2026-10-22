@@ -28,6 +28,12 @@ public sealed class DesktopSettings
     public SpeechPreferences Speech { get => speech; set => speech = value ?? new(); }
     private AiModelPreferences aiModels = new();
     public AiModelPreferences AiModels { get => aiModels; set => aiModels = value ?? new(); }
+    private Dictionary<string, string[]> enabledProvidersByType = new(StringComparer.Ordinal);
+    public Dictionary<string, string[]> EnabledProvidersByType
+    {
+        get => enabledProvidersByType;
+        set => enabledProvidersByType = ProviderPreferences.Normalize(value);
+    }
     private ModelContextPreferences modelContext = new();
     public ModelContextPreferences ModelContext { get => modelContext; set => modelContext = value ?? new(); }
     private AppAgentPreferences sideInferenceAgentNames = new();
@@ -48,6 +54,7 @@ public sealed class DesktopSettings
         Chat = Chat.Clone(), Images = Images.Clone(), Videos = Videos.Clone(), Transcriptions = Transcriptions.Clone(), Speech = Speech.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
         SideInferenceAgentNames = SideInferenceAgentNames.Clone(),
         Navigation = Navigation.Clone(),
+        EnabledProvidersByType = EnabledProvidersByType,
         AllowedToolList = AllowedToolList.ToList()
     };
 
@@ -82,6 +89,9 @@ public interface IDesktopHost
     string HistoryIdentity { get; }
     /// <summary>Whether interactive sign-in is needed before calling protected services. Read after initialization.</summary>
     bool RequiresSignIn => false;
+    bool HasProviderApiKeys => false;
+    Task ManageProviderApiKeysAsync(object xamlRoot, Func<IReadOnlyDictionary<string, bool>, Task> savePreferences,
+        CancellationToken cancellationToken) => Task.CompletedTask;
     DesktopUserContext? UserContext => null;
     /// <summary>Reapply host-owned configuration after loading user preferences, before validation or saving.</summary>
     void ApplySettingsPolicy(DesktopSettings settings) { }
@@ -115,6 +125,8 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     public DesktopContextOptions ContextOptions { get; set; } = new();
     /// <summary>Sample-owned initial definitions, copied into editable storage only on first use.</summary>
     public IReadOnlyList<DesktopAgent> DefaultAgents { get; set; } = [];
+    /// <summary>Sample-owned seeds; saved preferences, including empty lists, always win.</summary>
+    public IReadOnlyDictionary<string, string[]>? DefaultProvidersByType { get; set; }
     public string AgentPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
     public string PluginPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
     public string PluginExtensionNamespace { get; set; } = AgentPluginPackages.DefaultNamespace;

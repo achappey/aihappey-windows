@@ -9,6 +9,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private readonly ChatPreferences chatPreferences;
     private readonly List<string> allowedTools;
     private readonly AiModelPreferences aiModelPreferences;
+    private readonly DesktopSettings originalSettings;
     private readonly AppAgentPreferences appAgentPreferences;
     private readonly ImagePreferences imagePreferences;
     private readonly TranscriptionPreferences transcriptionPreferences;
@@ -25,6 +26,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         IReadOnlyList<DesktopAgent>? appAgents = null)
     {
         this.allowLocal = allowLocal;
+        originalSettings = settings.Clone();
         chatPreferences = settings.Chat.Clone();
         allowedTools = settings.AllowedToolList.ToList();
         aiModelPreferences = settings.AiModels.Clone();
@@ -38,7 +40,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         outputContent.Children.Add(ToolOutputContentPanel);
         imageStorage = new(imagePreferences, catalogLifetime.Token);
         videoStorage = new(videoPreferences, catalogLifetime.Token);
-        AiModelView = new(aiModelPreferences, aiModels, imageStorage, videoStorage);
+        AiModelView = new(aiModelPreferences, aiModels, imageStorage, videoStorage, originalSettings);
         ArtificialIntelligencePage.Children.Add(AiModelView);
         AppAgentsView = new(appAgentPreferences, appAgents);
         AppAgentsPage.Children.Add(AppAgentsView);
@@ -145,6 +147,9 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             Videos = videoPreferences.Clone(),
             Transcriptions = transcriptionPreferences.Clone(),
             AiModels = aiModelPreferences.Clone(),
+            EnabledProvidersByType = originalSettings.EnabledProvidersByType,
+            Navigation = originalSettings.Navigation.Clone(),
+            Speech = originalSettings.Speech.Clone(),
             SideInferenceAgentNames = appAgentPreferences.Clone(),
             AllowedToolList = allowedTools.ToList()
         };

@@ -4,6 +4,7 @@ namespace AIHappey.Desktop.Core;
 
 public static class SettingsStore
 {
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> writes = new(StringComparer.OrdinalIgnoreCase);
     public static async Task<DesktopSettings> LoadAsync(string directory, DesktopSettings defaults,
         Action<DesktopSettings>? applyHostPolicy = null)
     {
@@ -27,10 +28,16 @@ public static class SettingsStore
 
     public static async Task SaveAsync(string directory, DesktopSettings settings)
     {
+        var gate = writes.GetOrAdd(Path.GetFullPath(directory), _ => new(1, 1));
+        await gate.WaitAsync();
+        try
+        {
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, "settings.json");
         var temp = path + ".tmp";
         await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(settings, JsonSerializerOptions.Web));
         File.Move(temp, path, true);
+        }
+        finally { gate.Release(); }
     }
 }

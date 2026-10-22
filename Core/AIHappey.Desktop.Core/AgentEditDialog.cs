@@ -110,8 +110,9 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         var panel = Panel(); var body = Card(panel, "agent.general");
         var name = fields.Text(body, "agent.name", () => draft.Name, v => draft.Definition["name"] = v.Trim()); name.Name = "AgentName"; name.IsEnabled = !editing;
         fields.Text(body, "agent.description", () => draft.Description, v => draft.Definition["description"] = v).Name = "AgentDescription";
-        var modelOptions = models.Where(m => m.ModelType is null or "language" or "decision")
-            .Concat(draft.Models.Where(model => !models.Any(m => m.Id == DesktopAgent.Text(model["id"])))
+        var visibleModels = ProviderPreferences.Filter(models, session.Settings);
+        var modelOptions = visibleModels.Where(m => m.ModelType is null or "language" or "decision")
+            .Concat(draft.Models.Where(model => !visibleModels.Any(m => m.Id == DesktopAgent.Text(model["id"])))
                 .Select(model => new ChatTarget(DesktopAgent.Text(model["id"]), DesktopAgent.Text(model["id"])) { ModelType = DesktopAgent.Text(model["type"]) }))
             .DistinctBy(model => model.Id).Select(model => model.ModelType == "decision"
                 ? model with { Label = model.Label + " (" + DesktopResources.Get("AgentDecisionRouter") + ")" } : model).ToArray();

@@ -32,7 +32,7 @@ public sealed partial class ChatShell
             return Task.CompletedTask;
         };
     }
-    private void SpeechModelSuggestions(string query = "") => speechTarget.ItemsSource = speechModels.Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
+    private void SpeechModelSuggestions(string query = "") => speechTarget.ItemsSource = PickerModels(speechModels).Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
     private void InvalidateSpeech() { speechModels = []; speechTarget.Text = ""; speechTarget.ItemsSource = null; librarySpeech = []; speechLibrary = null; speechPartition = null; pendingSpeech = 0; speechPage.ClearNotices(); speechPage.SetItems([]); speechPage.SetModelAvailable(false); }
     private async Task LoadSpeechAsync(CancellationToken ct, bool useCache = false)
     {
@@ -40,7 +40,7 @@ public sealed partial class ChatShell
         speechLibrary = new(SpeechRoot, partition); librarySpeech = await speechLibrary.ListAsync(ct); speechPage.SetItems(librarySpeech, pendingSpeech);
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct); ct.ThrowIfCancellationRequested(); if (closing || partition != SpeechLibraryStore.Partition(session)) return;
         aiModelTargets = available; speechModels = AiModelCatalog.OfType(available, "speech");
-        if (SelectedSpeechModel is null) speechTarget.Text = speechModels.FirstOrDefault(m => m.Id == session.Settings.AiModels.SpeechModel)?.Id ?? speechModels.FirstOrDefault(m => m.Id == "openai/gpt-4o-mini-tts")?.Id ?? speechModels.FirstOrDefault()?.Id ?? "";
+        if (SelectedSpeechModel is null) speechTarget.Text = InitialModel(speechModels, "speech", "openai/gpt-4o-mini-tts");
         SpeechModelSuggestions(); speechPage.SetModelAvailable(SelectedSpeechModel is not null);
     }
     private async Task SendSpeechAsync()

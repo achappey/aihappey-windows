@@ -1381,4 +1381,8 @@
   <data name="AgentModelRoutingHint" xml:space="preserve"><value>Selecteer antwoordmodellen en eventueel een beslissingsmodel om ertussen te kiezen. Zonder router wordt het eerste antwoordmodel gebruikt.</value></data>
   <data name="AgentProviderMetadata" xml:space="preserve"><value>Providermetadata</value></data>
   <data name="AgentProviderHeaders" xml:space="preserve"><value>Providerheaders</value></data>
+  <data name="ProviderTypeCount" xml:space="preserve"><value>{0} ({1}/{2})</value></data>
+  <data name="AiDefaultProviderDisabled" xml:space="preserve"><value>Het opgeslagen standaardmodel blijft bewaard, maar de provider is uitgeschakeld voor dit modeltype.</value></data>
+  <data name="ProviderKeysSaveFailed" xml:space="preserve"><value>API-sleutels en providerinstellingen konden niet worden opgeslagen. Uw vorige instellingen blijven bewaard. Probeer opnieuw op te slaan.</value></data>
+  <data name="ProviderSettingsSaveFailed" xml:space="preserve"><value>Providerinstellingen konden niet worden opgeslagen. Uw vorige selectie blijft bewaard. Probeer opnieuw.</value></data>
 </root>

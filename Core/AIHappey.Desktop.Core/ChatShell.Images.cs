@@ -45,7 +45,7 @@ public sealed partial class ChatShell
         imagesPage.PreviewRequested = PreviewImageAsync;
         imagesPage.AttachmentDataRequested = AdmitImageDataAsync;
     }
-    private void ImageModelSuggestions(string query = "") => imageTarget.ItemsSource = imageModels.Where(m => string.IsNullOrWhiteSpace(query)
+    private void ImageModelSuggestions(string query = "") => imageTarget.ItemsSource = PickerModels(imageModels).Where(m => string.IsNullOrWhiteSpace(query)
         || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
     private void InvalidateImages()
     {
@@ -62,7 +62,7 @@ public sealed partial class ChatShell
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != ImageLibraryStore.Partition(session)) return;
         aiModelTargets = available; imageModels = AiModelCatalog.OfType(available, "image");
-        if (SelectedImageModel is null) imageTarget.Text = imageModels.FirstOrDefault(m => m.Id == session.Settings.AiModels.ImageModel)?.Id ?? imageModels.FirstOrDefault()?.Id ?? "";
+        if (SelectedImageModel is null) imageTarget.Text = InitialModel(imageModels, "image");
         ImageModelSuggestions(); imagesPage.SetModelAvailable(SelectedImageModel is not null);
     }
     private async Task ReloadImageLibraryAsync(CancellationToken ct)

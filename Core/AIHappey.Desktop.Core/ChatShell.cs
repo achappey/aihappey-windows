@@ -334,10 +334,12 @@ public sealed partial class ChatShell : UserControl
         AutomationProperties.SetName(progress, DesktopResources.Get("Working"));
         Grid.SetColumn(progress, 3); top.Children.Add(progress);
         var profileMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
-        profileMenu.Items.Add(settingsButton); profileMenu.Items.Add(manageAccount);
+        profileMenu.Items.Add(settingsButton); profileMenu.Items.Add(providerSettings);
+        if (!session.Host.HasProviderApiKeys) profileMenu.Items.Add(manageAccount);
         profileMenu.Items.Add(new MenuFlyoutSeparator()); profileMenu.Items.Add(refresh);
         profileMenu.Opening += (_, _) =>
         {
+            BuildProviderSettingsMenu();
             var palette = ControlAppearance.Palette(this);
             var style = new Style(typeof(MenuFlyoutPresenter));
             style.Setters.Add(new Setter(FrameworkElement.RequestedThemeProperty, ActualTheme));
@@ -470,7 +472,7 @@ public sealed partial class ChatShell : UserControl
             if (Service == ServiceKind.Ai) SelectNewChatModel();
             else TargetId = targets.FirstOrDefault()?.Id ?? "";
         }
-        if (targets.Count == 0 || Service == ServiceKind.Ai && AiModelCatalog.ChatSuggestions(targets, session.Settings.AiModels).Count == 0)
+        if (targets.Count == 0 || Service == ServiceKind.Ai && AiModelCatalog.ChatSuggestions(PickerModels(targets), session.Settings.AiModels).Count == 0)
             Show(DesktopResources.Get("NoTargets"), InfoBarSeverity.Warning);
         RefreshWelcome();
         if (Service == ServiceKind.Agents) RenderTranscript();
@@ -738,7 +740,7 @@ public sealed partial class ChatShell : UserControl
 
     private async Task EditSettingsAsync()
     {
-        if (busy || closing || catalogDialog is not null || historyDialogOpen) return;
+        if (busy || closing || pendingProviderSettingsWrites > 0 || catalogDialog is not null || historyDialogOpen) return;
         historyDialogOpen = true;
         try { await LoadLocalAgentsAsync(downloadLifetime.Token); }
         catch (Exception) { historyDialogOpen = false; Show(DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error); return; }
@@ -766,7 +768,7 @@ public sealed partial class ChatShell : UserControl
             session.Settings = next;
             RenderTranscript();
             RefreshWelcome();
-            UpdateTargetSuggestions();
+            RefreshProviderFiltering();
             if (elicitationChanged || mcpSkillsChanged) await Mcp.ReconnectAsync(ct);
             RenderContextTags();
             if (next.Language != session.ActiveLanguage) Show(DesktopResources.Get("RestartRequired"), InfoBarSeverity.Informational);
@@ -790,7 +792,7 @@ public sealed partial class ChatShell : UserControl
 
     private async Task RunAsync(Func<CancellationToken, Task> action, bool inference = false)
     {
-        if (busy || closing) return;
+        if (busy || closing || pendingProviderSettingsWrites > 0) return;
         busy = true; operation = new CancellationTokenSource();
         if (!inference) operation.CancelAfter(TimeSpan.FromMinutes(2));
         notice.IsOpen = false; notice.Visibility = Visibility.Collapsed;
@@ -871,6 +873,7 @@ public sealed partial class ChatShell : UserControl
         ResetFileDrop();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
         providerDialog?.Hide();
+        providerSelectionFlyout?.Hide();
         agentEditor?.Hide();
         skillEditor?.CancelAndHide();
         pluginDialog?.CancelAndHide(); pluginSelectionDialog?.Hide();
@@ -890,7 +893,7 @@ public sealed partial class ChatShell : UserControl
         mcpDialog?.Shutdown(); Mcp.Changed -= McpChanged;
         if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.CancelSkillLoading(); chatSettingsDialog.Hide(); }
         contextSearchDialog?.Shutdown();
-        while (busy) await Task.Delay(20);
+        while (busy || pendingProviderSettingsWrites > 0) await Task.Delay(20);
         await Task.WhenAll(appAgentTasks.ToArray());
         appAgentLifetime.Dispose();
         activeSharedFileTools?.Dispose(); activeSharedFileTools = null;

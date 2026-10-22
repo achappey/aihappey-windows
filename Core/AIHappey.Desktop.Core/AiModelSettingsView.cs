@@ -12,11 +12,15 @@ public sealed class AiModelSettingsView : NavigationView
     private readonly Dictionary<string, TextBlock> states = [];
     private readonly Dictionary<string, StackPanel> pages = [];
     private IReadOnlyList<ChatTarget>? catalog;
+    private readonly DesktopSettings? providerSettings;
+    private IReadOnlyList<ChatTarget> VisibleModels => providerSettings is null ? catalog ?? [] : ProviderPreferences.Filter(catalog ?? [], providerSettings);
 
-    public AiModelSettingsView(AiModelPreferences draft, IReadOnlyList<ChatTarget>? catalog = null, UIElement? imageSettings = null, UIElement? videoSettings = null)
+    public AiModelSettingsView(AiModelPreferences draft, IReadOnlyList<ChatTarget>? catalog = null, UIElement? imageSettings = null, UIElement? videoSettings = null,
+        DesktopSettings? providerSettings = null)
     {
         this.draft = draft;
         this.catalog = catalog;
+        this.providerSettings = providerSettings?.Clone();
         Name = "AiModelSettingsView";
         PaneDisplayMode = NavigationViewPaneDisplayMode.Top;
         IsSettingsVisible = false; IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed;
@@ -40,7 +44,7 @@ public sealed class AiModelSettingsView : NavigationView
             var state = new TextBlock { TextWrapping = TextWrapping.Wrap };
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(state, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
             states.Add(type, state); page.Children.Add(state);
-            void Search(string query) => picker.ItemsSource = AiModelCatalog.OfType(this.catalog ?? [], type)
+            void Search(string query) => picker.ItemsSource = AiModelCatalog.OfType(VisibleModels, type)
                 .Where(x => string.IsNullOrWhiteSpace(query) || x.Label.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)
                     || x.Id.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
             void Choose(ChatTarget selected)
@@ -58,7 +62,7 @@ public sealed class AiModelSettingsView : NavigationView
             picker.QuerySubmitted += (_, args) =>
             {
                 var selected = args.ChosenSuggestion as ChatTarget
-                    ?? AiModelCatalog.OfType(this.catalog ?? [], type).FirstOrDefault(x => x.Id == picker.Text.Trim());
+                    ?? AiModelCatalog.OfType(VisibleModels, type).FirstOrDefault(x => x.Id == picker.Text.Trim());
                 if (selected is not null) Choose(selected);
                 else { Search(picker.Text); picker.IsSuggestionListOpen = true; }
             };
@@ -104,7 +108,7 @@ public sealed class AiModelSettingsView : NavigationView
         foreach (var type in AiModelCatalog.Types)
         {
             pickers[type].IsEnabled = true;
-            pickers[type].ItemsSource = AiModelCatalog.OfType(models, type).Take(100).ToArray();
+            pickers[type].ItemsSource = AiModelCatalog.OfType(VisibleModels, type).Take(100).ToArray();
             pickers[type].Text = DisplayDefault(type);
             UpdateState(type);
         }
@@ -120,7 +124,7 @@ public sealed class AiModelSettingsView : NavigationView
 
     // Display the effective language fallback without turning a catalog arrival into a saved preference.
     private string DisplayDefault(string type) => draft.DefaultFor(type)
-        ?? (type == "language" && catalog is not null ? AiModelCatalog.NewChatModel(catalog, draft) : "");
+        ?? (type == "language" && catalog is not null ? AiModelCatalog.NewChatModel(VisibleModels, draft) : "");
 
     private void UpdateState(string type)
     {
@@ -128,7 +132,9 @@ public sealed class AiModelSettingsView : NavigationView
         var models = AiModelCatalog.OfType(catalog, type);
         var id = draft.DefaultFor(type);
         states[type].Text = !string.IsNullOrEmpty(id) && !models.Any(x => x.Id == id)
-            ? DesktopResources.Get("AiDefaultUnavailable") : models.Count == 0 ? DesktopResources.Get("AiNoModels") : "";
+            ? DesktopResources.Get("AiDefaultUnavailable")
+            : !string.IsNullOrEmpty(id) && !VisibleModels.Any(m => m.Id == id && m.ModelType == type) ? DesktopResources.Get("AiDefaultProviderDisabled")
+            : !VisibleModels.Any(m => m.ModelType == type) ? DesktopResources.Get("AiNoModels") : "";
         states[type].Visibility = string.IsNullOrEmpty(states[type].Text) ? Visibility.Collapsed : Visibility.Visible;
     }
 }
