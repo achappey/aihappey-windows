@@ -10,7 +10,7 @@ internal static class AgentRegressionTests
     public static async Task RunAsync(Action<bool, string> check, string root)
     {
         var original = DesktopAgent.Parse("""
-            {"name":"PortableAgent","description":"Portable fixture","instructions":"Be concise","argumentHint":"Enter a goal",
+            {"name":"PortableAgent","description":"Portable fixture","instructions":"Be concise","argumentHint":"Enter a goal","owned_by":"Team","tags":["support","internal"],
              "model":{"id":"openai/fixture","options":{"temperature":0.4,"future":true},"providerMetadata":{"reasoning":{"effort":"low","future":7},"futureProvider":{"keep":true}},"providerHeaders":{"OpenAI-Beta":"fixture=v1"},"futureModel":9},
              "responseFormat":{"type":"json_schema","json_schema":{"name":"result","schema":{"type":"object"},"strict":true}},
              "plugins":[{"type":"base64","media_type":"application/zip","data":"opaque","future":true}],
@@ -23,7 +23,7 @@ internal static class AgentRegressionTests
         var draft = original.Clone(); draft.Definition["description"] = "Edited";
         check(original.Description == "Portable fixture" && draft.Description == "Edited", "agent editor draft is isolated from committed definition");
         var roundtrip = DesktopAgent.Parse(draft.Definition.ToJsonString());
-        foreach (var key in new[] { "model", "responseFormat", "plugins", "skills", "mcpClient", "mcpServers", "tools", "evaluations", "future" })
+        foreach (var key in new[] { "owned_by", "tags", "model", "responseFormat", "plugins", "skills", "mcpClient", "mcpServers", "tools", "evaluations", "future" })
             check(JsonNode.DeepEquals(roundtrip.Definition[key], original.Definition[key]), "agent edit/export/import preserves " + key + " including nested unknown fields");
         check(!roundtrip.Definition.ContainsKey("id") && roundtrip.SelectionKey == "local:PortableAgent", "portable agent has browser name identity and no Windows-only ID");
         var targets = DesktopAgentTargets.Project([original.CatalogItem(), new CatalogItem(CatalogKind.Agent, original.Name, original.Name, "Backend same name")]);
@@ -35,15 +35,37 @@ internal static class AgentRegressionTests
         var remoteTarget = targets.Single(t => t.RemoteAgentId is not null);
         check(localTarget is { AgentModelId: "openai/fixture", ProviderKey: "openai" }
             && remoteTarget.ProviderKey is null, "agent provider identity comes from the underlying model, not its name or routing key");
-        check(remoteTarget.Label == "PortableAgent" && !localTarget.Label.StartsWith("local:", StringComparison.Ordinal),
-            "agent picker labels never contain internal routing prefixes");
+        check(remoteTarget.Label == "PortableAgent" && localTarget.Label == "PortableAgent",
+            "agent picker labels contain neither internal routing prefixes nor a local suffix");
         check(DesktopAgentTargets.Selection(localTarget.Label, localTarget.Id, targets) == localTarget
             && DesktopAgentTargets.Selection(remoteTarget.Label, remoteTarget.Id, targets) == remoteTarget,
             "displaying a label preserves the selected local/remote identity for same-name agents");
         check(DesktopAgentTargets.Selection("PortableAgent", null, targets) == remoteTarget
             && DesktopAgentTargets.Selection("remote:PortableAgent", null, targets) == remoteTarget
-            && DesktopAgentTargets.Selection(localTarget.Label, null, targets) == localTarget,
+            && DesktopAgentTargets.Selection("local:PortableAgent", null, targets) == localTarget,
             "typed labels, explicit keys and legacy backend IDs resolve to their existing routes");
+        check(localTarget.OwnedBy == "Team" && localTarget.Tags.SequenceEqual(new[] { "support", "internal" })
+            && DesktopAgentMetadata.Groups(localTarget).SequenceEqual(new[] { "support", "internal" }), "local agent metadata is preserved and tags take precedence over owner");
+        using (var listing = JsonDocument.Parse("""
+            {"id":"outer","name":"Outer","owned_by":" Listing owner ","tags":[" shared ","",3,"shared"],
+             "agent":{"name":"Nested","owned_by":"Nested owner","tags":["shared","nested"]}}
+            """))
+        {
+            var projected = DesktopAgentTargets.Project([CatalogProjection.Agent(listing.RootElement)!]).Single();
+            check(projected.OwnedBy == "Listing owner" && projected.Tags.SequenceEqual(new[] { "shared", "nested" }),
+                "remote agent projection merges model-list and embedded tags and prefers nonblank listing owner");
+        }
+        using (var listing = JsonDocument.Parse("""{"id":"standalone","owned_by":" Team ","tags":[" "]}"""))
+        {
+            var projected = DesktopAgentTargets.Project([CatalogProjection.Agent(listing.RootElement)!]).Single();
+            check(projected.ModelMetadata is null && projected.OwnedBy == "Team" && DesktopAgentMetadata.Groups(projected).SequenceEqual(new[] { "Team" }),
+                "remote model without embedded agent retains owner grouping and ignores blank tags");
+        }
+        using (var listing = JsonDocument.Parse("""{"id":"nested-owner","owned_by":" ","agent":{"owned_by":" Nested "}}"""))
+            check(DesktopAgentTargets.Project([CatalogProjection.Agent(listing.RootElement)!]).Single().OwnedBy == "Nested",
+                "blank listing owner falls back to embedded agent owner");
+        check(DesktopAgentMetadata.Groups(new ChatTarget("empty", "Empty") { Tags = [" ", ""], OwnedBy = " " }).Count == 0
+            && DesktopAgentMetadata.Groups(remoteTarget).Count == 0, "missing and whitespace-only metadata leaves agents for local/remote fallback");
         var duplicateLabels = new ChatTarget[] { new("remote:one", "Same") { RemoteAgentId = "one" }, new("remote:two", "Same") { RemoteAgentId = "two" } };
         check(DesktopAgentTargets.Selection("Same", null, duplicateLabels) is null
             && DesktopAgentTargets.Selection("Same", "remote:two", duplicateLabels)?.Id == "remote:two"

@@ -962,6 +962,8 @@
   <data name="AgentNameImmutable" xml:space="preserve"><value>De naam van een agent kan na het aanmaken niet worden gewijzigd.</value></data>
   <data name="AgentEdit" xml:space="preserve"><value>Agent bewerken</value></data>
   <data name="AgentCreate" xml:space="preserve"><value>Nieuwe agent maken</value></data>
+  <data name="AgentOwnedBy" xml:space="preserve"><value>Eigenaar</value></data>
+  <data name="AgentTags" xml:space="preserve"><value>Tags</value></data>
   <data name="AgentImport" xml:space="preserve"><value>Agent importeren</value></data>
   <data name="AgentChecks" xml:space="preserve"><value>Controles</value></data>
   <data name="AgentProvider" xml:space="preserve"><value>Providerinstellingen</value></data>

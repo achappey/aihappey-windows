@@ -16,6 +16,7 @@ public sealed record CatalogItem(CatalogKind Kind, string Id, string Name, strin
     public string? LatestVersion { get; init; }
     public long? Created { get; init; }
     public string? Owner { get; init; }
+    public IReadOnlyList<string> Tags { get; init; } = [];
     public JsonElement? Definition { get; init; }
     public IReadOnlyList<CatalogIcon> Icons { get; init; } = [];
     public bool CanDownload => Kind == CatalogKind.Agent ? Definition.HasValue : Origin == CatalogOrigin.Local || CatalogRoutes.SupportsSkill(Id);
@@ -39,7 +40,8 @@ public static class CatalogProjection
         return new(CatalogKind.Agent, id, Text(value, "name") ?? (definition is { } n ? Text(n, "name") : null) ?? id,
             Text(value, "description") ?? (definition is { } desc ? Text(desc, "description") : null) ?? "")
         {
-            Model = model, Definition = definition, Owner = Text(value, "owned_by"), Created = Number(value, "created"), Icons = icons
+            Model = model, Definition = definition, Owner = DesktopAgentMetadata.Owner(value, definition),
+            Tags = DesktopAgentMetadata.Tags(value, definition), Created = Number(value, "created"), Icons = icons
         };
     }
 

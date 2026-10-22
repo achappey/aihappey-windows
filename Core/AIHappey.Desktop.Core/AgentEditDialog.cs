@@ -26,6 +26,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
     private readonly CancellationTokenSource lifetime = new();
     private readonly string partition;
     private readonly IReadOnlyList<DesktopSkill> localSkills;
+    private readonly IReadOnlyList<ChatTarget> availableAgents;
     private readonly Func<DesktopSkill, CancellationToken, Task<byte[]>>? localSkillArchive;
     private OpenAIChatSettingsForm? openAI;
     private ChatPreferences? providerPreferences;
@@ -41,10 +42,12 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
 
     public AgentEditDialog(DesktopAgent agent, bool isEditing, DesktopSession session, DesktopCatalogClient catalog,
         HttpClient registryHttp, IReadOnlyList<ChatTarget> models, McpTurnSnapshot? connected = null,
-        IReadOnlyList<DesktopSkill>? localSkills = null, Func<DesktopSkill, CancellationToken, Task<byte[]>>? localSkillArchive = null, IReadOnlyList<DesktopAgentPlugin>? plugins = null)
+        IReadOnlyList<DesktopSkill>? localSkills = null, Func<DesktopSkill, CancellationToken, Task<byte[]>>? localSkillArchive = null, IReadOnlyList<DesktopAgentPlugin>? plugins = null,
+        IReadOnlyList<ChatTarget>? availableAgents = null)
     {
         draft = agent.Clone(); this.session = session; this.catalog = catalog; this.registryHttp = registryHttp;
         this.localSkills = localSkills ?? []; this.localSkillArchive = localSkillArchive;
+        this.availableAgents = availableAgents ?? [];
         partition = session.AgentPartition;
         Name = "AgentEditDialog";
         Resources["ContentDialogMaxWidth"] = 920d; Resources["ContentDialogMinWidth"] = 0d;
@@ -55,6 +58,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         layout.Children.Add(tabs); Grid.SetRow(feedback, 1); layout.Children.Add(feedback); Grid.SetRow(page, 2); layout.Children.Add(page); Content = layout;
         AutomationProperties.SetLiveSetting(feedback, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         AddTab("general", DesktopResources.Get("General"), General(isEditing, models));
+        AddTab("tags", DesktopResources.Get("AgentTags"), Tags());
         AddTab("modelContext", DesktopResources.Get("McpTitle"), ModelContext(connected ?? McpTurnSnapshot.Empty));
         AddTab("skills", DesktopResources.Get("Skills"), Skills());
         AddTab("plugins", DesktopResources.Get("PluginsTitle"), Plugins(plugins ?? []));
@@ -110,6 +114,25 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         var panel = Panel(); var body = Card(panel, "agent.general");
         var name = fields.Text(body, "agent.name", () => draft.Name, v => draft.Definition["name"] = v.Trim()); name.Name = "AgentName"; name.IsEnabled = !editing;
         fields.Text(body, "agent.description", () => draft.Description, v => draft.Definition["description"] = v).Name = "AgentDescription";
+        var owners = availableAgents.Select(agent => agent.OwnedBy?.Trim()).Append(DesktopAgent.Text(draft.Definition["owned_by"]).Trim())
+            .Where(owner => !string.IsNullOrEmpty(owner)).Cast<string>().Distinct(StringComparer.Ordinal).Order(StringComparer.CurrentCultureIgnoreCase).ToArray();
+        var owner = new AutoSuggestBox { Name = "AgentOwnedBy", Header = DesktopResources.Get("AgentOwnedBy"), Text = DesktopAgent.Text(draft.Definition["owned_by"]),
+            QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12), HorizontalAlignment = HorizontalAlignment.Stretch };
+        ControlAppearance.Stock(owner); AutomationProperties.SetName(owner, DesktopResources.Get("AgentOwnedBy")); body.Children.Add(owner);
+        void OwnerSuggestions(string query = "") => owner.ItemsSource = owners.Where(value => value.Contains(query, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+        owner.GotFocus += (_, _) => { OwnerSuggestions(); owner.IsSuggestionListOpen = true; };
+        owner.TextChanged += (_, args) =>
+        {
+            if (owner.Text.Length == 0) draft.Definition.Remove("owned_by"); else draft.Definition["owned_by"] = owner.Text;
+            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) { OwnerSuggestions(owner.Text); owner.IsSuggestionListOpen = true; }
+        };
+        owner.SuggestionChosen += (_, args) => { if (args.SelectedItem is string value) owner.Text = value; };
+        owner.QuerySubmitted += (_, args) =>
+        {
+            if (args.ChosenSuggestion is string value) owner.Text = value;
+            else { OwnerSuggestions(); owner.IsSuggestionListOpen = true; }
+        };
+        owner.LostFocus += (_, _) => { owner.IsSuggestionListOpen = false; owner.Text = owner.Text.Trim(); };
         var visibleModels = ProviderPreferences.Filter(models, session.Settings);
         var modelOptions = visibleModels.Where(m => m.ModelType is null or "language" or "decision")
             .Concat(draft.Models.Where(model => !visibleModels.Any(m => m.Id == DesktopAgent.Text(model["id"])))

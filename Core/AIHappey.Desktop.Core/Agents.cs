@@ -175,22 +175,42 @@ public sealed class DesktopAgent
     {
         var icons = (Definition["icons"] as JsonArray)?.OfType<JsonObject>().Select(i => new CatalogIcon(Text(i["src"]), Text(i["theme"]))).ToArray() ?? [];
         return new(CatalogKind.Agent, Name, Name, Description) { Origin = CatalogOrigin.Local, Model = ModelId,
-            Definition = JsonSerializer.SerializeToElement(Definition), Icons = icons };
+            Definition = JsonSerializer.SerializeToElement(Definition), Icons = icons,
+            Owner = Text(Definition["owned_by"]).Trim(), Tags = DesktopAgentMetadata.NormalizeTags((Definition["tags"] as JsonArray)?.Select(Text) ?? []) };
     }
     public static DesktopAgent Empty() => new(new JsonObject { ["name"] = "", ["description"] = "", ["instructions"] = "",
         ["model"] = new JsonObject { ["id"] = "" }, ["mcpClient"] = new JsonObject { ["policy"] = new JsonObject
             { ["readOnlyHint"] = false, ["openWorldHint"] = true, ["idempotentHint"] = false, ["destructiveHint"] = true } } });
 }
 
+public static class DesktopAgentMetadata
+{
+    public static IReadOnlyList<string> NormalizeTags(IEnumerable<string> values) => values.Select(value => value.Trim())
+        .Where(value => value.Length > 0).Distinct(StringComparer.Ordinal).ToArray();
+
+    public static IReadOnlyList<string> Tags(params JsonElement?[] sources) => NormalizeTags(sources.SelectMany(source =>
+        source is { ValueKind: JsonValueKind.Object } value && value.TryGetProperty("tags", out var tags) && tags.ValueKind == JsonValueKind.Array
+            ? tags.EnumerateArray().Where(tag => tag.ValueKind == JsonValueKind.String).Select(tag => tag.GetString()!) : []));
+
+    public static string Owner(params JsonElement?[] sources) => sources.Select(source => source is { } value
+        ? CatalogProjection.Text(value, "owned_by")?.Trim() : null).FirstOrDefault(value => !string.IsNullOrEmpty(value)) ?? "";
+
+    public static IReadOnlyList<string> Groups(ChatTarget target)
+    {
+        var tags = NormalizeTags(target.Tags);
+        return tags.Count > 0 ? tags : !string.IsNullOrWhiteSpace(target.OwnedBy) ? [target.OwnedBy.Trim()] : [];
+    }
+}
+
 public static class DesktopAgentTargets
 {
     public static IReadOnlyList<ChatTarget> Project(IEnumerable<CatalogItem> items) => items.Select(i =>
-        (i.Origin == CatalogOrigin.Local ? new ChatTarget("local:" + i.Id, i.Name + " (" + DesktopResources.Get("Local") + ")") { LocalAgentName = i.Id }
+        (i.Origin == CatalogOrigin.Local ? new ChatTarget("local:" + i.Id, i.Name) { LocalAgentName = i.Id }
             : new ChatTarget("remote:" + i.Id, i.Name) { RemoteAgentId = i.Id }) with
         { AgentModelId = i.Model, ProviderKey = ChatPreferences.ResolveProvider(ServiceKind.Ai, i.Model ?? ""),
             Description = i.Description, ModelMetadata = i.Definition,
-            Tags = i.Definition is { } definition && definition.TryGetProperty("tags", out var tags) && tags.ValueKind == JsonValueKind.Array
-                ? tags.EnumerateArray().Where(t => t.ValueKind == JsonValueKind.String).Select(t => t.GetString()!).ToArray() : [] }).ToArray();
+            OwnedBy = string.IsNullOrWhiteSpace(i.Owner) ? DesktopAgentMetadata.Owner(i.Definition) : i.Owner.Trim(),
+            Tags = DesktopAgentMetadata.NormalizeTags(i.Tags.Concat(DesktopAgentMetadata.Tags(i.Definition))) }).ToArray();
 
     public static string DisplayName(string value)
     {

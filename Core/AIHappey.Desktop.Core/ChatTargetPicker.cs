@@ -124,6 +124,7 @@ public sealed class ChatTargetPicker : Button
             var query = search.Text.Trim();
             bool Matches(ChatTarget item) => query.Length == 0 || item.Label.Contains(query, StringComparison.CurrentCultureIgnoreCase)
                 || item.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || item.Tags.Any(tag => tag.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+                || (agentMode && item.OwnedBy?.Contains(query, StringComparison.CurrentCultureIgnoreCase) == true)
                 || (item.ProviderKey is { } key && ProviderCatalog.Get(key).Name.Contains(query, StringComparison.CurrentCultureIgnoreCase));
             var visible = items.Where(Matches).ToArray(); var next = new List<TargetGroup>();
             void Add(string key, IEnumerable<ChatTarget> values)
@@ -136,11 +137,12 @@ public sealed class ChatTargetPicker : Button
             }
             else
             {
-                foreach (var tag in visible.SelectMany(i => i.Tags).Distinct().Order(StringComparer.CurrentCultureIgnoreCase))
-                    Add(tag, visible.Where(i => i.Tags.Contains(tag)).OrderBy(i => i.Label, StringComparer.CurrentCultureIgnoreCase));
+                var grouped = visible.Select(i => (Target: i, Groups: DesktopAgentMetadata.Groups(i))).ToArray();
+                foreach (var key in grouped.SelectMany(i => i.Groups).Distinct().Order(StringComparer.CurrentCultureIgnoreCase))
+                    Add(key, grouped.Where(i => i.Groups.Contains(key)).Select(i => i.Target).OrderBy(i => i.Label, StringComparer.CurrentCultureIgnoreCase));
                 foreach (var local in new[] { false, true })
-                    Add(local ? DesktopResources.Get("Local") : DesktopResources.Get("RemoteAgents"), visible.Where(i => i.Tags.Count == 0
-                        && !favorites.Contains(i.Id) && (i.LocalAgentName is not null) == local).OrderBy(i => i.Label, StringComparer.CurrentCultureIgnoreCase));
+                    Add(local ? DesktopResources.Get("Local") : DesktopResources.Get("RemoteAgents"), grouped.Where(i => i.Groups.Count == 0
+                        && !favorites.Contains(i.Target.Id) && (i.Target.LocalAgentName is not null) == local).Select(i => i.Target).OrderBy(i => i.Label, StringComparer.CurrentCultureIgnoreCase));
             }
             groups = next;
             list.ItemsSource = new CollectionViewSource { IsSourceGrouped = true, Source = next }.View;
