@@ -82,7 +82,11 @@ public static class AiModelCatalog
         var id = value.GetProperty("id").GetString()!;
         var displayId = CatalogProjection.Text(value, "displayId");
         var providerModelId = CatalogProjection.Text(value, "providerModelId");
-        return new(id, CatalogProjection.Text(value, "name") ?? ModelOverviewCatalog.DisplayId(id, displayId, providerModelId))
+        var label = CatalogProjection.Text(value, "name") ?? ModelOverviewCatalog.DisplayId(id, displayId, providerModelId);
+        var provider = ChatPreferences.ResolveProvider(service, id,
+            CatalogProjection.Text(value, "sourceProviderKey") ?? CatalogProjection.Text(value, "providerKey"));
+        if (service == ServiceKind.Ai && provider is not null && label.StartsWith(provider + "/", StringComparison.OrdinalIgnoreCase)) label = label[(provider.Length + 1)..];
+        return new(id, label)
         {
             ProviderKey = ChatPreferences.ResolveProvider(service, id,
                 CatalogProjection.Text(value, "sourceProviderKey") ?? CatalogProjection.Text(value, "providerKey")),

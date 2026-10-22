@@ -4,7 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace AIHappey.Desktop.Core;
 
-/// <summary>All five browser assignments are editable; welcome, naming and tool explanations are executed.</summary>
+/// <summary>Browser-compatible assignments, including the two Decisions routing roles.</summary>
 public sealed class AppAgentsSettingsView : StackPanel
 {
     private readonly AppAgentPreferences draft;

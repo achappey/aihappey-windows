@@ -21,6 +21,8 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/AgentPluginConversion.cs" Link="Core/AgentPluginConversion.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AgentPluginTools.cs" Link="Core/AgentPluginTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AppAgentPreferences.cs" Link="Core/AppAgentPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ChatSelection.cs" Link="Core/ChatSelection.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/DecisionRouting.cs" Link="Core/DecisionRouting.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AppAgentClient.cs" Link="Core/AppAgentClient.cs" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/AgentProviderDefaults.json" LogicalName="Desktop.AgentProviderDefaults" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/DesktopBranding.cs" Link="Core/DesktopBranding.cs" />

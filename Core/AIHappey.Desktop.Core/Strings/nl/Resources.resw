@@ -146,7 +146,7 @@
   <data name="RefreshTargets" xml:space="preserve"><value>Modellen of agents vernieuwen</value></data>
   <data name="RefreshAgents" xml:space="preserve"><value>Agentoverzicht vernieuwen</value></data>
   <data name="RefreshSkills" xml:space="preserve"><value>Skilloverzicht vernieuwen</value></data>
-  <data name="Working" xml:space="preserve"><value>BezigΓÇª</value></data>
+  <data name="Working" xml:space="preserve"><value>Bezig</value></data>
   <data name="Dismiss" xml:space="preserve"><value>Sluiten</value></data>
   <data name="ToggleHistory" xml:space="preserve"><value>Chatgeschiedenis tonen of verbergen</value></data>
   <data name="ManageAccount" xml:space="preserve"><value>Account beheren</value></data>
@@ -182,10 +182,10 @@
   <data name="OperationFailed" xml:space="preserve"><value>De bewerking is mislukt. Controleer de beschikbaarheid van de service, de instellingen en de toegangsrechten voor lokale opslag.</value></data>
   <data name="SearchChats" xml:space="preserve"><value>Chats zoeken</value></data>
   <data name="SearchConversations" xml:space="preserve"><value>Chats doorzoeken</value></data>
-  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Chats doorzoekenΓÇª</value></data>
+  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Chats doorzoeken</value></data>
   <data name="ChatActions" xml:space="preserve"><value>Chatacties</value></data>
   <data name="RecentChats" xml:space="preserve"><value>Recente chats</value></data>
-  <data name="Searching" xml:space="preserve"><value>ZoekenΓÇª</value></data>
+  <data name="Searching" xml:space="preserve"><value>Zoeken</value></data>
   <data name="NoRecentChats" xml:space="preserve"><value>Geen recente chats.</value></data>
   <data name="NoResults" xml:space="preserve"><value>Geen resultaten.</value></data>
   <data name="Details" xml:space="preserve"><value>Details</value></data>
@@ -206,17 +206,17 @@
   <data name="PublicUrl" xml:space="preserve"><value>URL (openbaar toegankelijk)</value></data>
   <data name="MimeType" xml:space="preserve"><value>MIME-type</value></data>
   <data name="CustomMimeType" xml:space="preserve"><value>Aangepast MIME-type</value></data>
-  <data name="DetectingMime" xml:space="preserve"><value>MIME-type bepalenΓÇª</value></data>
+  <data name="DetectingMime" xml:space="preserve"><value>MIME-type bepalen</value></data>
   <data name="MimeNotDetected" xml:space="preserve"><value>Het MIME-type kon niet worden bepaald. Selecteer het type inhoud op deze URL.</value></data>
   <data name="InvalidPublicUrl" xml:space="preserve"><value>Voer een geldige HTTP- of HTTPS-URL zonder inloggegevens in.</value></data>
   <data name="InvalidMime" xml:space="preserve"><value>Voer een geldig MIME-type in, bijvoorbeeld application/pdf.</value></data>
   <data name="Custom" xml:space="preserve"><value>Aangepast</value></data>
-  <data name="SearchPlaceholder" xml:space="preserve"><value>ZoekenΓÇª</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Zoeken</value></data>
   <data name="SearchAgents" xml:space="preserve"><value>Agents zoeken</value></data>
   <data name="SearchSkills" xml:space="preserve"><value>Skills zoeken</value></data>
   <data name="AgentsDescription" xml:space="preserve"><value>Agents combineren mogelijkheden, context en uitvoeringslogica in ├⌐├⌐n model. Ontdek de beschikbare agents en kies er een om een chat te starten.</value></data>
   <data name="SkillsDescription" xml:space="preserve"><value>Een overzicht van beschikbare skills voor taken en workflows. Bekijk wat elke skill doet en kies de juiste optie. Skills combineren instructies, logica en uitvoering in een consistente structuur.</value></data>
-  <data name="Loading" xml:space="preserve"><value>LadenΓÇª</value></data>
+  <data name="Loading" xml:space="preserve"><value>Laden</value></data>
   <data name="CatalogNoResults" xml:space="preserve"><value>Geen resultaten. Probeer een andere zoekopdracht of filter.</value></data>
   <data name="CatalogCanceled" xml:space="preserve"><value>Het laden van de catalogus is geannuleerd of de tijdslimiet is verstreken.</value></data>
   <data name="CatalogFailed" xml:space="preserve"><value>De catalogus kon niet worden geladen. Controleer je verbinding, account en toegangsrechten voor lokale opslag.</value></data>
@@ -243,7 +243,7 @@
   <data name="SkillDownloadHint" xml:space="preserve"><value>Bij het downloaden wordt alleen een ZIP-bestand opgeslagen. De skill wordt niet ge├»nstalleerd of ingeschakeld.</value></data>
   <data name="DefinitionUnavailable" xml:space="preserve"><value>Definitie niet beschikbaar</value></data>
   <data name="DefinitionUnavailableHint" xml:space="preserve"><value>Je kunt met deze agent chatten, maar de backend biedt geen downloadbare definitie aan.</value></data>
-  <data name="LoadingVersions" xml:space="preserve"><value>Versies ladenΓÇª</value></data>
+  <data name="LoadingVersions" xml:space="preserve"><value>Versies laden</value></data>
   <data name="VersionsUnavailable" xml:space="preserve"><value>Versies niet beschikbaar</value></data>
   <data name="NoVersions" xml:space="preserve"><value>Er zijn geen versies beschikbaar.</value></data>
   <data name="Default" xml:space="preserve"><value>Standaard</value></data>
@@ -652,7 +652,7 @@
   <data name="McpEnabled" xml:space="preserve"><value>Ingeschakeld</value></data>
   <data name="McpDisabled" xml:space="preserve"><value>Uitgeschakeld</value></data>
   <data name="McpStateDisabled" xml:space="preserve"><value>Niet verbonden</value></data>
-  <data name="McpStateConnecting" xml:space="preserve"><value>VerbindenΓÇª</value></data>
+  <data name="McpStateConnecting" xml:space="preserve"><value>Verbinden</value></data>
   <data name="McpStateConnected" xml:space="preserve"><value>Verbonden</value></data>
   <data name="McpStateError" xml:space="preserve"><value>Verbinding mislukt</value></data>
   <data name="McpDisconnect" xml:space="preserve"><value>Verbinding met {0} verbreken</value></data>
@@ -752,7 +752,7 @@
   <data name="AiChatWith_video" xml:space="preserve"><value>Chat met videomodellen</value></data>
   <data name="AiChatWith_speech" xml:space="preserve"><value>Chat met spraakmodellen</value></data>
   <data name="AiChatWith_transcription" xml:space="preserve"><value>Chat met transcriptiemodellen</value></data>
-  <data name="AiModelsLoading" xml:space="preserve"><value>Modellen ladenΓÇª</value></data>
+  <data name="AiModelsLoading" xml:space="preserve"><value>Modellen laden</value></data>
   <data name="AiModelsLoadFailed" xml:space="preserve"><value>Modellen konden niet worden geladen. Open de instellingen opnieuw om het nogmaals te proberen. Opgeslagen standaardmodellen zijn behouden.</value></data>
   <data name="AiNoModels" xml:space="preserve"><value>Er zijn geen modellen van dit type beschikbaar.</value></data>
   <data name="AiDefaultUnavailable" xml:space="preserve"><value>Het opgeslagen standaardmodel is momenteel niet beschikbaar voor dit modeltype. Het is behouden. Nieuwe taalchats gebruiken het nieuwste beschikbare taalmodel.</value></data>
@@ -766,7 +766,7 @@
   <data name="Images" xml:space="preserve"><value>Afbeeldingen</value></data>
   <data name="MyImages" xml:space="preserve"><value>Mijn afbeeldingen</value></data>
   <data name="ImageSettings" xml:space="preserve"><value>Afbeeldingsinstellingen</value></data>
-  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Beschrijf de afbeelding die je wilt makenΓÇª</value></data>
+  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Beschrijf de afbeelding die je wilt maken</value></data>
   <data name="ImageGenerate" xml:space="preserve"><value>Afbeeldingen genereren</value></data>
   <data name="ImageNoModels" xml:space="preserve"><value>Geen afbeeldingsmodel geselecteerd. Selecteer een beschikbaar model in de koptekst.</value></data>
   <data name="ImageEmptyLibrary" xml:space="preserve"><value>Je gegenereerde afbeeldingen verschijnen hier.</value></data>
@@ -782,7 +782,7 @@
   <data name="ImageMask" xml:space="preserve"><value>Afbeeldingsmasker selecteren</value></data>
   <data name="ImageMaskFailed" xml:space="preserve"><value>Het afbeeldingsmasker kon niet worden gelezen.</value></data>
   <data name="ImageStorage" xml:space="preserve"><value>Opslag</value></data>
-  <data name="ImageChooseFolder" xml:space="preserve"><value>Map kiezenΓÇª</value></data>
+  <data name="ImageChooseFolder" xml:space="preserve"><value>Map kiezen</value></data>
   <data name="ImageDefaultFolder" xml:space="preserve"><value>Map Afbeeldingen gebruiken</value></data>
   <data name="ImageFolderHint" xml:space="preserve"><value>Elk account en elke AI-backend heeft een aparte bibliotheek. Een andere map kiezen wisselt van bibliotheek; bestaande bestanden worden niet verplaatst of verwijderd.</value></data>
   <data name="ImageFolderFailed" xml:space="preserve"><value>De afbeeldingsmap kon niet worden geopend. Controleer de locatie en toegangsrechten.</value></data>
@@ -807,7 +807,7 @@
   <data name="ImagePaste" xml:space="preserve"><value>Plakken</value></data>
   <data name="ImageSelectAll" xml:space="preserve"><value>Alles selecteren</value></data>
   <data name="ImagePreview" xml:space="preserve"><value>Afbeeldingsvoorbeeld</value></data>
-  <data name="ImageSaveCopy" xml:space="preserve"><value>Kopie opslaanΓÇª</value></data>
+  <data name="ImageSaveCopy" xml:space="preserve"><value>Kopie opslaan</value></data>
   <data name="ImageAddToPrompt" xml:space="preserve"><value>Aan prompt toevoegen</value></data>
   <data name="ImageDeleteTitle" xml:space="preserve"><value>Afbeelding verwijderen?</value></data>
   <data name="ImageDeleteHint" xml:space="preserve"><value>Dit verwijdert de geselecteerde afbeelding definitief uit de lokale bibliotheek.</value></data>
@@ -820,7 +820,7 @@
   <data name="SpeechNoModels" xml:space="preserve"><value>Er zijn geen spraakmodellen beschikbaar. Controleer je providersleutels of vernieuw de modellenlijst.</value></data>
   <data name="SpeechEmptyLibrary" xml:space="preserve"><value>Je gegenereerde spraakbestanden verschijnen hier.</value></data>
   <data name="SpeechGenerate" xml:space="preserve"><value>Spraak genereren</value></data>
-  <data name="SpeechGenerating" xml:space="preserve"><value>Spraak genererenΓÇª</value></data>
+  <data name="SpeechGenerating" xml:space="preserve"><value>Spraak genereren</value></data>
   <data name="SpeechImport" xml:space="preserve"><value>Documenttekst importeren</value></data>
   <data name="SpeechImportFailed" xml:space="preserve"><value>Sommige bestanden konden niet worden geconverteerd: {0}</value></data>
   <data name="SpeechDictate" xml:space="preserve"><value>Tekst dicteren</value></data>
@@ -864,7 +864,7 @@
   <data name="TranscriptionNoModels" xml:space="preserve"><value>Er zijn geen transcriptiemodellen beschikbaar. Controleer je providersleutels of vernieuw de modellenlijst.</value></data>
   <data name="TranscriptionEmptyLibrary" xml:space="preserve"><value>Je opgeslagen transcripties verschijnen hier.</value></data>
   <data name="TranscriptionOpenFolder" xml:space="preserve"><value>Map openen</value></data>
-  <data name="TranscriptionProcessing" xml:space="preserve"><value>Bezig met transcriberenΓÇª</value></data>
+  <data name="TranscriptionProcessing" xml:space="preserve"><value>Bezig met transcriberen</value></data>
   <data name="TranscriptionUnsupported" xml:space="preserve"><value>Kies een niet-leeg audio- of videobestand.</value></data>
   <data name="TranscriptionInvalidResponse" xml:space="preserve"><value>De transcriptieservice heeft een ongeldig of te groot antwoord teruggestuurd.</value></data>
   <data name="TranscriptionLanguage" xml:space="preserve"><value>Taal</value></data>
@@ -925,13 +925,13 @@
   <data name="VideoStorageRetry" xml:space="preserve"><value>Video-opslag is niet beschikbaar. Opgeslagen opdrachten blijven bewaard en worden opnieuw geprobeerd.</value></data>
   <data name="VideoPollingRetry" xml:space="preserve"><value>De videostatus of opslag kon niet worden bijgewerkt. De opgeslagen opdracht wordt opnieuw geprobeerd.</value></data>
   <data name="VideoGenerationFailed" xml:space="preserve"><value>Video genereren is mislukt.</value></data>
-  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Beschrijf de video die je wilt makenΓÇª</value></data>
+  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Beschrijf de video die je wilt maken</value></data>
   <data name="VideoNoModels" xml:space="preserve"><value>Er zijn geen videomodellen beschikbaar. Je opgeslagen videoΓÇÖs blijven beschikbaar.</value></data>
   <data name="VideoEmptyLibrary" xml:space="preserve"><value>Je gegenereerde videoΓÇÖs verschijnen hier.</value></data>
   <data name="VideoOpenFolder" xml:space="preserve"><value>Videomap openen</value></data>
   <data name="VideoGenerate" xml:space="preserve"><value>VideoΓÇÖs genereren</value></data>
   <data name="VideoAttachFiles" xml:space="preserve"><value>Een afbeelding of video bijvoegen</value></data>
-  <data name="VideoProcessing" xml:space="preserve"><value>Video in wachtrij of wordt verwerktΓÇª</value></data>
+  <data name="VideoProcessing" xml:space="preserve"><value>Video in wachtrij of wordt verwerkt</value></data>
   <data name="VideoSize" xml:space="preserve"><value>Videoformaat</value></data>
   <data name="VideoResolution" xml:space="preserve"><value>Resolutie</value></data>
   <data name="VideoCount" xml:space="preserve"><value>Aantal videoΓÇÖs</value></data>
@@ -1385,4 +1385,36 @@
   <data name="AiDefaultProviderDisabled" xml:space="preserve"><value>Het opgeslagen standaardmodel blijft bewaard, maar de provider is uitgeschakeld voor dit modeltype.</value></data>
   <data name="ProviderKeysSaveFailed" xml:space="preserve"><value>API-sleutels en providerinstellingen konden niet worden opgeslagen. Uw vorige instellingen blijven bewaard. Probeer opnieuw op te slaan.</value></data>
   <data name="ProviderSettingsSaveFailed" xml:space="preserve"><value>Providerinstellingen konden niet worden opgeslagen. Uw vorige selectie blijft bewaard. Probeer opnieuw.</value></data>
+  <data name="AppAgentSelectModel" xml:space="preserve"><value>Agent voor modelselectie</value></data>
+  <data name="AppAgentSelectModelHint" xml:space="preserve"><value>Gebruikt het primaire beslismodel en de instructies om één van de geselecteerde chatmodellen te kiezen.</value></data>
+  <data name="AppAgentSelectFavorite" xml:space="preserve"><value>Agent voor selectie van favoriete agents</value></data>
+  <data name="AppAgentSelectFavoriteHint" xml:space="preserve"><value>Gebruikt het primaire beslismodel en de instructies om één van je favoriete agents te kiezen.</value></data>
+  <data name="TargetSearch" xml:space="preserve"><value>Zoek modellen of agents</value></data>
+  <data name="TargetNoResults" xml:space="preserve"><value>Geen overeenkomende modellen of agents.</value></data>
+  <data name="SelectAllFavorites" xml:space="preserve"><value>Alle favorieten selecteren</value></data>
+  <data name="RemoteAgents" xml:space="preserve"><value>Externe agents</value></data>
+  <data name="RoutingModelRequired" xml:space="preserve"><value>De toegewezen selectieagent moet een beschikbaar gateway-beslismodel als primair model hebben. Controleer de app-agentinstellingen en de modellen van de agent.</value></data>
+  <data name="RoutingCandidatesRequired" xml:space="preserve"><value>Routering vereist minstens twee verschillende beschikbare kandidaten.</value></data>
+  <data name="RoutingInvalidResponse" xml:space="preserve"><value>De beslissing bevat geen geldige keuze uit de aangeboden kandidaten. Er is geen chatverzoek verzonden.</value></data>
+  <data name="RoutingContextChanged" xml:space="preserve"><value>De routeringscontext of configuratie is gewijzigd. Verstuur het verzoek opnieuw.</value></data>
+  <data name="AgentWorkflow" xml:space="preserve"><value>Agentwerkstroom</value></data>
+  <data name="WorkflowInvalid" xml:space="preserve"><value>Controleer het werkstroomtype en de numerieke limieten.</value></data>
+  <data name="WorkflowRemoteDefinitionRequired" xml:space="preserve"><value>Een gemengde Magentic-werkstroom vereist de volledige configuratie van elke externe agent.</value></data>
+  <data name="Workflow_concurrent" xml:space="preserve"><value>Gelijktijdig</value></data>
+  <data name="Workflow_sequential" xml:space="preserve"><value>Opeenvolgend</value></data>
+  <data name="Workflow_groupchat" xml:space="preserve"><value>Groepschat</value></data>
+  <data name="Workflow_handoff" xml:space="preserve"><value>Overdracht</value></data>
+  <data name="Workflow_decisions" xml:space="preserve"><value>Beslissingen</value></data>
+  <data name="Workflow_magentic" xml:space="preserve"><value>Magentic</value></data>
+  <data name="WorkflowDecisionModel" xml:space="preserve"><value>Beslismodel</value></data>
+  <data name="WorkflowIterations" xml:space="preserve"><value>Maximum aantal iteraties</value></data>
+  <data name="WorkflowMoveUp" xml:space="preserve"><value>Agent omhoog verplaatsen</value></data>
+  <data name="WorkflowMoveDown" xml:space="preserve"><value>Agent omlaag verplaatsen</value></data>
+  <data name="WorkflowManager" xml:space="preserve"><value>Manageragent</value></data>
+  <data name="WorkflowMaxRounds" xml:space="preserve"><value>Maximum aantal rondes</value></data>
+  <data name="WorkflowMaxResets" xml:space="preserve"><value>Maximum aantal herstarts</value></data>
+  <data name="WorkflowMaxStalls" xml:space="preserve"><value>Maximum aantal vastlopers</value></data>
+  <data name="WorkflowResponseLanguage" xml:space="preserve"><value>Antwoordtaal</value></data>
+  <data name="WorkflowHandoffFrom" xml:space="preserve"><value>Van agent</value></data>
+  <data name="WorkflowHandoffTo" xml:space="preserve"><value>Naar agent</value></data>
 </root>

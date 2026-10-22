@@ -136,6 +136,7 @@ public sealed partial class ChatShell
         var chat = page == DesktopPage.Chat;
         overviewHost.Visibility = chat ? Visibility.Collapsed : Visibility.Visible;
         chatModes.Visibility = target.Visibility = composer.Visibility = disclaimer.Visibility = chat ? Visibility.Visible : Visibility.Collapsed;
+        target.IsSuggestionListOpen = false;
         scroll.Visibility = chat && current.Messages.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         agentsOverview.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         skillsOverview.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;

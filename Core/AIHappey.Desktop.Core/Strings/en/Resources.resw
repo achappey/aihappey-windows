@@ -146,7 +146,7 @@
   <data name="RefreshTargets" xml:space="preserve"><value>Refresh models or agents</value></data>
   <data name="RefreshAgents" xml:space="preserve"><value>Refresh agent overview</value></data>
   <data name="RefreshSkills" xml:space="preserve"><value>Refresh skill overview</value></data>
-  <data name="Working" xml:space="preserve"><value>WorkingΓÇª</value></data>
+  <data name="Working" xml:space="preserve"><value>Working</value></data>
   <data name="Dismiss" xml:space="preserve"><value>Dismiss</value></data>
   <data name="ToggleHistory" xml:space="preserve"><value>Toggle chat history</value></data>
   <data name="ManageAccount" xml:space="preserve"><value>Manage account</value></data>
@@ -182,10 +182,10 @@
   <data name="OperationFailed" xml:space="preserve"><value>The operation failed. Check service availability, settings, and local storage permissions.</value></data>
   <data name="SearchChats" xml:space="preserve"><value>Search chats</value></data>
   <data name="SearchConversations" xml:space="preserve"><value>Search conversations</value></data>
-  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Search conversationsΓÇª</value></data>
+  <data name="SearchConversationsPlaceholder" xml:space="preserve"><value>Search conversations</value></data>
   <data name="ChatActions" xml:space="preserve"><value>Chat actions</value></data>
   <data name="RecentChats" xml:space="preserve"><value>Recent chats</value></data>
-  <data name="Searching" xml:space="preserve"><value>SearchingΓÇª</value></data>
+  <data name="Searching" xml:space="preserve"><value>Searching</value></data>
   <data name="NoRecentChats" xml:space="preserve"><value>No recent chats.</value></data>
   <data name="NoResults" xml:space="preserve"><value>No results.</value></data>
   <data name="Details" xml:space="preserve"><value>Details</value></data>
@@ -206,17 +206,17 @@
   <data name="PublicUrl" xml:space="preserve"><value>URL (publicly accessible)</value></data>
   <data name="MimeType" xml:space="preserve"><value>MIME type</value></data>
   <data name="CustomMimeType" xml:space="preserve"><value>Custom MIME type</value></data>
-  <data name="DetectingMime" xml:space="preserve"><value>Detecting MIME typeΓÇª</value></data>
+  <data name="DetectingMime" xml:space="preserve"><value>Detecting MIME type</value></data>
   <data name="MimeNotDetected" xml:space="preserve"><value>MIME type could not be detected. Select the type of content at this URL.</value></data>
   <data name="InvalidPublicUrl" xml:space="preserve"><value>Enter a valid HTTP or HTTPS URL without credentials.</value></data>
   <data name="InvalidMime" xml:space="preserve"><value>Enter a valid MIME type, for example application/pdf.</value></data>
   <data name="Custom" xml:space="preserve"><value>Custom</value></data>
-  <data name="SearchPlaceholder" xml:space="preserve"><value>SearchΓÇª</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Search</value></data>
   <data name="SearchAgents" xml:space="preserve"><value>Search agents</value></data>
   <data name="SearchSkills" xml:space="preserve"><value>Search skills</value></data>
   <data name="AgentsDescription" xml:space="preserve"><value>Agents bring capabilities, context, and execution logic together in a single model. Explore the available agents and choose one to start a conversation.</value></data>
   <data name="SkillsDescription" xml:space="preserve"><value>An overview of available skills for tasks and workflows. See what each skill does and choose the right option. Skills combine instructions, logic, and execution in a consistent structure.</value></data>
-  <data name="Loading" xml:space="preserve"><value>LoadingΓÇª</value></data>
+  <data name="Loading" xml:space="preserve"><value>Loading</value></data>
   <data name="CatalogNoResults" xml:space="preserve"><value>No results. Try another search or filter.</value></data>
   <data name="CatalogCanceled" xml:space="preserve"><value>Catalog loading was canceled or timed out.</value></data>
   <data name="CatalogFailed" xml:space="preserve"><value>The catalog could not be loaded. Check your connection, account, and local storage permissions.</value></data>
@@ -243,7 +243,7 @@
   <data name="SkillDownloadHint" xml:space="preserve"><value>Downloading saves a ZIP file only. It does not install or enable this skill.</value></data>
   <data name="DefinitionUnavailable" xml:space="preserve"><value>Definition unavailable</value></data>
   <data name="DefinitionUnavailableHint" xml:space="preserve"><value>You can chat with this agent, but its backend does not expose a downloadable definition.</value></data>
-  <data name="LoadingVersions" xml:space="preserve"><value>Loading versionsΓÇª</value></data>
+  <data name="LoadingVersions" xml:space="preserve"><value>Loading versions</value></data>
   <data name="VersionsUnavailable" xml:space="preserve"><value>Versions unavailable</value></data>
   <data name="NoVersions" xml:space="preserve"><value>No versions are available.</value></data>
   <data name="Default" xml:space="preserve"><value>Default</value></data>
@@ -656,7 +656,7 @@
   <data name="McpEnabled" xml:space="preserve"><value>Enabled</value></data>
   <data name="McpDisabled" xml:space="preserve"><value>Disabled</value></data>
   <data name="McpStateDisabled" xml:space="preserve"><value>Disconnected</value></data>
-  <data name="McpStateConnecting" xml:space="preserve"><value>ConnectingΓÇª</value></data>
+  <data name="McpStateConnecting" xml:space="preserve"><value>Connecting</value></data>
   <data name="McpStateConnected" xml:space="preserve"><value>Connected</value></data>
   <data name="McpStateError" xml:space="preserve"><value>Connection failed</value></data>
   <data name="McpDisconnect" xml:space="preserve"><value>Disconnect {0}</value></data>
@@ -756,7 +756,7 @@
   <data name="AiChatWith_video" xml:space="preserve"><value>Chat with video models</value></data>
   <data name="AiChatWith_speech" xml:space="preserve"><value>Chat with speech models</value></data>
   <data name="AiChatWith_transcription" xml:space="preserve"><value>Chat with transcription models</value></data>
-  <data name="AiModelsLoading" xml:space="preserve"><value>Loading modelsΓÇª</value></data>
+  <data name="AiModelsLoading" xml:space="preserve"><value>Loading models</value></data>
   <data name="AiModelsLoadFailed" xml:space="preserve"><value>Models could not be loaded. Reopen settings to try again. Saved defaults have been retained.</value></data>
   <data name="AiNoModels" xml:space="preserve"><value>No models of this type are available.</value></data>
   <data name="AiDefaultUnavailable" xml:space="preserve"><value>The saved default is not currently available for this model type. It has been retained. New language chats use the newest available language model.</value></data>
@@ -770,7 +770,7 @@
   <data name="Images" xml:space="preserve"><value>Images</value></data>
   <data name="MyImages" xml:space="preserve"><value>My images</value></data>
   <data name="ImageSettings" xml:space="preserve"><value>Image settings</value></data>
-  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Describe the image you want to createΓÇª</value></data>
+  <data name="ImagePromptPlaceholder" xml:space="preserve"><value>Describe the image you want to create</value></data>
   <data name="ImageGenerate" xml:space="preserve"><value>Generate images</value></data>
   <data name="ImageNoModels" xml:space="preserve"><value>No image model selected. Select an available image model in the header.</value></data>
   <data name="ImageEmptyLibrary" xml:space="preserve"><value>Your generated images will appear here.</value></data>
@@ -786,7 +786,7 @@
   <data name="ImageMask" xml:space="preserve"><value>Select image mask</value></data>
   <data name="ImageMaskFailed" xml:space="preserve"><value>The image mask could not be read.</value></data>
   <data name="ImageStorage" xml:space="preserve"><value>Storage</value></data>
-  <data name="ImageChooseFolder" xml:space="preserve"><value>Choose folderΓÇª</value></data>
+  <data name="ImageChooseFolder" xml:space="preserve"><value>Choose folder</value></data>
   <data name="ImageDefaultFolder" xml:space="preserve"><value>Use Pictures folder</value></data>
   <data name="ImageFolderHint" xml:space="preserve"><value>Each account and AI backend has a separate library. Changing this folder switches libraries; existing files are not moved or deleted.</value></data>
   <data name="ImageFolderFailed" xml:space="preserve"><value>The image folder could not be opened. Check its location and permissions.</value></data>
@@ -811,7 +811,7 @@
   <data name="ImagePaste" xml:space="preserve"><value>Paste</value></data>
   <data name="ImageSelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="ImagePreview" xml:space="preserve"><value>Image preview</value></data>
-  <data name="ImageSaveCopy" xml:space="preserve"><value>Save a copyΓÇª</value></data>
+  <data name="ImageSaveCopy" xml:space="preserve"><value>Save a copy</value></data>
   <data name="ImageAddToPrompt" xml:space="preserve"><value>Add to prompt</value></data>
   <data name="ImageDeleteTitle" xml:space="preserve"><value>Delete image?</value></data>
   <data name="ImageDeleteHint" xml:space="preserve"><value>This permanently deletes the selected image from the local library.</value></data>
@@ -824,7 +824,7 @@
   <data name="SpeechNoModels" xml:space="preserve"><value>No speech models are available. Check your provider keys or refresh the model list.</value></data>
   <data name="SpeechEmptyLibrary" xml:space="preserve"><value>Your generated speech files will appear here.</value></data>
   <data name="SpeechGenerate" xml:space="preserve"><value>Generate speech</value></data>
-  <data name="SpeechGenerating" xml:space="preserve"><value>Generating speechΓÇª</value></data>
+  <data name="SpeechGenerating" xml:space="preserve"><value>Generating speech</value></data>
   <data name="SpeechImport" xml:space="preserve"><value>Import document text</value></data>
   <data name="SpeechImportFailed" xml:space="preserve"><value>Some files could not be converted: {0}</value></data>
   <data name="SpeechDictate" xml:space="preserve"><value>Dictate text</value></data>
@@ -868,7 +868,7 @@
   <data name="TranscriptionNoModels" xml:space="preserve"><value>No transcription models are available. Check your provider keys or refresh the model list.</value></data>
   <data name="TranscriptionEmptyLibrary" xml:space="preserve"><value>Your saved transcriptions will appear here.</value></data>
   <data name="TranscriptionOpenFolder" xml:space="preserve"><value>Open folder</value></data>
-  <data name="TranscriptionProcessing" xml:space="preserve"><value>TranscribingΓÇª</value></data>
+  <data name="TranscriptionProcessing" xml:space="preserve"><value>Transcribing</value></data>
   <data name="TranscriptionUnsupported" xml:space="preserve"><value>Choose a non-empty audio or video file.</value></data>
   <data name="TranscriptionInvalidResponse" xml:space="preserve"><value>The transcription service returned an invalid or oversized response.</value></data>
   <data name="TranscriptionLanguage" xml:space="preserve"><value>Language</value></data>
@@ -929,13 +929,13 @@
   <data name="VideoStorageRetry" xml:space="preserve"><value>Video storage is unavailable. Saved jobs are retained and will be retried.</value></data>
   <data name="VideoPollingRetry" xml:space="preserve"><value>The video status or storage could not be updated. The saved operation will be retried.</value></data>
   <data name="VideoGenerationFailed" xml:space="preserve"><value>Video generation failed.</value></data>
-  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Describe the video you want to createΓÇª</value></data>
+  <data name="VideoPromptPlaceholder" xml:space="preserve"><value>Describe the video you want to create</value></data>
   <data name="VideoNoModels" xml:space="preserve"><value>No video models are available. Your stored videos remain available.</value></data>
   <data name="VideoEmptyLibrary" xml:space="preserve"><value>Your generated videos will appear here.</value></data>
   <data name="VideoOpenFolder" xml:space="preserve"><value>Open videos folder</value></data>
   <data name="VideoGenerate" xml:space="preserve"><value>Generate videos</value></data>
   <data name="VideoAttachFiles" xml:space="preserve"><value>Attach an image or video</value></data>
-  <data name="VideoProcessing" xml:space="preserve"><value>Video queued or processingΓÇª</value></data>
+  <data name="VideoProcessing" xml:space="preserve"><value>Video queued or processing</value></data>
   <data name="VideoSize" xml:space="preserve"><value>Video size</value></data>
   <data name="VideoResolution" xml:space="preserve"><value>Resolution</value></data>
   <data name="VideoCount" xml:space="preserve"><value>Number of videos</value></data>
@@ -1390,4 +1390,36 @@
   <data name="AiDefaultProviderDisabled" xml:space="preserve"><value>The saved default is retained, but its provider is disabled for this model type.</value></data>
   <data name="ProviderKeysSaveFailed" xml:space="preserve"><value>Could not save API keys and provider preferences. Your previous settings are retained. Try saving again.</value></data>
   <data name="ProviderSettingsSaveFailed" xml:space="preserve"><value>Could not save provider preferences. Your previous selection is retained. Try again.</value></data>
+  <data name="AppAgentSelectModel" xml:space="preserve"><value>Model selection agent</value></data>
+  <data name="AppAgentSelectModelHint" xml:space="preserve"><value>Uses the primary decision model and instructions to choose one of the selected chat models.</value></data>
+  <data name="AppAgentSelectFavorite" xml:space="preserve"><value>Favorite-agent selection agent</value></data>
+  <data name="AppAgentSelectFavoriteHint" xml:space="preserve"><value>Uses the primary decision model and instructions to choose one of your favorite agents.</value></data>
+  <data name="TargetSearch" xml:space="preserve"><value>Search models or agents</value></data>
+  <data name="TargetNoResults" xml:space="preserve"><value>No matching models or agents.</value></data>
+  <data name="SelectAllFavorites" xml:space="preserve"><value>Select all favorites</value></data>
+  <data name="RemoteAgents" xml:space="preserve"><value>Remote agents</value></data>
+  <data name="RoutingModelRequired" xml:space="preserve"><value>The assigned selection agent must have an available gateway decision model as its primary model. Check App agents settings and the agent's models.</value></data>
+  <data name="RoutingCandidatesRequired" xml:space="preserve"><value>Routing requires at least two distinct available candidates.</value></data>
+  <data name="RoutingInvalidResponse" xml:space="preserve"><value>The decision did not return a valid selection from the offered candidates. No chat request was sent.</value></data>
+  <data name="RoutingContextChanged" xml:space="preserve"><value>The routing context or configuration changed. Send the request again.</value></data>
+  <data name="AgentWorkflow" xml:space="preserve"><value>Agent workflow</value></data>
+  <data name="WorkflowInvalid" xml:space="preserve"><value>Check the workflow type and numeric limits.</value></data>
+  <data name="WorkflowRemoteDefinitionRequired" xml:space="preserve"><value>A mixed Magentic workflow requires the full configuration of every remote agent.</value></data>
+  <data name="Workflow_concurrent" xml:space="preserve"><value>Concurrent</value></data>
+  <data name="Workflow_sequential" xml:space="preserve"><value>Sequential</value></data>
+  <data name="Workflow_groupchat" xml:space="preserve"><value>Group chat</value></data>
+  <data name="Workflow_handoff" xml:space="preserve"><value>Handoff</value></data>
+  <data name="Workflow_decisions" xml:space="preserve"><value>Decisions</value></data>
+  <data name="Workflow_magentic" xml:space="preserve"><value>Magentic</value></data>
+  <data name="WorkflowDecisionModel" xml:space="preserve"><value>Decision model</value></data>
+  <data name="WorkflowIterations" xml:space="preserve"><value>Maximum iterations</value></data>
+  <data name="WorkflowMoveUp" xml:space="preserve"><value>Move agent up</value></data>
+  <data name="WorkflowMoveDown" xml:space="preserve"><value>Move agent down</value></data>
+  <data name="WorkflowManager" xml:space="preserve"><value>Manager agent</value></data>
+  <data name="WorkflowMaxRounds" xml:space="preserve"><value>Maximum rounds</value></data>
+  <data name="WorkflowMaxResets" xml:space="preserve"><value>Maximum resets</value></data>
+  <data name="WorkflowMaxStalls" xml:space="preserve"><value>Maximum stalls</value></data>
+  <data name="WorkflowResponseLanguage" xml:space="preserve"><value>Response language</value></data>
+  <data name="WorkflowHandoffFrom" xml:space="preserve"><value>From agent</value></data>
+  <data name="WorkflowHandoffTo" xml:space="preserve"><value>To agent</value></data>
 </root>

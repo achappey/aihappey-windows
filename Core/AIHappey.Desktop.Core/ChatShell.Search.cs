@@ -43,6 +43,7 @@ public sealed partial class ChatShell
         var same = current.Id == selected.Id;
         if (!same) { current = selected; input.Text = ""; ResetContext(); }
         ShowPage(DesktopPage.Chat); UpdateMode(current.Service); TargetId = current.Target;
+        RestoreConversationSelection();
         suppress = true;
         try { chats.SelectedItem = conversations.FirstOrDefault(conversation => conversation.Id == current.Id); }
         finally { suppress = false; }

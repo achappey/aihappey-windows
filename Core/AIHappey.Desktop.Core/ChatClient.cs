@@ -50,7 +50,8 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
 
     public async IAsyncEnumerable<StreamEvent> StreamAsync(ServiceKind service, string target, string conversationId,
         List<UIMessage> messages, [EnumeratorCancellation] CancellationToken ct, ChatPreferences? preferences = null, string? providerKey = null,
-        UIMessage? systemContext = null, McpTurnSnapshot? mcp = null, DesktopAgent? localAgent = null)
+        UIMessage? systemContext = null, McpTurnSnapshot? mcp = null, DesktopAgent? localAgent = null,
+        System.Text.Json.Nodes.JsonObject? agentRequest = null)
     {
         var snapshot = (preferences ?? session.Settings.Chat).Clone();
         providerKey = ChatPreferences.ResolveProvider(service, target, providerKey);
@@ -62,6 +63,12 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
             ? snapshot.RequestBody(target, conversationId, requestMessages, providerKey, mcp ?? session.Mcp?.Capture())
             : JsonSerializer.SerializeToNode(localAgent is not null ? LocalAgentRequest(localAgent, conversationId, requestMessages)
                 : new { id = conversationId, model = target, messages = requestMessages }, PortableConversations.Json)!.AsObject();
+        if (service != ServiceKind.Ai && agentRequest is not null)
+        {
+            body = (System.Text.Json.Nodes.JsonObject)agentRequest.DeepClone();
+            body["id"] = conversationId;
+            body["messages"] = JsonSerializer.SerializeToNode(requestMessages, PortableConversations.Json);
+        }
         if (service != ServiceKind.Ai) snapshot.ToolOutputContentSettings.ApplyToRequest(body);
         request.Content = JsonContent.Create(body, options: PortableConversations.Json);
         if (service == ServiceKind.Ai) snapshot.ApplyHeaders(request, providerKey);

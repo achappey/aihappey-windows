@@ -1,6 +1,6 @@
 namespace AIHappey.Desktop.Core;
 
-public enum AppAgentRole { WelcomeMessage, ConversationName, ExplainToolCall, ToolSearch, ResourceSearch }
+public enum AppAgentRole { WelcomeMessage, ConversationName, ExplainToolCall, ToolSearch, ResourceSearch, SelectModel, SelectFavorite }
 
 /// <summary>Browser-compatible name assignments. Missing settings seed defaults; an empty
 /// string is an explicit None and must never be replaced with a default during loading.</summary>
@@ -11,6 +11,8 @@ public sealed class AppAgentPreferences
     public string ExplainToolCallAgent { get; set; } = "ExplainToolcallAgent";
     public string ToolSearchAgent { get; set; } = "ToolSearchAgent";
     public string ResourceSearchAgent { get; set; } = "ResourceSearchAgent";
+    public string SelectModelAgent { get; set; } = "SelectModelAgent";
+    public string SelectFavoriteAgent { get; set; } = "SelectFavoriteAgent";
     public AppAgentPreferences Clone() => (AppAgentPreferences)MemberwiseClone();
     public string Get(AppAgentRole role) => (role switch
     {
@@ -19,6 +21,8 @@ public sealed class AppAgentPreferences
         AppAgentRole.ExplainToolCall => ExplainToolCallAgent,
         AppAgentRole.ToolSearch => ToolSearchAgent,
         AppAgentRole.ResourceSearch => ResourceSearchAgent,
+        AppAgentRole.SelectModel => SelectModelAgent,
+        AppAgentRole.SelectFavorite => SelectFavoriteAgent,
         _ => throw new ArgumentOutOfRangeException(nameof(role))
     }) ?? "";
     public void Set(AppAgentRole role, string? name)
@@ -31,6 +35,8 @@ public sealed class AppAgentPreferences
             case AppAgentRole.ExplainToolCall: ExplainToolCallAgent = name; break;
             case AppAgentRole.ToolSearch: ToolSearchAgent = name; break;
             case AppAgentRole.ResourceSearch: ResourceSearchAgent = name; break;
+            case AppAgentRole.SelectModel: SelectModelAgent = name; break;
+            case AppAgentRole.SelectFavorite: SelectFavoriteAgent = name; break;
             default: throw new ArgumentOutOfRangeException(nameof(role));
         }
     }

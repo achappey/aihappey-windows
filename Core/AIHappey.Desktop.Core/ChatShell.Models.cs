@@ -18,25 +18,11 @@ public sealed partial class ChatShell
     private CatalogFavoritesStore modelFavoritesStore = null!;
     private HashSet<string> modelFavorites = new(StringComparer.Ordinal);
     private string? modelFavoritesPartition;
-    private string? selectedAgentTarget;
-
-    // The editable picker displays agent labels, never routing/storage keys.
+    // Canonical IDs are independent of labels, filter text and the latest routing winner.
     private string TargetId
     {
-        get
-        {
-            if (Service != ServiceKind.Agents) return target.Text.Trim();
-            if (selectedAgentTarget is { } id && target.Text ==
-                (targets.FirstOrDefault(t => t.Id == id)?.Label ?? DesktopAgentTargets.DisplayName(id))) return id;
-            return DesktopAgentTargets.Selection(target.Text, null, targets)?.Id ?? target.Text.Trim();
-        }
-        set
-        {
-            selectedAgentTarget = Service == ServiceKind.Agents ? DesktopAgentTargets.Restore(value, targets) : null;
-            target.Text = Service == ServiceKind.Agents
-                ? targets.FirstOrDefault(t => t.Id == selectedAgentTarget)?.Label ?? DesktopAgentTargets.DisplayName(value)
-                : value;
-        }
+        get => target.Text;
+        set => target.Text = Service == ServiceKind.Agents ? DesktopAgentTargets.Restore(value, targets) : value;
     }
 
     private void PrepareModelsOverview()
@@ -160,10 +146,15 @@ public sealed partial class ChatShell
 
     private void UpdateTargetSuggestions(string query = "")
     {
-        target.ItemsSource = (Service == ServiceKind.Ai
-            ? AiModelCatalog.ChatSuggestions(PickerModels(targets), session.Settings.AiModels, query)
-            : targets.Where(x => string.IsNullOrWhiteSpace(query) || x.Label.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || x.Id.Contains(query, StringComparison.OrdinalIgnoreCase)).ToArray()).Take(100).ToArray();
+        var agentMode = Service == ServiceKind.Agents;
+        var routerAgent = DecisionRouting.Agent(session.Settings.SideInferenceAgentNames, localAgents, agentMode);
+        var decision = DecisionRouting.Model(routerAgent, aiModelTargets ?? []);
+        var favoriteIds = SelectionFavorites(agentMode);
+        var visible = agentMode ? targets.Where(t => AgentVisible(t, favoriteIds)).ToArray()
+            : AiModelCatalog.ChatSuggestions(PickerModels(targets), session.Settings.AiModels);
+        target.Configure(agentMode, agentMode || decision is not null, favoriteIds,
+            decision is not null && (!agentMode || visible.Count(t => favoriteIds.Contains(t.Id)) >= 2), routerAgent?.Name ?? "");
+        target.ItemsSource = visible;
     }
 
     private void SelectNewChatModel()

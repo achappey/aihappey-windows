@@ -27,7 +27,7 @@ public sealed class DesktopAgent
                 && !string.IsNullOrWhiteSpace(Text(legacy["id"])) ? [legacy] : [];
         }
     }
-    public string ModelId => Text(Models.FirstOrDefault(model => Text(model["type"]) != "decision")?["id"]);
+    public string ModelId => Text((Models.FirstOrDefault(model => Text(model["type"]) != "decision") ?? Models.FirstOrDefault())?["id"]);
     public IReadOnlyList<string> ModelIds => Models.Select(model => Text(model["id"])).ToArray();
     public string SelectionKey => "local:" + Name;
     public DesktopAgent(JsonObject definition) => Definition = (JsonObject)definition.DeepClone();
@@ -187,7 +187,10 @@ public static class DesktopAgentTargets
     public static IReadOnlyList<ChatTarget> Project(IEnumerable<CatalogItem> items) => items.Select(i =>
         (i.Origin == CatalogOrigin.Local ? new ChatTarget("local:" + i.Id, i.Name + " (" + DesktopResources.Get("Local") + ")") { LocalAgentName = i.Id }
             : new ChatTarget("remote:" + i.Id, i.Name) { RemoteAgentId = i.Id }) with
-        { AgentModelId = i.Model, ProviderKey = ChatPreferences.ResolveProvider(ServiceKind.Ai, i.Model ?? "") }).ToArray();
+        { AgentModelId = i.Model, ProviderKey = ChatPreferences.ResolveProvider(ServiceKind.Ai, i.Model ?? ""),
+            Description = i.Description, ModelMetadata = i.Definition,
+            Tags = i.Definition is { } definition && definition.TryGetProperty("tags", out var tags) && tags.ValueKind == JsonValueKind.Array
+                ? tags.EnumerateArray().Where(t => t.ValueKind == JsonValueKind.String).Select(t => t.GetString()!).ToArray() : [] }).ToArray();
 
     public static string DisplayName(string value)
     {

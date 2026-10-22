@@ -32,7 +32,7 @@ public sealed partial class ChatShell : UserControl
     private readonly TextBox input = new() { PlaceholderText = DesktopResources.Get("AskAnything"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 96, MaxHeight = 240 };
     private readonly ToggleButton models = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Brain), DesktopResources.Get("Models"));
     private readonly ToggleButton agents = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Bot), DesktopResources.Get("Agents"));
-    private readonly AutoSuggestBox target = new() { PlaceholderText = DesktopResources.Get("SelectModel"), MinWidth = 120, MaxWidth = 420, Height = 40, CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1), VerticalContentAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly ChatTargetPicker target = new() { PlaceholderText = DesktopResources.Get("SelectModel"), MinWidth = 120, MaxWidth = 420, Height = 40, CornerRadius = new CornerRadius(6), BorderThickness = new Thickness(1), VerticalContentAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly MenuFlyoutItem refresh = new() { Text = DesktopResources.Get("Refresh"), Icon = DesktopIcons.Create(Icon.ArrowSync) };
     private readonly Button account = new() { Content = DesktopIcons.Create(Icon.Person), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(20) };
     private readonly MenuFlyoutItem settingsButton = new() { Text = DesktopResources.Get("Settings"), Icon = DesktopIcons.Create(Icon.Settings) };
@@ -197,24 +197,8 @@ public sealed partial class ChatShell : UserControl
         agents.Checked += async (_, _) => { if (!updatingMode) await SelectServiceAsync(ServiceKind.Agents); };
         models.Unchecked += (_, _) => { if (!updatingMode) UpdateMode(Service); };
         agents.Unchecked += (_, _) => { if (!updatingMode) UpdateMode(Service); };
-        target.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
-        target.QuerySubmitted += (_, args) =>
-        {
-            if (args.ChosenSuggestion is ChatTarget selected) TargetId = selected.Id;
-            else
-            {
-                UpdateTargetSuggestions();
-                target.IsSuggestionListOpen = true;
-            }
-        };
-        target.TextChanged += (_, args) =>
-        {
-            if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
-            selectedAgentTarget = null;
-            UpdateTargetSuggestions(target.Text);
-        };
-        target.SuggestionChosen += (_, args) => TargetId = ((ChatTarget)args.SelectedItem).Id;
-        target.GotFocus += (_, _) => { UpdateTargetSuggestions(); target.IsSuggestionListOpen = true; };
+        target.Opening = () => UpdateTargetSuggestions();
+        target.SelectionChanged += () => { if (!busy) RememberSelection(); };
         chats.SelectionChanged += async (_, _) =>
         {
             if (suppress || busy || chats.SelectedItem is not Conversation selected) return;
@@ -325,7 +309,7 @@ public sealed partial class ChatShell : UserControl
         top.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         top.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         chatModes.Children.Add(models); chatModes.Children.Add(agents); top.Children.Add(chatModes);
-        ToolbarControls.Outline(target);
+        ControlAppearance.Stock(target);
         Grid.SetColumn(target, 1); top.Children.Add(target);
         Grid.SetColumn(imageTarget, 1); top.Children.Add(imageTarget);
         Grid.SetColumn(videoModelToolbar, 1); top.Children.Add(videoModelToolbar);
@@ -410,6 +394,7 @@ public sealed partial class ChatShell : UserControl
         current = new() { Service = Service };
         input.Text = ""; ResetContext();
         targets = []; TargetId = "";
+        rememberedSelections.Clear(); target.IsSuggestionListOpen = false;
         aiModelTargets = null;
         InvalidateCatalogs();
         RenderTranscript();
@@ -421,6 +406,7 @@ public sealed partial class ChatShell : UserControl
 
     private void UpdateMode(ServiceKind selected)
     {
+        target.IsSuggestionListOpen = false;
         service = selected;
         updatingMode = true;
         try
@@ -432,7 +418,7 @@ public sealed partial class ChatShell : UserControl
         var label = selected == ServiceKind.Ai ? DesktopResources.Get("SelectModel") : DesktopResources.Get("SelectAgent");
         target.PlaceholderText = label;
         ToolbarControls.Label(target, label);
-        chatSettings.Visibility = selected == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
+        chatSettings.Visibility = Visibility.Visible;
         searchContext.Visibility = selected == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
         RenderMcpTags();
         RenderContextTags();
@@ -445,9 +431,11 @@ public sealed partial class ChatShell : UserControl
             UpdateMode(Service);
             return;
         }
+        RememberSelection();
         UpdateMode(selected);
         TargetId = ""; targets = []; target.ItemsSource = null; target.IsSuggestionListOpen = false;
         NewConversation();
+        if (rememberedSelections.TryGetValue(selected, out var previous)) target.SetSelection(previous.Ids, previous.FavoriteRouter);
         await RunAsync(DiscoverAsync);
     }
 
@@ -461,13 +449,16 @@ public sealed partial class ChatShell : UserControl
             return;
         }
         var selected = TargetId;
+        var selection = target.Selection.Ids;
+        var routerSelected = target.Selection.FavoriteRouter;
+        await LoadSelectionCatalogsAsync(ct);
         targets = Service == ServiceKind.Agents ? await AgentTargetsAsync(ct)
             : await Task.Run(() => client.ListAsync(Service, ct), ct);
-        if (Service == ServiceKind.Agents && !string.IsNullOrWhiteSpace(selected)) TargetId = DesktopAgentTargets.Restore(selected, targets);
+        if (Service == ServiceKind.Agents) target.SetSelection(selection.Select(id => DesktopAgentTargets.Restore(id, targets)), routerSelected);
         if (Service == ServiceKind.Ai) aiModelTargets = targets;
         UpdateAccountMenu();
         UpdateTargetSuggestions();
-        if (string.IsNullOrWhiteSpace(selected))
+        if (string.IsNullOrWhiteSpace(selected) && !routerSelected)
         {
             if (Service == ServiceKind.Ai) SelectNewChatModel();
             else TargetId = targets.FirstOrDefault()?.Id ?? "";
@@ -483,12 +474,15 @@ public sealed partial class ChatShell : UserControl
         if (busy || closing || historyDialogOpen || catalogDialog is not null
             || selectedPrompt is null && string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
         var selected = TargetId;
-        if (!targets.Any(x => x.Id == selected)) { Show(DesktopResources.Get("SelectTarget"), InfoBarSeverity.Warning); return; }
+        var selectedIds = target.Selection.Ids.ToArray();
+        var favoriteRouter = target.Selection.FavoriteRouter;
+        if (!favoriteRouter && (selectedIds.Length == 0 || selectedIds.Any(id => !targets.Any(x => x.Id == id))))
+        { Show(DesktopResources.Get("SelectTarget"), InfoBarSeverity.Warning); return; }
         var prompt = selectedPrompt is null ? input.Text.Trim() : "";
         var snapshot = contextAttachments.ToArray();
         var resourceSnapshot = selectedResources.ToArray();
         var inferencePreferences = session.Settings.Chat.Clone();
-        var selectedProvider = targets.First(x => x.Id == selected).ProviderKey;
+        string? selectedProvider = null;
         var extractDocuments = session.Settings.ConvertAttachmentsToText;
         var partition = session.HistoryPartition;
         await RunAsync(async ct =>
@@ -498,13 +492,19 @@ public sealed partial class ChatShell : UserControl
                 throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
             var prepared = await ComposerAttachments.PrepareAsync(prompt, snapshot, Service, extractDocuments, documentExtractor, ct,
                 resourceSnapshot, selectedPrompt?.Parts);
+            await LoadSelectionCatalogsAsync(ct);
+            var resolved = await ResolveTurnSelectionAsync(current.Messages.Select(m => m.Message).Append(prepared.Message).ToList(), selectedIds, favoriteRouter, ct);
+            selected = resolved[0];
             var agentTarget = targets.First(t => t.Id == selected);
-            DesktopAgent? localAgent = null;
-            if (Service == ServiceKind.Agents && agentTarget.LocalAgentName is { } agentName)
+            selectedProvider = agentTarget.ProviderKey;
+            System.Text.Json.Nodes.JsonObject? agentRequest = null;
+            if (Service == ServiceKind.Agents)
             {
-                await LoadLocalAgentsAsync(ct);
-                localAgent = localAgents.FirstOrDefault(a => a.Name == agentName)?.Clone()
-                    ?? throw new InvalidOperationException(DesktopResources.Get("AgentUnavailable"));
+                var workflow = session.Settings.AgentWorkflow.Clone();
+                // Favorite routing chooses one agent; manual team workflows are a distinct mode.
+                if (!favoriteRouter && resolved.Length > 1) workflow.Validate(aiModelTargets ?? []);
+                else workflow.Type = "sequential";
+                agentRequest = DesktopAgentRequests.Build(resolved, targets, localAgents, workflow);
             }
             var wireTarget = Service == ServiceKind.Agents ? agentTarget.RemoteAgentId ?? selected : selected;
             activeConversationTools = null;
@@ -517,6 +517,7 @@ public sealed partial class ChatShell : UserControl
             if (selectedPrompt is not null && !selectedPrompt.Entry.IsCurrent())
                 throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
             current.Service = Service; current.Target = selected;
+            SaveConversationSelection(selectedIds, favoriteRouter);
             var nameConversation = current.Messages.Count == 0 && current.Title == DesktopResources.Get("NewChat");
             var initialTitle = current.Title;
             current.Messages.Add(new() { Message = prepared.Message });
@@ -540,7 +541,7 @@ public sealed partial class ChatShell : UserControl
             {
                 await DesktopChatTurn.RunAsync(current, output,
                     (messages, token) => client.StreamAsync(current.Service, wireTarget, current.Id, messages, token,
-                        inferencePreferences, selectedProvider, systemContext, mcpTurn, localAgent), ApproveToolAsync,
+                        inferencePreferences, selectedProvider, systemContext, mcpTurn, agentRequest: agentRequest), ApproveToolAsync,
                     async (force, token) =>
                 {
                     if (force || watch.Elapsed - renderAt > TimeSpan.FromMilliseconds(100))

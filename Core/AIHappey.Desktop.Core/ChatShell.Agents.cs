@@ -31,7 +31,9 @@ public sealed partial class ChatShell
         var partition = session.AgentPartition;
         var items = await Task.Run(() => agentStore.ListAsync(partition, session.DefaultAgents, ct), ct);
         ct.ThrowIfCancellationRequested(); if (session.AgentPartition != partition || closing) return;
-        localAgents = items; localAgentPartition = partition;
+        // Bring the two new browser defaults into existing installations without replacing customized definitions.
+        var routingDefaults = session.DefaultAgents.Where(a => a.Name is "SelectModelAgent" or "SelectFavoriteAgent");
+        localAgents = items.Concat(routingDefaults).DistinctBy(a => a.Name, StringComparer.Ordinal).ToArray(); localAgentPartition = partition;
         RefreshWelcome();
     }
     private static IReadOnlyList<ChatTarget> ProjectAgentTargets(IEnumerable<CatalogItem> items) => DesktopAgentTargets.Project(items);
@@ -68,7 +70,8 @@ public sealed partial class ChatShell
         agentsOverview.SetItems(items, favorites, config.Location == RuntimeLocation.Local ? "localhost" : DesktopSettings.RemoteUri(config.RemoteUrl).Host);
         if (Service == ServiceKind.Agents)
         {
-            var selected = TargetId; targets = ProjectAgentTargets(items); TargetId = selected; UpdateTargetSuggestions();
+            var selected = target.Selection.Ids; var router = target.Selection.FavoriteRouter;
+            targets = ProjectAgentTargets(items); target.SetSelection(selected, router); UpdateTargetSuggestions();
         }
     }
     private async Task EditAgentAsync(CatalogItem? item, Button owner)

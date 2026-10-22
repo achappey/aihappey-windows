@@ -25,6 +25,14 @@ public sealed record ChatMessagePresentation(string Model, CatalogProvider? Prov
                 if (matches.Length == 1) agent = matches[0];
             }
         }
+        var wireModel = model;
+        if (!isAgent && message.Role == Role.assistant)
+        {
+            var known = agentTargets?.FirstOrDefault(t => t.Id == model);
+            var providerKey = ChatPreferences.ResolveProvider(service, model);
+            model = known?.Label ?? (providerKey is not null && model.StartsWith(providerKey + "/", StringComparison.OrdinalIgnoreCase)
+                ? model[(providerKey.Length + 1)..] : model);
+        }
         if (!showProviderLogo || message.Role != Role.assistant) return new(model, null);
 
         var key = PortableConversations.MetadataString(message.Metadata, "providerKey");
@@ -33,7 +41,7 @@ public sealed record ChatMessagePresentation(string Model, CatalogProvider? Prov
             var agentModel = PortableConversations.MetadataString(message.Metadata, "agentModel");
             key = isAgent
                 ? ChatPreferences.ResolveProvider(ServiceKind.Ai, string.IsNullOrWhiteSpace(agentModel) ? agent?.AgentModelId ?? "" : agentModel)
-                : ChatPreferences.ResolveProvider(service, model);
+                : ChatPreferences.ResolveProvider(service, wireModel);
         }
         else key = key.Trim().ToLowerInvariant();
         // Match the browser: no catalog icon means no logo and no abbreviated author.

@@ -12,7 +12,7 @@ public sealed partial class ChatShell
     private void PrepareChatSettings()
     {
         ToolbarControls.Subtle(chatSettings); ToolbarControls.Label(chatSettings, DesktopResources.Get("ChatSettings"));
-        chatSettings.Click += async (_, _) => await EditChatSettingsAsync();
+        chatSettings.Click += async (_, _) => { if (Service == ServiceKind.Agents) await EditAgentWorkflowAsync(); else await EditChatSettingsAsync(); };
     }
     private async Task EditChatSettingsAsync()
     {
@@ -40,6 +40,27 @@ public sealed partial class ChatShell
             chatSettingsDialog = null; historyDialogOpen = false;
             if (!closing) chatSettings.Focus(FocusState.Programmatic);
         }
+    }
+
+    private async Task EditAgentWorkflowAsync()
+    {
+        if (busy || closing || historyDialogOpen || catalogDialog is not null) return;
+        historyDialogOpen = true; var partition = session.HistoryPartition;
+        try
+        {
+            var selected = target.Selection.Ids.Select(id => targets.FirstOrDefault(t => t.Id == id)).OfType<ChatTarget>().ToArray();
+            var dialog = new AgentWorkflowDialog(session.Settings.AgentWorkflow, selected, aiModelTargets ?? []) { XamlRoot = XamlRoot };
+            dialog.SaveAsync = async (workflow, ids) =>
+            {
+                if (closing || partition != session.HistoryPartition) throw new OperationCanceledException();
+                var next = session.Settings.Clone(); next.AgentWorkflow = workflow;
+                await SettingsStore.SaveAsync(session.DataDirectory, next);
+                if (closing || partition != session.HistoryPartition) throw new OperationCanceledException();
+                session.Settings = next; target.SetSelection(ids, target.Selection.FavoriteRouter); RememberSelection();
+            };
+            SystemAppearance.PrepareDialog(dialog); await dialog.ShowAsync();
+        }
+        finally { historyDialogOpen = false; if (!closing) chatSettings.Focus(FocusState.Programmatic); }
     }
 
     private IReadOnlyList<ChatToolOption> AvailableChatTools(ChatPreferences preferences)
