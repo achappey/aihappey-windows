@@ -148,6 +148,9 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private void SizeToRoot()
     {
         layout.Width = Math.Max(0, Math.Min(820, XamlRoot.Size.Width - 96));
-        layout.Height = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240));
+        // Native ContentDialog chrome can leave less space than the root-size estimate
+        // (including its own maximum height). Allow the grid to shrink with its presenter;
+        // a fixed Height makes the inner scroll viewport extend underneath the footer.
+        layout.MaxHeight = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240));
     }
 }
