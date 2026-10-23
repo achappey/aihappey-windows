@@ -42,12 +42,37 @@ internal sealed class NativeWindowsWindowInspector(Func<bool>? isCurrent = null)
 
     public Task<LocalWindowInspection> InspectAsync(LocalWindowInspectionRequest request, CancellationToken ct) => NativeWindowsAutomation.InspectAsync(request, ct, isCurrent);
 
-    internal static LocalWindowInfo RequireWindow(LocalWindowInspectionRequest request)
+    public Task<IReadOnlyList<LocalScreenInfo>> ScreensAsync(CancellationToken ct) => Task.Run<IReadOnlyList<LocalScreenInfo>>(() =>
     {
-        var handle = LocalWindowTools.ParseHandle(request.WindowHandle);
-        if (!Visible(handle) || GetAncestor(handle, 2) != handle || Describe(handle) is not { } window || window.ProcessId != request.ProcessId)
+        Check(ct);
+        var screens = EnumerateScreens().Select(s => s.Info).ToArray();
+        Check(ct); return screens;
+    }, ct);
+
+    internal static LocalWindowInfo RequireWindow(LocalWindowInspectionRequest request) => RequireWindow(request.WindowHandle, request.ProcessId);
+
+    internal static LocalWindowInfo RequireWindow(string windowHandle, int processId)
+    {
+        var handle = LocalWindowTools.ParseHandle(windowHandle);
+        if (!Visible(handle) || GetAncestor(handle, 2) != handle || Describe(handle) is not { } window || window.ProcessId != processId)
             throw new LocalToolException(DesktopResources.Get("LocalWindowUnavailable"));
         return window;
+    }
+
+    internal static nint RequireScreen(string screenId) => EnumerateScreens().FirstOrDefault(s => s.Info.ScreenId == screenId).Handle is var handle && handle != 0
+        ? handle : throw new LocalToolException(DesktopResources.Get("LocalCaptureUnavailable"));
+
+    private static List<(nint Handle, LocalScreenInfo Info)> EnumerateScreens()
+    {
+        var screens = new List<(nint, LocalScreenInfo)>();
+        if (!EnumDisplayMonitors(0, 0, (nint monitor, nint _, ref Rect bounds, nint state) =>
+        {
+            var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>(), Device = "" };
+            if (GetMonitorInfo(monitor, ref info)) screens.Add((monitor, new(info.Device, info.Monitor.Left, info.Monitor.Top,
+                info.Monitor.Right - info.Monitor.Left, info.Monitor.Bottom - info.Monitor.Top, (info.Flags & 1) != 0)));
+            return screens.Count < 32;
+        }, 0) && screens.Count == 0) throw new LocalToolException(DesktopResources.Get("LocalCaptureUnavailable"));
+        return screens;
     }
 
     private static bool Visible(nint handle) => IsWindow(handle) && IsWindowVisible(handle)
@@ -71,6 +96,16 @@ internal sealed class NativeWindowsWindowInspector(Func<bool>? isCurrent = null)
     }
 
     private delegate bool EnumWindowCallback(nint handle, nint state);
+    [StructLayout(LayoutKind.Sequential)] private struct Rect { public int Left, Top, Right, Bottom; }
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct MonitorInfo
+    {
+        public int Size; public Rect Monitor, Work; public uint Flags;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string Device;
+    }
+    private delegate bool MonitorCallback(nint monitor, nint dc, ref Rect bounds, nint state);
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool EnumDisplayMonitors(nint dc, nint clip, MonitorCallback callback, nint state);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetMonitorInfo(nint monitor, ref MonitorInfo info);
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool EnumWindows(EnumWindowCallback callback, nint state);
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsWindow(nint handle);

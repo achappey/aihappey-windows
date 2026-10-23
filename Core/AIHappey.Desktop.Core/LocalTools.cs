@@ -17,6 +17,8 @@ public static class DesktopLocalTools
     public const string Clipboard = "windows-clipboard";
     public const string WindowInspector = "windows-window-inspector";
     public const string Ocr = "windows-ocr";
+    public const string SystemInformation = "windows-system-information";
+    public const string AppLauncher = "windows-app-launcher";
     public const string Files = "local-files";
     public const string Images = "local-images";
     public const string AgentsEditor = "local-agents-editor";
@@ -31,14 +33,15 @@ public static class DesktopLocalTools
         using var desktopStream = typeof(DesktopLocalTools).Assembly.GetManifestResourceStream("Desktop.DesktopToolDefinitions")
             ?? throw new InvalidDataException("Missing desktop tool contracts.");
         using var desktop = JsonDocument.Parse(desktopStream);
-        return Array.AsReadOnly(new[] { Conversations, SkillSearch, ArtificialIntelligence, WindowsSearch, Clipboard, WindowInspector, Ocr, Files, Images, AgentsEditor, AgentsRuntime, SkillEditor }
+        return Array.AsReadOnly(new[] { Conversations, SkillSearch, ArtificialIntelligence, WindowsSearch, Clipboard, WindowInspector, Ocr, SystemInformation, AppLauncher, Files, Images, AgentsEditor, AgentsRuntime, SkillEditor }
             .Select(id => new DesktopToolPlugin(id, id switch
             {
                 Conversations => "LocalPluginConversations", SkillSearch => "LocalPluginSkills", ArtificialIntelligence => "LocalPluginAi",
                 Images => "LocalPluginImages", AgentsEditor => "LocalPluginAgentsEditor", AgentsRuntime => "LocalPluginAgentsRuntime", SkillEditor => "LocalPluginSkillEditor",
                 Clipboard => "LocalPluginClipboard", WindowInspector => "LocalPluginWindowInspector", Ocr => "LocalPluginOcr",
+                SystemInformation => "LocalPluginSystemInformation", AppLauncher => "LocalPluginAppLauncher",
                 WindowsSearch => "LocalPluginWindowsSearch", Files => "LocalPluginFiles", _ => throw new InvalidDataException("Unknown local plugin.")
-            }, Array.AsReadOnly((id is WindowsSearch or Files or Clipboard or WindowInspector or Ocr ? desktop : document).RootElement.GetProperty(id)
+            }, Array.AsReadOnly((id is WindowsSearch or Files or Clipboard or WindowInspector or Ocr or SystemInformation or AppLauncher ? desktop : document).RootElement.GetProperty(id)
                 .EnumerateArray().Select(t => t.Clone()).ToArray()))).Append(new DesktopToolPlugin(AgentPluginTools.EditorId, "PluginEditorTools", AgentPluginTools.Definitions)).ToArray());
     }
     public static bool Reserved(string name) => Plugins.Any(p => p.Tools.Any(t => CatalogProjection.Text(t, "name") == name));

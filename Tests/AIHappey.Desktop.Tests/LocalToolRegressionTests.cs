@@ -20,9 +20,9 @@ internal static class LocalToolRegressionTests
         check(defaults.ActivePlugins.Count == 2 && clone.ActivePlugins.Count == 3, "local tools: normalized selections and isolated clone");
         var directory = Path.Combine(root, "local-settings"); await SettingsStore.SaveAsync(directory, new() { Chat = clone });
         check((await SettingsStore.LoadAsync(directory, new())).Chat.ActivePlugins.SequenceEqual(clone.ActivePlugins), "local tools: selections persist");
-        var expectedToolCount = 32 + 13 + AgentPluginTools.Definitions.Count;
-        check(DesktopLocalTools.Plugins.Count == 13 && DesktopLocalTools.Plugins.SelectMany(p => p.Tools).Count() == expectedToolCount && DesktopLocalTools.Plugins.SelectMany(p => p.Tools)
-            .Select(t => t.GetProperty("name").GetString()).Distinct().Count() == expectedToolCount, "local tools: 32 browser, thirteen desktop-only, and unchanged package-editor unique contracts");
+        var expectedToolCount = 32 + 19 + AgentPluginTools.Definitions.Count;
+        check(DesktopLocalTools.Plugins.Count == 15 && DesktopLocalTools.Plugins.SelectMany(p => p.Tools).Count() == expectedToolCount && DesktopLocalTools.Plugins.SelectMany(p => p.Tools)
+            .Select(t => t.GetProperty("name").GetString()).Distinct().Count() == expectedToolCount, "local tools: 32 browser, nineteen desktop-only, and unchanged package-editor unique contracts");
         check(DesktopLocalTools.Definition("local_conversations_delete_conversation").GetProperty("annotations").GetProperty("destructiveHint").GetBoolean(),
             "local tools: destructive delete annotation preserved");
         check(McpTurnSnapshot.Empty.Tools.Count == 0, "local tools: disabled plugins expose no tools");

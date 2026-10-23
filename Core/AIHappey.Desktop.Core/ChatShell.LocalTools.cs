@@ -35,8 +35,21 @@ public sealed partial class ChatShell
         if (preferences.PluginEnabled(DesktopLocalTools.WindowInspector))
         {
             var windows = new NativeWindowsWindowInspector(Current);
-            var tools = new LocalWindowTools(windows.ActiveAsync, windows.ListAsync, windows.InspectAsync, Current);
+            var capture = new NativeWindowsCapture(DispatcherQueue,
+                () => Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId), Current);
+            var tools = new LocalWindowTools(windows.ActiveAsync, windows.ListAsync, windows.InspectAsync, Current, windows.ScreensAsync, capture.CaptureAsync);
             DesktopLocalTools.Register(snapshot, DesktopLocalTools.WindowInspector, tools.CallAsync);
+        }
+        if (preferences.PluginEnabled(DesktopLocalTools.SystemInformation))
+        {
+            var tools = new LocalSystemInformationTools(Current);
+            DesktopLocalTools.Register(snapshot, DesktopLocalTools.SystemInformation, tools.CallAsync);
+        }
+        if (preferences.PluginEnabled(DesktopLocalTools.AppLauncher))
+        {
+            var launcher = new NativeWindowsAppLauncher(Current);
+            var tools = new LocalAppLauncherTools(launcher.ListAsync, launcher.LaunchAsync, Current);
+            DesktopLocalTools.Register(snapshot, DesktopLocalTools.AppLauncher, tools.CallAsync);
         }
         if (preferences.PluginEnabled(DesktopLocalTools.Ocr))
         {

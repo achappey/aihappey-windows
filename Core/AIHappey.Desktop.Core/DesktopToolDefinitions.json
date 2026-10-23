@@ -59,6 +59,25 @@
         "maxNodes": { "type": "integer", "minimum": 1, "maximum": 500, "default": 200 }
       }, "required": ["windowHandle", "processId"], "additionalProperties": false },
       "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_windows_list_screens",
+      "title": "List screens",
+      "description": "List up to 32 currently attached Windows screens with screenId, desktop bounds in pixels, and primary status. Use a returned screenId for direct screen capture with local_windows_capture. Screen identities and layout can change; no screenshot is taken by listing.",
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_windows_capture",
+      "title": "Capture a window or screen",
+      "description": "Capture one frame locally using Windows Graphics Capture. For source=window supply windowHandle and processId from the existing window tools; for source=screen supply screenId from local_windows_list_screens. Omit source or use picker to let the user select a window/screen in the native Windows picker. If a valid direct target cannot be captured, the native picker is offered as fallback; malformed or stale window identities fail safely. Canceling the picker returns canceled=true. Returns inline PNG plus text metadata, never saves a file or retains a capture session. Limited to 16 megapixels and 20 MiB encoded PNG. Does not focus, restore, or automate the target. Protected/minimized/closed windows may be unavailable or blank. Sensitive visible content enters the normal tool-result/chat flow; outgoing image and text blocks respect Tool Output Filter settings. Uses existing execute-then-review approval, not a new pre-capture approval prompt. Native picker selection is separate from result review.",
+      "inputSchema": { "type": "object", "properties": {
+        "source": { "type": "string", "enum": ["window", "screen", "picker"], "default": "picker", "description": "Selects the capture mode. Omit or use picker for native user selection; all target selectors are ignored in picker mode. Only selectors for the selected source are used." },
+        "windowHandle": { "type": "string", "pattern": "^0x[0-9A-Fa-f]{1,16}$", "description": "Required only for source=window, together with processId. Use a handle returned by the existing window tools. Ignored for screen/picker." },
+        "processId": { "type": "integer", "minimum": 1, "maximum": 2147483647, "description": "Required only for source=window; must match the selected window's process. Ignored for screen/picker." },
+        "screenId": { "type": "string", "minLength": 1, "maxLength": 128, "description": "Required only for source=screen; use an identity returned by local_windows_list_screens. Ignored for window/picker." }
+      }, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
     }
   ],
   "windows-ocr": [
@@ -78,6 +97,47 @@
         "language": { "type": "string", "minLength": 1, "maxLength": 85, "description": "Optional installed Windows OCR language tag, such as en-US or nl-NL." }
       }, "required": ["path"], "additionalProperties": false },
       "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false }
+    }
+  ],
+  "windows-system-information": [
+    {
+      "name": "local_system_get_info",
+      "title": "Read system information",
+      "description": "Read a local .NET/Win32 snapshot of CPU model, architecture and logical processor count, total/available/used physical memory in bytes, memory load percentage, and Windows version/build. Does not sample CPU utilization, collect device identifiers, query remote services, run commands, or retain monitoring state. Returned text follows the normal tool-result flow and Text Output Filter setting. Uses existing execute-then-review approval.",
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_system_list_processes",
+      "title": "List running processes",
+      "description": "Read a bounded local snapshot of running process IDs, names, working-set bytes and cumulative CPU time in milliseconds (not utilization). Optional case-insensitive name substring query. Default 50 results, maximum 200, ordered by process ID. Inaccessible/exited processes may be skipped or have null metrics; partial and hasMore indicate incomplete results. No command lines, environment variables, executable paths, process control, elevation, monitoring, or remote access. Returned text respects the Text Output Filter. Uses existing execute-then-review approval.",
+      "inputSchema": { "type": "object", "properties": {
+        "query": { "type": "string", "maxLength": 256 },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 }
+      }, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    }
+  ],
+  "windows-app-launcher": [
+    {
+      "name": "local_apps_list",
+      "title": "List installed applications",
+      "description": "Discover installed applications from the local Windows Apps folder, returning appId and name. Optional case-insensitive name/ID substring query; default 50 results, capped at 100, with hasMore. Search with a more specific query when truncated. No filesystem crawling, downloads, launching, or retained catalog. Some listed entries cannot be launched because their shortcuts contain arguments or require elevation. Returned text respects the Text Output Filter.",
+      "inputSchema": { "type": "object", "properties": {
+        "query": { "type": "string", "maxLength": 256 },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 }
+      }, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_apps_launch",
+      "title": "Open an app, document, or URL",
+      "description": "Use native ShellExecute(open) for a single target: kind=app with an exact installed appId from local_apps_list; kind=executable with an existing absolute local .exe path; kind=document with an existing supported local document path; or kind=url with an HTTP/HTTPS URL. No arguments, arbitrary command strings, scripts, shortcuts, custom URI schemes, runas, or elevation. Local paths reject network/device paths and links. Supported documents: txt/md/log/json/xml/yaml/yml/csv/tsv/pdf/rtf/docx/xlsx/pptx/odt/ods/odp, PNG/JPEG/BMP/GIF/TIFF/WebP, MP3/WAV/FLAC/MP4/MKV/WebM. Executables/handlers must be native Windows executables with an explicit asInvoker manifest, not auto-elevating; legacy/unverifiable targets fail safely. Installed shortcut entries with arguments are rejected. No application output is captured; success means Windows accepted the open request, not that the app finished or the document loaded. Opening a URL may cause the user's browser to access the network; these tools do not fetch it. Launches occur before existing result review, so rejecting review cannot undo a launch. Returned text respects the Text Output Filter and review/continuation never relaunches the target.",
+      "inputSchema": { "type": "object", "properties": {
+        "kind": { "type": "string", "enum": ["app", "executable", "document", "url"] },
+        "target": { "type": "string", "minLength": 1, "maxLength": 32700 }
+      }, "required": ["kind", "target"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": true }
     }
   ],
   "local-files": [

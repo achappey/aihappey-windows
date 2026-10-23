@@ -1132,6 +1132,17 @@
   <data name="LocalPluginClipboard" xml:space="preserve"><value>Windows Klembord</value></data>
   <data name="LocalPluginWindowInspector" xml:space="preserve"><value>Windows Vensterinspectie</value></data>
   <data name="LocalPluginOcr" xml:space="preserve"><value>Windows OCR</value></data>
+  <data name="LocalPluginSystemInformation" xml:space="preserve"><value>Windows Systeeminformatie</value></data>
+  <data name="LocalPluginAppLauncher" xml:space="preserve"><value>Windows Appstarter</value></data>
+  <data name="LocalCaptureUnavailable" xml:space="preserve"><value>Het venster of scherm kon niet worden vastgelegd. Het is mogelijk gesloten, beveiligd, geminimaliseerd of niet beschikbaar in deze Windows-versie.</value></data>
+  <data name="LocalCaptureTooLarge" xml:space="preserve"><value>De opname overschrijdt de ondersteunde afbeeldingsgrootte (16 megapixels of 20 MiB PNG).</value></data>
+  <data name="LocalCaptureInvalidSource" xml:space="preserve"><value>Kies opnamebron window, screen of picker. Laat source weg om de Windows-kiezer te openen.</value></data>
+  <data name="LocalCaptureInvalidScreen" xml:space="preserve"><value>Voor een schermopname is een screenId uit de schermlijst vereist.</value></data>
+  <data name="LocalSystemUnavailable" xml:space="preserve"><value>Windows-systeeminformatie is momenteel niet beschikbaar.</value></data>
+  <data name="LocalSystemInvalid" xml:space="preserve"><value>Gebruik een procesnaamzoekopdracht van maximaal 256 tekens zonder besturingstekens.</value></data>
+  <data name="LocalAppInvalid" xml:space="preserve"><value>Gebruik een geïnstalleerde app-ID, een bestaand absoluut lokaal pad naar een programma of ondersteund document, of een HTTP/HTTPS-URL. Argumenten, opdrachten, scripts, snelkoppelingen, koppelingen en aangepaste URI-schema's worden niet ondersteund.</value></data>
+  <data name="LocalAppUnavailable" xml:space="preserve"><value>Windows kon dit doel niet openen. De app, het bestand of de geregistreerde toepassing is mogelijk niet beschikbaar.</value></data>
+  <data name="LocalAppElevationUnsupported" xml:space="preserve"><value>Er kan niet worden vastgesteld dat dit programma zonder verhoogde rechten wordt uitgevoerd. Alleen programma's met een expliciet asInvoker-manifest zonder automatische rechtenverhoging worden ondersteund.</value></data>
   <data name="LocalClipboardUnavailable" xml:space="preserve"><value>Het Windows-klembord is bezet of niet beschikbaar. Probeer het opnieuw.</value></data>
   <data name="LocalClipboardTextInvalid" xml:space="preserve"><value>Klembordtekst moet een tekenreeks zijn van maximaal 50.000 tekens zonder nultekens.</value></data>
   <data name="LocalWindowInvalid" xml:space="preserve"><value>De vensterhandle of proces-ID is ongeldig.</value></data>

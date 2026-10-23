@@ -1137,6 +1137,17 @@
   <data name="LocalPluginClipboard" xml:space="preserve"><value>Windows Clipboard</value></data>
   <data name="LocalPluginWindowInspector" xml:space="preserve"><value>Windows Window Inspector</value></data>
   <data name="LocalPluginOcr" xml:space="preserve"><value>Windows OCR</value></data>
+  <data name="LocalPluginSystemInformation" xml:space="preserve"><value>Windows System Information</value></data>
+  <data name="LocalPluginAppLauncher" xml:space="preserve"><value>Windows App Launcher</value></data>
+  <data name="LocalCaptureUnavailable" xml:space="preserve"><value>The window or screen could not be captured. It may be closed, protected, minimized, or unavailable on this Windows version.</value></data>
+  <data name="LocalCaptureTooLarge" xml:space="preserve"><value>The capture exceeds the supported image size (16 megapixels or 20 MiB PNG).</value></data>
+  <data name="LocalCaptureInvalidSource" xml:space="preserve"><value>Choose capture source window, screen, or picker. Omit source to open the native Windows picker.</value></data>
+  <data name="LocalCaptureInvalidScreen" xml:space="preserve"><value>Screen capture requires a screenId returned by the screen-list tool.</value></data>
+  <data name="LocalSystemUnavailable" xml:space="preserve"><value>Windows system information is currently unavailable.</value></data>
+  <data name="LocalSystemInvalid" xml:space="preserve"><value>Use a process-name query of at most 256 characters without control characters.</value></data>
+  <data name="LocalAppInvalid" xml:space="preserve"><value>Use an installed app ID, an existing absolute local executable or supported document path, or an HTTP/HTTPS URL. Arguments, commands, scripts, shortcuts, links, and custom URI schemes are not supported.</value></data>
+  <data name="LocalAppUnavailable" xml:space="preserve"><value>Windows could not open this target. The app, file, or registered handler may be unavailable.</value></data>
+  <data name="LocalAppElevationUnsupported" xml:space="preserve"><value>This executable cannot be verified to run without elevation. Only explicit asInvoker executables without auto-elevation are supported.</value></data>
   <data name="LocalClipboardUnavailable" xml:space="preserve"><value>The Windows clipboard is busy or unavailable. Try again.</value></data>
   <data name="LocalClipboardTextInvalid" xml:space="preserve"><value>Clipboard text must be a string of at most 50,000 characters without null characters.</value></data>
   <data name="LocalWindowInvalid" xml:space="preserve"><value>The window handle or process ID is invalid.</value></data>

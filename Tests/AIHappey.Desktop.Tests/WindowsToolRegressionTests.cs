@@ -13,8 +13,8 @@ internal static class WindowsToolRegressionTests
     {
         var ids = new[] { DesktopLocalTools.Clipboard, DesktopLocalTools.WindowInspector, DesktopLocalTools.Ocr };
         var definitions = DesktopLocalTools.Plugins.Where(p => ids.Contains(p.Id)).SelectMany(p => p.Tools).ToArray();
-        check(definitions.Length == 7 && definitions.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 7,
-            "Windows tools: three plugins expose seven unique contracts");
+        check(definitions.Length == 9 && definitions.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 9,
+            "Windows tools: three existing plugins expose nine unique contracts including capture");
         check(definitions.All(t => t.GetProperty("name").GetString()!.StartsWith("local_", StringComparison.Ordinal)
             && !t.GetProperty("inputSchema").GetProperty("additionalProperties").GetBoolean()
             && !t.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean()), "Windows tools: local naming, closed schemas and no open-world access");
@@ -37,6 +37,7 @@ internal static class WindowsToolRegressionTests
         await WindowsAsync(check);
         await OcrAsync(check, root);
         await ReviewAsync(check);
+        await WindowsDesktopToolRegressionTests.RunAsync(check, root);
     }
 
     private static async Task ClipboardAsync(Action<bool, string> check)
