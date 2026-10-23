@@ -965,7 +965,7 @@
   <data name="AgentOwnedBy" xml:space="preserve"><value>Eigenaar</value></data>
   <data name="AgentTags" xml:space="preserve"><value>Tags</value></data>
   <data name="AgentImport" xml:space="preserve"><value>Agent importeren</value></data>
-  <data name="AgentChecks" xml:space="preserve"><value>Controles</value></data>
+  <data name="AgentChecks" xml:space="preserve"><value>Tests</value></data>
   <data name="AgentProvider" xml:space="preserve"><value>Providerinstellingen</value></data>
   <data name="AgentProviderDeferred" xml:space="preserve"><value>Er is nog geen native formulier voor deze provider. Bestaande providerinstellingen blijven behouden.</value></data>
   <data name="AgentToolsNotConnected" xml:space="preserve"><value>Verbind deze MCP-server in Modelcontext om tools te vinden. Bestaande toolselecties blijven behouden.</value></data>

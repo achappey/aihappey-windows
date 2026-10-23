@@ -966,10 +966,10 @@
   <data name="AgentNameImmutable" xml:space="preserve"><value>The agent name cannot be changed after creation.</value></data>
   <data name="AgentEdit" xml:space="preserve"><value>Edit agent</value></data>
   <data name="AgentCreate" xml:space="preserve"><value>Create new agent</value></data>
-  <data name="AgentOwnedBy" xml:space="preserve"><value>Owned by</value></data>
+  <data name="AgentOwnedBy" xml:space="preserve"><value>Owner</value></data>
   <data name="AgentTags" xml:space="preserve"><value>Tags</value></data>
   <data name="AgentImport" xml:space="preserve"><value>Import agent</value></data>
-  <data name="AgentChecks" xml:space="preserve"><value>Checks</value></data>
+  <data name="AgentChecks" xml:space="preserve"><value>Tests</value></data>
   <data name="AgentProvider" xml:space="preserve"><value>Provider settings</value></data>
   <data name="AgentProviderDeferred" xml:space="preserve"><value>A native form is not available for this provider yet. Existing provider settings are preserved.</value></data>
   <data name="AgentToolsNotConnected" xml:space="preserve"><value>Connect this MCP server in Model Context to discover its tools. Existing allowed-tool selections are preserved.</value></data>

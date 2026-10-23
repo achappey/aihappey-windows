@@ -1,4 +1,3 @@
-using FluentIcons.Common;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.UI.Xaml;
@@ -58,7 +57,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         layout.Children.Add(tabs); Grid.SetRow(feedback, 1); layout.Children.Add(feedback); Grid.SetRow(page, 2); layout.Children.Add(page); Content = layout;
         AutomationProperties.SetLiveSetting(feedback, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         AddTab("general", DesktopResources.Get("General"), General(isEditing, models));
-        AddTab("tags", DesktopResources.Get("AgentTags"), Tags());
+        AddTab("details", DesktopResources.Get("Details"), Details());
         AddTab("modelContext", DesktopResources.Get("McpTitle"), ModelContext(connected ?? McpTurnSnapshot.Empty));
         AddTab("skills", DesktopResources.Get("Skills"), Skills());
         AddTab("plugins", DesktopResources.Get("PluginsTitle"), Plugins(plugins ?? []));
@@ -73,6 +72,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
                 {
                     if (control is AutoSuggestBox suggest) suggest.IsSuggestionListOpen = false;
                     if (control is ComboBox combo) combo.IsDropDownOpen = false;
+                    if (control is ChatTargetPicker picker) picker.IsSuggestionListOpen = false;
                 }
             page.Content = pages[key]; SizePage(); page.ChangeView(0, 0, null, true);
         };
@@ -114,91 +114,28 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         var panel = Panel(); var body = Card(panel, "agent.general");
         var name = fields.Text(body, "agent.name", () => draft.Name, v => draft.Definition["name"] = v.Trim()); name.Name = "AgentName"; name.IsEnabled = !editing;
         fields.Text(body, "agent.description", () => draft.Description, v => draft.Definition["description"] = v).Name = "AgentDescription";
-        var owners = availableAgents.Select(agent => agent.OwnedBy?.Trim()).Append(DesktopAgent.Text(draft.Definition["owned_by"]).Trim())
-            .Where(owner => !string.IsNullOrEmpty(owner)).Cast<string>().Distinct(StringComparer.Ordinal).Order(StringComparer.CurrentCultureIgnoreCase).ToArray();
-        var owner = new AutoSuggestBox { Name = "AgentOwnedBy", Header = DesktopResources.Get("AgentOwnedBy"), Text = DesktopAgent.Text(draft.Definition["owned_by"]),
-            QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12), HorizontalAlignment = HorizontalAlignment.Stretch };
-        ControlAppearance.Stock(owner); AutomationProperties.SetName(owner, DesktopResources.Get("AgentOwnedBy")); body.Children.Add(owner);
-        void OwnerSuggestions(string query = "") => owner.ItemsSource = owners.Where(value => value.Contains(query, StringComparison.CurrentCultureIgnoreCase)).ToArray();
-        owner.GotFocus += (_, _) => { OwnerSuggestions(); owner.IsSuggestionListOpen = true; };
-        owner.TextChanged += (_, args) =>
-        {
-            if (owner.Text.Length == 0) draft.Definition.Remove("owned_by"); else draft.Definition["owned_by"] = owner.Text;
-            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) { OwnerSuggestions(owner.Text); owner.IsSuggestionListOpen = true; }
-        };
-        owner.SuggestionChosen += (_, args) => { if (args.SelectedItem is string value) owner.Text = value; };
-        owner.QuerySubmitted += (_, args) =>
-        {
-            if (args.ChosenSuggestion is string value) owner.Text = value;
-            else { OwnerSuggestions(); owner.IsSuggestionListOpen = true; }
-        };
-        owner.LostFocus += (_, _) => { owner.IsSuggestionListOpen = false; owner.Text = owner.Text.Trim(); };
         var visibleModels = ProviderPreferences.Filter(models, session.Settings);
         var modelOptions = visibleModels.Where(m => m.ModelType is null or "language" or "decision")
             .Concat(draft.Models.Where(model => !visibleModels.Any(m => m.Id == DesktopAgent.Text(model["id"])))
                 .Select(model => new ChatTarget(DesktopAgent.Text(model["id"]), DesktopAgent.Text(model["id"])) { ModelType = DesktopAgent.Text(model["type"]) }))
             .DistinctBy(model => model.Id).Select(model => model.ModelType == "decision"
                 ? model with { Label = model.Label + " (" + DesktopResources.Get("AgentDecisionRouter") + ")" } : model).ToArray();
-        var choices = new ListView { Name = "AgentModels", SelectionMode = ListViewSelectionMode.Multiple,
-            IsMultiSelectCheckBoxEnabled = true, Height = 200, ItemsSource = modelOptions,
-            HorizontalAlignment = HorizontalAlignment.Stretch };
-        AutomationProperties.SetName(choices, DesktopResources.Get("AgentModels"));
-        var updatingModels = false;
-        void RefreshChoices(string query = "")
-        {
-            updatingModels = true;
-            choices.ItemsSource = modelOptions.Where(m => draft.ModelIds.Contains(m.Id)
-                || (m.Id + " " + m.Label).Contains(query, StringComparison.OrdinalIgnoreCase)).ToArray();
-            foreach (var option in choices.Items.OfType<ChatTarget>())
-                if (draft.ModelIds.Contains(option.Id)) choices.SelectedItems.Add(option);
-            updatingModels = false;
-        }
-        RefreshChoices();
-        void SelectModels(IEnumerable<ChatTarget> next)
+        var modelField = new StackPanel { Spacing = 8 };
+        var modelLabel = new TextBlock { Text = DesktopResources.Get("AgentModels") };
+        modelField.Children.Add(modelLabel);
+        var model = new ChatTargetPicker { Name = "AgentModels", PlaceholderText = DesktopResources.Get("SelectModel"),
+            AllowEmptySelection = true, HorizontalAlignment = HorizontalAlignment.Stretch, ItemsSource = modelOptions };
+        model.Configure(agents: false, multiselect: true, favoriteIds: new HashSet<string>(), canRoute: false, routeLabel: "");
+        model.SetSelection(draft.ModelIds);
+        AutomationProperties.SetName(model, DesktopResources.Get("AgentModels"));
+        AutomationProperties.SetLabeledBy(model, modelLabel);
+        modelField.Children.Add(model); body.Children.Add(modelField);
+        model.SelectionChanged += () =>
         {
             CommitProvider();
-            draft.SelectModels(next.Select(item => (item.Id, item.ModelType)));
+            draft.SelectModels(model.Selection.Ids.Select(id => (id, modelOptions.First(option => option.Id == id).ModelType)));
             BuildProvider(); fields.Refresh();
-        }
-        choices.SelectionChanged += (_, args) =>
-        {
-            if (updatingModels) return;
-            var removed = args.RemovedItems.OfType<ChatTarget>().Select(item => item.Id).ToHashSet();
-            var next = draft.Models.Where(item => !removed.Contains(DesktopAgent.Text(item["id"])))
-                .Select(item => modelOptions.First(m => m.Id == DesktopAgent.Text(item["id"])))
-                .Concat(args.AddedItems.OfType<ChatTarget>()).DistinctBy(item => item.Id);
-            SelectModels(next.ToArray());
         };
-        var model = new AutoSuggestBox { Name = "AgentModel", Header = ChatSettingsFields.L("model"), Text = draft.ModelId,
-            ItemsSource = modelOptions.Take(100).ToArray(), DisplayMemberPath = "Label", TextMemberPath = "Id", PlaceholderText = DesktopResources.Get("SelectModel"),
-            QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12), HorizontalAlignment = HorizontalAlignment.Stretch };
-        ControlAppearance.Stock(model); AutomationProperties.SetName(model, ChatSettingsFields.L("model")); body.Children.Add(model);
-        void SetModel(string id)
-        {
-            if (draft.ModelIds.Contains(id) || modelOptions.FirstOrDefault(item => item.Id == id) is not { } selected) return;
-            SelectModels(draft.Models.Select(item => modelOptions.First(m => m.Id == DesktopAgent.Text(item["id"]))).Append(selected).ToArray());
-            RefreshChoices();
-        }
-        void Suggestions(string query = "") => model.ItemsSource = modelOptions
-            .Where(m => (m.Id + " " + m.Label).Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
-        model.GotFocus += (_, _) => { Suggestions(); model.IsSuggestionListOpen = true; };
-        model.TextChanged += (_, args) =>
-        {
-            // A selected suggestion must commit immediately, not depend on a later focus
-            // transition inside AutoSuggestBox's textbox/query-button template.
-            if (modelOptions.Any(m => m.Id == model.Text.Trim())) SetModel(model.Text.Trim());
-            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
-            { Suggestions(model.Text); RefreshChoices(model.Text); model.IsSuggestionListOpen = true; }
-        };
-        model.SuggestionChosen += (_, args) => { if (args.SelectedItem is ChatTarget selected) { model.Text = selected.Id; SetModel(selected.Id); } };
-        model.QuerySubmitted += (_, args) =>
-        {
-            if (args.ChosenSuggestion is ChatTarget selected) { model.Text = selected.Id; SetModel(selected.Id); }
-            else { Suggestions(); model.IsSuggestionListOpen = true; }
-        };
-        model.LostFocus += (_, _) => { model.IsSuggestionListOpen = false; SetModel(model.Text.Trim()); };
-        body.Children.Add(choices);
-        body.Children.Add(new TextBlock { Text = DesktopResources.Get("AgentModelRoutingHint"), TextWrapping = TextWrapping.Wrap });
         fields.Text(body, "agent.instructions", () => DesktopAgent.Text(draft.Definition["instructions"]), v => draft.Definition["instructions"] = v, multiline: true).Name = "AgentInstructions";
         fields.Text(body, "agent.argumentHint", () => DesktopAgent.Text(draft.Definition["argumentHint"]), v => draft.Definition["argumentHint"] = v).Name = "AgentArgumentHint";
         return panel;

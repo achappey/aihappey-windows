@@ -8,9 +8,28 @@ namespace AIHappey.Desktop.Core;
 
 public sealed partial class AgentEditDialog
 {
-    private StackPanel Tags()
+    private StackPanel Details()
     {
         var panel = Panel();
+        var owners = availableAgents.Select(agent => agent.OwnedBy?.Trim()).Append(DesktopAgent.Text(draft.Definition["owned_by"]).Trim())
+            .Where(owner => !string.IsNullOrEmpty(owner)).Cast<string>().Distinct(StringComparer.Ordinal).Order(StringComparer.CurrentCultureIgnoreCase).ToArray();
+        var owner = new AutoSuggestBox { Name = "AgentOwnedBy", Header = DesktopResources.Get("AgentOwnedBy"), Text = DesktopAgent.Text(draft.Definition["owned_by"]),
+            QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12), HorizontalAlignment = HorizontalAlignment.Stretch };
+        ControlAppearance.Stock(owner); AutomationProperties.SetName(owner, DesktopResources.Get("AgentOwnedBy")); panel.Children.Add(owner);
+        void OwnerSuggestions(string query = "") => owner.ItemsSource = owners.Where(value => value.Contains(query, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+        owner.GotFocus += (_, _) => { OwnerSuggestions(); owner.IsSuggestionListOpen = true; };
+        owner.TextChanged += (_, args) =>
+        {
+            if (owner.Text.Length == 0) draft.Definition.Remove("owned_by"); else draft.Definition["owned_by"] = owner.Text;
+            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) { OwnerSuggestions(owner.Text); owner.IsSuggestionListOpen = true; }
+        };
+        owner.SuggestionChosen += (_, args) => { if (args.SelectedItem is string value) owner.Text = value; };
+        owner.QuerySubmitted += (_, args) =>
+        {
+            if (args.ChosenSuggestion is string value) owner.Text = value;
+            else { OwnerSuggestions(); owner.IsSuggestionListOpen = true; }
+        };
+        owner.LostFocus += (_, _) => { owner.IsSuggestionListOpen = false; owner.Text = owner.Text.Trim(); };
         var input = new AutoSuggestBox { Name = "AgentTagInput", Header = DesktopResources.Get("AgentTags"),
             QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12), HorizontalAlignment = HorizontalAlignment.Stretch };
         ControlAppearance.Stock(input); AutomationProperties.SetName(input, DesktopResources.Get("AgentTags"));

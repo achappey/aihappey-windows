@@ -32,6 +32,8 @@ public sealed class ChatTargetPicker : Button
     public ChatSelection Selection { get; } = new();
     public event Action? SelectionChanged;
     public Action? Opening { get; set; }
+    // Agent forms allow clearing every model and let Save validation flag the incomplete draft.
+    public bool AllowEmptySelection { get; set; }
     public bool IsSuggestionListOpen { get => popup.IsOpen; set { if (!value) popup.Hide(); else if (IsLoaded && IsEnabled) popup.ShowAt(this); } }
     public string PlaceholderText { get => placeholder; set { placeholder = value; UpdateSummary(); } }
     // Compatibility with existing launch/history paths: Text is a canonical key, never editable display text.
@@ -73,9 +75,9 @@ public sealed class ChatTargetPicker : Button
             if (updating) return;
             // A filtered/grouped row is only a view. Apply changes by ID to the ordered selection.
             foreach (var item in args.AddedItems.OfType<ChatTarget>())
-                if (!Selection.Ids.Contains(item.Id) || Selection.FavoriteRouter) Selection.Toggle(item.Id, multiple, agentMode);
+                if (!Selection.Ids.Contains(item.Id) || Selection.FavoriteRouter) Selection.Toggle(item.Id, multiple, agentMode || AllowEmptySelection);
             foreach (var item in args.RemovedItems.OfType<ChatTarget>())
-                if (args.AddedItems.Count == 0 && Selection.Ids.Contains(item.Id)) Selection.Toggle(item.Id, multiple, agentMode);
+                if (args.AddedItems.Count == 0 && Selection.Ids.Contains(item.Id)) Selection.Toggle(item.Id, multiple, agentMode || AllowEmptySelection);
             SyncSelectedRows(); UpdateSummary(); SelectionChanged?.Invoke();
             if (!multiple) popup.Hide();
         };
