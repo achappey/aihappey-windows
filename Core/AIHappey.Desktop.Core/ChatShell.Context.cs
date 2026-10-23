@@ -23,6 +23,7 @@ public sealed partial class ChatShell
 
     private void PrepareContext()
     {
+        PrepareClipboardAttachments();
         ToolbarControls.Subtle(addContext); ToolbarControls.Label(addContext, DesktopResources.Get("AddContext"));
         contextTagScroll.Content = contextTags;
         var menu = new MenuFlyout { Placement = FlyoutPlacementMode.TopEdgeAlignedLeft };

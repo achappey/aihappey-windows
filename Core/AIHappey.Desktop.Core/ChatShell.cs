@@ -45,7 +45,10 @@ public sealed partial class ChatShell : UserControl
     private readonly ConditionalWeakTable<ListViewItem, ConversationRow> conversationRows = new();
     private readonly InfoBar notice = new() { Name = "ChatNotice", IsOpen = false, IsClosable = true,
         HorizontalAlignment = HorizontalAlignment.Stretch, Visibility = Visibility.Collapsed };
-    private readonly TextBlock noticeMessage = new() { TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, VerticalAlignment = VerticalAlignment.Center };
+    private readonly TextBlock noticeMessage = new() { Name = "ChatNoticeMessage", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+    private readonly ScrollViewer noticeScroll = new() { Name = "ChatNoticeScroll", MaxHeight = 240, Margin = new Thickness(0, 0, 0, 12),
+        HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+        VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly ProgressRing progress = new() { Name = "HeaderActivityProgress", Width = 20, Height = 20, IsActive = false,
         VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private IReadOnlyList<ChatTarget> targets = [];
@@ -218,6 +221,8 @@ public sealed partial class ChatShell : UserControl
         {
             // Keep the selector/profile accessible at narrow widths and high display scaling.
             if (args.NewSize.Width < split.OpenPaneLength + 360) split.IsPaneOpen = false;
+            // Long diagnostics must remain readable without pushing the composer out of view.
+            noticeScroll.MaxHeight = Math.Max(48, Math.Min(240, args.NewSize.Height * .3));
         };
         RenderTranscript();
     }
@@ -248,9 +253,10 @@ public sealed partial class ChatShell : UserControl
         var root = new Grid();
         root.RowDefinitions.Add(new() { Height = GridLength.Auto });
         root.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
-        notice.Content = noticeMessage;
+        noticeScroll.Content = noticeMessage;
+        notice.Content = noticeScroll;
         ControlAppearance.Stock(notice);
-        notice.Closed += (_, _) => notice.Visibility = Visibility.Collapsed;
+        notice.Closed += (_, _) => { if (!notice.IsOpen) notice.Visibility = Visibility.Collapsed; };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(noticeMessage, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Assertive);
         var notices = new StackPanel(); notices.Children.Add(notice); PrepareExplorerNotice(notices);
         root.Children.Add(notices);
@@ -797,7 +803,6 @@ public sealed partial class ChatShell : UserControl
         if (busy || closing || pendingProviderSettingsWrites > 0) return;
         busy = true; operation = new CancellationTokenSource();
         if (!inference) operation.CancelAfter(TimeSpan.FromMinutes(2));
-        notice.IsOpen = false; notice.Visibility = Visibility.Collapsed;
         SetBusy(true, inference);
         try { await action(operation.Token); }
         catch (OperationCanceledException) { Show(DesktopResources.Get("OperationCanceled"), InfoBarSeverity.Warning); }
@@ -844,6 +849,8 @@ public sealed partial class ChatShell : UserControl
         if (activePage == DesktopPage.Videos) { videosPage.Notice(message, severity); return; }
         if (activePage == DesktopPage.Speech) { speechPage.Notice(message, severity); return; }
         if (activePage == DesktopPage.Transcriptions) { transcriptionsPage.Notice(message, severity); return; }
+        // Only dismissal or a newer error may replace an error, never unrelated background work.
+        if (notice.IsOpen && notice.Severity == InfoBarSeverity.Error && severity != InfoBarSeverity.Error) return;
         var label = severity switch
         {
             InfoBarSeverity.Error => DesktopResources.Get("Error"),
@@ -854,6 +861,7 @@ public sealed partial class ChatShell : UserControl
         notice.Title = label;
         notice.Severity = severity;
         noticeMessage.Text = message;
+        noticeScroll.ChangeView(null, 0, null, true);
         notice.Visibility = Visibility.Visible;
         notice.IsOpen = true;
     }

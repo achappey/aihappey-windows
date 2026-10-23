@@ -137,7 +137,7 @@ public partial class App
                 && !Descendants(shell).OfType<TextBlock>().Any(t => t.Text == DesktopResources.Get("Working")),
                 context + ": empty failed assistant produces neither duplicate error card nor Busy");
             Check(notification.IsOpen && notification.Severity == InfoBarSeverity.Error && notification.Visibility == Visibility.Visible
-                && notification.Content is TextBlock { Text: "Exact service error fixture", IsTextSelectionEnabled: true },
+                && Descendants(notification).OfType<TextBlock>().Any(t => t.Text == "Exact service error fixture" && t.IsTextSelectionEnabled),
                 context + ": exact selectable error shown only in top native error notification");
             var errorBackgrounds = Descendants(notification).OfType<Border>().Select(b => b.Background)
                 .OfType<Microsoft.UI.Xaml.Media.SolidColorBrush>().Select(b => b.Color).ToArray();
