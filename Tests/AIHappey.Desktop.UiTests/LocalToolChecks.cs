@@ -28,7 +28,7 @@ public partial class App
         Check(!Descendants(dialog).OfType<FrameworkElement>().Any(e => e.Name is "SendToolOutputImages" or "ToolOutputImagesCard"), context + ": obsolete image-output card is removed from inference tools");
         var toggles = Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").ToArray();
         var pluginCount = DesktopLocalTools.Plugins.Count;
-        Check(toggles.Length == pluginCount && pluginCount == 10 && toggles.All(t => !t.IsOn), context + ": all ten plugins initially off");
+        Check(toggles.Length == pluginCount && pluginCount == 13 && toggles.All(t => !t.IsOn), context + ": all thirteen plugins initially off");
         var alphabeticalPlugins = DesktopLocalTools.Plugins
             .OrderBy(p => DesktopResources.Get(p.ResourceKey), StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(p => p.Id, StringComparer.Ordinal).ToArray();
@@ -90,6 +90,7 @@ public partial class App
             Check(runtime.Tools.Count == toolCount && runtime.Tools.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == toolCount,
                 context + ": native shell captures all enabled plugin routes exactly once");
             foreach (var plugin in DesktopLocalTools.Plugins.Where(p => p.Id is DesktopLocalTools.WindowsSearch or DesktopLocalTools.Files
+                or DesktopLocalTools.Clipboard or DesktopLocalTools.WindowInspector or DesktopLocalTools.Ocr
                 or DesktopLocalTools.Images or DesktopLocalTools.AgentsEditor or DesktopLocalTools.AgentsRuntime or DesktopLocalTools.SkillEditor))
             {
                 var independent = (McpTurnSnapshot)Call(shell, "CaptureSkillRuntime", new ChatPreferences { ActivePlugins = [plugin.Id] })!;

@@ -25,6 +25,24 @@ public sealed partial class ChatShell
             var tools = new LocalWindowsSearchTools(isCurrent: () => !closing && session.HistoryPartition == partition);
             DesktopLocalTools.Register(snapshot, DesktopLocalTools.WindowsSearch, tools.CallAsync);
         }
+        bool Current() => !closing && session.HistoryPartition == partition;
+        if (preferences.PluginEnabled(DesktopLocalTools.Clipboard))
+        {
+            var clipboard = new NativeWindowsClipboard(DispatcherQueue, Current);
+            var tools = new LocalClipboardTools(clipboard.ReadAsync, clipboard.WriteAsync, Current);
+            DesktopLocalTools.Register(snapshot, DesktopLocalTools.Clipboard, tools.CallAsync);
+        }
+        if (preferences.PluginEnabled(DesktopLocalTools.WindowInspector))
+        {
+            var windows = new NativeWindowsWindowInspector(Current);
+            var tools = new LocalWindowTools(windows.ActiveAsync, windows.ListAsync, windows.InspectAsync, Current);
+            DesktopLocalTools.Register(snapshot, DesktopLocalTools.WindowInspector, tools.CallAsync);
+        }
+        if (preferences.PluginEnabled(DesktopLocalTools.Ocr))
+        {
+            var tools = new LocalOcrTools(Current);
+            DesktopLocalTools.Register(snapshot, DesktopLocalTools.Ocr, tools.CallAsync);
+        }
         if (preferences.PluginEnabled(DesktopLocalTools.Files))
         {
             activeSharedFileTools?.Dispose();

@@ -64,6 +64,11 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/SharedFileAccess.cs" Link="Core/SharedFileAccess.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalSharedFileTools.cs" Link="Core/LocalSharedFileTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalWindowsSearchTools.cs" Link="Core/LocalWindowsSearchTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalClipboardTools.cs" Link="Core/LocalClipboardTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalWindowTools.cs" Link="Core/LocalWindowTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/NativeWindowsWindowInspector.cs" Link="Core/NativeWindowsWindowInspector.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/NativeWindowsAutomation.cs" Link="Core/NativeWindowsAutomation.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalOcrTools.cs" Link="Core/LocalOcrTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/NativeWindowsSearch.cs" Link="Core/NativeWindowsSearch.cs" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/LocalToolDefinitions.json" LogicalName="Desktop.LocalToolDefinitions" />
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/DesktopToolDefinitions.json" LogicalName="Desktop.DesktopToolDefinitions" />

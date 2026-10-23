@@ -19,6 +19,11 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--windows-tools-only"))
+    {
+        await WindowsToolRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} Windows tool checks passed."); return;
+    }
     if (args.Contains("--chat-provider-forms-only"))
     {
         await ChatProviderFormRegressionTests.RunAsync(Check, root);

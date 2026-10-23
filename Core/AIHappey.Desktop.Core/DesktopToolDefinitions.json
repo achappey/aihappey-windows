@@ -17,6 +17,69 @@
       "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false }
     }
   ],
+  "windows-clipboard": [
+    {
+      "name": "local_clipboard_get",
+      "title": "Read clipboard text",
+      "description": "Read the current Windows clipboard as plain text, locally. Returns hasText and text; empty/non-text clipboards return hasText=false. Text is limited to 50,000 characters with truncated=true when shortened. Does not read images, files, clipboard history, or monitor changes. Clipboard contents may be sensitive and returned text enters the normal chat/tool-result flow. Uses the existing execute-then-review flow, not a pre-access permission prompt.",
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_clipboard_set",
+      "title": "Copy text to the clipboard",
+      "description": "Replace the current Windows clipboard contents with plain text (up to 50,000 characters). An empty string copies empty text. Existing clipboard formats/content are replaced; this cannot be undone by this tool. Does not read clipboard history or start monitoring. Requests no cloud/history storage for the copied data. Uses the existing execute-then-review flow, not a pre-access permission prompt.",
+      "inputSchema": { "type": "object", "properties": { "text": { "type": "string", "maxLength": 50000 } }, "required": ["text"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": true, "idempotentHint": false, "openWorldHint": false }
+    }
+  ],
+  "windows-window-inspector": [
+    {
+      "name": "local_windows_get_active_window",
+      "title": "Get the active window",
+      "description": "Read metadata for the current foreground Windows window, which may be AIHappey itself. Returns window handle, process ID/name, title, class name and minimized state, or window=null if none is available. Does not switch focus, capture the screen or inspect UI controls. Metadata is live and may change. Uses the existing execute-then-review flow.",
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_windows_list_windows",
+      "title": "List open windows",
+      "description": "List visible, non-cloaked top-level Windows windows, including minimized windows, with handles, process IDs/names, titles and class names. Not an inventory of every running/background process or windows on other desktops. Results are bounded and may change. Use a returned windowHandle and processId with local_windows_inspect_window. No focusing, screen capture or UI actions. Uses the existing execute-then-review flow.",
+      "inputSchema": { "type": "object", "properties": { "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 } }, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_windows_inspect_window",
+      "title": "Inspect window controls",
+      "description": "Read a bounded Windows UI Automation control-view tree for one visible top-level window returned by the window tools. Supply both its windowHandle and processId to detect stale/reused handles. Returns flat nodes with parent IDs, depth, control type, name, automation ID, class, enabled/offscreen status and available plain-text edit values. Password/protected nodes are redacted and not traversed. Never clicks, invokes, types, focuses, expands, captures screens, or elevates. Inaccessible/elevated apps, custom controls and hung providers may yield partial results or a safe error. Depth, nodes, text and waiting time are capped. Sensitive visible text may enter the normal chat/tool-result flow. Uses the existing execute-then-review flow, not a pre-access permission prompt.",
+      "inputSchema": { "type": "object", "properties": {
+        "windowHandle": { "type": "string", "pattern": "^0x[0-9A-Fa-f]{1,16}$", "description": "Opaque hexadecimal windowHandle returned by a window tool; never a JSON number." },
+        "processId": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "maxDepth": { "type": "integer", "minimum": 1, "maximum": 8, "default": 3 },
+        "maxNodes": { "type": "integer", "minimum": 1, "maximum": 500, "default": 200 }
+      }, "required": ["windowHandle", "processId"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    }
+  ],
+  "windows-ocr": [
+    {
+      "name": "local_ocr_list_languages",
+      "title": "List local OCR languages",
+      "description": "List installed Windows OCR recognition languages and the maximum supported image dimension. Runs locally and installs/downloads nothing. An empty list means the user needs to install a Windows OCR language pack through Windows Settings.",
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false }
+    },
+    {
+      "name": "local_ocr_recognize_text",
+      "title": "Recognize text in a local image",
+      "description": "Extract text from a local PNG, JPEG, BMP or TIFF image with installed Windows OCR, without any model/API/network request. Supply an absolute local path, optionally an installed BCP-47 language tag from local_ocr_list_languages; otherwise Windows user languages are used. Reads only the first image frame. Rejects network/device paths, links, oversized files and images above 16 megapixels or the native OCR dimension limit; does not resize. Returns text and bounded lines/word rectangles in decoded-image pixels, with truncation indicators. Maximum file size 20 MiB, text 50,000 characters, lines 500, words 2,000. No screen capture, PDF processing, language downloads, or external OCR fallback. Extracted text enters the normal chat/tool-result flow.",
+      "inputSchema": { "type": "object", "properties": {
+        "path": { "type": "string", "minLength": 1, "description": "Absolute local image path; for example C:\\Users\\Alice\\Pictures\\error.png." },
+        "language": { "type": "string", "minLength": 1, "maxLength": 85, "description": "Optional installed Windows OCR language tag, such as en-US or nl-NL." }
+      }, "required": ["path"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false }
+    }
+  ],
   "local-files": [
     {
       "name": "local_files_list",
