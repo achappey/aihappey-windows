@@ -31,6 +31,34 @@
       "description": "Replace the current Windows clipboard contents with plain text (up to 50,000 characters). An empty string copies empty text. Existing clipboard formats/content are replaced; this cannot be undone by this tool. Does not read clipboard history or start monitoring. Requests no cloud/history storage for the copied data. Uses the existing execute-then-review flow, not a pre-access permission prompt.",
       "inputSchema": { "type": "object", "properties": { "text": { "type": "string", "maxLength": 50000 } }, "required": ["text"], "additionalProperties": false },
       "annotations": { "readOnlyHint": false, "destructiveHint": true, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_clipboard_get_image",
+      "title": "Read a clipboard image",
+      "description": "Read the current Windows clipboard bitmap once and return inline PNG with text metadata. An empty/non-bitmap clipboard returns hasImage=false. Maximum input/output image size 20 MiB and decoded size 16 megapixels; unsupported or oversized images fail safely. No files are saved, clipboard history is not read, and no monitoring starts. Sensitive content enters the normal chat/tool-result flow. PNG bytes exist only in the image block and respect Images in Tool Output Filter; metadata respects Text. Uses existing execute-then-review approval, not a pre-access prompt.",
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_clipboard_set_image",
+      "title": "Copy a local image to the clipboard",
+      "description": "Replace all current clipboard content with a bitmap decoded from one existing absolute local PNG/JPEG/BMP/TIFF path. Reads only the first frame, limited to 20 MiB encoded input/output and 16 megapixels. Rejects network/device paths, links, corrupt and oversized images; no downloads, base64 input, temporary files or saved images. Clipboard history/roaming is disabled. Replacement happens before existing result review and cannot be undone by rejecting review. Returned status respects Text in Tool Output Filter.",
+      "inputSchema": { "type": "object", "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 32700 } }, "required": ["path"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": true, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_clipboard_get_files",
+      "title": "Read clipboard file references",
+      "description": "Read up to 100 existing local file references from the current Windows clipboard storage-item format, limited to 50,000 total path characters. Returns paths, count, hasFiles, hasMore and unsupportedCount. Non-file/virtual/folder/network/device/link or unavailable references are omitted without exposing their paths. Does not read file contents, traverse folders, copy/move files, register Files-page shares, inspect clipboard history, or monitor changes. Paths are text metadata covered by Text in Tool Output Filter. Uses existing execute-then-review approval.",
+      "inputSchema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_clipboard_set_files",
+      "title": "Copy file references to the clipboard",
+      "description": "Replace current clipboard content with copy-only references to 1-100 existing absolute local files, limited to 50,000 total path characters. Validates every reference before replacement; rejects folders, network/device paths and links. Does not read contents, move/delete files, traverse folders, execute files, or register Files-page shares. Another application can later paste the references; this tool does not paste. History/roaming is disabled. Uses existing execute-then-review flow: rejecting review cannot undo replacement. Returned status/count respects Text in Tool Output Filter and does not echo paths.",
+      "inputSchema": { "type": "object", "properties": { "paths": { "type": "array", "minItems": 1, "maxItems": 100, "items": { "type": "string", "minLength": 1, "maxLength": 32700 } } }, "required": ["paths"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": true, "idempotentHint": false, "openWorldHint": false }
     }
   ],
   "windows-window-inspector": [
@@ -78,6 +106,62 @@
         "screenId": { "type": "string", "minLength": 1, "maxLength": 128, "description": "Required only for source=screen; use an identity returned by local_windows_list_screens. Ignored for window/picker." }
       }, "additionalProperties": false },
       "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_windows_activate_window",
+      "title": "Activate a window",
+      "description": "Request foreground activation of one visible top-level local window using Win32. Supply its exact windowHandle and processId from the window tools; stale identities fail. Does not restore minimized windows: use restore separately if needed. Windows may refuse foreground activation; submitted/completed and observed foreground/minimized/bounds report the actual outcome. No clicks, keystrokes, input-thread attachment, elevation, or foreground-lock bypass. Uses existing execute-once-then-review flow; rejected review cannot undo focus changes. Status respects Text in Tool Output Filter.",
+      "inputSchema": { "type": "object", "properties": {
+        "windowHandle": { "type": "string", "pattern": "^0x[0-9A-Fa-f]{1,16}$" },
+        "processId": { "type": "integer", "minimum": 1, "maximum": 2147483647 }
+      }, "required": ["windowHandle", "processId"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_windows_minimize_window",
+      "title": "Minimize a window",
+      "description": "Request Win32 minimization of one visible top-level window identified by windowHandle and processId. Revalidates identity immediately before acting. Does not close the window, automate controls, send input or elevate. The asynchronous native request is observed for up to one second; submitted=true with completed=false means queued/unconfirmed, not guaranteed success. Returns current foreground/minimized/bounds. Uses existing execute-once-then-review flow; rejecting review cannot undo minimization and does not repeat it. Status respects Text in Tool Output Filter.",
+      "inputSchema": { "type": "object", "properties": {
+        "windowHandle": { "type": "string", "pattern": "^0x[0-9A-Fa-f]{1,16}$" },
+        "processId": { "type": "integer", "minimum": 1, "maximum": 2147483647 }
+      }, "required": ["windowHandle", "processId"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_windows_restore_window",
+      "title": "Restore a window",
+      "description": "Request Win32 restoration of a minimized/maximized visible top-level window using its windowHandle and processId. Restoration may activate the target; no foreground-lock bypass is attempted. Stale identities fail safely. Returns submitted/completed and observed foreground/minimized/bounds after up to one second; a queued request is not guaranteed success. No input simulation, control automation or elevation. Executes once before existing result review; rejecting review cannot undo restoration. Status respects Text in Tool Output Filter.",
+      "inputSchema": { "type": "object", "properties": {
+        "windowHandle": { "type": "string", "pattern": "^0x[0-9A-Fa-f]{1,16}$" },
+        "processId": { "type": "integer", "minimum": 1, "maximum": 2147483647 }
+      }, "required": ["windowHandle", "processId"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    },
+    {
+      "name": "local_windows_reposition_window",
+      "title": "Move or resize a window",
+      "description": "Request Win32 positioning of one visible top-level window identified by windowHandle and processId. x/y are signed virtual-desktop pixel coordinates, including negative coordinates on secondary screens. Supply both width and height to resize (1-32768 pixels each), or omit both to preserve size. Coordinate sums must fit signed 32-bit integers. Does not activate, restore, change z-order, click, type or elevate. Minimized/maximized apps may ignore or constrain positioning. Returns observed bounds and submitted/completed after up to one second; accepted/queued is not guaranteed completion. Executes once before existing result review; rejection cannot undo changes. Status respects Text in Tool Output Filter.",
+      "inputSchema": { "type": "object", "properties": {
+        "windowHandle": { "type": "string", "pattern": "^0x[0-9A-Fa-f]{1,16}$" },
+        "processId": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "x": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+        "y": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+        "width": { "type": "integer", "minimum": 1, "maximum": 32768 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 32768 }
+      }, "required": ["windowHandle", "processId", "x", "y"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
+    }
+  ],
+  "windows-notifications": [
+    {
+      "name": "local_notifications_show",
+      "title": "Show a Windows notification",
+      "description": "Submit one immediate native Windows app notification with plain-text title and body through AppNotificationManager. No buttons, click commands, custom activation, scheduling, history management, downloads or network access. Returns submitted=true and the native notification ID, not a guarantee it was displayed/read: Windows notification settings or Do Not Disturb may suppress presentation. Unsupported, disabled or unregistered hosts fail safely without fallback infrastructure. No app-side notification state is stored. Submission happens once before existing result review; rejecting review cannot retract it. Returned status respects Text in Tool Output Filter and does not echo the title/body.",
+      "inputSchema": { "type": "object", "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "body": { "type": "string", "minLength": 1, "maxLength": 2000 }
+      }, "required": ["title", "body"], "additionalProperties": false },
+      "annotations": { "readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false }
     }
   ],
   "windows-ocr": [

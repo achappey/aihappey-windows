@@ -65,6 +65,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalSharedFileTools.cs" Link="Core/LocalSharedFileTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalWindowsSearchTools.cs" Link="Core/LocalWindowsSearchTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalClipboardTools.cs" Link="Core/LocalClipboardTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalNotificationTools.cs" Link="Core/LocalNotificationTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalWindowTools.cs" Link="Core/LocalWindowTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalSystemInformationTools.cs" Link="Core/LocalSystemInformationTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalAppLauncherTools.cs" Link="Core/LocalAppLauncherTools.cs" />

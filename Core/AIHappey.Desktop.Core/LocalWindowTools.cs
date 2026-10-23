@@ -14,21 +14,30 @@ public sealed record LocalWindowInspection(LocalWindowInfo Window, IReadOnlyList
 public sealed record LocalScreenInfo(string ScreenId, int X, int Y, int Width, int Height, bool Primary);
 public sealed record LocalWindowCaptureRequest(string Source, string? WindowHandle = null, int? ProcessId = null, string? ScreenId = null);
 public sealed record LocalWindowCapture(string Source, string Name, int Width, int Height, byte[] Png, bool PickerFallback);
+public sealed record LocalWindowActionRequest(string Action, string WindowHandle, int ProcessId,
+    int X = 0, int Y = 0, int? Width = null, int? Height = null);
+public sealed record LocalWindowActionResult(bool Submitted, bool Completed, bool Foreground, bool Minimized,
+    int X, int Y, int Width, int Height);
 
-/// <summary>Read-only window inspection and one-shot capture. No automation actions or saved screenshots.</summary>
+/// <summary>Bounded window inspection, capture and explicit Win32 window management. No input simulation.</summary>
 public sealed class LocalWindowTools(
     Func<CancellationToken, Task<LocalWindowInfo?>> active,
     Func<int, CancellationToken, Task<LocalWindowList>> list,
     Func<LocalWindowInspectionRequest, CancellationToken, Task<LocalWindowInspection>> inspect,
     Func<bool>? isCurrent = null,
     Func<CancellationToken, Task<IReadOnlyList<LocalScreenInfo>>>? screens = null,
-    Func<LocalWindowCaptureRequest, CancellationToken, Task<LocalWindowCapture?>>? capture = null)
+    Func<LocalWindowCaptureRequest, CancellationToken, Task<LocalWindowCapture?>>? capture = null,
+    Func<LocalWindowActionRequest, CancellationToken, Task<LocalWindowActionResult>>? manage = null)
 {
     public const string ActiveTool = "local_windows_get_active_window";
     public const string ListTool = "local_windows_list_windows";
     public const string InspectTool = "local_windows_inspect_window";
     public const string ScreensTool = "local_windows_list_screens";
     public const string CaptureTool = "local_windows_capture";
+    public const string ActivateTool = "local_windows_activate_window";
+    public const string MinimizeTool = "local_windows_minimize_window";
+    public const string RestoreTool = "local_windows_restore_window";
+    public const string RepositionTool = "local_windows_reposition_window";
     public const int MaximumNodes = 500;
     public const int MaximumTextCharacters = 50_000;
     public const int MaximumCapturePixels = 16_777_216;
@@ -87,9 +96,42 @@ public sealed class LocalWindowTools(
                 return DesktopLocalTools.Result(null,
                     DesktopLocalTools.Text(JsonSerializer.Serialize(new { image.Source, image.Name, image.Width, image.Height, image.PickerFallback, mimeType = "image/png" }, JsonSerializerOptions.Web)),
                     new JsonObject { ["type"] = "image", ["mimeType"] = "image/png", ["data"] = Convert.ToBase64String(image.Png) });
+            case ActivateTool:
+            case MinimizeTool:
+            case RestoreTool:
+            case RepositionTool:
+                var action = ActionRequest(name, input);
+                if (manage is null) throw new LocalToolException(DesktopResources.Get("LocalWindowActionUnavailable"));
+                Check(ct); var outcome = await manage(action, ct); Check(ct);
+                return DesktopLocalTools.Result(null, DesktopLocalTools.Text(JsonSerializer.Serialize(outcome, JsonSerializerOptions.Web)));
             default: throw new LocalToolException("Unsupported window tool.");
         }
     }, ct);
+
+    private static LocalWindowActionRequest ActionRequest(string name, JsonElement input)
+    {
+        var handle = DesktopLocalTools.Required(input, "windowHandle"); _ = ParseHandle(handle);
+        if (!input.TryGetProperty("processId", out var pid) || pid.ValueKind != JsonValueKind.Number || !pid.TryGetInt32(out var processId) || processId < 1)
+            throw new LocalToolException(DesktopResources.Get("LocalWindowInvalid"));
+        var action = name switch { ActivateTool => "activate", MinimizeTool => "minimize", RestoreTool => "restore", _ => "reposition" };
+        if (action != "reposition") return new(action, handle, processId);
+        int Coordinate(string field)
+        {
+            if (!input.TryGetProperty(field, out var value) || value.ValueKind != JsonValueKind.Number || !value.TryGetInt32(out var number))
+                throw new LocalToolException(DesktopResources.Get("LocalWindowBoundsInvalid"));
+            return number;
+        }
+        var x = Coordinate("x"); var y = Coordinate("y");
+        int? width = null, height = null;
+        if (input.TryGetProperty("width", out _) || input.TryGetProperty("height", out _))
+        {
+            width = Coordinate("width"); height = Coordinate("height");
+            if (width is < 1 or > 32768 || height is < 1 or > 32768
+                || (long)x + width > int.MaxValue || (long)y + height > int.MaxValue)
+                throw new LocalToolException(DesktopResources.Get("LocalWindowBoundsInvalid"));
+        }
+        return new(action, handle, processId, x, y, width, height);
+    }
 
     private static LocalWindowCaptureRequest CaptureRequest(JsonElement input)
     {

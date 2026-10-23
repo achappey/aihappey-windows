@@ -28,7 +28,7 @@ public partial class App
         Check(!Descendants(dialog).OfType<FrameworkElement>().Any(e => e.Name is "SendToolOutputImages" or "ToolOutputImagesCard"), context + ": obsolete image-output card is removed from inference tools");
         var toggles = Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").ToArray();
         var pluginCount = DesktopLocalTools.Plugins.Count;
-        Check(toggles.Length == pluginCount && pluginCount == 15 && toggles.All(t => !t.IsOn), context + ": all fifteen plugins initially off");
+        Check(toggles.Length == pluginCount && pluginCount == 16 && toggles.All(t => !t.IsOn), context + ": all sixteen plugins initially off");
         var alphabeticalPlugins = DesktopLocalTools.Plugins
             .OrderBy(p => DesktopResources.Get(p.ResourceKey), StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(p => p.Id, StringComparer.Ordinal).ToArray();

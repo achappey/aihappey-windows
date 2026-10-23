@@ -13,15 +13,17 @@ internal static class WindowsToolRegressionTests
     {
         var ids = new[] { DesktopLocalTools.Clipboard, DesktopLocalTools.WindowInspector, DesktopLocalTools.Ocr };
         var definitions = DesktopLocalTools.Plugins.Where(p => ids.Contains(p.Id)).SelectMany(p => p.Tools).ToArray();
-        check(definitions.Length == 9 && definitions.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 9,
-            "Windows tools: three existing plugins expose nine unique contracts including capture");
+        check(definitions.Length == 17 && definitions.Select(t => t.GetProperty("name").GetString()).Distinct().Count() == 17,
+            "Windows tools: three existing plugins expose seventeen unique contracts including capture and management");
         check(definitions.All(t => t.GetProperty("name").GetString()!.StartsWith("local_", StringComparison.Ordinal)
             && !t.GetProperty("inputSchema").GetProperty("additionalProperties").GetBoolean()
             && !t.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean()), "Windows tools: local naming, closed schemas and no open-world access");
-        check(definitions.Where(t => t.GetProperty("name").GetString() != LocalClipboardTools.SetTool)
-            .All(t => t.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean())
-            && DesktopLocalTools.Definition(LocalClipboardTools.SetTool).GetProperty("annotations").GetProperty("destructiveHint").GetBoolean(),
-            "Windows tools: only clipboard set mutates state and declares replacement");
+        var mutations = new[] { LocalClipboardTools.SetTool, LocalClipboardTools.SetImageTool, LocalClipboardTools.SetFilesTool,
+            LocalWindowTools.ActivateTool, LocalWindowTools.MinimizeTool, LocalWindowTools.RestoreTool, LocalWindowTools.RepositionTool };
+        check(definitions.All(t => t.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean() != mutations.Contains(t.GetProperty("name").GetString()))
+            && new[] { LocalClipboardTools.SetTool, LocalClipboardTools.SetImageTool, LocalClipboardTools.SetFilesTool }
+                .All(n => DesktopLocalTools.Definition(n).GetProperty("annotations").GetProperty("destructiveHint").GetBoolean()),
+            "Windows tools: clipboard replacement and window mutations have accurate annotations");
         check(ids.All(id => !new ChatPreferences().PluginEnabled(id) && !JsonSerializer.Deserialize<ChatPreferences>("{}")!.PluginEnabled(id)),
             "Windows tools: new and migrated preferences default all three off");
         var settingsPath = Path.Combine(root, "windows-tool-settings");

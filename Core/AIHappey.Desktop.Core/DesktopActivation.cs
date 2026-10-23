@@ -179,6 +179,7 @@ public static class DesktopActivation
     }
     public static void Stop()
     {
+        NativeWindowsNotifications.Stop();
         lock (gate) { stopped = true; pending.Clear(); }
         if (primary is { IsCurrent: true }) { primary.Activated -= OnActivated; primary.UnregisterKey(); }
     }

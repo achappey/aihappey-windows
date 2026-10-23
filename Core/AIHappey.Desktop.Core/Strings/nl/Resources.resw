@@ -1134,6 +1134,13 @@
   <data name="LocalPluginOcr" xml:space="preserve"><value>Windows OCR</value></data>
   <data name="LocalPluginSystemInformation" xml:space="preserve"><value>Windows Systeeminformatie</value></data>
   <data name="LocalPluginAppLauncher" xml:space="preserve"><value>Windows Appstarter</value></data>
+  <data name="LocalPluginNotifications" xml:space="preserve"><value>Windows Meldingen</value></data>
+  <data name="LocalWindowActionUnavailable" xml:space="preserve"><value>De vensteractie is niet beschikbaar of is geweigerd door Windows. Het venster is mogelijk gesloten, beveiligd of reageert niet.</value></data>
+  <data name="LocalWindowBoundsInvalid" xml:space="preserve"><value>Geef gehele bureaubladcoördinaten op en bij formaatwijziging zowel breedte als hoogte van 1 tot 32768 pixels, zonder coördinatenoverloop.</value></data>
+  <data name="LocalClipboardImageInvalid" xml:space="preserve"><value>De afbeelding is niet ondersteund, ongeldig of groter dan 20 MiB of 16 megapixels.</value></data>
+  <data name="LocalClipboardFilesInvalid" xml:space="preserve"><value>Geef 1–100 bestaande lokale bestandspaden op, met maximaal 50.000 tekens in totaal. Mappen, netwerk-/apparaatpaden en koppelingen worden niet ondersteund.</value></data>
+  <data name="LocalNotificationTextInvalid" xml:space="preserve"><value>Geef geldige niet-lege meldingstekst op: een titel van maximaal 200 tekens en een bericht van maximaal 2000 tekens.</value></data>
+  <data name="LocalNotificationUnavailable" xml:space="preserve"><value>Windows-meldingen zijn niet beschikbaar of uitgeschakeld voor deze toepassing. Het verzenden van de melding is niet bevestigd.</value></data>
   <data name="LocalCaptureUnavailable" xml:space="preserve"><value>Het venster of scherm kon niet worden vastgelegd. Het is mogelijk gesloten, beveiligd, geminimaliseerd of niet beschikbaar in deze Windows-versie.</value></data>
   <data name="LocalCaptureTooLarge" xml:space="preserve"><value>De opname overschrijdt de ondersteunde afbeeldingsgrootte (16 megapixels of 20 MiB PNG).</value></data>
   <data name="LocalCaptureInvalidSource" xml:space="preserve"><value>Kies opnamebron window, screen of picker. Laat source weg om de Windows-kiezer te openen.</value></data>

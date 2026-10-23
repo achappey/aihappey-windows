@@ -42,6 +42,52 @@ internal sealed class NativeWindowsWindowInspector(Func<bool>? isCurrent = null)
 
     public Task<LocalWindowInspection> InspectAsync(LocalWindowInspectionRequest request, CancellationToken ct) => NativeWindowsAutomation.InspectAsync(request, ct, isCurrent);
 
+    public Task<LocalWindowActionResult> ManageAsync(LocalWindowActionRequest request, CancellationToken ct) => Task.Run(async () =>
+    {
+        Check(ct); RequireWindow(request.WindowHandle, request.ProcessId);
+        var handle = LocalWindowTools.ParseHandle(request.WindowHandle);
+        if (request.Action is not ("activate" or "minimize" or "restore" or "reposition"))
+            throw new LocalToolException(DesktopResources.Get("LocalWindowActionUnavailable"));
+        if (!GetWindowRect(handle, out var original)) throw new LocalToolException(DesktopResources.Get("LocalWindowActionUnavailable"));
+        var width = request.Width ?? ((long)original.Right - original.Left);
+        var height = request.Height ?? ((long)original.Bottom - original.Top);
+        if (request.Action == "reposition" && (request.Width.HasValue != request.Height.HasValue
+            || width is < 1 or > 32768 || height is < 1 or > 32768
+            || (long)request.X + width > int.MaxValue || (long)request.Y + height > int.MaxValue))
+            throw new LocalToolException(DesktopResources.Get("LocalWindowBoundsInvalid"));
+        Check(ct); RequireWindow(request.WindowHandle, request.ProcessId);
+        // Asynchronous show/position calls do not block on a foreign window's message loop.
+        // No AttachThreadInput, synthetic keys, retries, elevation, or foreground-lock bypass.
+        var submitted = request.Action switch
+        {
+            "activate" => SetForegroundWindow(handle),
+            "minimize" => ShowWindowAsync(handle, 6 /* SW_MINIMIZE */),
+            "restore" => ShowWindowAsync(handle, 9 /* SW_RESTORE */),
+            _ => SetWindowPos(handle, 0, request.X, request.Y, (int)width, (int)height,
+                0x4000 /* ASYNCWINDOWPOS */ | 0x0010 /* NOACTIVATE */ | 0x0004 /* NOZORDER */ | 0x0200 /* NOOWNERZORDER */
+                | (request.Width is null ? 0x0001u /* NOSIZE */ : 0))
+        };
+        var watch = Stopwatch.StartNew();
+        while (true)
+        {
+            Check(ct); RequireWindow(request.WindowHandle, request.ProcessId);
+            if (!GetWindowRect(handle, out var bounds)) throw new LocalToolException(DesktopResources.Get("LocalWindowActionUnavailable"));
+            var foreground = GetForegroundWindow() == handle; var minimized = IsIconic(handle);
+            var completed = request.Action switch
+            {
+                "activate" => foreground,
+                "minimize" => minimized,
+                "restore" => !minimized && !IsZoomed(handle),
+                _ => bounds.Left == request.X && bounds.Top == request.Y
+                    && (request.Width is null || (long)bounds.Right - bounds.Left == width && (long)bounds.Bottom - bounds.Top == height)
+            };
+            if (!submitted || completed || watch.ElapsedMilliseconds >= 1000)
+                return new LocalWindowActionResult(submitted, completed, foreground, minimized,
+                    bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top);
+            await Task.Delay(25, ct);
+        }
+    }, ct);
+
     public Task<IReadOnlyList<LocalScreenInfo>> ScreensAsync(CancellationToken ct) => Task.Run<IReadOnlyList<LocalScreenInfo>>(() =>
     {
         Check(ct);
@@ -107,6 +153,11 @@ internal sealed class NativeWindowsWindowInspector(Func<bool>? isCurrent = null)
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool EnumDisplayMonitors(nint dc, nint clip, MonitorCallback callback, nint state);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetMonitorInfo(nint monitor, ref MonitorInfo info);
     [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetForegroundWindow(nint handle);
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool ShowWindowAsync(nint handle, int command);
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool SetWindowPos(nint handle, nint after, int x, int y, int width, int height, uint flags);
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetWindowRect(nint handle, out Rect bounds);
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsZoomed(nint handle);
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool EnumWindows(EnumWindowCallback callback, nint state);
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsWindow(nint handle);
     [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsWindowVisible(nint handle);

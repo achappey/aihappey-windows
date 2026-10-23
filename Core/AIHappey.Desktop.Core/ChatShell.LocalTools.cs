@@ -29,7 +29,8 @@ public sealed partial class ChatShell
         if (preferences.PluginEnabled(DesktopLocalTools.Clipboard))
         {
             var clipboard = new NativeWindowsClipboard(DispatcherQueue, Current);
-            var tools = new LocalClipboardTools(clipboard.ReadAsync, clipboard.WriteAsync, Current);
+            var tools = new LocalClipboardTools(clipboard.ReadAsync, clipboard.WriteAsync, Current,
+                clipboard.ReadImageAsync, clipboard.WriteImageAsync, clipboard.ReadFilesAsync, clipboard.WriteFilesAsync);
             DesktopLocalTools.Register(snapshot, DesktopLocalTools.Clipboard, tools.CallAsync);
         }
         if (preferences.PluginEnabled(DesktopLocalTools.WindowInspector))
@@ -37,7 +38,7 @@ public sealed partial class ChatShell
             var windows = new NativeWindowsWindowInspector(Current);
             var capture = new NativeWindowsCapture(DispatcherQueue,
                 () => Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId), Current);
-            var tools = new LocalWindowTools(windows.ActiveAsync, windows.ListAsync, windows.InspectAsync, Current, windows.ScreensAsync, capture.CaptureAsync);
+            var tools = new LocalWindowTools(windows.ActiveAsync, windows.ListAsync, windows.InspectAsync, Current, windows.ScreensAsync, capture.CaptureAsync, windows.ManageAsync);
             DesktopLocalTools.Register(snapshot, DesktopLocalTools.WindowInspector, tools.CallAsync);
         }
         if (preferences.PluginEnabled(DesktopLocalTools.SystemInformation))
@@ -50,6 +51,12 @@ public sealed partial class ChatShell
             var launcher = new NativeWindowsAppLauncher(Current);
             var tools = new LocalAppLauncherTools(launcher.ListAsync, launcher.LaunchAsync, Current);
             DesktopLocalTools.Register(snapshot, DesktopLocalTools.AppLauncher, tools.CallAsync);
+        }
+        if (preferences.PluginEnabled(DesktopLocalTools.Notifications))
+        {
+            var notifications = new NativeWindowsNotifications(DispatcherQueue, Current);
+            var tools = new LocalNotificationTools(notifications.ShowAsync, Current);
+            DesktopLocalTools.Register(snapshot, DesktopLocalTools.Notifications, tools.CallAsync);
         }
         if (preferences.PluginEnabled(DesktopLocalTools.Ocr))
         {

@@ -1139,6 +1139,13 @@
   <data name="LocalPluginOcr" xml:space="preserve"><value>Windows OCR</value></data>
   <data name="LocalPluginSystemInformation" xml:space="preserve"><value>Windows System Information</value></data>
   <data name="LocalPluginAppLauncher" xml:space="preserve"><value>Windows App Launcher</value></data>
+  <data name="LocalPluginNotifications" xml:space="preserve"><value>Windows Notifications</value></data>
+  <data name="LocalWindowActionUnavailable" xml:space="preserve"><value>The window action is unavailable or was refused by Windows. The target may be closed, protected, or unresponsive.</value></data>
+  <data name="LocalWindowBoundsInvalid" xml:space="preserve"><value>Supply integer desktop coordinates and, when resizing, both width and height from 1 to 32768 pixels without coordinate overflow.</value></data>
+  <data name="LocalClipboardImageInvalid" xml:space="preserve"><value>The image is unsupported, invalid, or exceeds 20 MiB or 16 megapixels.</value></data>
+  <data name="LocalClipboardFilesInvalid" xml:space="preserve"><value>Supply 1–100 existing local file paths, up to 50,000 total path characters. Folders, network/device paths, and links are unsupported.</value></data>
+  <data name="LocalNotificationTextInvalid" xml:space="preserve"><value>Supply valid nonblank notification text: a title of up to 200 characters and a body of up to 2000 characters.</value></data>
+  <data name="LocalNotificationUnavailable" xml:space="preserve"><value>Windows notifications are unavailable or disabled for this application. The notification was not confirmed as submitted.</value></data>
   <data name="LocalCaptureUnavailable" xml:space="preserve"><value>The window or screen could not be captured. It may be closed, protected, minimized, or unavailable on this Windows version.</value></data>
   <data name="LocalCaptureTooLarge" xml:space="preserve"><value>The capture exceeds the supported image size (16 megapixels or 20 MiB PNG).</value></data>
   <data name="LocalCaptureInvalidSource" xml:space="preserve"><value>Choose capture source window, screen, or picker. Omit source to open the native Windows picker.</value></data>
