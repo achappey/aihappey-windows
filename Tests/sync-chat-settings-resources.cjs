@@ -13,7 +13,7 @@ const flatten = (value, prefix = '', result = {}) => {
   return result;
 };
 const escape = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const common = ['reasoning', 'reasoningEffort', 'reasoningSummary', 'reasoningContext', 'reasoningMode', 'webSearch', 'searchContextSize', 'country', 'region', 'city', 'timezone', 'image_generation', 'model', 'partial_images', 'quality', 'input_fidelity', 'moderation', 'background', 'size', 'code_execution', 'other', 'parallelToolCalls', 'add', 'delete', 'save', 'cancel', 'enabled', 'toolChoice', 'maxToolCalls', 'stopTools', 'none', 'auto', 'required'];
+const common = ['reasoning', 'reasoningEffort', 'reasoningSummary', 'reasoningContext', 'reasoningMode', 'webSearch', 'searchContextSize', 'country', 'region', 'city', 'timezone', 'image_generation', 'model', 'partial_images', 'quality', 'input_fidelity', 'moderation', 'background', 'size', 'code_execution', 'other', 'parallelToolCalls', 'add', 'delete', 'save', 'cancel', 'enabled', 'toolChoice', 'maxToolCalls', 'stopTools', 'none', 'auto', 'required', 'low', 'medium', 'high', 'xhigh', 'max', 'maxOutputTokens', 'budget', 'mode', 'webFetch', 'providerDefault'];
 const custom = {
   en: {
     General: 'General', ChatSettings: 'Chat settings', ChatMaxOutputTokens: 'Maximum output tokens', ChatOptional: 'Optional', ChatRestoreDefaults: 'Restore defaults',
@@ -22,7 +22,7 @@ const custom = {
     ChatToolRequiredHint: 'Required is available when a maximum tool-call count or a tool that ends the turn is configured.',
     ChatNoAvailableTools: 'No client tools are available with the current selections and policy.', ChatToolUnavailable: 'Currently unavailable',
     ChatShellSkillsDeferred: 'Skills catalog selection is not available in this version. Existing native shell skills are preserved.',
-    ChatForm_artificialIntelligence: 'Artificial Intelligence', ChatForm_inherit: 'Not specified', ChatForm_on: 'On', ChatForm_off: 'Off', ChatForm_up: 'Up', ChatForm_down: 'Down', ChatForm_edit: 'Edit'
+    ChatForm_artificialIntelligence: 'Artificial Intelligence', ChatForm_inherit: 'Not specified', ChatForm_on: 'On', ChatForm_off: 'Off', ChatForm_up: 'Up', ChatForm_down: 'Down', ChatForm_edit: 'Edit', ChatForm_bash: 'Bash'
   },
   nl: {
     General: 'Algemeen', ChatSettings: 'Chat instellingen', ChatMaxOutputTokens: 'Maximaal aantal uitvoertokens', ChatOptional: 'Optioneel', ChatRestoreDefaults: 'Standaardwaarden',
@@ -31,13 +31,14 @@ const custom = {
     ChatToolRequiredHint: 'Verplicht is beschikbaar wanneer een maximaal aantal tool-aanroepen of een tool die de beurt beëindigt is ingesteld.',
     ChatNoAvailableTools: 'Er zijn geen clienttools beschikbaar met de huidige selecties en het huidige beleid.', ChatToolUnavailable: 'Momenteel niet beschikbaar',
     ChatShellSkillsDeferred: 'Selectie uit de skillcatalogus is nog niet beschikbaar. Bestaande OpenAI-shellskills blijven behouden.',
-    ChatForm_artificialIntelligence: 'Artificial Intelligence', ChatForm_inherit: 'Niet opgegeven', ChatForm_on: 'Aan', ChatForm_off: 'Uit', ChatForm_up: 'Omhoog', ChatForm_down: 'Omlaag', ChatForm_edit: 'Bewerken'
+    ChatForm_artificialIntelligence: 'Artificial Intelligence', ChatForm_inherit: 'Niet opgegeven', ChatForm_on: 'Aan', ChatForm_off: 'Uit', ChatForm_up: 'Omhoog', ChatForm_down: 'Omlaag', ChatForm_edit: 'Bewerken', ChatForm_bash: 'Bash'
   }
 };
 for (const lang of ['en', 'nl']) {
   const browser = path.join(root, 'aihappey-chat/packages/aihappey-i18n/src/locales', lang);
   const general = read(path.join(browser, `${lang}.json`));
-  const providers = flatten(read(path.join(browser, 'providers.json')).openai, 'openai');
+  const providerLabels = read(path.join(browser, 'providers.json'));
+  const providers = { ...flatten(providerLabels.openai, 'openai'), ...flatten(providerLabels.anthropic, 'anthropic') };
   const labels = { ...custom[lang] };
   labels.BuiltInLocalTools = general.builtInLocalTools ?? (lang === 'nl' ? 'Ingebouwde lokale tools' : 'Built-in local tools');
   labels.LocalPluginConversations = general.plugins['local-conversations'];
@@ -53,7 +54,7 @@ for (const lang of ['en', 'nl']) {
     if (typeof generalLabels[key] !== 'string') throw new Error(`Missing browser label: ${lang}/${key}`);
     labels[`ChatForm_${key.replace(/\./g, '_')}`] = generalLabels[key];
   }
-  for (const [key, value] of Object.entries(providers)) labels[`ChatForm_${key.replace(/\./g, '_')}`] = value;
+  for (const [key, value] of Object.entries(providers)) labels[`ChatForm_${key.replace(/\./g, '_')}`] = value.replace(/\s*\(\{\{effort\}\}\)/g, '');
   const file = path.join(root, 'aihappey-desktop/Core/AIHappey.Desktop.Core/Strings', lang, 'Resources.resw');
   let xml = fs.readFileSync(file, 'utf8');
   for (const [key, value] of Object.entries(labels)) {

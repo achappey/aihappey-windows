@@ -1,0 +1,3011 @@
+{
+  "defaults": {
+    "service_tier": "auto",
+    "cache_control": {
+      "type": "ephemeral"
+    },
+    "tools": [
+      {
+        "name": "web_search",
+        "type": "web_search_20260318",
+        "max_uses": 5,
+        "allowed_callers": [
+          "direct"
+        ]
+      },
+      {
+        "name": "web_fetch",
+        "type": "web_fetch_20260318",
+        "max_uses": 5,
+        "allowed_callers": [
+          "direct"
+        ],
+        "citations": {
+          "enabled": true
+        }
+      },
+      {
+        "name": "code_execution",
+        "allowed_callers": [
+          "direct"
+        ],
+        "type": "code_execution_20260521"
+      }
+    ],
+    "max_tokens": 64000,
+    "thinking": {
+      "type": "adaptive"
+    },
+    "output_config": {
+      "effort": "medium"
+    }
+  },
+  "tools": {
+    "advisor": {
+      "defaults": {
+        "type": "advisor_20260301",
+        "name": "advisor",
+        "model": "claude-sonnet-5-5"
+      },
+      "versions": [
+        "advisor_20260301"
+      ]
+    },
+    "bash": {
+      "defaults": {
+        "name": "bash",
+        "type": "bash_20250124",
+        "allowed_callers": [
+          "direct"
+        ]
+      },
+      "versions": [
+        "bash_20250124"
+      ]
+    },
+    "code_execution": {
+      "defaults": {
+        "name": "code_execution",
+        "type": "code_execution_20260521",
+        "allowed_callers": [
+          "direct"
+        ]
+      },
+      "versions": [
+        "code_execution_20260521",
+        "code_execution_20260120",
+        "code_execution_20250825"
+      ]
+    },
+    "memory": {
+      "defaults": {
+        "name": "memory",
+        "type": "memory_20250818",
+        "allowed_callers": [
+          "direct"
+        ]
+      },
+      "versions": [
+        "memory_20250818"
+      ]
+    },
+    "text_editor": {
+      "defaults": {
+        "name": "str_replace_based_edit_tool",
+        "type": "text_editor_20250728",
+        "allowed_callers": [
+          "direct"
+        ]
+      },
+      "versions": [
+        "text_editor_20250728",
+        "text_editor_20250429",
+        "text_editor_20250124"
+      ]
+    },
+    "web_fetch": {
+      "defaults": {
+        "name": "web_fetch",
+        "type": "web_fetch_20260318",
+        "max_uses": 5,
+        "citations": {
+          "enabled": true
+        },
+        "allowed_callers": [
+          "direct"
+        ]
+      },
+      "versions": [
+        "web_fetch_20260318",
+        "web_fetch_20260309",
+        "web_fetch_20260209",
+        "web_fetch_20250910"
+      ]
+    },
+    "web_search": {
+      "defaults": {
+        "name": "web_search",
+        "type": "web_search_20260318",
+        "max_uses": 5,
+        "allowed_callers": [
+          "direct"
+        ]
+      },
+      "versions": [
+        "web_search_20260318",
+        "web_search_20260209",
+        "web_search_20250305"
+      ]
+    },
+    "tool_search_tool_bm25": {
+      "defaults": {
+        "name": "tool_search_tool_bm25",
+        "type": "tool_search_tool_bm25_20251119"
+      },
+      "versions": [
+        "tool_search_tool_bm25_20251119",
+        "tool_search_tool_bm25"
+      ]
+    },
+    "tool_search_tool_regex": {
+      "defaults": {
+        "name": "tool_search_tool_regex",
+        "type": "tool_search_tool_regex_20251119"
+      },
+      "versions": [
+        "tool_search_tool_regex_20251119",
+        "tool_search_tool_regex"
+      ]
+    }
+  },
+  "betas": [
+    "mcp-client-2025-11-20",
+    "interleaved-thinking-2025-05-14",
+    "context-management-2025-06-27",
+    "model-context-window-exceeded-2025-08-26",
+    "fast-mode-2026-02-01",
+    "mid-conversation-tool-changes-2026-07-01",
+    "managed-agents-2026-04-01",
+    "task-budgets-2026-03-13",
+    "server-side-fallback-2026-07-01",
+    "advisor-tool-2026-03-01",
+    "cache-diagnosis-2026-04-07",
+    "thinking-display-updates-2026-08-18",
+    "mid-conversation-system-clear-at-2026-08-21",
+    "mid-conversation-output-config-2026-07-01",
+    "thinking-binding-controls-2026-08-01",
+    "compact-2026-09-04",
+    "inline-tools-2026-09-15",
+    "mcp-client-2026-09-15"
+  ],
+  "contextDefaults": [
+    {
+      "type": "clear_tool_uses_20250919",
+      "trigger": {
+        "type": "input_tokens",
+        "value": 10000
+      }
+    },
+    {
+      "type": "clear_thinking_20251015",
+      "keep": {
+        "type": "thinking_turns",
+        "value": 1
+      }
+    },
+    {
+      "type": "compact_20260112",
+      "trigger": {
+        "type": "input_tokens",
+        "value": 150000
+      }
+    }
+  ],
+  "anthropic": [
+    {
+      "name": "tool advisor",
+      "initial": {
+        "future": {
+          "retained": true
+        },
+        "tools": [
+          {
+            "type": "custom_tool",
+            "x": 1
+          }
+        ]
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "advisor",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "advisor/future",
+          "value": "kept"
+        },
+        {
+          "kind": "toggle",
+          "section": "advisor",
+          "enabled": false
+        },
+        {
+          "kind": "toggle",
+          "section": "advisor",
+          "enabled": true
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "type": "advisor_20260301",
+                "name": "advisor",
+                "model": "claude-sonnet-5-5"
+              }
+            ]
+          },
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01"
+          }
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "type": "advisor_20260301",
+                "name": "advisor",
+                "model": "claude-sonnet-5-5",
+                "future": "kept"
+              }
+            ]
+          },
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01"
+          }
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "type": "advisor_20260301",
+                "name": "advisor",
+                "model": "claude-sonnet-5-5"
+              }
+            ]
+          },
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tool bash",
+      "initial": {
+        "future": {
+          "retained": true
+        },
+        "tools": [
+          {
+            "type": "custom_tool",
+            "x": 1
+          }
+        ]
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "bash",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "bash/future",
+          "value": "kept"
+        },
+        {
+          "kind": "toggle",
+          "section": "bash",
+          "enabled": false
+        },
+        {
+          "kind": "toggle",
+          "section": "bash",
+          "enabled": true
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "bash",
+                "type": "bash_20250124",
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "bash",
+                "type": "bash_20250124",
+                "allowed_callers": [
+                  "direct"
+                ],
+                "future": "kept"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "bash",
+                "type": "bash_20250124",
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "tool code_execution",
+      "initial": {
+        "future": {
+          "retained": true
+        },
+        "tools": [
+          {
+            "type": "custom_tool",
+            "x": 1
+          }
+        ]
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "code_execution",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "code_execution/future",
+          "value": "kept"
+        },
+        {
+          "kind": "toggle",
+          "section": "code_execution",
+          "enabled": false
+        },
+        {
+          "kind": "toggle",
+          "section": "code_execution",
+          "enabled": true
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "code_execution",
+                "type": "code_execution_20260521",
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "code_execution",
+                "type": "code_execution_20260521",
+                "allowed_callers": [
+                  "direct"
+                ],
+                "future": "kept"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "code_execution",
+                "type": "code_execution_20260521",
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "tool memory",
+      "initial": {
+        "future": {
+          "retained": true
+        },
+        "tools": [
+          {
+            "type": "custom_tool",
+            "x": 1
+          }
+        ]
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "memory",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "memory/future",
+          "value": "kept"
+        },
+        {
+          "kind": "toggle",
+          "section": "memory",
+          "enabled": false
+        },
+        {
+          "kind": "toggle",
+          "section": "memory",
+          "enabled": true
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "memory",
+                "type": "memory_20250818",
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "memory",
+                "type": "memory_20250818",
+                "allowed_callers": [
+                  "direct"
+                ],
+                "future": "kept"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "memory",
+                "type": "memory_20250818",
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "tool text_editor",
+      "initial": {
+        "future": {
+          "retained": true
+        },
+        "tools": [
+          {
+            "type": "custom_tool",
+            "x": 1
+          }
+        ]
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "text_editor",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "text_editor/future",
+          "value": "kept"
+        },
+        {
+          "kind": "toggle",
+          "section": "text_editor",
+          "enabled": false
+        },
+        {
+          "kind": "toggle",
+          "section": "text_editor",
+          "enabled": true
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "str_replace_based_edit_tool",
+                "type": "text_editor_20250728",
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "str_replace_based_edit_tool",
+                "type": "text_editor_20250728",
+                "allowed_callers": [
+                  "direct"
+                ],
+                "future": "kept"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "str_replace_based_edit_tool",
+                "type": "text_editor_20250728",
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "tool web_fetch",
+      "initial": {
+        "future": {
+          "retained": true
+        },
+        "tools": [
+          {
+            "type": "custom_tool",
+            "x": 1
+          }
+        ]
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "web_fetch",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "web_fetch/future",
+          "value": "kept"
+        },
+        {
+          "kind": "toggle",
+          "section": "web_fetch",
+          "enabled": false
+        },
+        {
+          "kind": "toggle",
+          "section": "web_fetch",
+          "enabled": true
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20260318",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20260318",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ],
+                "future": "kept"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20260318",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "tool web_search",
+      "initial": {
+        "future": {
+          "retained": true
+        },
+        "tools": [
+          {
+            "type": "custom_tool",
+            "x": 1
+          }
+        ]
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "web_search",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "web_search/future",
+          "value": "kept"
+        },
+        {
+          "kind": "toggle",
+          "section": "web_search",
+          "enabled": false
+        },
+        {
+          "kind": "toggle",
+          "section": "web_search",
+          "enabled": true
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "web_search",
+                "type": "web_search_20260318",
+                "max_uses": 5,
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "web_search",
+                "type": "web_search_20260318",
+                "max_uses": 5,
+                "allowed_callers": [
+                  "direct"
+                ],
+                "future": "kept"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "web_search",
+                "type": "web_search_20260318",
+                "max_uses": 5,
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ]
+          },
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "tool tool_search_tool_bm25",
+      "initial": {
+        "future": {
+          "retained": true
+        },
+        "tools": [
+          {
+            "type": "custom_tool",
+            "x": 1
+          }
+        ]
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "tool_search_tool_bm25",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "tool_search_tool_bm25/future",
+          "value": "kept"
+        },
+        {
+          "kind": "toggle",
+          "section": "tool_search_tool_bm25",
+          "enabled": false
+        },
+        {
+          "kind": "toggle",
+          "section": "tool_search_tool_bm25",
+          "enabled": true
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "tool_search_tool_bm25",
+                "type": "tool_search_tool_bm25_20251119"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "tool_search_tool_bm25",
+                "type": "tool_search_tool_bm25_20251119",
+                "future": "kept"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "tool_search_tool_bm25",
+                "type": "tool_search_tool_bm25_20251119"
+              }
+            ]
+          },
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "tool tool_search_tool_regex",
+      "initial": {
+        "future": {
+          "retained": true
+        },
+        "tools": [
+          {
+            "type": "custom_tool",
+            "x": 1
+          }
+        ]
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "tool_search_tool_regex",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "tool_search_tool_regex/future",
+          "value": "kept"
+        },
+        {
+          "kind": "toggle",
+          "section": "tool_search_tool_regex",
+          "enabled": false
+        },
+        {
+          "kind": "toggle",
+          "section": "tool_search_tool_regex",
+          "enabled": true
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "tool_search_tool_regex",
+                "type": "tool_search_tool_regex_20251119"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "tool_search_tool_regex",
+                "type": "tool_search_tool_regex_20251119",
+                "future": "kept"
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              }
+            ]
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "future": {
+              "retained": true
+            },
+            "tools": [
+              {
+                "type": "custom_tool",
+                "x": 1
+              },
+              {
+                "name": "tool_search_tool_regex",
+                "type": "tool_search_tool_regex_20251119"
+              }
+            ]
+          },
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "all core sections and explicit false",
+      "initial": {},
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "set",
+          "path": "max_tokens",
+          "value": 64000
+        },
+        {
+          "kind": "toggle",
+          "section": "cache_control",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "cache_control/ttl",
+          "value": "1h"
+        },
+        {
+          "kind": "toggle",
+          "section": "thinking",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "thinking/display",
+          "value": "updates"
+        },
+        {
+          "kind": "set",
+          "path": "thinking/block_binding/prefix_mismatch_behavior",
+          "value": "error"
+        },
+        {
+          "kind": "toggle",
+          "section": "output_config",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "output_config/task_budget",
+          "value": {
+            "type": "tokens",
+            "total": 25000
+          }
+        },
+        {
+          "kind": "toggle",
+          "section": "container",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "container/id",
+          "value": "  container-id  "
+        },
+        {
+          "kind": "set",
+          "path": "container/skills",
+          "value": [
+            {
+              "type": "custom",
+              "skill_id": " custom ",
+              "version": "  v1 "
+            },
+            {
+              "type": "anthropic",
+              "skill_id": "pdf",
+              "version": "latest"
+            }
+          ]
+        },
+        {
+          "kind": "set",
+          "path": "budget",
+          "value": {
+            "type": "limit",
+            "max_list_cost": {
+              "amount": "123456789012345678901",
+              "currency": "USD"
+            }
+          }
+        },
+        {
+          "kind": "set",
+          "path": "speed",
+          "value": "fast"
+        },
+        {
+          "kind": "set",
+          "path": "service_tier",
+          "value": "standard_only"
+        },
+        {
+          "kind": "set",
+          "path": "inference_geo",
+          "value": "us"
+        },
+        {
+          "kind": "toggle",
+          "section": "web_fetch",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "web_fetch/use_cache",
+          "value": false
+        },
+        {
+          "kind": "set",
+          "path": "web_fetch/response_inclusion",
+          "value": "excluded"
+        },
+        {
+          "kind": "set",
+          "path": "web_fetch/type",
+          "value": "web_fetch_20250910"
+        },
+        {
+          "kind": "toggle",
+          "section": "web_search",
+          "enabled": true
+        },
+        {
+          "kind": "set",
+          "path": "web_search/allowed_domains",
+          "value": null
+        },
+        {
+          "kind": "set",
+          "path": "web_search/blocked_domains",
+          "value": null
+        },
+        {
+          "kind": "set",
+          "path": "web_search/user_location",
+          "value": null
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "max_tokens": 64000
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "cache_control": {
+              "type": "ephemeral"
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "summarized"
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates"
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium"
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {},
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id"
+            },
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            }
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only",
+            "inference_geo": "us"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "tools": [
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20260318",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ],
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only",
+            "inference_geo": "us"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "tools": [
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20260318",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ],
+                "use_cache": false
+              }
+            ],
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only",
+            "inference_geo": "us"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "tools": [
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20260318",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ],
+                "use_cache": false,
+                "response_inclusion": "excluded"
+              }
+            ],
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only",
+            "inference_geo": "us"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "tools": [
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20250910",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ],
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only",
+            "inference_geo": "us"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "tools": [
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20250910",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ]
+              },
+              {
+                "name": "web_search",
+                "type": "web_search_20260318",
+                "max_uses": 5,
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ],
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only",
+            "inference_geo": "us"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "tools": [
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20250910",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ]
+              },
+              {
+                "name": "web_search",
+                "type": "web_search_20260318",
+                "max_uses": 5,
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ],
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only",
+            "inference_geo": "us"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "tools": [
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20250910",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ]
+              },
+              {
+                "name": "web_search",
+                "type": "web_search_20260318",
+                "max_uses": 5,
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ],
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only",
+            "inference_geo": "us"
+          },
+          "headers": {}
+        },
+        {
+          "config": {
+            "max_tokens": 64000,
+            "container": {
+              "id": "container-id",
+              "skills": [
+                {
+                  "type": "custom",
+                  "skill_id": "custom",
+                  "version": "v1"
+                },
+                {
+                  "type": "anthropic",
+                  "skill_id": "pdf",
+                  "version": "latest"
+                }
+              ]
+            },
+            "tools": [
+              {
+                "name": "web_fetch",
+                "type": "web_fetch_20250910",
+                "max_uses": 5,
+                "citations": {
+                  "enabled": true
+                },
+                "allowed_callers": [
+                  "direct"
+                ]
+              },
+              {
+                "name": "web_search",
+                "type": "web_search_20260318",
+                "max_uses": 5,
+                "allowed_callers": [
+                  "direct"
+                ]
+              }
+            ],
+            "cache_control": {
+              "type": "ephemeral",
+              "ttl": "1h"
+            },
+            "thinking": {
+              "type": "enabled",
+              "budget_tokens": 4096,
+              "display": "updates",
+              "block_binding": {
+                "prefix_mismatch_behavior": "error"
+              }
+            },
+            "output_config": {
+              "effort": "medium",
+              "task_budget": {
+                "type": "tokens",
+                "total": 25000
+              }
+            },
+            "budget": {
+              "type": "limit",
+              "max_list_cost": {
+                "amount": "123456789012345678901",
+                "currency": "USD"
+              }
+            },
+            "speed": "fast",
+            "service_tier": "standard_only",
+            "inference_geo": "us"
+          },
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "automatic and manually owned betas",
+      "initial": {},
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "advisor",
+          "enabled": true
+        },
+        {
+          "kind": "toggle",
+          "section": "advisor",
+          "enabled": false
+        },
+        {
+          "kind": "beta",
+          "flag": "advisor-tool-2026-03-01",
+          "enabled": true
+        },
+        {
+          "kind": "toggle",
+          "section": "advisor",
+          "enabled": true
+        },
+        {
+          "kind": "toggle",
+          "section": "advisor",
+          "enabled": false
+        },
+        {
+          "kind": "context",
+          "entries": [
+            {
+              "type": "clear_tool_uses_20250919",
+              "trigger": {
+                "type": "input_tokens",
+                "value": 10000
+              }
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "entries": []
+        },
+        {
+          "kind": "beta",
+          "flag": "context-management-2025-06-27",
+          "enabled": true
+        },
+        {
+          "kind": "context",
+          "entries": [
+            {
+              "type": "clear_tool_uses_20250919",
+              "trigger": {
+                "type": "input_tokens",
+                "value": 10000
+              }
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "entries": []
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "tools": [
+              {
+                "type": "advisor_20260301",
+                "name": "advisor",
+                "model": "claude-sonnet-5-5"
+              }
+            ]
+          },
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01"
+          }
+        },
+        {
+          "config": {},
+          "headers": {}
+        },
+        {
+          "config": {},
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01"
+          }
+        },
+        {
+          "config": {
+            "tools": [
+              {
+                "type": "advisor_20260301",
+                "name": "advisor",
+                "model": "claude-sonnet-5-5"
+              }
+            ]
+          },
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01"
+          }
+        },
+        {
+          "config": {},
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01"
+          }
+        },
+        {
+          "config": {
+            "context_management": {
+              "edits": [
+                {
+                  "type": "clear_tool_uses_20250919",
+                  "trigger": {
+                    "type": "input_tokens",
+                    "value": 10000
+                  }
+                }
+              ]
+            }
+          },
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01,context-management-2025-06-27"
+          }
+        },
+        {
+          "config": {},
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01"
+          }
+        },
+        {
+          "config": {},
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01,context-management-2025-06-27"
+          }
+        },
+        {
+          "config": {
+            "context_management": {
+              "edits": [
+                {
+                  "type": "clear_tool_uses_20250919",
+                  "trigger": {
+                    "type": "input_tokens",
+                    "value": 10000
+                  }
+                }
+              ]
+            }
+          },
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01,context-management-2025-06-27"
+          }
+        },
+        {
+          "config": {},
+          "headers": {
+            "anthropic-beta": "advisor-tool-2026-03-01,context-management-2025-06-27"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compaction coupling and context exclusion",
+      "initial": {},
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "toggle",
+          "section": "compaction",
+          "enabled": true
+        },
+        {
+          "kind": "toggle",
+          "section": "compaction",
+          "enabled": false
+        },
+        {
+          "kind": "beta",
+          "flag": "compact-2026-09-04",
+          "enabled": false
+        },
+        {
+          "kind": "beta",
+          "flag": "compact-2026-09-04",
+          "enabled": true
+        },
+        {
+          "kind": "context",
+          "entries": [
+            {
+              "type": "clear_tool_uses_20250919",
+              "trigger": {
+                "type": "input_tokens",
+                "value": 10000
+              }
+            }
+          ]
+        },
+        {
+          "kind": "context",
+          "entries": []
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "compaction": {
+              "type": "summarize"
+            }
+          },
+          "headers": {
+            "anthropic-beta": "compact-2026-09-04"
+          }
+        },
+        {
+          "config": {},
+          "headers": {
+            "anthropic-beta": "compact-2026-09-04"
+          }
+        },
+        {
+          "config": {},
+          "headers": {}
+        },
+        {
+          "config": {
+            "compaction": {
+              "type": "summarize"
+            }
+          },
+          "headers": {
+            "anthropic-beta": "compact-2026-09-04"
+          }
+        },
+        {
+          "config": {
+            "context_management": {
+              "edits": [
+                {
+                  "type": "clear_tool_uses_20250919",
+                  "trigger": {
+                    "type": "input_tokens",
+                    "value": 10000
+                  }
+                }
+              ]
+            }
+          },
+          "headers": {
+            "anthropic-beta": "compact-2026-09-04,context-management-2025-06-27"
+          }
+        },
+        {
+          "config": {
+            "compaction": {
+              "type": "summarize"
+            }
+          },
+          "headers": {
+            "anthropic-beta": "compact-2026-09-04"
+          }
+        }
+      ]
+    },
+    {
+      "name": "legacy aliases and headers",
+      "initial": {
+        "anthropic-beta": [
+          "custom-beta",
+          "custom-beta"
+        ],
+        "web_search": {
+          "type": "web_search_20250305",
+          "name": "web_search",
+          "max_uses": 2
+        },
+        "future": null
+      },
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "set",
+          "path": "max_tokens",
+          "value": 1024
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "future": null,
+            "max_tokens": 1024,
+            "tools": [
+              {
+                "type": "web_search_20250305",
+                "name": "web_search",
+                "max_uses": 2
+              }
+            ]
+          },
+          "headers": {
+            "anthropic-beta": "custom-beta"
+          }
+        }
+      ]
+    },
+    {
+      "name": "all context editor shapes",
+      "initial": {},
+      "initialHeaders": {},
+      "ops": [
+        {
+          "kind": "context",
+          "entries": [
+            {
+              "type": "clear_tool_uses_20250919",
+              "trigger": {
+                "type": "tool_uses",
+                "value": 4
+              },
+              "keep": {
+                "type": "tool_uses",
+                "value": 2
+              },
+              "clear_at_least": {
+                "type": "input_tokens",
+                "value": 200
+              },
+              "clear_tool_inputs": false,
+              "exclude_tools": [
+                " x ",
+                ""
+              ]
+            },
+            {
+              "type": "clear_thinking_20251015",
+              "keep": "all"
+            },
+            {
+              "type": "clear_thinking_20251015",
+              "keep": {
+                "type": "all"
+              }
+            },
+            {
+              "type": "clear_thinking_20251015",
+              "keep": {
+                "type": "thinking_turns",
+                "value": 1
+              }
+            },
+            {
+              "type": "compact_20260112",
+              "trigger": {
+                "type": "input_tokens",
+                "value": 150000
+              },
+              "instructions": "  preserve facts  ",
+              "pause_after_compaction": false
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "config": {
+            "context_management": {
+              "edits": [
+                {
+                  "type": "clear_tool_uses_20250919",
+                  "clear_at_least": {
+                    "type": "input_tokens",
+                    "value": 200
+                  },
+                  "clear_tool_inputs": false,
+                  "exclude_tools": [
+                    "x"
+                  ],
+                  "keep": {
+                    "type": "tool_uses",
+                    "value": 2
+                  },
+                  "trigger": {
+                    "type": "tool_uses",
+                    "value": 4
+                  }
+                },
+                {
+                  "type": "clear_thinking_20251015",
+                  "keep": "all"
+                },
+                {
+                  "type": "clear_thinking_20251015",
+                  "keep": {
+                    "type": "all"
+                  }
+                },
+                {
+                  "type": "clear_thinking_20251015",
+                  "keep": {
+                    "type": "thinking_turns",
+                    "value": 1
+                  }
+                },
+                {
+                  "type": "compact_20260112",
+                  "instructions": "preserve facts",
+                  "pause_after_compaction": false,
+                  "trigger": {
+                    "type": "input_tokens",
+                    "value": 150000
+                  }
+                }
+              ]
+            }
+          },
+          "headers": {
+            "anthropic-beta": "context-management-2025-06-27"
+          }
+        }
+      ]
+    }
+  ],
+  "deepseek": [
+    {
+      "initial": {},
+      "normalized": {},
+      "searchOn": {
+        "tools": [
+          {
+            "type": "web_search"
+          }
+        ]
+      },
+      "searchOff": {
+        "tools": []
+      }
+    },
+    {
+      "initial": {
+        "thinking": {
+          "type": "disabled"
+        },
+        "reasoning_effort": "max",
+        "future": 1
+      },
+      "normalized": {
+        "future": 1,
+        "reasoning": {
+          "effort": "none"
+        }
+      },
+      "searchOn": {
+        "future": 1,
+        "reasoning": {
+          "effort": "none"
+        },
+        "tools": [
+          {
+            "type": "web_search"
+          }
+        ]
+      },
+      "searchOff": {
+        "future": 1,
+        "reasoning": {
+          "effort": "none"
+        },
+        "tools": []
+      }
+    },
+    {
+      "initial": {
+        "thinking": {
+          "type": "enabled"
+        }
+      },
+      "normalized": {
+        "reasoning": {
+          "effort": "high"
+        }
+      },
+      "searchOn": {
+        "reasoning": {
+          "effort": "high"
+        },
+        "tools": [
+          {
+            "type": "web_search"
+          }
+        ]
+      },
+      "searchOff": {
+        "reasoning": {
+          "effort": "high"
+        },
+        "tools": []
+      }
+    },
+    {
+      "initial": {
+        "reasoning": {
+          "effort": "low",
+          "future": true
+        },
+        "thinking": {
+          "type": "disabled"
+        },
+        "reasoning_effort": "max"
+      },
+      "normalized": {
+        "reasoning": {
+          "effort": "low",
+          "future": true
+        }
+      },
+      "searchOn": {
+        "reasoning": {
+          "effort": "low",
+          "future": true
+        },
+        "tools": [
+          {
+            "type": "web_search"
+          }
+        ]
+      },
+      "searchOff": {
+        "reasoning": {
+          "effort": "low",
+          "future": true
+        },
+        "tools": []
+      }
+    },
+    {
+      "initial": {
+        "reasoning": null,
+        "thinking": {
+          "type": "enabled"
+        }
+      },
+      "normalized": {
+        "reasoning": null
+      },
+      "searchOn": {
+        "reasoning": null,
+        "tools": [
+          {
+            "type": "web_search"
+          }
+        ]
+      },
+      "searchOff": {
+        "reasoning": null,
+        "tools": []
+      }
+    },
+    {
+      "initial": {
+        "tools": [
+          {
+            "type": "web_search",
+            "future": true
+          },
+          {
+            "type": "function",
+            "name": "keep"
+          }
+        ]
+      },
+      "normalized": {
+        "tools": [
+          {
+            "type": "web_search",
+            "future": true
+          },
+          {
+            "type": "function",
+            "name": "keep"
+          }
+        ]
+      },
+      "searchOn": {
+        "tools": [
+          {
+            "type": "function",
+            "name": "keep"
+          },
+          {
+            "type": "web_search",
+            "future": true
+          }
+        ]
+      },
+      "searchOff": {
+        "tools": [
+          {
+            "type": "function",
+            "name": "keep"
+          }
+        ]
+      }
+    }
+  ],
+  "money": [
+    {
+      "usd": "",
+      "cents": null
+    },
+    {
+      "usd": "0",
+      "cents": null
+    },
+    {
+      "usd": "0.00",
+      "cents": null
+    },
+    {
+      "usd": "0.01",
+      "cents": "1"
+    },
+    {
+      "usd": "1",
+      "cents": "100"
+    },
+    {
+      "usd": "1.2",
+      "cents": "120"
+    },
+    {
+      "usd": "1.23",
+      "cents": "123"
+    },
+    {
+      "usd": "01.02",
+      "cents": "102"
+    },
+    {
+      "usd": "1.234",
+      "cents": null
+    },
+    {
+      "usd": "-1",
+      "cents": null
+    },
+    {
+      "usd": "1e3",
+      "cents": null
+    },
+    {
+      "usd": " 2.50 ",
+      "cents": "250"
+    },
+    {
+      "usd": "123456789012345678901234567890.99",
+      "cents": "12345678901234567890123456789099"
+    }
+  ]
+}

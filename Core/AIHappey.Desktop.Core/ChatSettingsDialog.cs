@@ -99,7 +99,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         selectProviderTab = null;
         if (providerForm is not null)
         {
-            providerTab = new() { Name = "ChatProviderTab", Content = provider == "openai" ? "OpenAI" : provider };
+            providerTab = new() { Name = "ChatProviderTab", Content = provider?.ToLowerInvariant() switch { "openai" => "OpenAI", "anthropic" => "Anthropic", "deepseek" => "DeepSeek", _ => provider } };
             ControlAppearance.Stock(providerTab); tabs.Children.Add(providerTab);
             selectProviderTab = () => { generalTab.IsChecked = skillsTab.IsChecked = toolsTab.IsChecked = false; providerTab.IsChecked = true; page.Content = providerForm.View; page.ChangeView(null, 0, null, true); };
             providerTab.Click += (_, _) => selectProviderTab();

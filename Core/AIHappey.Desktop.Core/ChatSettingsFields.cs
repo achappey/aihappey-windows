@@ -34,7 +34,7 @@ internal sealed class ChatSettingsFields
     }
     public void Visible(FrameworkElement element, Func<bool> visible) => Watch(() => element.Visibility = visible() ? Visibility.Visible : Visibility.Collapsed);
 
-    public TextBox Text(Panel parent, string key, Func<string> read, Action<string> write, Func<bool>? enabled = null, bool multiline = false, Func<string, bool>? validate = null)
+    public TextBox Text(Panel parent, string key, Func<string> read, Action<string> write, Func<bool>? enabled = null, bool multiline = false, Func<string, bool>? validate = null, bool trackValidation = false)
     {
         var box = new TextBox { Header = L(key), Text = read(), TextWrapping = TextWrapping.Wrap, AcceptsReturn = multiline, MinHeight = multiline ? 72 : 0, MaxHeight = multiline ? 220 : double.PositiveInfinity };
         ControlAppearance.Stock(box); AutomationProperties.SetName(box, L(key));
@@ -44,7 +44,14 @@ internal sealed class ChatSettingsFields
         AutomationProperties.SetLiveSetting(error, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         field.Children.Add(error); parent.Children.Add(field);
         Enabled(box, enabled);
+        void Validate()
+        {
+            var valid = !box.IsEnabled || (validate?.Invoke(box.Text) ?? true);
+            if (valid) invalid.Remove(box); else invalid.Add(box);
+            error.Visibility = valid ? Visibility.Collapsed : Visibility.Visible;
+        }
         refresh.Add(() => { if (!invalid.Contains(box) && box.FocusState == FocusState.Unfocused && box.Text != read()) box.Text = read(); if (!box.IsEnabled) error.Visibility = Visibility.Collapsed; });
+        if (trackValidation) Watch(Validate);
         box.TextChanged += (_, _) =>
         {
             if (syncing) return;
@@ -54,6 +61,27 @@ internal sealed class ChatSettingsFields
             if (valid) Changed(() => write(box.Text));
         };
         return box;
+    }
+
+    // Opt-in validation preserves existing callers while new provider fields also validate
+    // initial values and re-enabled drafts. Invalid text is retained until corrected.
+    public TextBox Number(Panel parent, string key, Func<string> read, Action<double?> write, Func<bool>? enabled = null,
+        double min = double.NegativeInfinity, double max = double.PositiveInfinity, bool optional = true, bool whole = false)
+    {
+        bool Valid(string value) => ProviderChatConfig.TryNumber(value, out var number)
+            && (number is null ? optional : number >= min && number <= max && (!whole || Math.Truncate(number.Value) == number));
+        return Text(parent, key, read, value => { ProviderChatConfig.TryNumber(value, out var number); write(number); }, enabled, validate: Valid, trackValidation: true);
+    }
+    public TextBox OptionalJson(Panel parent, string key, Func<JsonNode?> read, Action<JsonNode?, bool> write, Func<bool>? enabled = null)
+    {
+        bool Valid(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return true;
+            try { JsonNode.Parse(value); return true; } catch (JsonException) { return false; }
+        }
+        return Text(parent, key, () => read()?.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) ?? "",
+            value => write(string.IsNullOrWhiteSpace(value) ? null : JsonNode.Parse(value), string.IsNullOrWhiteSpace(value)),
+            enabled, true, Valid, trackValidation: true);
     }
 
     public ComboBox Select(Panel parent, string key, Func<string> read, IEnumerable<string> options, Action<string> write, Func<bool>? enabled = null, bool inherit = false, Func<string, string>? label = null)
@@ -161,7 +189,9 @@ internal static class ChatProviderForms
 {
     private static readonly Dictionary<string, Func<ChatPreferences, IChatProviderForm>> factories = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["openai"] = preferences => new OpenAIChatSettingsForm(preferences)
+        ["openai"] = preferences => new OpenAIChatSettingsForm(preferences),
+        ["anthropic"] = preferences => new AnthropicChatSettingsForm(preferences),
+        ["deepseek"] = preferences => new DeepSeekChatSettingsForm(preferences)
     };
     public static IChatProviderForm? Create(string? provider, ChatPreferences preferences) => provider is not null && factories.TryGetValue(provider, out var factory) ? factory(preferences) : null;
 }

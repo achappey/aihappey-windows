@@ -445,7 +445,7 @@
   <data name="ChatForm_openai_promptCacheOptions_in-memory" xml:space="preserve"><value>Tijdelijk</value></data>
   <data name="ChatForm_openai_promptCacheOptions_title" xml:space="preserve"><value>Promptcache</value></data>
   <data name="ChatForm_openai_promptCacheOptions_mode" xml:space="preserve"><value>Modus</value></data>
-  <data name="ChatForm_openai_promptCacheOptions_ttl" xml:space="preserve"><value>Minimale cacheduur</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_ttl" xml:space="preserve"><value>Cacheduur</value></data>
   <data name="ChatForm_openai_promptCacheOptions_modes_implicit" xml:space="preserve"><value>Impliciet</value></data>
   <data name="ChatForm_openai_promptCacheOptions_modes_explicit" xml:space="preserve"><value>Expliciet</value></data>
   <data name="ChatForm_openai_promptCacheOptions_ttls_30m" xml:space="preserve"><value>30 minuten</value></data>
@@ -1522,4 +1522,143 @@
   <data name="SettingsShowMetrics.OnContent" xml:space="preserve"><value>Aan</value></data>
   <data name="SettingsShowMetrics.OffContent" xml:space="preserve"><value>Uit</value></data>
   <data name="FilesSharingNote" xml:space="preserve"><value>Alleen verwijzingen worden opgeslagen—je bestanden blijven op hun plek. Met een gedeelde map kan AI de inhoud en submappen lezen en daar nieuwe bestanden maken wanneer de Bestanden-plug-in aanstaat. Bestaande bestanden worden nooit overschreven. Bestandstools worden uitgevoerd voordat de resultaten worden beoordeeld.</value></data>
+  <data name="ChatForm_bash" xml:space="preserve"><value>Bash</value></data>
+  <data name="ChatForm_low" xml:space="preserve"><value>Laag</value></data>
+  <data name="ChatForm_medium" xml:space="preserve"><value>Gemiddeld</value></data>
+  <data name="ChatForm_high" xml:space="preserve"><value>Hoog</value></data>
+  <data name="ChatForm_xhigh" xml:space="preserve"><value>Extra hoog</value></data>
+  <data name="ChatForm_max" xml:space="preserve"><value>Maximum</value></data>
+  <data name="ChatForm_maxOutputTokens" xml:space="preserve"><value>Maximaal aantal uitvoertokens</value></data>
+  <data name="ChatForm_budget" xml:space="preserve"><value>Budget</value></data>
+  <data name="ChatForm_mode" xml:space="preserve"><value>Modus</value></data>
+  <data name="ChatForm_webFetch" xml:space="preserve"><value>Web lezen</value></data>
+  <data name="ChatForm_providerDefault" xml:space="preserve"><value>Standaard</value></data>
+  <data name="ChatForm_openai_promptCacheOptions_ttls_12h" xml:space="preserve"><value>12 uur</value></data>
+  <data name="ChatForm_anthropic_maxUses" xml:space="preserve"><value>Maximaal aantal keer</value></data>
+  <data name="ChatForm_anthropic_betaHeader" xml:space="preserve"><value>Beta</value></data>
+  <data name="ChatForm_anthropic_other_serviceTier_title" xml:space="preserve"><value>Serviceniveau</value></data>
+  <data name="ChatForm_anthropic_other_serviceTier_options_auto" xml:space="preserve"><value>Prioriteit indien beschikbaar</value></data>
+  <data name="ChatForm_anthropic_other_serviceTier_options_standard_only" xml:space="preserve"><value>Alleen standaard</value></data>
+  <data name="ChatForm_anthropic_other_speed_title" xml:space="preserve"><value>Snelheid</value></data>
+  <data name="ChatForm_anthropic_other_speed_options_standard" xml:space="preserve"><value>Standaard</value></data>
+  <data name="ChatForm_anthropic_other_speed_options_fast" xml:space="preserve"><value>Snel</value></data>
+  <data name="ChatForm_anthropic_other_inferenceGeo_title" xml:space="preserve"><value>Locatie</value></data>
+  <data name="ChatForm_anthropic_other_inferenceGeo_options_global" xml:space="preserve"><value>Wereldwijd</value></data>
+  <data name="ChatForm_anthropic_other_inferenceGeo_options_us" xml:space="preserve"><value>Verenigde Staten</value></data>
+  <data name="ChatForm_anthropic_memory" xml:space="preserve"><value>Geheugen</value></data>
+  <data name="ChatForm_anthropic_customSkills" xml:space="preserve"><value>Aangepaste vaardigheden</value></data>
+  <data name="ChatForm_anthropic_allowedDomains" xml:space="preserve"><value>Toegestane domeinen</value></data>
+  <data name="ChatForm_anthropic_blockedDomains" xml:space="preserve"><value>Geblokkeerde domeinen</value></data>
+  <data name="ChatForm_anthropic_shell" xml:space="preserve"><value>Shell</value></data>
+  <data name="ChatForm_anthropic_textEditor" xml:space="preserve"><value>Tekstbewerker</value></data>
+  <data name="ChatForm_anthropic_toolSearchBm25" xml:space="preserve"><value>Tool zoeken (BM25)</value></data>
+  <data name="ChatForm_anthropic_toolSearchRegex" xml:space="preserve"><value>Tool zoeken (Regex)</value></data>
+  <data name="ChatForm_anthropic_version" xml:space="preserve"><value>Versie</value></data>
+  <data name="ChatForm_anthropic_allowedCallers" xml:space="preserve"><value>Gebruiksmethode</value></data>
+  <data name="ChatForm_anthropic_none" xml:space="preserve"><value>Geen</value></data>
+  <data name="ChatForm_anthropic_cacheControl" xml:space="preserve"><value>Promptcache</value></data>
+  <data name="ChatForm_anthropic_cache_title" xml:space="preserve"><value>Cache</value></data>
+  <data name="ChatForm_anthropic_cache_ttl" xml:space="preserve"><value>Duur</value></data>
+  <data name="ChatForm_anthropic_cache_ttlOptions_5m" xml:space="preserve"><value>5 minuten</value></data>
+  <data name="ChatForm_anthropic_cache_ttlOptions_1h" xml:space="preserve"><value>1 uur</value></data>
+  <data name="ChatForm_anthropic_compaction_title" xml:space="preserve"><value>Context comprimeren</value></data>
+  <data name="ChatForm_anthropic_deferLoading" xml:space="preserve"><value>Later laden</value></data>
+  <data name="ChatForm_anthropic_strictValidation" xml:space="preserve"><value>Strikt</value></data>
+  <data name="ChatForm_anthropic_cacheControlType" xml:space="preserve"><value>Cachetype</value></data>
+  <data name="ChatForm_anthropic_cacheDuration" xml:space="preserve"><value>Cacheduur</value></data>
+  <data name="ChatForm_anthropic_defaultOption" xml:space="preserve"><value>Standaard</value></data>
+  <data name="ChatForm_anthropic_ephemeral" xml:space="preserve"><value>Tijdelijk</value></data>
+  <data name="ChatForm_anthropic_outputConfig_title" xml:space="preserve"><value>Uitvoer</value></data>
+  <data name="ChatForm_anthropic_outputConfig_effort" xml:space="preserve"><value>Inspanning</value></data>
+  <data name="ChatForm_anthropic_outputConfig_taskBudget" xml:space="preserve"><value>Taakbudget</value></data>
+  <data name="ChatForm_anthropic_advisor_title" xml:space="preserve"><value>Adviseur</value></data>
+  <data name="ChatForm_anthropic_advisor_toolName" xml:space="preserve"><value>Toolnaam</value></data>
+  <data name="ChatForm_anthropic_advisor_model" xml:space="preserve"><value>Model</value></data>
+  <data name="ChatForm_anthropic_advisor_maxTokens" xml:space="preserve"><value>Maximaal aantal tokens</value></data>
+  <data name="ChatForm_anthropic_advisor_caching" xml:space="preserve"><value>Adviseur-promptcache</value></data>
+  <data name="ChatForm_anthropic_inputExamples" xml:space="preserve"><value>Voorbeeldinvoer</value></data>
+  <data name="ChatForm_anthropic_maxCharacters" xml:space="preserve"><value>Maximaal aantal tekens</value></data>
+  <data name="ChatForm_anthropic_maxContentTokens" xml:space="preserve"><value>Maximaal aantal contenttokens</value></data>
+  <data name="ChatForm_anthropic_citations" xml:space="preserve"><value>Citaten</value></data>
+  <data name="ChatForm_anthropic_useCache" xml:space="preserve"><value>Cache gebruiken</value></data>
+  <data name="ChatForm_anthropic_responseInclusion" xml:space="preserve"><value>Responsopname</value></data>
+  <data name="ChatForm_anthropic_container" xml:space="preserve"><value>Container</value></data>
+  <data name="ChatForm_anthropic_containerPlaceholder" xml:space="preserve"><value>Optionele container-id</value></data>
+  <data name="ChatForm_anthropic_containerSettings_title" xml:space="preserve"><value>Container</value></data>
+  <data name="ChatForm_anthropic_containerSettings_id" xml:space="preserve"><value>Container-id</value></data>
+  <data name="ChatForm_anthropic_containerSettings_idPlaceholder" xml:space="preserve"><value>Optionele container-id</value></data>
+  <data name="ChatForm_anthropic_containerSettings_customSkillIds" xml:space="preserve"><value>Aangepaste skill-ID's</value></data>
+  <data name="ChatForm_anthropic_containerSettings_customSkillIdsPlaceholder" xml:space="preserve"><value>skill_custom_a, skill_custom_b</value></data>
+  <data name="ChatForm_anthropic_containerSettings_skills_pptx" xml:space="preserve"><value>PowerPoint</value></data>
+  <data name="ChatForm_anthropic_containerSettings_skills_xlsx" xml:space="preserve"><value>Excel</value></data>
+  <data name="ChatForm_anthropic_containerSettings_skills_docx" xml:space="preserve"><value>Word</value></data>
+  <data name="ChatForm_anthropic_containerSettings_skills_pdf" xml:space="preserve"><value>PDF</value></data>
+  <data name="ChatForm_anthropic_session_title" xml:space="preserve"><value>Budget (Managed Agents)</value></data>
+  <data name="ChatForm_anthropic_session_maxListCostUsd" xml:space="preserve"><value>Maximaal budget (USD)</value></data>
+  <data name="ChatForm_anthropic_userLocation" xml:space="preserve"><value>Locatie</value></data>
+  <data name="ChatForm_anthropic_locationType" xml:space="preserve"><value>Locatietype</value></data>
+  <data name="ChatForm_anthropic_locationApproximate" xml:space="preserve"><value>Bij benadering</value></data>
+  <data name="ChatForm_anthropic_thinkingDisplay" xml:space="preserve"><value>Weergave gedachten</value></data>
+  <data name="ChatForm_anthropic_prefixMismatchBehavior" xml:space="preserve"><value>Afwijkende denkblokken</value></data>
+  <data name="ChatForm_anthropic_prefixMismatchBehaviorOptions_error" xml:space="preserve"><value>Fout</value></data>
+  <data name="ChatForm_anthropic_prefixMismatchBehaviorOptions_drop_block" xml:space="preserve"><value>Verwijderen</value></data>
+  <data name="ChatForm_anthropic_thinkingModes_enabled" xml:space="preserve"><value>Ingeschakeld</value></data>
+  <data name="ChatForm_anthropic_thinkingModes_disabled" xml:space="preserve"><value>Uitgeschakeld</value></data>
+  <data name="ChatForm_anthropic_thinkingModes_between_tools" xml:space="preserve"><value>Tussen tools</value></data>
+  <data name="ChatForm_anthropic_thinkingModes_adaptive" xml:space="preserve"><value>Adaptief</value></data>
+  <data name="ChatForm_anthropic_thinkingDisplayModes_summarized" xml:space="preserve"><value>Samengevat</value></data>
+  <data name="ChatForm_anthropic_thinkingDisplayModes_omitted" xml:space="preserve"><value>Weggelaten</value></data>
+  <data name="ChatForm_anthropic_thinkingDisplayModes_updates" xml:space="preserve"><value>Updates</value></data>
+  <data name="ChatForm_anthropic_contextManagement_title" xml:space="preserve"><value>Contextbeheer</value></data>
+  <data name="ChatForm_anthropic_contextManagement_empty" xml:space="preserve"><value>Er zijn nog geen contextbeheerbewerkingen geconfigureerd.</value></data>
+  <data name="ChatForm_anthropic_contextManagement_add" xml:space="preserve"><value>Contextbewerking toevoegen</value></data>
+  <data name="ChatForm_anthropic_contextManagement_type" xml:space="preserve"><value>Bewerkingstype</value></data>
+  <data name="ChatForm_anthropic_contextManagement_trigger" xml:space="preserve"><value>Trigger</value></data>
+  <data name="ChatForm_anthropic_contextManagement_triggerValue" xml:space="preserve"><value>Triggerwaarde</value></data>
+  <data name="ChatForm_anthropic_contextManagement_keep" xml:space="preserve"><value>Bewaren</value></data>
+  <data name="ChatForm_anthropic_contextManagement_keepValue" xml:space="preserve"><value>Waarde bewaren</value></data>
+  <data name="ChatForm_anthropic_contextManagement_clearAtLeast" xml:space="preserve"><value>Minimaal wissen</value></data>
+  <data name="ChatForm_anthropic_contextManagement_clearAtLeastValue" xml:space="preserve"><value>Minimaal te wissen tokens</value></data>
+  <data name="ChatForm_anthropic_contextManagement_clearToolInputs" xml:space="preserve"><value>Tool-invoer wissen</value></data>
+  <data name="ChatForm_anthropic_contextManagement_clearToolInputsValue" xml:space="preserve"><value>Booleaanse waarde</value></data>
+  <data name="ChatForm_anthropic_contextManagement_clearToolInputsList" xml:space="preserve"><value>Specifieke tool-invoer</value></data>
+  <data name="ChatForm_anthropic_contextManagement_clearToolInputsPlaceholder" xml:space="preserve"><value>input_a, input_b</value></data>
+  <data name="ChatForm_anthropic_contextManagement_excludeTools" xml:space="preserve"><value>Tools uitsluiten</value></data>
+  <data name="ChatForm_anthropic_contextManagement_excludeToolsPlaceholder" xml:space="preserve"><value>tool_a, tool_b</value></data>
+  <data name="ChatForm_anthropic_contextManagement_instructions" xml:space="preserve"><value>Instructies</value></data>
+  <data name="ChatForm_anthropic_contextManagement_instructionsPlaceholder" xml:space="preserve"><value>Optionele extra instructies voor compactie-samenvatting.</value></data>
+  <data name="ChatForm_anthropic_contextManagement_pauseAfterCompaction" xml:space="preserve"><value>Pauzeren na compactie</value></data>
+  <data name="ChatForm_anthropic_contextManagement_types_clear_tool_uses_20250919" xml:space="preserve"><value>Toolgebruik wissen (2025-09-19)</value></data>
+  <data name="ChatForm_anthropic_contextManagement_types_clear_thinking_20251015" xml:space="preserve"><value>Denkblokken wissen (2025-10-15)</value></data>
+  <data name="ChatForm_anthropic_contextManagement_types_compact_20260112" xml:space="preserve"><value>Context comprimeren (2026-01-12)</value></data>
+  <data name="ChatForm_anthropic_contextManagement_modes_none" xml:space="preserve"><value>Niet ingesteld</value></data>
+  <data name="ChatForm_anthropic_contextManagement_modes_boolean" xml:space="preserve"><value>Booleaans</value></data>
+  <data name="ChatForm_anthropic_contextManagement_modes_list" xml:space="preserve"><value>Specifieke tool-invoer</value></data>
+  <data name="ChatForm_anthropic_contextManagement_modes_input_tokens" xml:space="preserve"><value>Invoertokens</value></data>
+  <data name="ChatForm_anthropic_contextManagement_modes_tool_uses" xml:space="preserve"><value>Toolgebruiken</value></data>
+  <data name="ChatForm_anthropic_contextManagement_modes_thinking_turns" xml:space="preserve"><value>Denkbeurten</value></data>
+  <data name="ChatForm_anthropic_contextManagement_modes_all_object" xml:space="preserve"><value>Object: { type: &quot;all&quot; }</value></data>
+  <data name="ChatForm_anthropic_contextManagement_modes_all_literal" xml:space="preserve"><value>Letterlijk: &quot;all&quot;</value></data>
+  <data name="ChatForm_anthropic_contextManagement_booleanValues_true" xml:space="preserve"><value>Waar</value></data>
+  <data name="ChatForm_anthropic_contextManagement_booleanValues_false" xml:space="preserve"><value>Onwaar</value></data>
+  <data name="ChatForm_anthropic_contextManagement_booleanModes_none" xml:space="preserve"><value>Niet ingesteld</value></data>
+  <data name="ChatForm_anthropic_contextManagement_booleanModes_true" xml:space="preserve"><value>Waar</value></data>
+  <data name="ChatForm_anthropic_contextManagement_booleanModes_false" xml:space="preserve"><value>Onwaar</value></data>
+  <data name="ChatForm_anthropic_contextManagement_validation_invalid" xml:space="preserve"><value>Vul alle geselecteerde numerieke velden in voordat je deze contextbewerking opslaat.</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_noOptionalFields" xml:space="preserve"><value>Geen optionele velden geconfigureerd.</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_triggerInputTokens" xml:space="preserve"><value>Trigger: {{value}} invoertokens</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_triggerToolUses" xml:space="preserve"><value>Trigger: {{value}} toolgebruiken</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_keepToolUses" xml:space="preserve"><value>Bewaren: {{value}} toolgebruiken</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_clearAtLeast" xml:space="preserve"><value>Minimaal wissen: {{value}} invoertokens</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_clearToolInputsTrue" xml:space="preserve"><value>Tool-invoer wissen: waar</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_clearToolInputsFalse" xml:space="preserve"><value>Tool-invoer wissen: onwaar</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_clearToolInputsList" xml:space="preserve"><value>Tool-invoer wissen: {{value}}</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_excludeTools" xml:space="preserve"><value>Tools uitsluiten: {{value}}</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_keepThinkingTurns" xml:space="preserve"><value>Denkblokken bewaren: {{value}} beurten</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_keepAllObject" xml:space="preserve"><value>Denkblokken bewaren: object { type: &quot;all&quot; }</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_keepAllLiteral" xml:space="preserve"><value>Denkblokken bewaren: letterlijk &quot;all&quot;</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_compactDefaultTrigger" xml:space="preserve"><value>Trigger: standaard {{value}} invoertokens</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_pauseAfterCompactionTrue" xml:space="preserve"><value>Pauzeren na compactie: waar</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_pauseAfterCompactionFalse" xml:space="preserve"><value>Pauzeren na compactie: onwaar</value></data>
+  <data name="ChatForm_anthropic_contextManagement_summaries_instructions" xml:space="preserve"><value>Instructies ingesteld</value></data>
 </root>

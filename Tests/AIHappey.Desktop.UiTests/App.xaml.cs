@@ -99,6 +99,11 @@ public partial class App : Application
                     foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckSidebarAsync(local, theme);
                 results.Add("All sidebar UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
             }
+            if (Environment.GetCommandLineArgs().Contains("--chat-provider-forms-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckNativeChatProvidersAsync(theme);
+                results.Add("All native chat-provider form UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--chat-settings-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
@@ -106,6 +111,7 @@ public partial class App : Application
                     await CheckContextSearchAsync(theme); await CheckToolLayoutAndSkillProgressAsync(theme);
                     await CheckChatSkillsSettingsAsync(theme);
                     await CheckChatToolsSettingsAsync(theme);
+                    await CheckNativeChatProvidersAsync(theme);
                 }
                 results.Add("All chat settings UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
             }

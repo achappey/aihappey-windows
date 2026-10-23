@@ -19,6 +19,11 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--chat-provider-forms-only"))
+    {
+        await ChatProviderFormRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} native provider form checks passed."); return;
+    }
     if (args.Contains("--usage-snapshot"))
     {
         using var fixture = typeof(UsageRegressionTests).Assembly.GetManifestResourceStream("Desktop.UsageFixture")!;

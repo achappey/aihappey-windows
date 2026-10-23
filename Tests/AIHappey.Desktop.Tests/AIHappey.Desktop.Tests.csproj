@@ -15,6 +15,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/MessageUsage.cs" Link="Core/MessageUsage.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/UsageAnalytics.cs" Link="Core/UsageAnalytics.cs" />
     <EmbeddedResource Include="../Fixtures/usage-conversations.json" LogicalName="Desktop.UsageFixture" />
+    <EmbeddedResource Include="../Fixtures/chat-provider-parity.json" LogicalName="Desktop.ChatProviderFixture" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatMessagePresentation.cs" Link="Core/ChatMessagePresentation.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Agents.cs" Link="Core/Agents.cs" />
@@ -73,6 +74,10 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatClient.cs" Link="Core/ChatClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/GatewayErrors.cs" Link="Core/GatewayErrors.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatPreferences.cs" Link="Core/ChatPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ProviderChatConfig.cs" Link="Core/ProviderChatConfig.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/AnthropicChatConfig.cs" Link="Core/AnthropicChatConfig.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/AnthropicChatConfig.Context.cs" Link="Core/AnthropicChatConfig.Context.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/DeepSeekChatConfig.cs" Link="Core/DeepSeekChatConfig.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ToolOutputContentSettings.cs" Link="Core/ToolOutputContentSettings.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Catalog.cs" Link="Core/Catalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/CatalogClient.cs" Link="Core/CatalogClient.cs" />
