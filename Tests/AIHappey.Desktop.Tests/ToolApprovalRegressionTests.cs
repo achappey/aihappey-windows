@@ -105,17 +105,61 @@ internal static class ToolApprovalRegressionTests
             (_, _) => throw new Exception("Must not approve incomplete stream"), (_, _) => Task.CompletedTask, McpTurnSnapshot.Empty, "en", CancellationToken.None);
         check(interrupted.Status == "approval required" && interruptRounds == 1, "incomplete stream is not automatically approved or retried");
 
-        var bounded = Reply(); var loopRounds = 0;
-        try
-        {
-            await DesktopChatTurn.RunAsync(Conversation(ServiceKind.Agents, bounded), bounded,
-                (_, ct) => { loopRounds++; return Events([$$$"""{"type":"tool-search","toolCallId":"loop{{{loopRounds}}}","state":"approval-requested","output":{},"approval":{"id":"loop{{{loopRounds}}}"}}""", Finish], ct); },
-                (_, _) => Task.FromResult(new ToolApprovalDecision(true)), (_, _) => Task.CompletedTask, McpTurnSnapshot.Empty, "en", CancellationToken.None);
-            throw new Exception("Expected loop limit");
-        }
-        catch (GatewayException) { check(loopRounds == DesktopChatTurn.MaxRounds, "automatic approval loop is bounded"); }
-
+        await CheckLongRunsAsync(check);
         await CheckMcpAsync(check);
+    }
+
+    private static async Task CheckLongRunsAsync(Action<bool, string> check)
+    {
+        const int toolRounds = 40;
+        foreach (var service in new[] { ServiceKind.Ai, ServiceKind.Agents })
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var reply = Reply(); var rounds = 0; var approvals = 0;
+            await DesktopChatTurn.RunAsync(Conversation(service, reply), reply,
+                (_, ct) => Events(++rounds <= toolRounds
+                    ? [$$$"""{"type":"tool-search","toolCallId":"long{{{rounds}}}","state":"approval-requested","output":{},"approval":{"id":"long{{{rounds}}}"}}""", Finish]
+                    : ["""{"type":"text-delta","id":"answer","delta":"done"}""", Finish], ct),
+                (_, _) => { approvals++; return Task.FromResult(new ToolApprovalDecision(true)); },
+                (_, _) => Task.CompletedTask, McpTurnSnapshot.Empty, "en", timeout.Token);
+            check(rounds == toolRounds + 1 && approvals == toolRounds && reply.Status == "complete" && reply.Text == "done",
+                $"{service}: approval continuation exceeds the old 32-round cap and completes naturally");
+        }
+
+        foreach (var local in new[] { false, true })
+        foreach (var cancel in new[] { false, true })
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var executions = 0; var rounds = 0; var snapshot = McpTurnSnapshot.Empty;
+            Task<JsonElement> Call(JsonElement input, CancellationToken ct)
+            {
+                executions++;
+                if (cancel && executions == toolRounds) { timeout.Cancel(); return Task.FromCanceled<JsonElement>(ct); }
+                return Task.FromResult(Json("""{"content":[]}"""));
+            }
+            var definition = Json("""{"name":"search","inputSchema":{"type":"object"}}""");
+            if (local) snapshot.AddLocal(definition, Call);
+            else snapshot = McpTurnSnapshot.Create(new[] { new McpConnectedServer(new("long", "long", "", "https://mcp.example/"),
+                new(Json("{}"), Json("{}"), null, [definition]), (_, input, _, _, ct) => Call(input, ct)) });
+            var reply = Reply();
+            try
+            {
+                await DesktopChatTurn.RunAsync(Conversation(ServiceKind.Ai, reply), reply,
+                    (_, ct) => Events(++rounds <= toolRounds
+                        ? [$$$"""{"type":"tool-input-available","toolCallId":"long{{{rounds}}}","toolName":"search","input":{}}""", Finish]
+                        : ["""{"type":"text-delta","id":"answer","delta":"done"}""", Finish], ct),
+                    (_, _) => throw new Exception("Unexpected approval"), (_, _) => Task.CompletedTask, snapshot, "en", timeout.Token);
+                check(!cancel && rounds == toolRounds + 1 && executions == toolRounds && reply.Status == "complete" && reply.Text == "done"
+                    && reply.Message.Parts.Where(PortableConversations.IsTool).All(part => PortableConversations.String(PortableConversations.Element(part), "state") == "output-available"),
+                    $"{(local ? "local" : "MCP")}: exceeds old round/call caps without duplicate execution and completes naturally");
+            }
+            catch (OperationCanceledException) when (cancel && executions == toolRounds)
+            {
+                check(rounds == toolRounds && reply.Status == "stopped"
+                    && PortableConversations.String(PortableConversations.Element(reply.Message.Parts.Last()), "state") == "output-error",
+                    $"{(local ? "local" : "MCP")}: Stop cancels a long run without another inference request");
+            }
+        }
     }
 
     private static async Task CheckMcpAsync(Action<bool, string> check)
@@ -135,6 +179,28 @@ internal static class ToolApprovalRegressionTests
             check(calls == (!withOutput && approved ? 1 : 0) && executions - before == calls, "MCP executes only approved calls without existing output: " + withOutput + "/" + approved);
             check(await DesktopMcpToolExecution.ExecutePendingAsync(reply, snapshot, executed, "en", CancellationToken.None) == 0, "MCP existing/denied results are never rerun");
         }
+
+        var batch = Reply(); var batchAssembler = new MessageAssembler(batch);
+        const int batchSize = 64;
+        for (var index = 0; index < batchSize; index++)
+            batchAssembler.Apply(StreamEvent.Parse($$$"""{"type":"tool-input-available","toolCallId":"batch{{{index}}}","toolName":"search","input":{}}"""));
+        batchAssembler.Apply(StreamEvent.Parse(Finish));
+        var batchExecuted = new HashSet<string>(); var beforeBatch = executions;
+        check(await DesktopMcpToolExecution.ExecutePendingAsync(batch, snapshot, batchExecuted, "en", default) == batchSize
+            && executions - beforeBatch == batchSize && batchExecuted.Count == batchSize,
+            "MCP executes a parallel batch beyond the old 32-call cap");
+        check(await DesktopMcpToolExecution.ExecutePendingAsync(batch, snapshot, batchExecuted, "en", default) == 0
+            && executions - beforeBatch == batchSize, "large completed batch is never executed twice");
+
+        var duplicate = Reply(); var duplicateAssembler = new MessageAssembler(duplicate);
+        duplicateAssembler.Apply(StreamEvent.Parse("""{"type":"tool-input-available","toolCallId":"batch0","toolName":"search","input":{}}"""));
+        duplicateAssembler.Apply(StreamEvent.Parse(Finish));
+        try
+        {
+            await DesktopMcpToolExecution.ExecutePendingAsync(duplicate, snapshot, batchExecuted, "en", default);
+            throw new Exception("Expected duplicate call rejection");
+        }
+        catch (GatewayException) { check(executions - beforeBatch == batchSize, "duplicate pending call ID remains rejected without executing again"); }
     }
 
     private static async IAsyncEnumerable<StreamEvent> Events(IEnumerable<string> payloads, [EnumeratorCancellation] CancellationToken ct)

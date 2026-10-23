@@ -1,6 +1,8 @@
 using System.Text.Json;
 using AIHappey.Desktop.Core;
 using AIHappey.Vercel.Models;
+using FluentIcons.Common;
+using FluentIcons.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -94,6 +96,15 @@ public partial class App
         var send = Field<Button>(shell, "send");
         Check(VisualTreeHelper.GetParent(dictate) == VisualTreeHelper.GetParent(send)
             && Grid.GetColumn(dictate) + 2 == Grid.GetColumn(send), context + ": Dictate is in the right-hand composer actions immediately before Stop/Send");
+        var stop = Field<Button>(shell, "stop");
+        Check(stop.Content is FluentIcon { Icon: Icon.Stop } && stop.Width == send.Width && stop.Height == send.Height
+            && stop.Padding == new Thickness(0) && stop.CornerRadius == send.CornerRadius
+            && AutomationProperties.GetName(stop) == DesktopResources.Get("Stop")
+            && ToolTipService.GetToolTip(stop) is ToolTip { Content: string stopLabel } && stopLabel == DesktopResources.Get("Stop"),
+            context + ": Stop is a matching icon-only action with a localized tooltip and accessible name");
+        Check(stop.Visibility == Visibility.Collapsed && VisualTreeHelper.GetParent(stop) == VisualTreeHelper.GetParent(send)
+            && Grid.GetColumn(stop) == Grid.GetColumn(dictate) + 1 && Grid.GetColumn(send) == Grid.GetColumn(stop) + 1,
+            context + ": idle Stop is hidden in the composer action row between Dictate and Send");
         input.Select(7, 4);
         var voiceTyping = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.WindowsVoiceTyping")!;
         var nativeInput = voiceTyping.GetNestedType("Input", System.Reflection.BindingFlags.NonPublic)!;
@@ -105,9 +116,31 @@ public partial class App
         Check(!(bool)startDictation.Invoke(null, [input])!, context + ": disabled composer cannot launch global voice typing");
         input.IsEnabled = true;
         Call(shell, "SetBusy", true, true);
+        shell.UpdateLayout();
+        Check(stop.Visibility == Visibility.Visible && stop.IsEnabled && send.Visibility == Visibility.Collapsed
+            && stop.ActualWidth == 40 && stop.ActualHeight == 40
+            && Math.Abs(stop.TransformToVisual(dictate).TransformPoint(new(0, 0)).Y) < 1,
+            context + ": streaming exposes an enabled 40px Stop icon aligned with the other composer actions");
+        using (var cancellation = new CancellationTokenSource())
+        {
+            var operationField = typeof(ChatShell).GetField("operation", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            var previousOperation = operationField.GetValue(shell);
+            try
+            {
+                operationField.SetValue(shell, cancellation);
+                InvokeButton(stop);
+                Check(cancellation.IsCancellationRequested, context + ": icon-only Stop cancels the active operation");
+            }
+            finally { operationField.SetValue(shell, previousOperation); }
+        }
         Check(!dictate.IsEnabled && !(bool)startDictation.Invoke(null, [input])!
             && input.Text == "Unsent display-settings draft" && input.SelectionStart == 7 && input.SelectionLength == 4,
             context + ": busy/read-only composer blocks dictation without altering its draft or selection");
+        Call(shell, "SetBusy", false, false);
+        Check(stop.Visibility == Visibility.Collapsed && send.Visibility == Visibility.Visible,
+            context + ": returning idle hides Stop and restores Send");
+        Call(shell, "SetBusy", true, false);
+        Check(stop.Visibility == Visibility.Visible && stop.IsEnabled, context + ": non-streaming busy work retains the enabled Stop icon");
         Call(shell, "SetBusy", false, false);
         Check(dictate.IsEnabled && !input.IsReadOnly, context + ": Dictate and editing return after inference");
         var speechPage = new SpeechPage();

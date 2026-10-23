@@ -5,8 +5,6 @@ namespace AIHappey.Desktop.Core;
 /// <summary>One active human-in-the-loop turn, shared by AI and Agents. Never processes historical approvals.</summary>
 public static class DesktopChatTurn
 {
-    public const int MaxRounds = 32;
-
     public static async Task RunAsync(Conversation conversation, ConversationMessage output,
         Func<List<UIMessage>, CancellationToken, IAsyncEnumerable<StreamEvent>> stream,
         Func<PendingToolApproval, CancellationToken, Task<ToolApprovalDecision>> approve,
@@ -16,11 +14,11 @@ public static class DesktopChatTurn
         var assembler = new MessageAssembler(output);
         var executed = new HashSet<string>(StringComparer.Ordinal);
         var answered = new HashSet<string>(StringComparer.Ordinal);
-        var mcpRounds = 0;
         var messages = conversation.Messages.Where(x => x != output && PortableConversations.CanReplay(x)).Select(x => x.Message).ToList();
         try
         {
-            for (var round = 0; ; round++)
+            // Continue until completion or cancellation; only explicit chat tool policy limits a run.
+            while (true)
             {
                 ct.ThrowIfCancellationRequested();
                 await foreach (var item in stream(messages, ct))
@@ -44,7 +42,6 @@ public static class DesktopChatTurn
                 if (calls > 0)
                 {
                     await changed(true, ct); // Save the executed result before displaying its review.
-                    mcpRounds++;
                 }
                 var decisions = 0;
                 while (DesktopToolApprovals.Pending(output.Message).FirstOrDefault() is { } pending)
@@ -60,8 +57,6 @@ public static class DesktopChatTurn
                     await changed(true, ct); // Persist each decision before requesting continuation.
                 }
                 if (calls == 0 && decisions == 0) break;
-                if (mcpRounds >= DesktopMcpToolExecution.MaxRounds) throw new GatewayException(DesktopResources.Get("McpToolLimit"));
-                if (round + 1 >= MaxRounds) throw new GatewayException(DesktopResources.Get("ApprovalLoopLimit"));
                 messages = conversation.Messages.Where(x => x != output && PortableConversations.CanReplay(x)).Select(x => x.Message).Append(output.Message).ToList();
                 assembler.Continue();
             }

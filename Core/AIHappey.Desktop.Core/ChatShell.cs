@@ -39,7 +39,7 @@ public sealed partial class ChatShell : UserControl
     private readonly MenuFlyoutItem manageAccount = new() { Icon = DesktopIcons.Create(Icon.PersonAccounts) };
     private readonly Button send = new() { Content = DesktopIcons.Create(Icon.Send), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Right };
     private readonly Button dictate = new() { Name = "Dictate", Content = DesktopIcons.Create(Icon.Mic), Width = 40, Height = 40, Padding = new Thickness(0) };
-    private readonly Button stop = new() { Content = DesktopResources.Get("Stop"), Visibility = Visibility.Collapsed };
+    private readonly Button stop = new() { Name = "Stop", Content = DesktopIcons.Create(Icon.Stop), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), Visibility = Visibility.Collapsed };
     private readonly Button newChat = new() { HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(6) };
     private readonly ListView chats = new() { SelectionMode = ListViewSelectionMode.Single };
     private readonly ConditionalWeakTable<ListViewItem, ConversationRow> conversationRows = new();
@@ -131,6 +131,7 @@ public sealed partial class ChatShell : UserControl
         UpdateMode(ServiceKind.Ai);
         ToolbarControls.Label(account, DesktopResources.Get("UserProfile"));
         ToolbarControls.Label(send, DesktopResources.Get("SendMessage"));
+        ToolbarControls.Label(stop, DesktopResources.Get("Stop"));
         ToolbarControls.Subtle(dictate);
         ToolbarControls.Label(dictate, DesktopResources.Get("SpeechDictate"));
         ToolbarControls.Label(target, DesktopResources.Get("SelectModel"));

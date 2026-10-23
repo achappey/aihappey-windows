@@ -29,7 +29,7 @@ public partial class App
         Check(!ReferenceEquals(first, second) && first.IconSize == IconSize.Resizable && first.IconVariant == IconVariant.Regular
             && first.FontSize == 20 && first.ReadLocalValue(IconElement.ForegroundProperty) == DependencyProperty.UnsetValue,
             context + ": factory creates fresh regular resizable icons without pinning foreground");
-        var samples = new[] { Icon.Brain, Icon.Bot, Icon.Cloud, Icon.Connector, Icon.Copy, Icon.Send, Icon.Image, Icon.Video, Icon.Mic, Icon.Money, Icon.DataUsage };
+        var samples = new[] { Icon.Brain, Icon.Bot, Icon.Cloud, Icon.Connector, Icon.Copy, Icon.Send, Icon.Stop, Icon.Image, Icon.Video, Icon.Mic, Icon.Money, Icon.DataUsage };
         var icons = new List<FluentIcon>();
         var row = new StackPanel { Orientation = Orientation.Horizontal };
         root.Children.Add(row);

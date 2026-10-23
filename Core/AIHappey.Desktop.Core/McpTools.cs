@@ -153,8 +153,6 @@ public sealed class McpTurnSnapshot
 public static class DesktopMcpToolExecution
 {
     public const string ElicitationToolName = "ai_input_required";
-    public const int MaxRounds = 8;
-    public const int MaxCalls = 32;
 
     public static async Task<int> ExecutePendingAsync(ConversationMessage output, McpTurnSnapshot snapshot,
         HashSet<string> executed, string locale, CancellationToken ct, DesktopElicitationHandler? elicit = null, bool executeMcp = true)
@@ -179,7 +177,7 @@ public static class DesktopMcpToolExecution
                 || raw.TryGetProperty("providerExecuted", out var provider) && provider.ValueKind == JsonValueKind.True) continue;
             ct.ThrowIfCancellationRequested();
             var id = PortableConversations.String(raw, "toolCallId") ?? throw new JsonException("Missing tool call ID.");
-            if (executed.Count >= MaxCalls || !executed.Add(id)) throw new GatewayException(DesktopResources.Get("McpToolLimit"));
+            if (!executed.Add(id)) throw new GatewayException(DesktopResources.Get("McpToolLimit"));
             var node = PortableConversations.Node(part);
             // Local and MCP tools share this executor. Match the browser's explicit client-tool boundary.
             node["providerExecuted"] = false;
