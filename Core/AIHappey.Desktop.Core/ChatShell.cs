@@ -597,9 +597,9 @@ public sealed partial class ChatShell : UserControl
         ToolbarControls.Subtle(button); ToolbarControls.Label(button, label); return button;
     }
 
-    private static void RenderPart(StackPanel content, UIMessagePart part)
+    private static void RenderPart(StackPanel content, UIMessagePart part, bool chartsEnabled = false)
     {
-        if (part.Type == "text") { content.Children.Add(new ChatMarkdown { Name = "MessageMarkdown", Text = PortableConversations.Text(part) }); return; }
+        if (part.Type == "text") { content.Children.Add(new ChatMarkdown { Name = "MessageMarkdown", ChartsEnabled = chartsEnabled, Text = PortableConversations.Text(part) }); return; }
         if (part.Type == "reasoning")
         {
             content.Children.Add(new TextBlock { Text = DesktopResources.Get("Reasoning"), FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });

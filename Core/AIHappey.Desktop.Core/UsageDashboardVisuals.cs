@@ -57,19 +57,7 @@ internal static class UsageDashboardVisuals
             series.YValues = new Samples { ItemsSource = data.Values.ToList() };
             chart.Series.Add(series);
         }
-        void Theme()
-        {
-            var dark = chart.ActualTheme == ElementTheme.Dark;
-            var colors = dark ? new[] { 0x80B4FFu, 0x50D8D0u, 0x9BD98Bu, 0xFFD479u, 0xEAA1DDu, 0xFF9F96u, 0xB7A5FFu, 0x96D8F5u }
-                : new[] { 0x245EB5u, 0x087F8Cu, 0x327F35u, 0x966000u, 0x9D3688u, 0xBD382Du, 0x6941B5u, 0x006B99u };
-            for (var i = 0; i < chart.Series.Count; i++)
-            {
-                var color = colors[i % colors.Length];
-                var brush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, (byte)(color >> 16), (byte)(color >> 8), (byte)color));
-                if (chart.Series[i] is CartesianSeries series) { series.Stroke = brush; if (series is BarSeries bars) bars.Fill = brush; }
-            }
-        }
-        chart.Loaded += (_, _) => Theme(); chart.ActualThemeChanged += (_, _) => Theme();
+        NativeChartAppearance.Apply(chart);
         var body = new StackPanel { Spacing = 12 }; body.Children.Add(chart);
         // Native charts currently have no hover tooltips. Always provide exact, selectable, paginated values.
         var details = new Expander { Name = "UsageChartValues", Header = Text("ChartValues"), HorizontalAlignment = HorizontalAlignment.Stretch,

@@ -29,6 +29,7 @@ public sealed partial class ChatShell
         public bool? Activity;
         public string? ContentKey;
         public string? ContentType;
+        public bool ChartsEnabled;
         public (ChatMessagePresentation Presentation, DateTimeOffset Timestamp, string? ActivityType)? HeaderKey;
         public (bool Activity, int Page, int Count, string? Tokens, string? Price, bool ShowTokens, string Key)? FooterKey;
         public IReadOnlyList<MessageSource> Sources = [];
@@ -178,6 +179,8 @@ public sealed partial class ChatShell
     {
         var part = view.Displayed;
         var block = view.Projected.Block;
+        var chartsEnabled = view.Projected.Message.Message.Role == Role.assistant
+            && view.Projected.Message.Status == "complete" && part?.Type == "text";
         var waiting = view.Projected.Message.Status == "streaming" && block.Key.EndsWith(":pending", StringComparison.Ordinal);
         var images = block.Images;
         var type = images?.Count > 0 ? "inline-images" : part?.Type;
@@ -185,10 +188,11 @@ public sealed partial class ChatShell
             : part is null ? (waiting ? "" : block.Key.EndsWith(":details", StringComparison.Ordinal)
             ? DesktopResources.Get("AttachmentsSources") : DesktopResources.Get("Working"))
             : type is "text" or "reasoning" ? PortableConversations.Text(part) : PortableConversations.Element(part).GetRawText();
-        if (view.ContentKey == contentKey && view.ContentType == type) return;
+        if (view.ContentKey == contentKey && view.ContentType == type && view.ChartsEnabled == chartsEnabled) return;
         if (part is not null && type is "text" or "reasoning" && view.ContentType == type
             && view.Content.Children.OfType<ChatMarkdown>().FirstOrDefault() is { } markdown)
         {
+            markdown.ChartsEnabled = chartsEnabled;
             if (markdown.Text != contentKey) markdown.Text = contentKey;
         }
         else
@@ -199,7 +203,7 @@ public sealed partial class ChatShell
             var content = new StackPanel();
             if (images?.Count > 0)
                 foreach (var file in images) content.Children.Add(ToolOutputView.ImageView(file));
-            else if (part is not null) RenderPart(content, part);
+            else if (part is not null) RenderPart(content, part, chartsEnabled);
             else if (!waiting) content.Children.Add(SelectableText(contentKey));
             var children = content.Children.ToArray();
             content.Children.Clear();
@@ -207,6 +211,7 @@ public sealed partial class ChatShell
         }
         view.ContentKey = contentKey;
         view.ContentType = type;
+        view.ChartsEnabled = chartsEnabled;
     }
 
     private void UpdateStreamingFooter(StreamingRow view)

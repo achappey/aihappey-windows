@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="Chart" xml:space="preserve"><value>Chart</value></data>
+  <data name="Code" xml:space="preserve"><value>Code</value></data>
+  <data name="CopyCode" xml:space="preserve"><value>Copy code</value></data>
   <data name="SkillCreate" xml:space="preserve"><value>Create new skill</value></data>
   <data name="SkillEdit" xml:space="preserve"><value>Edit skill</value></data>
   <data name="SkillImport" xml:space="preserve"><value>Import skill package</value></data>

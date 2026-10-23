@@ -6,16 +6,21 @@ using Windows.System;
 
 namespace AIHappey.Desktop.Core;
 
-/// <summary>Toolkit integration only: native resource adaptation and read-only content policy.</summary>
+/// <summary>Toolkit integration: native resources, read-only content policy, and opt-in chart previews.</summary>
 public sealed partial class ChatMarkdown : UserControl
 {
     private bool refreshQueued;
-    public string Text { get => Markdown.Text; set => Markdown.Text = value; }
+    public string Text
+    {
+        get => Markdown.Text;
+        set { if (Markdown.Text == value) return; RestoreChartLayout(); Markdown.Text = value; QueueCharts(); }
+    }
 
     public ChatMarkdown()
     {
         InitializeComponent();
         Markdown.Config = new MarkdownConfig { ImageProvider = new NoRemoteImages() };
+        Markdown.LayoutUpdated += (_, _) => QueueCharts();
         Markdown.OnLinkClicked += async (_, args) =>
         {
             args.Handled = true;
@@ -62,10 +67,12 @@ public sealed partial class ChatMarkdown : UserControl
                 }
             };
             var text = Text;
+            RestoreChartLayout();
             Markdown.Text = "";
             Markdown.Text = text;
             foreach (var richText in ControlAppearance.Descendants(Markdown).OfType<RichTextBlock>())
                 richText.SetBinding(RichTextBlock.ForegroundProperty, new Binding { Source = Primary, Path = new PropertyPath("Foreground") });
+            EnhanceCharts();
         });
     }
 

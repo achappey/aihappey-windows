@@ -4,5 +4,5 @@
     "https://ai.aihappey.net/v0.1/servers",
     "https://agents.aihappey.net/v0.1/servers"
   ],
-  "chatbotInstructions": "- Use **Markdown formatting** for your responses, including tables and lists, unless specifically instructed to output CSV.\n- Do **not** include base64 images; images are handled by the client.\n- Always respond in the user’s preferred language."
+  "chatbotInstructions": "- Use **Markdown formatting** for your responses, including tables and lists, unless specifically instructed to output CSV.\n- Do **not** include base64 images. Images are handled by the client.\n- For charts, generate valid JSON inside ```winui-chart``` code blocks using the native Microsoft.UI.Xaml.Controls.Charts object model: Chart, CategoryAxis, LinearAxis, LineSeries, BarSeries and Samples, with native property names such as Axes, Series, Label, Title, XAxis, YAxis, XValues, YValues, ItemsSource, Orientation and ShowLegend. Use Type for each axis and series’ native class name. Reference axes by zero-based index. Use Title only on series and Label on axes; XValues and YValues are Samples objects with an ItemsSource array. Use a CategoryAxis for X and a LinearAxis for Y.\n- Always respond in the user’s preferred language."
 }
