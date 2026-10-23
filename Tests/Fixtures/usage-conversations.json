@@ -1,0 +1,36 @@
+[
+  {
+    "id": "usage-one", "metadata": { "name": "Research", "model": "fallback/model" },
+    "messages": [
+      { "id": "user", "role": "user", "metadata": { "timestamp": "2026-10-20T23:30:00Z" }, "parts": [
+        { "type": "text", "text": "Hello 🌍" }, { "type": "file", "mediaType": "image/png", "url": "data:image/png;base64,AA==" },
+        { "type": "file", "mimeType": "application/pdf", "url": "https://example.invalid/file" }
+      ] },
+      { "id": "model", "role": "assistant", "metadata": {
+        "timestamp": "2026-10-21T00:30:00+02:00", "model": "OpenAI/gpt-test", "providerId": "OpenAI", "temperature": "0.7", "finishReason": "stop",
+        "response": { "usage": { "inputTokens": 99, "outputTokens": 99 }, "cost": 9 },
+        "gateway": { "usage": { "inputTokens": 88, "outputTokens": 88 }, "cost": 8, "ttft": 90 },
+        "usage": { "inputTokens": "12", "outputTokens": 8, "totalTokens": 24 },
+        "providerMetadata": { "gateway": { "cost": "0.125", "ttft": 0, "tps": 20 } }
+      }, "parts": [
+        { "type": "text", "text": "Answer" }, { "type": "reasoning", "reasoning": "Think" },
+        { "type": "source-url", "url": "https://example.invalid" }, { "type": "source-document", "title": "Doc" },
+        { "type": "data-report", "data": { "result": true } },
+        { "type": "tool-search", "state": "output-available", "output": { "structuredContent": {}, "content": [ { "type": "text" }, { "type": "image" } ] } },
+        { "type": "tool-search", "state": "output-error", "errorText": "failure" },
+        { "type": "tool-pending", "state": "input-available" }, { "type": "dynamic-tool", "toolName": "legacy", "output": "ignored by web tool metrics" }
+      ] },
+      { "id": "agent", "role": "assistant", "metadata": {
+        "updatedAt": "2026-10-22T10:00:00Z", "modelId": "org/model", "provider": "custom", "author": "ResearchAgent",
+        "gateway": { "cost": 0.25, "ttft": 2, "tps": 40, "usage": { "tokens": { "input": 3, "output": 7 } } },
+        "error": { "message": "Recorded error" }, "response": { "finishReason": "length" }
+      }, "parts": [ { "type": "text", "text": "Agent" }, { "type": "tool-search", "output": null, "state": "output-available" } ] }
+    ]
+  },
+  { "id": "usage-two", "metadata": { "name": "Empty metadata" }, "messages": [
+    { "id": "zero", "role": "assistant", "metadata": { "createdAt": "not-a-date", "model": "bare-model", "totalTokens": 0,
+      "usage": { "prompt_tokens": 5, "completion_tokens": 2 }, "cost": "not-a-number", "providerMetadata": { "gateway": { "ttft": "1", "tps": -1 } }
+    }, "parts": [] },
+    { "id": "no-metadata", "role": "user", "parts": [] }
+  ] }
+]

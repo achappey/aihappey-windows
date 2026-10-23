@@ -1419,4 +1419,97 @@
   <data name="WorkflowResponseLanguage" xml:space="preserve"><value>Antwoordtaal</value></data>
   <data name="WorkflowHandoffFrom" xml:space="preserve"><value>Van agent</value></data>
   <data name="WorkflowHandoffTo" xml:space="preserve"><value>Naar agent</value></data>
+  <data name="UsageTitle" xml:space="preserve"><value>AI-gebruik</value></data>
+  <data name="UsageSubtitle" xml:space="preserve"><value>Gebruik in {0} opgeslagen gesprekken en {1} berichten voor dit account en eindpunt.</value></data>
+  <data name="UsageLoading" xml:space="preserve"><value>Gebruiksgegevens van gesprekken laden…</value></data>
+  <data name="UsageLoadFailed" xml:space="preserve"><value>De gebruiksgegevens van gesprekken konden niet worden geladen.</value></data>
+  <data name="UsageRefresh" xml:space="preserve"><value>Gespreksgebruik vernieuwen</value></data>
+  <data name="UsageNoData" xml:space="preserve"><value>Er zijn geen vastgelegde gegevens beschikbaar voor deze weergave.</value></data>
+  <data name="UsageView" xml:space="preserve"><value>Weergave</value></data>
+  <data name="UsageOverview" xml:space="preserve"><value>Overzicht</value></data>
+  <data name="UsageSummary" xml:space="preserve"><value>Samenvatting</value></data>
+  <data name="UsageConversations" xml:space="preserve"><value>Gesprekken</value></data>
+  <data name="UsageConversation" xml:space="preserve"><value>Gesprek</value></data>
+  <data name="UsageMessages" xml:space="preserve"><value>Berichten</value></data>
+  <data name="UsageModels" xml:space="preserve"><value>Modellen</value></data>
+  <data name="UsageAgents" xml:space="preserve"><value>Agents</value></data>
+  <data name="UsageModel" xml:space="preserve"><value>Model</value></data>
+  <data name="UsageAgent" xml:space="preserve"><value>Agent</value></data>
+  <data name="UsageModelsAgents" xml:space="preserve"><value>Modellen / agents</value></data>
+  <data name="UsageProviders" xml:space="preserve"><value>Providers</value></data>
+  <data name="UsageMatrix" xml:space="preserve"><value>Provider-/modelvergelijking</value></data>
+  <data name="UsageTokensCost" xml:space="preserve"><value>Tokens / kosten</value></data>
+  <data name="UsagePerformance" xml:space="preserve"><value>Prestaties</value></data>
+  <data name="UsageToolsMcp" xml:space="preserve"><value>Tools / MCP</value></data>
+  <data name="UsageActivity" xml:space="preserve"><value>Activiteit</value></data>
+  <data name="UsageParts" xml:space="preserve"><value>Onderdelen</value></data>
+  <data name="UsageAttachments" xml:space="preserve"><value>Bijlagen</value></data>
+  <data name="UsageRichParts" xml:space="preserve"><value>Rijke inhoud</value></data>
+  <data name="UsageBalance" xml:space="preserve"><value>Generatie-instellingen</value></data>
+  <data name="UsageFinish" xml:space="preserve"><value>Afronding / fouten</value></data>
+  <data name="UsageTokens" xml:space="preserve"><value>Tokens</value></data>
+  <data name="UsageCost" xml:space="preserve"><value>Kosten</value></data>
+  <data name="UsageOutliers" xml:space="preserve"><value>Uitschieters</value></data>
+  <data name="UsageTtft" xml:space="preserve"><value>Tijd tot eerste token (s)</value></data>
+  <data name="UsageTps" xml:space="preserve"><value>Tokens per seconde (tok/s)</value></data>
+  <data name="UsageTools" xml:space="preserve"><value>Tools</value></data>
+  <data name="UsageStates" xml:space="preserve"><value>Statussen</value></data>
+  <data name="UsageResults" xml:space="preserve"><value>Resultaten</value></data>
+  <data name="UsageTotalTokens" xml:space="preserve"><value>Totaal tokens</value></data>
+  <data name="UsageInputTokens" xml:space="preserve"><value>Invoertokens</value></data>
+  <data name="UsageOutputTokens" xml:space="preserve"><value>Uitvoertokens</value></data>
+  <data name="UsageEstimatedCost" xml:space="preserve"><value>Geschatte kosten (vastgelegd)</value></data>
+  <data name="UsageRoleMix" xml:space="preserve"><value>Berichtrollen</value></data>
+  <data name="UsageActivityOverTime" xml:space="preserve"><value>Activiteit door de tijd</value></data>
+  <data name="UsageConversationSizeDistribution" xml:space="preserve"><value>Verdeling van gespreksgrootte</value></data>
+  <data name="UsageTopConversationsByMessages" xml:space="preserve"><value>Gesprekken met de meeste berichten</value></data>
+  <data name="UsageHourOfDay" xml:space="preserve"><value>Berichten per lokaal uur</value></data>
+  <data name="UsageDailyTokens" xml:space="preserve"><value>Dagelijkse tokens (UTC)</value></data>
+  <data name="UsageTextVolume" xml:space="preserve"><value>Tekstvolume</value></data>
+  <data name="UsageCharacters" xml:space="preserve"><value>tekens</value></data>
+  <data name="UsagePartTypes" xml:space="preserve"><value>Onderdeeltypen</value></data>
+  <data name="UsageSources" xml:space="preserve"><value>Bronnen</value></data>
+  <data name="UsageAttachmentTypes" xml:space="preserve"><value>Bijlagetypen</value></data>
+  <data name="UsageReasoning" xml:space="preserve"><value>Berichten met redenering</value></data>
+  <data name="UsageDataParts" xml:space="preserve"><value>Berichten met gegevensonderdelen</value></data>
+  <data name="UsageStructuredOutput" xml:space="preserve"><value>Berichten met gestructureerde uitvoer</value></data>
+  <data name="UsageTemperatureDistribution" xml:space="preserve"><value>Temperatuurverdeling</value></data>
+  <data name="UsageFinishReasons" xml:space="preserve"><value>Afrondingsredenen</value></data>
+  <data name="UsageErrors" xml:space="preserve"><value>Vastgelegde fouten</value></data>
+  <data name="UsageTopModels" xml:space="preserve"><value>Meest gebruikte modellen</value></data>
+  <data name="UsageTopAgents" xml:space="preserve"><value>Meest gebruikte agents</value></data>
+  <data name="UsageModelTokens" xml:space="preserve"><value>Tokens per model</value></data>
+  <data name="UsageAgentTokens" xml:space="preserve"><value>Tokens per agent</value></data>
+  <data name="UsageTopProviders" xml:space="preserve"><value>Meest gebruikte providers</value></data>
+  <data name="UsageProviderUniqueModels" xml:space="preserve"><value>Unieke modellen per provider</value></data>
+  <data name="UsageProviderModelMatrix" xml:space="preserve"><value>Antwoorden per provider en model</value></data>
+  <data name="UsageTokenBreakdown" xml:space="preserve"><value>Tokenverdeling</value></data>
+  <data name="UsageDailyCost" xml:space="preserve"><value>Dagelijkse kosten (UTC)</value></data>
+  <data name="UsageTopConversationsByCost" xml:space="preserve"><value>Gesprekken met de hoogste kosten</value></data>
+  <data name="UsageLargestTokenUsage" xml:space="preserve"><value>Hoogste tokengebruik per bericht</value></data>
+  <data name="UsageLargestCost" xml:space="preserve"><value>Hoogste kosten per bericht</value></data>
+  <data name="UsageAverageTtft" xml:space="preserve"><value>Gemiddelde tijd tot eerste token</value></data>
+  <data name="UsageP95Ttft" xml:space="preserve"><value>P95 tijd tot eerste token</value></data>
+  <data name="UsageAverageTps" xml:space="preserve"><value>Gemiddelde tokens per seconde</value></data>
+  <data name="UsageMeasuredResponses" xml:space="preserve"><value>Gemeten antwoorden</value></data>
+  <data name="UsageTtftOverTime" xml:space="preserve"><value>Gemiddelde tijd tot eerste token door de tijd (s)</value></data>
+  <data name="UsageTpsOverTime" xml:space="preserve"><value>Gemiddelde tokens per seconde door de tijd</value></data>
+  <data name="UsageAverage" xml:space="preserve"><value>Gemiddelde</value></data>
+  <data name="UsageMedian" xml:space="preserve"><value>Mediaan</value></data>
+  <data name="UsageSamples" xml:space="preserve"><value>Metingen</value></data>
+  <data name="UsageKind" xml:space="preserve"><value>Soort</value></data>
+  <data name="UsageMessagesWithTools" xml:space="preserve"><value>Berichten met tools</value></data>
+  <data name="UsageTopTools" xml:space="preserve"><value>Meest gebruikte tools</value></data>
+  <data name="UsageInvocations" xml:space="preserve"><value>Aanroepen</value></data>
+  <data name="UsageToolStates" xml:space="preserve"><value>Toolstatussen</value></data>
+  <data name="UsageToolSuccessByName" xml:space="preserve"><value>Toolresultaten per naam</value></data>
+  <data name="UsageSuccess" xml:space="preserve"><value>Geslaagd</value></data>
+  <data name="UsageError" xml:space="preserve"><value>Fout</value></data>
+  <data name="UsagePending" xml:space="preserve"><value>In afwachting</value></data>
+  <data name="UsageToolResultTypes" xml:space="preserve"><value>Toolresultaattypen</value></data>
+  <data name="UsageCount" xml:space="preserve"><value>Aantal</value></data>
+  <data name="UsageCategory" xml:space="preserve"><value>Categorie</value></data>
+  <data name="UsageChartValues" xml:space="preserve"><value>Exacte waarden</value></data>
+  <data name="UsagePrevious" xml:space="preserve"><value>Vorige</value></data>
+  <data name="UsageNext" xml:space="preserve"><value>Volgende</value></data>
 </root>

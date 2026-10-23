@@ -1424,4 +1424,97 @@
   <data name="WorkflowResponseLanguage" xml:space="preserve"><value>Response language</value></data>
   <data name="WorkflowHandoffFrom" xml:space="preserve"><value>From agent</value></data>
   <data name="WorkflowHandoffTo" xml:space="preserve"><value>To agent</value></data>
+  <data name="UsageTitle" xml:space="preserve"><value>AI usage</value></data>
+  <data name="UsageSubtitle" xml:space="preserve"><value>Usage across {0} saved conversations and {1} messages in this account and endpoint.</value></data>
+  <data name="UsageLoading" xml:space="preserve"><value>Loading conversation usage data…</value></data>
+  <data name="UsageLoadFailed" xml:space="preserve"><value>Conversation usage data could not be loaded.</value></data>
+  <data name="UsageRefresh" xml:space="preserve"><value>Refresh conversation usage</value></data>
+  <data name="UsageNoData" xml:space="preserve"><value>No recorded data is available for this view.</value></data>
+  <data name="UsageView" xml:space="preserve"><value>View</value></data>
+  <data name="UsageOverview" xml:space="preserve"><value>Overview</value></data>
+  <data name="UsageSummary" xml:space="preserve"><value>Summary</value></data>
+  <data name="UsageConversations" xml:space="preserve"><value>Conversations</value></data>
+  <data name="UsageConversation" xml:space="preserve"><value>Conversation</value></data>
+  <data name="UsageMessages" xml:space="preserve"><value>Messages</value></data>
+  <data name="UsageModels" xml:space="preserve"><value>Models</value></data>
+  <data name="UsageAgents" xml:space="preserve"><value>Agents</value></data>
+  <data name="UsageModel" xml:space="preserve"><value>Model</value></data>
+  <data name="UsageAgent" xml:space="preserve"><value>Agent</value></data>
+  <data name="UsageModelsAgents" xml:space="preserve"><value>Models / agents</value></data>
+  <data name="UsageProviders" xml:space="preserve"><value>Providers</value></data>
+  <data name="UsageMatrix" xml:space="preserve"><value>Provider / model comparison</value></data>
+  <data name="UsageTokensCost" xml:space="preserve"><value>Tokens / cost</value></data>
+  <data name="UsagePerformance" xml:space="preserve"><value>Performance</value></data>
+  <data name="UsageToolsMcp" xml:space="preserve"><value>Tools / MCP</value></data>
+  <data name="UsageActivity" xml:space="preserve"><value>Activity</value></data>
+  <data name="UsageParts" xml:space="preserve"><value>Parts</value></data>
+  <data name="UsageAttachments" xml:space="preserve"><value>Attachments</value></data>
+  <data name="UsageRichParts" xml:space="preserve"><value>Rich content</value></data>
+  <data name="UsageBalance" xml:space="preserve"><value>Generation settings</value></data>
+  <data name="UsageFinish" xml:space="preserve"><value>Completion / errors</value></data>
+  <data name="UsageTokens" xml:space="preserve"><value>Tokens</value></data>
+  <data name="UsageCost" xml:space="preserve"><value>Cost</value></data>
+  <data name="UsageOutliers" xml:space="preserve"><value>Outliers</value></data>
+  <data name="UsageTtft" xml:space="preserve"><value>Time to first token (s)</value></data>
+  <data name="UsageTps" xml:space="preserve"><value>Tokens per second (tok/s)</value></data>
+  <data name="UsageTools" xml:space="preserve"><value>Tools</value></data>
+  <data name="UsageStates" xml:space="preserve"><value>States</value></data>
+  <data name="UsageResults" xml:space="preserve"><value>Results</value></data>
+  <data name="UsageTotalTokens" xml:space="preserve"><value>Total tokens</value></data>
+  <data name="UsageInputTokens" xml:space="preserve"><value>Input tokens</value></data>
+  <data name="UsageOutputTokens" xml:space="preserve"><value>Output tokens</value></data>
+  <data name="UsageEstimatedCost" xml:space="preserve"><value>Estimated cost (recorded)</value></data>
+  <data name="UsageRoleMix" xml:space="preserve"><value>Message roles</value></data>
+  <data name="UsageActivityOverTime" xml:space="preserve"><value>Activity over time</value></data>
+  <data name="UsageConversationSizeDistribution" xml:space="preserve"><value>Conversation size distribution</value></data>
+  <data name="UsageTopConversationsByMessages" xml:space="preserve"><value>Top conversations by messages</value></data>
+  <data name="UsageHourOfDay" xml:space="preserve"><value>Messages by local hour</value></data>
+  <data name="UsageDailyTokens" xml:space="preserve"><value>Daily tokens (UTC)</value></data>
+  <data name="UsageTextVolume" xml:space="preserve"><value>Text volume</value></data>
+  <data name="UsageCharacters" xml:space="preserve"><value>characters</value></data>
+  <data name="UsagePartTypes" xml:space="preserve"><value>Part types</value></data>
+  <data name="UsageSources" xml:space="preserve"><value>Sources</value></data>
+  <data name="UsageAttachmentTypes" xml:space="preserve"><value>Attachment types</value></data>
+  <data name="UsageReasoning" xml:space="preserve"><value>Messages with reasoning</value></data>
+  <data name="UsageDataParts" xml:space="preserve"><value>Messages with data parts</value></data>
+  <data name="UsageStructuredOutput" xml:space="preserve"><value>Messages with structured output</value></data>
+  <data name="UsageTemperatureDistribution" xml:space="preserve"><value>Temperature distribution</value></data>
+  <data name="UsageFinishReasons" xml:space="preserve"><value>Finish reasons</value></data>
+  <data name="UsageErrors" xml:space="preserve"><value>Recorded errors</value></data>
+  <data name="UsageTopModels" xml:space="preserve"><value>Top models by responses</value></data>
+  <data name="UsageTopAgents" xml:space="preserve"><value>Top agents by responses</value></data>
+  <data name="UsageModelTokens" xml:space="preserve"><value>Model tokens</value></data>
+  <data name="UsageAgentTokens" xml:space="preserve"><value>Agent tokens</value></data>
+  <data name="UsageTopProviders" xml:space="preserve"><value>Top providers</value></data>
+  <data name="UsageProviderUniqueModels" xml:space="preserve"><value>Unique models by provider</value></data>
+  <data name="UsageProviderModelMatrix" xml:space="preserve"><value>Provider / model response counts</value></data>
+  <data name="UsageTokenBreakdown" xml:space="preserve"><value>Token breakdown</value></data>
+  <data name="UsageDailyCost" xml:space="preserve"><value>Daily cost (UTC)</value></data>
+  <data name="UsageTopConversationsByCost" xml:space="preserve"><value>Top conversations by cost</value></data>
+  <data name="UsageLargestTokenUsage" xml:space="preserve"><value>Largest message token usage</value></data>
+  <data name="UsageLargestCost" xml:space="preserve"><value>Largest message cost</value></data>
+  <data name="UsageAverageTtft" xml:space="preserve"><value>Average time to first token</value></data>
+  <data name="UsageP95Ttft" xml:space="preserve"><value>P95 time to first token</value></data>
+  <data name="UsageAverageTps" xml:space="preserve"><value>Average tokens per second</value></data>
+  <data name="UsageMeasuredResponses" xml:space="preserve"><value>Measured responses</value></data>
+  <data name="UsageTtftOverTime" xml:space="preserve"><value>Average time to first token over time (s)</value></data>
+  <data name="UsageTpsOverTime" xml:space="preserve"><value>Average tokens per second over time</value></data>
+  <data name="UsageAverage" xml:space="preserve"><value>Average</value></data>
+  <data name="UsageMedian" xml:space="preserve"><value>Median</value></data>
+  <data name="UsageSamples" xml:space="preserve"><value>Samples</value></data>
+  <data name="UsageKind" xml:space="preserve"><value>Kind</value></data>
+  <data name="UsageMessagesWithTools" xml:space="preserve"><value>Messages with tools</value></data>
+  <data name="UsageTopTools" xml:space="preserve"><value>Top tools</value></data>
+  <data name="UsageInvocations" xml:space="preserve"><value>Invocations</value></data>
+  <data name="UsageToolStates" xml:space="preserve"><value>Tool states</value></data>
+  <data name="UsageToolSuccessByName" xml:space="preserve"><value>Tool outcomes by name</value></data>
+  <data name="UsageSuccess" xml:space="preserve"><value>Success</value></data>
+  <data name="UsageError" xml:space="preserve"><value>Error</value></data>
+  <data name="UsagePending" xml:space="preserve"><value>Pending</value></data>
+  <data name="UsageToolResultTypes" xml:space="preserve"><value>Tool result types</value></data>
+  <data name="UsageCount" xml:space="preserve"><value>Count</value></data>
+  <data name="UsageCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="UsageChartValues" xml:space="preserve"><value>Exact values</value></data>
+  <data name="UsagePrevious" xml:space="preserve"><value>Previous</value></data>
+  <data name="UsageNext" xml:space="preserve"><value>Next</value></data>
 </root>

@@ -88,7 +88,7 @@ public partial class App
         try
         {
             var ai = Field<StackPanel>(shell, "aiNavigation");
-            Check(ai.Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Select(b => b.Name).SequenceEqual(["NavigateModels", "NavigateProviders"]), context + ": Providers is beside Models in the AI navigation group");
+            Check(ai.Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Select(b => b.Name).SequenceEqual(["NavigateModels", "NavigateProviders", "NavigateUsage"]), context + ": Providers and Usage are beside Models in the AI navigation group");
             var providersButton = ai.Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Single(b => b.Name == "NavigateProviders");
             var mcpButton = Field<StackPanel>(shell, "expandedPageNavigation").Children.OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Single(b => b.Name == "NavigateMcp");
             var providerIcon = ((StackPanel)providersButton.Content).Children.OfType<FluentIcons.WinUI.FluentIcon>().Single();

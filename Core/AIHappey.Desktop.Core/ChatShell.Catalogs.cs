@@ -11,7 +11,7 @@ using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
 
-internal enum DesktopPage { Chat, Images, Videos, Speech, Transcriptions, Agents, Skills, Plugins, Mcp, Models, Providers, Files }
+internal enum DesktopPage { Chat, Images, Videos, Speech, Transcriptions, Agents, Skills, Plugins, Mcp, Models, Providers, Files, Usage }
 
 public sealed partial class ChatShell
 {
@@ -52,7 +52,8 @@ public sealed partial class ChatShell
             (DesktopPage.Plugins, DesktopResources.Get("PluginsTitle"), (IconElement)DesktopIcons.Create(Icon.PuzzlePiece)),
             (DesktopPage.Files, DesktopResources.Get("Files"), (IconElement)DesktopIcons.Create(Icon.Folder)),
             (DesktopPage.Models, DesktopResources.Get("Models"), (IconElement)DesktopIcons.Create(Icon.Brain)),
-            (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)DesktopIcons.Create(Icon.Cloud))
+            (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)DesktopIcons.Create(Icon.Cloud)),
+            (DesktopPage.Usage, DesktopResources.Get("UsageTitle"), (IconElement)DesktopIcons.Create(Icon.DataUsage))
         })
         {
             if (page == DesktopPage.Models)
@@ -83,7 +84,7 @@ public sealed partial class ChatShell
             ToolbarControls.Label(button, label);
             button.Click += async (_, _) => await NavigateAsync(page);
             pageButtons.Add(page, button);
-            if (page is DesktopPage.Models or DesktopPage.Providers) { button.Margin = new Thickness(24, 0, 0, 0); aiNavigation.Children.Add(button); }
+            if (page is DesktopPage.Models or DesktopPage.Providers or DesktopPage.Usage) { button.Margin = new Thickness(24, 0, 0, 0); aiNavigation.Children.Add(button); }
             else
             {
                 var key = page == DesktopPage.Mcp ? "servers" : page.ToString().ToLowerInvariant();
@@ -108,6 +109,9 @@ public sealed partial class ChatShell
         overviewHost.Children.Add(providersOverview);
         overviewHost.Children.Add(filesOverview);
         overviewHost.Children.Add(pluginsOverview);
+        overviewHost.Children.Add(usagePage);
+        usagePage.RetryRequested = async () => await RunAsync(LoadUsageAsync);
+        usagePage.CancelRequested = () => operation?.Cancel();
         foreach (var page in new[] { agentsOverview, skillsOverview })
         {
             page.RetryRequested = async () => await RunAsync(ct => LoadOverviewAsync(page, ct));
@@ -143,12 +147,13 @@ public sealed partial class ChatShell
         modelsOverview.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
         modelFilters.Visibility = page == DesktopPage.Models ? Visibility.Visible : Visibility.Collapsed;
         providersOverview.Visibility = page == DesktopPage.Providers ? Visibility.Visible : Visibility.Collapsed;
+        usagePage.Visibility = page == DesktopPage.Usage ? Visibility.Visible : Visibility.Collapsed;
         providerFilters.Visibility = page == DesktopPage.Providers ? Visibility.Visible : Visibility.Collapsed;
         addAgent.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         addSkill.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
         pluginsOverview.Visibility = addPlugin.Visibility = page == DesktopPage.Plugins ? Visibility.Visible : Visibility.Collapsed;
         filesOverview.Visibility = addFiles.Visibility = page == DesktopPage.Files ? Visibility.Visible : Visibility.Collapsed;
-        if (page is DesktopPage.Models or DesktopPage.Providers && aiCategory is not null)
+        if (page is DesktopPage.Models or DesktopPage.Providers or DesktopPage.Usage && aiCategory is not null)
         {
             aiCategoryExpanded = true; aiNavigation.Visibility = Visibility.Visible;
             if (aiCategory.Content is Grid categoryHeader && categoryHeader.Children.OfType<FluentIcon>().FirstOrDefault(icon => icon.Name == "ArtificialIntelligenceChevron") is { } chevron) chevron.Icon = Icon.ChevronUp;
@@ -162,7 +167,7 @@ public sealed partial class ChatShell
         RefreshConversationActivity();
         UpdatePageButtons();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
-        { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Speech => "SpeechRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Files => "FilesRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", _ => "RefreshSkills" }));
+        { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Speech => "SpeechRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Files => "FilesRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", DesktopPage.Usage => "UsageRefresh", _ => "RefreshSkills" }));
     }
 
     private void UpdatePageButtons()
@@ -186,6 +191,7 @@ public sealed partial class ChatShell
         mcpOverview.SetActionsEnabled(!value);
         modelsOverview.SetActionsEnabled(!value);
         providersOverview.SetActionsEnabled(!value);
+        usagePage.SetActionsEnabled(!value);
         catalogDialog?.SetActionsEnabled(!value);
     }
 
@@ -204,6 +210,7 @@ public sealed partial class ChatShell
         InvalidateTranscriptions();
         InvalidateModelsOverview();
         InvalidateProvidersOverview();
+        usagePage.Reset();
         InvalidateFiles();
         runtimeSkillCatalog = []; runtimeSkillPartition = null;
         localAgents = []; localAgentPartition = null; agentEditor?.Hide();

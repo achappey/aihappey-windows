@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly, [switch]$AuthoringToolsOnly, [switch]$ToolOutputOnly, [switch]$ChatFilesOnly, [switch]$ContextSearchOnly, [switch]$SettingsAppearanceOnly)
+param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly, [switch]$AuthoringToolsOnly, [switch]$ToolOutputOnly, [switch]$ChatFilesOnly, [switch]$ContextSearchOnly, [switch]$SettingsAppearanceOnly, [switch]$UsageOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -8,6 +8,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Fluent icon source audit failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Video resource key audit failed.' }
 & node (Join-Path $PSScriptRoot 'check-agent-resources.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Agent resource key audit failed.' }
+& node (Join-Path $PSScriptRoot 'check-usage-resources.cjs')
+if ($LASTEXITCODE -ne 0) { throw 'Usage resource key audit failed.' }
 
 # Guard against reintroducing the resource-lookup patterns behind the startup/rendering crashes.
 $unsafe = Get-ChildItem (Join-Path $repo 'Core\AIHappey.Desktop.Core') -Filter '*.cs' |
@@ -25,6 +27,7 @@ $report = Join-Path ([IO.Path]::GetTempPath()) ('AIHappey-ui-tests-' + [guid]::N
 try {
     $arguments = @('"' + $report + '"')
     if ($StartupOnly) { $arguments += '--startup-only' }
+    if ($UsageOnly) { $arguments += '--usage-only' }
     if ($SettingsAppearanceOnly) { $arguments += '--settings-appearance-only' }
     if ($ContextSearchOnly) { $arguments += '--context-search-only' }
     if ($TranscriptOnly) { $arguments += '--transcript-only' }

@@ -19,6 +19,16 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--usage-snapshot"))
+    {
+        using var fixture = typeof(UsageRegressionTests).Assembly.GetManifestResourceStream("Desktop.UsageFixture")!;
+        var usageFixture = JsonSerializer.Deserialize<Conversation[]>(fixture, PortableConversations.Json)!;
+        Console.WriteLine(JsonSerializer.Serialize(UsageAnalytics.Build(usageFixture,
+            new Dictionary<string, string> { ["openai"] = "OpenAI", ["custom"] = "Custom provider" }, TimeZoneInfo.Utc), JsonSerializerOptions.Web));
+        return;
+    }
+    await UsageRegressionTests.RunAsync(Check, root);
+    if (args.Contains("--usage-only")) { Console.WriteLine($"All {tests} usage checks passed."); return; }
     await EnterpriseSettingsRegressionTests.RunAsync(Check, root);
     await ProviderSettingsRegressionTests.RunAsync(Check, root);
     if (args.Contains("--provider-settings-only")) { Console.WriteLine($"All {tests} provider settings checks passed."); return; }
