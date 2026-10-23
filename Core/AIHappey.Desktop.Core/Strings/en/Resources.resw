@@ -217,8 +217,8 @@
   <data name="SearchPlaceholder" xml:space="preserve"><value>Search</value></data>
   <data name="SearchAgents" xml:space="preserve"><value>Search agents</value></data>
   <data name="SearchSkills" xml:space="preserve"><value>Search skills</value></data>
-  <data name="AgentsDescription" xml:space="preserve"><value>Agents bring capabilities, context, and execution logic together in a single model. Explore the available agents and choose one to start a conversation.</value></data>
-  <data name="SkillsDescription" xml:space="preserve"><value>An overview of available skills for tasks and workflows. See what each skill does and choose the right option. Skills combine instructions, logic, and execution in a consistent structure.</value></data>
+  <data name="AgentsDescription" xml:space="preserve"><value>Agents are autonomous units that bring capabilities, context, and execution logic together in a single model. This delivers predictable behavior, makes scaling straightforward, and ensures consistent use across different environments.</value></data>
+  <data name="SkillsDescription" xml:space="preserve"><value>An overview of all available skills for tasks and workflows. For each skill, you see what it does, when to use it, and how it differs from others. This helps you quickly choose the right option. Skills combine instructions, logic, and execution in a consistent structure for clarity, repeatability, and control.</value></data>
   <data name="Loading" xml:space="preserve"><value>Loading</value></data>
   <data name="CatalogNoResults" xml:space="preserve"><value>No results. Try another search or filter.</value></data>
   <data name="CatalogCanceled" xml:space="preserve"><value>Catalog loading was canceled or timed out.</value></data>
@@ -642,7 +642,7 @@
   <data name="Edit" xml:space="preserve"><value>Edit</value></data>
   <data name="Output" xml:space="preserve"><value>Output</value></data>
   <data name="McpTitle" xml:space="preserve"><value>Model Context</value></data>
-  <data name="McpDescription" xml:space="preserve"><value>Connect tools and services to your models with Model Context Protocol.</value></data>
+  <data name="McpDescription" xml:space="preserve"><value>Model Context Protocol gives you one structured way to work with prompts, resources and tools, no matter where the information comes from. You always work clearly, transparently and in the same way.</value></data>
   <data name="McpAddServer" xml:space="preserve"><value>Add server</value></data>
   <data name="McpInstalledServers" xml:space="preserve"><value>Installed servers</value></data>
   <data name="McpManage" xml:space="preserve"><value>Manage</value></data>
@@ -1183,7 +1183,7 @@
   <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>One word or phrase per line to guide transcription</value></data>
   <data name="ChatForm_openai_transcriptionResponseFormat" xml:space="preserve"><value>Response format</value></data>
   <data name="Files" xml:space="preserve"><value>Files</value></data>
-  <data name="FilesDescription" xml:space="preserve"><value>Share files and folders with AI. Only references are savedΓÇöyour files stay where they are. Sharing a folder lets AI read its contents and subfolders and create new files there when the Files plugin is enabled. Existing files are never overwritten. File tools execute before results are reviewed.</value></data>
+  <data name="FilesDescription" xml:space="preserve"><value>An overview of all locally available files. Drag and drop files onto this page to add them and allow AI to read and create files through tools.</value></data>
   <data name="FilesSearch" xml:space="preserve"><value>Search shared files and folders</value></data>
   <data name="FilesCount" xml:space="preserve"><value>Files ({0})</value></data>
   <data name="FoldersCount" xml:space="preserve"><value>Folders ({0})</value></data>
@@ -1232,9 +1232,7 @@
   <data name="PluginsTitle" xml:space="preserve">
     <value>Plugins</value>
   </data>
-  <data name="PluginsDescription" xml:space="preserve">
-    <value>Portable packages containing Agent Skills, MCP servers and reusable files.</value>
-  </data>
+  <data name="PluginsDescription" xml:space="preserve"><value>Plugins bundle Skills and Model Context servers into a single package. This lets you add complete sets of instructions, tools, and capabilities at once, and easily combine, share, and reuse them.</value></data>
   <data name="PluginWebsite" xml:space="preserve">
     <value>Official website</value>
   </data>
@@ -1427,7 +1425,7 @@
   <data name="WorkflowResponseLanguage" xml:space="preserve"><value>Response language</value></data>
   <data name="WorkflowHandoffFrom" xml:space="preserve"><value>From agent</value></data>
   <data name="WorkflowHandoffTo" xml:space="preserve"><value>To agent</value></data>
-  <data name="UsageTitle" xml:space="preserve"><value>AI usage</value></data>
+  <data name="UsageTitle" xml:space="preserve"><value>Usage</value></data>
   <data name="UsageSubtitle" xml:space="preserve"><value>Usage across {0} saved conversations and {1} messages in this account and endpoint.</value></data>
   <data name="UsageLoading" xml:space="preserve"><value>Loading conversation usage data…</value></data>
   <data name="UsageLoadFailed" xml:space="preserve"><value>Conversation usage data could not be loaded.</value></data>
@@ -1520,4 +1518,13 @@
   <data name="UsageChartValues" xml:space="preserve"><value>Exact values</value></data>
   <data name="UsagePrevious" xml:space="preserve"><value>Previous</value></data>
   <data name="UsageNext" xml:space="preserve"><value>Next</value></data>
+  <data name="TimeToFirstToken" xml:space="preserve"><value>Time to first token</value></data>
+  <data name="TokensPerSecond" xml:space="preserve"><value>Tokens per second</value></data>
+  <data name="SettingsShowMetrics.Header" xml:space="preserve"><value>Show metrics</value></data>
+  <data name="SettingsShowMetrics.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Show metrics</value></data>
+  <data name="OverviewDocumentation" xml:space="preserve"><value>Technical documentation</value></data>
+  <data name="OverviewOfficialWebsite" xml:space="preserve"><value>Official website</value></data>
+  <data name="SettingsShowMetrics.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="SettingsShowMetrics.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="FilesSharingNote" xml:space="preserve"><value>Only references are saved—your files stay where they are. Sharing a folder lets AI read its contents and subfolders and create new files there when the Files plugin is enabled. Existing files are never overwritten. File tools execute before results are reviewed.</value></data>
 </root>

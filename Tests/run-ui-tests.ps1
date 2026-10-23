@@ -10,6 +10,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Video resource key audit failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Agent resource key audit failed.' }
 & node (Join-Path $PSScriptRoot 'check-usage-resources.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Usage resource key audit failed.' }
+& node (Join-Path $PSScriptRoot 'check-overview-resources.cjs')
+if ($LASTEXITCODE -ne 0) { throw 'Overview/browser resource parity failed.' }
 
 # Guard against reintroducing the resource-lookup patterns behind the startup/rendering crashes.
 $unsafe = Get-ChildItem (Join-Path $repo 'Core\AIHappey.Desktop.Core') -Filter '*.cs' |

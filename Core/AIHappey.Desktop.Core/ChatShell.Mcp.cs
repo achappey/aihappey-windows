@@ -7,6 +7,8 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class ChatShell
 {
     private readonly McpOverviewPage mcpOverview = new();
+    private readonly Button addMcpServer = new() { Name = "McpAddServer", Content = DesktopIcons.Create(Icon.Add), Width = 40, Height = 40,
+        Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private readonly MessageFooterPanel mcpTags = new() { Name = "McpConnectedServers" };
     private readonly ScrollViewer mcpTagScroll = new() { MaxHeight = 128, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
         HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Visibility = Visibility.Collapsed };
@@ -23,8 +25,9 @@ public sealed partial class ChatShell
         mcpTagScroll.Content = mcpTags;
         ToolbarControls.Label(manageMcp, DesktopResources.Get("McpTitle"));
         manageMcp.Click += async (_, _) => await ManageMcpAsync();
+        ControlAppearance.Stock(addMcpServer); ToolbarControls.Label(addMcpServer, DesktopResources.Get("McpAddServer"));
+        addMcpServer.Click += async (_, _) => await ManageMcpAsync(add: true);
         mcpOverview.RetryRequested = async () => await RunAsync(ct => LoadMcpOverviewAsync(ct));
-        mcpOverview.AddRequested = async () => await ManageMcpAsync(add: true);
         mcpOverview.ManageRequested = async () => await ManageMcpAsync();
         mcpOverview.InstallRequested = async item => await RunAsync(ct => Mcp.InstallAsync(new DesktopMcpServer
         { Id = item.Id, Name = item.Name, Description = item.Description, Url = item.Url, RegistryUrl = item.RegistryUrl, Version = item.Version, Icons = item.Icons.ToArray() }, ct));
@@ -109,6 +112,7 @@ public sealed partial class ChatShell
         {
             mcpDialog = null; historyDialogOpen = false; RenderMcpTags(); mcpOverview.SetInstalled(Mcp.Servers);
             if (!closing && activePage == DesktopPage.Chat) addContext.Focus(FocusState.Programmatic);
+            else if (!closing && activePage == DesktopPage.Mcp && add) addMcpServer.Focus(FocusState.Programmatic);
         }
     }
 }

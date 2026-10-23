@@ -53,7 +53,9 @@ internal sealed class OverviewPage : UserControl
             Text = kind == CatalogKind.Agent
                 ? DesktopResources.Get("AgentsDescription")
                 : DesktopResources.Get("SkillsDescription") };
-        body.Children.Add(title); body.Children.Add(description);
+        body.Children.Add(new OverviewPageHeader(title, kind == CatalogKind.Skill ? "https://agentskills.io" : null,
+            kind == CatalogKind.Skill ? "https://agentskills.io/specification" : null));
+        body.Children.Add(description);
         var searchRow = new Grid { ColumnSpacing = 8, MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 0, 0) };
         SearchBox.HorizontalAlignment = HorizontalAlignment.Stretch;
         searchRow.Children.Add(SearchBox); body.Children.Add(searchRow);
@@ -169,7 +171,8 @@ internal sealed class OverviewPage : UserControl
         grid.RowDefinitions.Add(new() { Height = GridLength.Auto }); grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) }); grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new Grid { Margin = new Thickness(16, 16, 16, 0), ColumnSpacing = 12 };
         header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        header.Children.Add(CardIcon(item));
+        var icon = CardIcon(item);
+        if (icon is not null) header.Children.Add(icon);
         var labels = new StackPanel { Spacing = 6 };
         labels.Children.Add(new TextBlock { Text = item.Name, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, MaxLines = 2, TextTrimming = TextTrimming.CharacterEllipsis });
         var badgeText = item.Kind == CatalogKind.Agent ? item.Model : item.Version;
@@ -213,10 +216,16 @@ internal sealed class OverviewPage : UserControl
         NativeCardSurface.Action(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", DesktopResources.Get(action), item.Name)); AutomationProperties.SetAutomationId(button, item.Key + ":" + action); return button;
     }
 
-    private UIElement CardIcon(CatalogItem item)
+    private UIElement? CardIcon(CatalogItem item)
     {
+        if (item.Kind == CatalogKind.Skill)
+        {
+            var provider = ProviderCatalog.SkillProvider(item);
+            return provider is null || provider.Icons.Count == 0 ? null
+                : new ProviderLogo(provider with { Urls = new() }, 32, showPlaceholder: false) { Name = "SkillProviderLogo", VerticalAlignment = VerticalAlignment.Top };
+        }
         var icon = new Grid { Width = 32, Height = 32, VerticalAlignment = VerticalAlignment.Top };
-        icon.Children.Add(item.Kind == CatalogKind.Agent ? DesktopIcons.Create(Icon.Bot) : DesktopIcons.Create(Icon.Star, 24));
+        icon.Children.Add(DesktopIcons.Create(Icon.Bot));
         if (!AppContext.TryGetSwitch("AIHappey.Desktop.DisableRemoteImages", out var disabled) || !disabled)
         {
             var theme = ActualTheme == ElementTheme.Dark ? "dark" : "light";

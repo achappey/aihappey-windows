@@ -27,6 +27,8 @@ try
             new Dictionary<string, string> { ["openai"] = "OpenAI", ["custom"] = "Custom provider" }, TimeZoneInfo.Utc), JsonSerializerOptions.Web));
         return;
     }
+    await OverviewConsistencyRegressionTests.RunAsync(Check, root);
+    if (args.Contains("--overview-consistency-only")) { Console.WriteLine($"All {tests} overview/metrics checks passed."); return; }
     await UsageRegressionTests.RunAsync(Check, root);
     if (args.Contains("--usage-only")) { Console.WriteLine($"All {tests} usage checks passed."); return; }
     await EnterpriseSettingsRegressionTests.RunAsync(Check, root);

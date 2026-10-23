@@ -15,9 +15,12 @@ namespace AIHappey.Desktop.Core;
 public sealed class PluginsOverviewPage : UserControl
 {
     private readonly StackPanel rows = new() { Spacing = 16 };
-    private readonly AutoSuggestBox search = new() { Name = "PluginSearch", PlaceholderText = DesktopResources.Get("Search"), MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly AutoSuggestBox search = new() { Name = "PluginSearch", PlaceholderText = DesktopResources.Get("Search"), HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly Button keywords = new() { Content = DesktopResources.Get("PluginKeywords") }, authors = new() { Content = DesktopResources.Get("PluginAuthor") };
-    private readonly ToggleButton all = new() { Content = DesktopResources.Get("All"), IsChecked = true }, favorites = new() { Content = DesktopResources.Get("Favorites") };
+    private readonly NavigationView tabs = new() { Name = "PluginFilters", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
+    private readonly NavigationViewItem all = new() { Tag = "all" }, favorites = new() { Tag = "favorites" };
     private IReadOnlyList<DesktopAgentPlugin> items = [];
     private readonly HashSet<string> selectedKeywords = new(StringComparer.OrdinalIgnoreCase), selectedAuthors = new(StringComparer.OrdinalIgnoreCase);
     private bool favoriteOnly, enabled = true;
@@ -30,13 +33,23 @@ public sealed class PluginsOverviewPage : UserControl
     {
         Name = "PluginsOverview";
         var panel = new StackPanel { Name = "PluginsBody", Spacing = 16, MaxWidth = 900, Margin = new Thickness(24), HorizontalAlignment = HorizontalAlignment.Center };
-        panel.Children.Add(new TextBlock { Text = DesktopResources.Get("PluginsTitle"), FontSize = 28, HorizontalAlignment = HorizontalAlignment.Center });
-        panel.Children.Add(new TextBlock { Text = DesktopResources.Get("PluginsDescription"), TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center });
-        var links = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Center };
-        links.Children.Add(new HyperlinkButton { Content = DesktopResources.Get("PluginWebsite"), NavigateUri = new("https://agent-plugins.org/") });
-        links.Children.Add(new HyperlinkButton { Content = DesktopResources.Get("PluginSpecification"), NavigateUri = new("https://agent-plugins.org/specification") }); panel.Children.Add(links);
-        var filters = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 }; filters.Children.Add(search); filters.Children.Add(keywords); filters.Children.Add(authors); panel.Children.Add(filters);
-        var tabs = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 }; tabs.Children.Add(all); tabs.Children.Add(favorites); panel.Children.Add(tabs); panel.Children.Add(rows);
+        panel.Children.Add(new OverviewPageHeader(new TextBlock { Text = DesktopResources.Get("PluginsTitle"), FontSize = 36,
+            FontWeight = Microsoft.UI.Text.FontWeights.Bold }, "https://agent-plugins.org/", "https://agent-plugins.org/specification"));
+        panel.Children.Add(new TextBlock { Text = DesktopResources.Get("PluginsDescription"), FontSize = 16, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center });
+        var filters = new Grid { Name = "PluginSearchFilters", ColumnSpacing = 16, RowSpacing = 8 };
+        filters.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        filters.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        filters.RowDefinitions.Add(new() { Height = GridLength.Auto }); filters.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        var facets = new StackPanel { Name = "PluginFacets", Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
+        facets.Children.Add(keywords); facets.Children.Add(authors); filters.Children.Add(search); Grid.SetColumn(facets, 1); filters.Children.Add(facets); panel.Children.Add(filters);
+        filters.SizeChanged += (_, _) =>
+        {
+            var compact = filters.ActualWidth < 560;
+            Grid.SetColumnSpan(search, compact ? 2 : 1); Grid.SetRow(facets, compact ? 1 : 0);
+        };
+        AutomationProperties.SetAutomationId(all, "PluginFilter_all"); AutomationProperties.SetAutomationId(favorites, "PluginFilter_favorites");
+        tabs.MenuItems.Add(all); tabs.MenuItems.Add(favorites); tabs.SelectedItem = all;
+        panel.Children.Add(tabs); panel.Children.Add(rows);
         var viewer = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
         Content = viewer;
@@ -47,10 +60,15 @@ public sealed class PluginsOverviewPage : UserControl
         }
         viewer.SizeChanged += (_, _) => SizeBody();
         Loaded += (_, _) => SizeBody();
-        foreach (var control in new Control[] { search, keywords, authors, all, favorites }) ControlAppearance.Stock(control);
+        foreach (var control in new Control[] { search, keywords, authors }) ControlAppearance.Stock(control);
         AutomationProperties.SetName(search, DesktopResources.Get("Search"));
         search.TextChanged += (_, _) => Render();
-        all.Click += (_, _) => { favoriteOnly = false; Render(); }; favorites.Click += (_, _) => { favoriteOnly = true; Render(); };
+        tabs.SelectionChanged += (_, args) =>
+        {
+            var selected = ReferenceEquals(args.SelectedItem, favorites);
+            if (favoriteOnly == selected) return;
+            favoriteOnly = selected; Render();
+        };
         keywords.Click += (_, _) => Facet(keywords, true); authors.Click += (_, _) => Facet(authors, false);
         AllowDrop = true;
         DragOver += (_, args) => { args.AcceptedOperation = enabled && args.DataView.Contains(StandardDataFormats.StorageItems) ? DataPackageOperation.Copy : DataPackageOperation.None; args.Handled = true; };
@@ -65,7 +83,11 @@ public sealed class PluginsOverviewPage : UserControl
     {
         items = value; selectedKeywords.IntersectWith(items.SelectMany(p => p.Keywords)); selectedAuthors.IntersectWith(items.Select(p => p.Author)); Render();
     }
-    public void SetActionsEnabled(bool value) { enabled = value; foreach (var control in rows.Children.SelectMany(ControlAppearance.Descendants).OfType<Button>()) control.IsEnabled = value; }
+    public void SetActionsEnabled(bool value)
+    {
+        enabled = value; search.IsEnabled = tabs.IsEnabled = keywords.IsEnabled = authors.IsEnabled = value;
+        foreach (var control in rows.Children.SelectMany(ControlAppearance.Descendants).OfType<Button>()) control.IsEnabled = value;
+    }
     private bool Matches(DesktopAgentPlugin plugin, string? keyword = null, string? author = null) =>
         (plugin.Id + " " + plugin.Description + " " + string.Join(' ', plugin.Keywords)).Contains(search.Text.Trim(), StringComparison.OrdinalIgnoreCase)
         && (keyword is null ? selectedKeywords.All(k => plugin.Keywords.Contains(k, StringComparer.OrdinalIgnoreCase)) : selectedKeywords.Append(keyword).All(k => plugin.Keywords.Contains(k, StringComparer.OrdinalIgnoreCase)))
@@ -86,8 +108,8 @@ public sealed class PluginsOverviewPage : UserControl
     private void Render()
     {
         rows.Children.Clear(); var filtered = items.Where(p => Matches(p)).ToArray();
-        all.IsChecked = !favoriteOnly; favorites.IsChecked = favoriteOnly;
         all.Content = DesktopResources.Get("All") + $" ({filtered.Length})"; favorites.Content = DesktopResources.Get("Favorites") + $" ({filtered.Count(p => p.Favorite)})";
+        ToolbarControls.Label(all, (string)all.Content); ToolbarControls.Label(favorites, (string)favorites.Content);
         foreach (var plugin in filtered.Where(p => !favoriteOnly || p.Favorite))
         {
             var body = new StackPanel { Spacing = 10 }; body.Children.Add(new TextBlock { Text = plugin.Id, FontSize = 20, TextWrapping = TextWrapping.Wrap });

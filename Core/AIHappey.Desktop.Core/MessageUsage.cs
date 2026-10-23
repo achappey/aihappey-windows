@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using AIHappey.Vercel.Models;
 
 namespace AIHappey.Desktop.Core;
@@ -7,6 +8,41 @@ namespace AIHappey.Desktop.Core;
 /// <summary>Optional footer metadata, shared by live and restored assistant messages.</summary>
 internal static class MessageUsage
 {
+    public static (string? Ttft, string? Tps) ReadPerformance(Dictionary<string, object>? metadata)
+    {
+        var nested = Property(Property(metadata, "providerMetadata"), "gateway");
+        var legacy = Property(metadata, "gateway");
+        return (FormatMetric(Property(nested, "ttft") ?? Property(legacy, "ttft"), true),
+            FormatMetric(Property(nested, "tps") ?? Property(legacy, "tps"), false));
+    }
+
+    private static object? Property(object? value, string name)
+    {
+        object? result = value switch
+        {
+            JsonElement { ValueKind: JsonValueKind.Object } element when element.TryGetProperty(name, out var property) => property,
+            JsonObject node => node[name],
+            System.Collections.IDictionary dictionary => dictionary.Contains(name) ? dictionary[name] : null,
+            _ => null
+        };
+        return result is JsonElement { ValueKind: JsonValueKind.Null or JsonValueKind.Undefined } ? null : result;
+    }
+
+    // Validate each field independently. Bad optional metrics must never hide valid cost,
+    // token or sibling metric badges, and strings are not coerced to numbers.
+    internal static string? FormatMetric(object? raw, bool firstToken)
+    {
+        if (raw is null) return null;
+        try
+        {
+            var element = raw is JsonElement json ? json : JsonSerializer.SerializeToElement(raw);
+            if (element.ValueKind != JsonValueKind.Number || !element.TryGetDouble(out var value) || !double.IsFinite(value) || value < 0) return null;
+            var rounded = Math.Round(value, firstToken ? 2 : 0, MidpointRounding.AwayFromZero);
+            return (rounded == 0 ? 0 : rounded).ToString(firstToken ? "#,0.##" : "N0", CultureInfo.CurrentCulture) + (firstToken ? " s" : " tok/s");
+        }
+        catch (Exception error) when (error is JsonException or ArgumentException or NotSupportedException) { return null; }
+    }
+
     public static (string? Tokens, string? Price) Read(Dictionary<string, object> metadata, string model, DateTimeOffset timestamp)
     {
         try

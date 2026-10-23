@@ -31,7 +31,7 @@ public sealed partial class ChatShell
         public string? ContentType;
         public bool ChartsEnabled;
         public (ChatMessagePresentation Presentation, DateTimeOffset Timestamp, string? ActivityType)? HeaderKey;
-        public (bool Activity, int Page, int Count, string? Tokens, string? Price, bool ShowTokens, string Key)? FooterKey;
+        public (bool Activity, int Page, int Count, string? Tokens, string? Price, bool ShowTokens, string Key, bool ShowMetrics, string? Ttft, string? Tps)? FooterKey;
         public IReadOnlyList<MessageSource> Sources = [];
         public IReadOnlyList<MessageAttachment> Attachments = [];
     }
@@ -222,7 +222,9 @@ public sealed partial class ChatShell
         var user = message.Message.Role == Role.user;
         var (tokenCount, price) = !user && !block.Activity && message.Message.Metadata is not null
             ? MessageUsage.Read(message.Message.Metadata, current.Target, message.Timestamp) : (null, null);
-        var footerKey = (block.Activity, view.Page, block.Parts.Count, tokenCount, price, session.Settings.Chat.ShowTokens, block.Key);
+        var (ttft, tps) = message.Message.Role == Role.assistant && !block.Activity
+            ? MessageUsage.ReadPerformance(message.Message.Metadata) : (null, null);
+        var footerKey = (block.Activity, view.Page, block.Parts.Count, tokenCount, price, session.Settings.Chat.ShowTokens, block.Key, session.Settings.Chat.ShowMetrics, ttft, tps);
         if (view.FooterKey == footerKey && view.Sources.SequenceEqual(projected.Sources)
             && view.Attachments.SequenceEqual(projected.Attachments)) return;
         var footerActions = new MessageFooterPanel();
@@ -276,10 +278,26 @@ public sealed partial class ChatShell
             badge.Style = TranscriptStyle("TranscriptSurfaceStyle");
             footerActions.Children.Add(badge);
         }
+        if (session.Settings.Chat.ShowMetrics)
+        {
+            AddMetric(ttft, "TimeToFirstToken", Icon.Timer);
+            AddMetric(tps, "TokensPerSecond", Icon.TopSpeed);
+        }
         AddDetailsActions(footerActions, projected);
         view.Footer.Child = footerActions;
         view.FooterKey = footerKey;
         view.Sources = projected.Sources;
         view.Attachments = projected.Attachments;
+        void AddMetric(string? text, string name, Icon icon)
+        {
+            if (text is null) return;
+            var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
+            content.Children.Add(DesktopIcons.Create(icon, 14));
+            content.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
+            var badge = new Border { Name = name, Child = content, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16),
+                VerticalAlignment = VerticalAlignment.Center, Style = TranscriptStyle("TranscriptSurfaceStyle") };
+            ToolbarControls.Label(badge, DesktopResources.Get(name) + ": " + text);
+            footerActions.Children.Add(badge);
+        }
     }
 }

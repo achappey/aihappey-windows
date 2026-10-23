@@ -55,6 +55,7 @@
                 <StackPanel x:Name="ChatPage" Spacing="16" Visibility="Collapsed">
                     <ToggleSwitch x:Name="ShowTokens" x:Uid="SettingsShowTokens" />
                     <ToggleSwitch x:Name="ShowProviderLogo" x:Uid="SettingsShowProviderLogo" />
+                    <ToggleSwitch x:Name="ShowMetrics" x:Uid="SettingsShowMetrics" />
                     <ToggleSwitch x:Name="ApiDebugEnabled" x:Uid="SettingsApiDebug" />
                     <StackPanel x:Name="ToolOutputContentPanel" Spacing="12">
                         <ToggleSwitch x:Name="ToolOutputText" x:Uid="SettingsToolOutputText" />

@@ -11,6 +11,7 @@ namespace AIHappey.Desktop.Core;
 public sealed class ChatPreferences
 {
     public bool ShowTokens { get; set; }
+    public bool ShowMetrics { get; set; }
     public bool ShowProviderLogo { get; set; } = true;
     public bool ApiDebugEnabled { get; set; }
     private ToolOutputContentSettings toolOutputContentSettings = new();
@@ -71,6 +72,7 @@ public sealed class ChatPreferences
     public ChatPreferences Clone() => new()
     {
         ShowTokens = ShowTokens,
+        ShowMetrics = ShowMetrics,
         ShowProviderLogo = ShowProviderLogo,
         ApiDebugEnabled = ApiDebugEnabled,
         ToolOutputContentSettings = ToolOutputContentSettings.Clone(),
@@ -89,7 +91,7 @@ public sealed class ChatPreferences
     // Inference reset must not reset app-wide choices owned by user settings.
     internal ChatPreferences InferenceDefaults() => new()
     {
-        ShowTokens = ShowTokens, ShowProviderLogo = ShowProviderLogo, ApiDebugEnabled = ApiDebugEnabled,
+        ShowTokens = ShowTokens, ShowMetrics = ShowMetrics, ShowProviderLogo = ShowProviderLogo, ApiDebugEnabled = ApiDebugEnabled,
         ToolOutputContentSettings = ToolOutputContentSettings.Clone()
     };
 

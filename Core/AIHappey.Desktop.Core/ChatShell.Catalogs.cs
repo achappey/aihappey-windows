@@ -47,9 +47,9 @@ public sealed partial class ChatShell
             (DesktopPage.Speech, DesktopResources.Get("Speech"), (IconElement)DesktopIcons.Create(Icon.Speaker2)),
             (DesktopPage.Transcriptions, DesktopResources.Get("Transcriptions"), (IconElement)DesktopIcons.Create(Icon.Mic)),
             (DesktopPage.Agents, DesktopResources.Get("Agents"), (IconElement)DesktopIcons.Create(Icon.Bot)),
+            (DesktopPage.Plugins, DesktopResources.Get("PluginsTitle"), (IconElement)DesktopIcons.Create(Icon.PuzzlePiece)),
             (DesktopPage.Mcp, DesktopResources.Get("McpTitle"), (IconElement)DesktopIcons.Create(Icon.Connector)),
             (DesktopPage.Skills, DesktopResources.Get("Skills"), (IconElement)DesktopIcons.Create(Icon.Star)),
-            (DesktopPage.Plugins, DesktopResources.Get("PluginsTitle"), (IconElement)DesktopIcons.Create(Icon.PuzzlePiece)),
             (DesktopPage.Files, DesktopResources.Get("Files"), (IconElement)DesktopIcons.Create(Icon.Folder)),
             (DesktopPage.Models, DesktopResources.Get("Models"), (IconElement)DesktopIcons.Create(Icon.Brain)),
             (DesktopPage.Providers, DesktopResources.Get("Providers"), (IconElement)DesktopIcons.Create(Icon.Cloud)),
@@ -151,6 +151,7 @@ public sealed partial class ChatShell
         providerFilters.Visibility = page == DesktopPage.Providers ? Visibility.Visible : Visibility.Collapsed;
         addAgent.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         addSkill.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
+        addMcpServer.Visibility = page == DesktopPage.Mcp ? Visibility.Visible : Visibility.Collapsed;
         pluginsOverview.Visibility = addPlugin.Visibility = page == DesktopPage.Plugins ? Visibility.Visible : Visibility.Collapsed;
         filesOverview.Visibility = addFiles.Visibility = page == DesktopPage.Files ? Visibility.Visible : Visibility.Collapsed;
         if (page is DesktopPage.Models or DesktopPage.Providers or DesktopPage.Usage && aiCategory is not null)
@@ -185,6 +186,7 @@ public sealed partial class ChatShell
         foreach (var button in pageButtons.Values) button.IsEnabled = !value;
         addAgent.IsEnabled = !value;
         addSkill.IsEnabled = !value;
+        addMcpServer.IsEnabled = !value;
         addPlugin.IsEnabled = !value; pluginsOverview.SetActionsEnabled(!value);
         addFiles.IsEnabled = !value; filesOverview.SetActionsEnabled(!value);
         agentsOverview.SetActionsEnabled(!value); skillsOverview.SetActionsEnabled(!value);

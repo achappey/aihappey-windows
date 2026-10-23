@@ -217,8 +217,8 @@
   <data name="SearchPlaceholder" xml:space="preserve"><value>Zoeken</value></data>
   <data name="SearchAgents" xml:space="preserve"><value>Agents zoeken</value></data>
   <data name="SearchSkills" xml:space="preserve"><value>Skills zoeken</value></data>
-  <data name="AgentsDescription" xml:space="preserve"><value>Agents combineren mogelijkheden, context en uitvoeringslogica in ├⌐├⌐n model. Ontdek de beschikbare agents en kies er een om een chat te starten.</value></data>
-  <data name="SkillsDescription" xml:space="preserve"><value>Een overzicht van beschikbare skills voor taken en workflows. Bekijk wat elke skill doet en kies de juiste optie. Skills combineren instructies, logica en uitvoering in een consistente structuur.</value></data>
+  <data name="AgentsDescription" xml:space="preserve"><value>Agents zijn autonome eenheden die vaardigheden, context en uitvoeringslogica samenbrengen in één model. Dat levert voorspelbaar gedrag op, maakt opschalen eenvoudig en zorgt voor een consistente inzet in verschillende omgevingen.</value></data>
+  <data name="SkillsDescription" xml:space="preserve"><value>Een overzicht van alle beschikbare skills voor taken en workflows. Per skill zie je wat het doet, wanneer je het inzet en hoe het verschilt van andere skills. Zo kies je snel de juiste optie. Skills bundelen instructies, logica en uitvoering in één consistente aanpak, voor duidelijkheid, herhaalbaarheid en grip.</value></data>
   <data name="Loading" xml:space="preserve"><value>Laden</value></data>
   <data name="CatalogNoResults" xml:space="preserve"><value>Geen resultaten. Probeer een andere zoekopdracht of filter.</value></data>
   <data name="CatalogCanceled" xml:space="preserve"><value>Het laden van de catalogus is geannuleerd of de tijdslimiet is verstreken.</value></data>
@@ -638,7 +638,7 @@
   <data name="Edit" xml:space="preserve"><value>Bewerken</value></data>
   <data name="Output" xml:space="preserve"><value>Uitvoer</value></data>
   <data name="McpTitle" xml:space="preserve"><value>Model Context</value></data>
-  <data name="McpDescription" xml:space="preserve"><value>Verbind tools en diensten met je modellen via Model Context Protocol.</value></data>
+  <data name="McpDescription" xml:space="preserve"><value>Model Context Protocol biedt één gestructureerde manier om met prompts, bronnen en tools te werken, ongeacht waar de informatie vandaan komt. Je werkt altijd overzichtelijk, transparant en op dezelfde manier.</value></data>
   <data name="McpAddServer" xml:space="preserve"><value>Server toevoegen</value></data>
   <data name="McpInstalledServers" xml:space="preserve"><value>Ge├»nstalleerde servers</value></data>
   <data name="McpManage" xml:space="preserve"><value>Beheren</value></data>
@@ -1178,7 +1178,7 @@
   <data name="ChatForm_openai_transcriptionKeywordsPlaceholder" xml:space="preserve"><value>Eén woord of uitdrukking per regel om de transcriptie te sturen</value></data>
   <data name="ChatForm_openai_transcriptionResponseFormat" xml:space="preserve"><value>Antwoordformaat</value></data>
   <data name="Files" xml:space="preserve"><value>Bestanden</value></data>
-  <data name="FilesDescription" xml:space="preserve"><value>Deel bestanden en mappen met AI. Alleen verwijzingen worden opgeslagenΓÇöje bestanden blijven op hun plek. Met een gedeelde map kan AI de inhoud en submappen lezen en daar nieuwe bestanden maken wanneer de Bestanden-plug-in aanstaat. Bestaande bestanden worden nooit overschreven. Bestandstools worden uitgevoerd voordat de resultaten worden beoordeeld.</value></data>
+  <data name="FilesDescription" xml:space="preserve"><value>Een overzicht van alle lokaal beschikbare bestanden. Sleep bestanden naar deze pagina om ze toe te voegen en laat AI bestanden lezen en aanmaken via tools.</value></data>
   <data name="FilesSearch" xml:space="preserve"><value>Zoek gedeelde bestanden en mappen</value></data>
   <data name="FilesCount" xml:space="preserve"><value>Bestanden ({0})</value></data>
   <data name="FoldersCount" xml:space="preserve"><value>Mappen ({0})</value></data>
@@ -1227,9 +1227,7 @@
   <data name="PluginsTitle" xml:space="preserve">
     <value>Plugins</value>
   </data>
-  <data name="PluginsDescription" xml:space="preserve">
-    <value>Draagbare pakketten met Agent Skills, MCP-servers en herbruikbare bestanden.</value>
-  </data>
+  <data name="PluginsDescription" xml:space="preserve"><value>Plugins bundelen Skills en Model Context servers in één pakket. Zo voeg je complete sets van instructies, tools en mogelijkheden in één keer toe en kun je ze eenvoudig combineren, delen en hergebruiken.</value></data>
   <data name="PluginWebsite" xml:space="preserve">
     <value>Officiële website</value>
   </data>
@@ -1422,7 +1420,7 @@
   <data name="WorkflowResponseLanguage" xml:space="preserve"><value>Antwoordtaal</value></data>
   <data name="WorkflowHandoffFrom" xml:space="preserve"><value>Van agent</value></data>
   <data name="WorkflowHandoffTo" xml:space="preserve"><value>Naar agent</value></data>
-  <data name="UsageTitle" xml:space="preserve"><value>AI-gebruik</value></data>
+  <data name="UsageTitle" xml:space="preserve"><value>Gebruik</value></data>
   <data name="UsageSubtitle" xml:space="preserve"><value>Gebruik in {0} opgeslagen gesprekken en {1} berichten voor dit account en eindpunt.</value></data>
   <data name="UsageLoading" xml:space="preserve"><value>Gebruiksgegevens van gesprekken laden…</value></data>
   <data name="UsageLoadFailed" xml:space="preserve"><value>De gebruiksgegevens van gesprekken konden niet worden geladen.</value></data>
@@ -1515,4 +1513,13 @@
   <data name="UsageChartValues" xml:space="preserve"><value>Exacte waarden</value></data>
   <data name="UsagePrevious" xml:space="preserve"><value>Vorige</value></data>
   <data name="UsageNext" xml:space="preserve"><value>Volgende</value></data>
+  <data name="TimeToFirstToken" xml:space="preserve"><value>Tijd tot eerste token</value></data>
+  <data name="TokensPerSecond" xml:space="preserve"><value>Tokens per seconde</value></data>
+  <data name="SettingsShowMetrics.Header" xml:space="preserve"><value>Toon metingen</value></data>
+  <data name="SettingsShowMetrics.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Toon metingen</value></data>
+  <data name="OverviewDocumentation" xml:space="preserve"><value>Technische documentatie</value></data>
+  <data name="OverviewOfficialWebsite" xml:space="preserve"><value>Officiële site</value></data>
+  <data name="SettingsShowMetrics.OnContent" xml:space="preserve"><value>Aan</value></data>
+  <data name="SettingsShowMetrics.OffContent" xml:space="preserve"><value>Uit</value></data>
+  <data name="FilesSharingNote" xml:space="preserve"><value>Alleen verwijzingen worden opgeslagen—je bestanden blijven op hun plek. Met een gedeelde map kan AI de inhoud en submappen lezen en daar nieuwe bestanden maken wanneer de Bestanden-plug-in aanstaat. Bestaande bestanden worden nooit overschreven. Bestandstools worden uitgevoerd voordat de resultaten worden beoordeeld.</value></data>
 </root>

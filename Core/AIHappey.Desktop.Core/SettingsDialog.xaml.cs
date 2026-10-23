@@ -59,6 +59,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         }
         DocumentTextExtraction.IsOn = settings.ConvertAttachmentsToText;
         ShowTokens.IsOn = chatPreferences.ShowTokens;
+        ShowMetrics.IsOn = chatPreferences.ShowMetrics;
         ShowProviderLogo.IsOn = chatPreferences.ShowProviderLogo;
         ApiDebugEnabled.IsOn = chatPreferences.ApiDebugEnabled;
         ToolOutputText.IsOn = chatPreferences.ToolOutputContentSettings.Text;
@@ -121,6 +122,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         Result = null;
         if (imageStorage.PickerOpen || videoStorage.PickerOpen) { args.Cancel = true; return; }
         chatPreferences.ShowTokens = ShowTokens.IsOn;
+        chatPreferences.ShowMetrics = ShowMetrics.IsOn;
         chatPreferences.ShowProviderLogo = ShowProviderLogo.IsOn;
         chatPreferences.ApiDebugEnabled = ApiDebugEnabled.IsOn;
         chatPreferences.ToolOutputContentSettings.Text = ToolOutputText.IsOn;

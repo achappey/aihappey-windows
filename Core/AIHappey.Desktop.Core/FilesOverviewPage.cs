@@ -38,7 +38,11 @@ internal sealed class FilesOverviewPage : UserControl
         var description = new TextBlock { Name = "OverviewDescription", Text = DesktopResources.Get("FilesDescription"), FontSize = 16,
             TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
         NativeCardSurface.Secondary(description);
-        body.Children.Add(title); body.Children.Add(description); body.Children.Add(search); body.Children.Add(tabs);
+        body.Children.Add(title); body.Children.Add(description);
+        var sharingNote = new TextBlock { Name = "FilesSharingNote", Text = DesktopResources.Get("FilesSharingNote"), FontSize = 13,
+            TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
+        NativeCardSurface.Secondary(sharingNote); body.Children.Add(sharingNote);
+        body.Children.Add(search); body.Children.Add(tabs);
         body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cards); body.Children.Add(more);
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };

@@ -344,6 +344,7 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(providerFilters, 4); top.Children.Add(providerFilters);
         Grid.SetColumn(addAgent, 4); top.Children.Add(addAgent);
         Grid.SetColumn(addSkill, 4); top.Children.Add(addSkill);
+        Grid.SetColumn(addMcpServer, 4); top.Children.Add(addMcpServer);
         Grid.SetColumn(addPlugin, 4); top.Children.Add(addPlugin);
         Grid.SetColumn(addFiles, 4); top.Children.Add(addFiles);
         Grid.SetColumn(activityToggle, 4); top.Children.Add(activityToggle);

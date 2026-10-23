@@ -28,7 +28,8 @@ public static class DesktopChatTurn
                     if (TransientConversationData.IsTransient(item)) onTransientData?.Invoke(item);
                     else assembler.Apply(item);
                     await changed(assembler.Finished, ct);
-                    if (assembler.Finished) break;
+                    // Drain the SSE response to [DONE]/EOF: final performance/usage metadata
+                    // may follow finish. The assembler ignores late content, not metadata.
                 }
                 if (!assembler.Finished)
                 {

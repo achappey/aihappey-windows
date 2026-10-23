@@ -49,7 +49,7 @@ public sealed class MessageAssembler(ConversationMessage output)
 
     public void Apply(StreamEvent item)
     {
-        if (Finished || item.Type == "data-aihappey-debug") return;
+        if (item.Type == "data-aihappey-debug" || Finished && item.Type != "message-metadata") return;
         var raw = JsonNode.Parse(item.Raw.GetRawText())!.AsObject();
         switch (item.Type)
         {
@@ -158,8 +158,22 @@ public sealed class MessageAssembler(ConversationMessage output)
     private void SetMetadata(JsonObject metadata)
     {
         var merged = output.Message.Metadata?.ToDictionary(p => p.Key, p => p.Value) ?? [];
-        foreach (var (key, value) in metadata) if (value is not null) merged[key] = JsonSerializer.SerializeToElement(value);
+        foreach (var (key, value) in metadata)
+        {
+            if (value is null) continue;
+            // Metadata events can enrich the gateway object incrementally (TTFT first,
+            // throughput/cost later). Replacing the object loses previously received fields.
+            var previous = merged.TryGetValue(key, out var existing) ? JsonSerializer.SerializeToNode(existing) : null;
+            merged[key] = JsonSerializer.SerializeToElement(Merge(previous, value));
+        }
         output.Message = PortableConversations.WithMetadata(output.Message, merged);
+        static JsonNode Merge(JsonNode? previous, JsonNode update)
+        {
+            if (previous is not JsonObject target || update is not JsonObject additions) return update.DeepClone();
+            foreach (var (key, value) in additions)
+                target[key] = value is null ? null : Merge(target[key], value);
+            return target;
+        }
     }
 }
 

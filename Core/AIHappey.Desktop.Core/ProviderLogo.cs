@@ -15,10 +15,11 @@ internal sealed class ProviderLogo : Grid
     private readonly IconElement placeholder = DesktopIcons.Create(Icon.Brain);
     private CancellationTokenSource? lifetime;
     internal string? DisplayedSource { get; private set; }
-    public ProviderLogo(CatalogProvider provider, double size = 48)
+    public ProviderLogo(CatalogProvider provider, double size = 48, bool showPlaceholder = true)
     {
         this.provider = provider; Width = Height = size; Name = "ProviderLogo";
-        Children.Add(placeholder); Children.Add(image);
+        if (showPlaceholder) Children.Add(placeholder);
+        Children.Add(image);
         ToolbarControls.Label(this, DesktopResources.Format("ProviderLogoLabel", provider.Name));
         Loaded += (_, _) => Reload(); ActualThemeChanged += (_, _) => { if (IsLoaded) Reload(); };
         Unloaded += (_, _) => { lifetime?.Cancel(); image.Source = null; };

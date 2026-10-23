@@ -18,8 +18,6 @@ internal sealed class McpOverviewPage : UserControl
     private readonly TextBlock status = new() { Name = "McpCatalogStatus", TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center };
     private readonly Button retry = new() { Content = DesktopResources.Get("Retry") };
     private readonly Button more = new() { Content = DesktopResources.Get("ShowMore") };
-    private readonly Button add = new() { Name = "McpAddServer", Content = DesktopResources.Get("McpAddServer") };
-    private readonly Button manage = new() { Name = "McpManageServers", Content = DesktopResources.Get("McpInstalledServers") };
     private readonly ScrollViewer viewer;
     private McpCatalogResult catalog = new([], []);
     private IReadOnlyList<McpConnectionView> installed = [];
@@ -29,7 +27,6 @@ internal sealed class McpOverviewPage : UserControl
     private bool updatingFilters;
     private int visible = 50;
     public Action? RetryRequested { get; set; }
-    public Action? AddRequested { get; set; }
     public Action? ManageRequested { get; set; }
     public Action<McpCatalogItem>? InstallRequested { get; set; }
     public Action<McpCatalogItem>? RemoveRequested { get; set; }
@@ -40,17 +37,16 @@ internal sealed class McpOverviewPage : UserControl
         var title = new TextBlock { Name = "McpOverviewTitle", Text = DesktopResources.Get("McpTitle"), FontSize = 36,
             FontWeight = Microsoft.UI.Text.FontWeights.Bold, TextAlignment = TextAlignment.Center };
         AutomationProperties.SetHeadingLevel(title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
-        body.Children.Add(title);
+        body.Children.Add(new OverviewPageHeader(title, "https://modelcontextprotocol.io/", "https://github.com/modelcontextprotocol"));
         body.Children.Add(new TextBlock { Text = DesktopResources.Get("McpDescription"), FontSize = 16, TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center });
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Center };
-        actions.Children.Add(add); actions.Children.Add(manage); body.Children.Add(actions); body.Children.Add(search);
+        body.Children.Add(search);
         body.Children.Add(filters);
         body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cards); body.Children.Add(more);
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalContentAlignment = HorizontalAlignment.Stretch };
         Content = viewer;
-        foreach (var control in new Control[] { search, add, manage, retry, more }) ControlAppearance.Native(control);
+        foreach (var control in new Control[] { search, retry, more }) ControlAppearance.Native(control);
         ToolbarControls.Label(search, DesktopResources.Get("McpSearch"));
         AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         search.TextChanged += (_, _) => { visible = 50; Render(); };
@@ -59,7 +55,6 @@ internal sealed class McpOverviewPage : UserControl
             if (updatingFilters || args.SelectedItem is not NavigationViewItem { Tag: string key } || filter == key) return;
             filter = key; visible = 50; Render();
         };
-        add.Click += (_, _) => AddRequested?.Invoke(); manage.Click += (_, _) => ManageRequested?.Invoke();
         retry.Click += (_, _) => RetryRequested?.Invoke(); more.Click += (_, _) => { visible += 50; Render(); };
         viewer.SizeChanged += (_, _) => SizeBody(); Loaded += (_, _) => SizeBody(); Render();
     }
