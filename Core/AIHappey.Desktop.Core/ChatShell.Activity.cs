@@ -64,10 +64,12 @@ public sealed partial class ChatShell
     private void RefreshConversationActivity()
     {
         transientConversationData.SetScope(session.HistoryPartition, current.Id);
+        if (canvasSelection.SetScope(session.HistoryPartition, current.Id)) conversationActivityBody.Children.Clear();
         var available = activePage == DesktopPage.Chat && current.Messages.Count > 0;
         activityToggle.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
         if (!available)
         {
+            canvasSelection.Synchronize([]);
             conversationActivity.IsPaneOpen = false;
             activityToggle.IsChecked = false;
             conversationActivityBody.Children.Clear();
@@ -78,6 +80,8 @@ public sealed partial class ChatShell
         var projected = ConversationActivityProjection.Project(current.Messages, transientConversationData.Items);
         var tabs = new ToolReviewTabs("ConversationActivityTabs");
         tabs.Add(DesktopResources.Format("ToolsCount", projected.Tools.Count), ActivityList(projected.Tools, true), "ConversationActivityTools");
+        var canvas = ConversationCanvasProjection.Project(current.Messages);
+        tabs.Add(DesktopResources.Format("CanvasCount", canvas.Count), CanvasActivityList(canvas), "ConversationActivityCanvas");
         tabs.Add(DesktopResources.Format("DataCount", projected.Data.Count), ActivityList(projected.Data, false), "ConversationActivityData");
         tabs.SelectedIndex = Math.Clamp(selectedIndex, 0, tabs.Count - 1);
         conversationActivityBody.Children.Clear(); conversationActivityBody.Children.Add(tabs);

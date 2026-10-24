@@ -78,6 +78,12 @@
   <data name="ToggleActivities" xml:space="preserve"><value>Show conversation activities</value></data>
   <data name="CloseActivities" xml:space="preserve"><value>Close conversation activities</value></data>
   <data name="ToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
+  <data name="CanvasCount" xml:space="preserve"><value>Canvas ({0})</value></data>
+  <data name="NoCanvasActivities" xml:space="preserve"><value>No Markdown documents in this conversation.</value></data>
+  <data name="CanvasVersions" xml:space="preserve"><value>Versions of {0}</value></data>
+  <data name="CopyCanvasMarkdown" xml:space="preserve"><value>Copy {0}</value></data>
+  <data name="OpenCanvasLink" xml:space="preserve"><value>Open {0} in your browser</value></data>
+  <data name="CanvasLinkUnavailable" xml:space="preserve"><value>{0} has no HTTP or HTTPS link to open</value></data>
   <data name="DataCount" xml:space="preserve"><value>Data ({0})</value></data>
   <data name="Data" xml:space="preserve"><value>Data</value></data>
   <data name="NoToolActivities" xml:space="preserve"><value>No tool activity in this conversation.</value></data>

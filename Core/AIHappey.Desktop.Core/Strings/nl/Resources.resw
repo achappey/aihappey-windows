@@ -78,6 +78,12 @@
   <data name="ToggleActivities" xml:space="preserve"><value>Gespreksactiviteiten tonen</value></data>
   <data name="CloseActivities" xml:space="preserve"><value>Gespreksactiviteiten sluiten</value></data>
   <data name="ToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
+  <data name="CanvasCount" xml:space="preserve"><value>Canvas ({0})</value></data>
+  <data name="NoCanvasActivities" xml:space="preserve"><value>Geen Markdown-documenten in dit gesprek.</value></data>
+  <data name="CanvasVersions" xml:space="preserve"><value>Versies van {0}</value></data>
+  <data name="CopyCanvasMarkdown" xml:space="preserve"><value>{0} kopiëren</value></data>
+  <data name="OpenCanvasLink" xml:space="preserve"><value>{0} openen in je browser</value></data>
+  <data name="CanvasLinkUnavailable" xml:space="preserve"><value>{0} heeft geen HTTP- of HTTPS-link om te openen</value></data>
   <data name="DataCount" xml:space="preserve"><value>Gegevens ({0})</value></data>
   <data name="Data" xml:space="preserve"><value>Gegevens</value></data>
   <data name="NoToolActivities" xml:space="preserve"><value>Geen toolactiviteit in dit gesprek.</value></data>

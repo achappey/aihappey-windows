@@ -103,6 +103,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatTurn.cs" Link="Core/ChatTurn.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/PortableConversations.cs" Link="Core/PortableConversations.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ConversationActivity.cs" Link="Core/ConversationActivity.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ConversationCanvas.cs" Link="Core/ConversationCanvas.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptProjection.cs" Link="Core/TranscriptProjection.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/MessageDetails.cs" Link="Core/MessageDetails.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AttachmentDownloads.cs" Link="Core/AttachmentDownloads.cs" />

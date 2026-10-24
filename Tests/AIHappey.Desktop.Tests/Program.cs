@@ -19,6 +19,8 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    CanvasRegressionTests.Run(Check);
+    if (args.Contains("--canvas-only")) { Console.WriteLine($"All {tests} Canvas checks passed."); return; }
     if (args.Contains("--agents-only"))
     {
         await AgentRegressionTests.RunAsync(Check, root);
