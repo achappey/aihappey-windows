@@ -1,9 +1,11 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
+using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage.Pickers;
@@ -67,8 +69,11 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
     private readonly TextBlock validation = new() { Name = "ImageSettingsValidation", TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private readonly string maskDirectory;
     private readonly CancellationTokenSource lifetime = new();
+    private readonly List<(SettingsExpander Expander, StackPanel Body)> sections = [];
+    private Action showGeneral = null!;
     private IImageProviderForm? providerForm;
-    private TextBox size = null!, aspect = null!, batch = null!, seed = null!;
+    private DimensionFields size = null!, aspect = null!;
+    private TextBox batch = null!, seed = null!;
     private Slider count = null!;
     private ComposerAttachment? newMask;
     private bool maskChanged;
@@ -99,41 +104,89 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
     }
     private static TextBox Field(string name, string label, string? value) => new()
     { Name = name, Header = DesktopResources.Get(label), Text = value ?? "", HorizontalAlignment = HorizontalAlignment.Stretch };
-    private static StackPanel Card(StackPanel parent, string title)
+    private StackPanel Section(StackPanel parent, string title)
     {
-        NativeSettingsSurface.Card(parent, title + "Card", DesktopResources.Get(title), out var panel);
+        var expander = NativeSettingsSurface.Expander(parent, title + "Card", DesktopResources.Get(title), null, out var panel);
+        sections.Add((expander, panel));
         return panel;
     }
-    private static TextBox Dimensions(StackPanel panel, string name, string label, string? value, string[] presets)
+    private sealed class DimensionFields
     {
-        var select = new ComboBox { Name = name + "Preset", Header = DesktopResources.Get(label), HorizontalAlignment = HorizontalAlignment.Stretch };
-        select.Items.Add(new ComboBoxItem { Content = DesktopResources.Get("ImageProviderDefault"), Tag = "" });
-        foreach (var preset in presets) select.Items.Add(new ComboBoxItem { Content = preset, Tag = preset });
-        select.Items.Add(new ComboBoxItem { Content = DesktopResources.Get("Custom"), Tag = "custom" });
-        select.SelectedIndex = string.IsNullOrEmpty(value) ? 0 : presets.Contains(value) ? Array.IndexOf(presets, value) + 1 : select.Items.Count - 1;
-        var custom = Field(name, label, value); custom.PlaceholderText = label == "ImageSize" ? "1024x1024" : "16:9";
-        custom.Visibility = select.SelectedIndex == select.Items.Count - 1 ? Visibility.Visible : Visibility.Collapsed;
-        select.SelectionChanged += (_, _) =>
+        private readonly ComboBox select;
+        private readonly TextBox width, height;
+        private readonly char separator;
+        private bool updating;
+        public string? Value => select.SelectedIndex == 0 ? null : width.Text.Trim() + separator + height.Text.Trim();
+        public Control? InvalidField => ImagePreferences.ValidDimensions(Value, separator) ? null
+            : ImagePreferences.ValidDimensions(width.Text.Trim() + separator + "1", separator) ? height : width;
+
+        public DimensionFields(StackPanel panel, string name, string label, string? value, string[] presets, char separator)
         {
-            var choice = (string)((ComboBoxItem)select.SelectedItem).Tag;
-            custom.Visibility = choice == "custom" ? Visibility.Visible : Visibility.Collapsed;
-            if (choice != "custom") custom.Text = choice;
-        };
-        ControlAppearance.Stock(select); ControlAppearance.Stock(custom); panel.Children.Add(select); panel.Children.Add(custom); return custom;
+            this.separator = separator;
+            select = new() { Name = name + "Preset", Header = DesktopResources.Get(label), HorizontalAlignment = HorizontalAlignment.Stretch };
+            select.Items.Add(new ComboBoxItem { Content = DesktopResources.Get("ImageProviderDefault"), Tag = "" });
+            foreach (var preset in presets) select.Items.Add(new ComboBoxItem { Content = preset, Tag = preset });
+            select.Items.Add(new ComboBoxItem { Content = DesktopResources.Get("Custom"), Tag = "custom" });
+            select.SelectedIndex = string.IsNullOrEmpty(value) ? 0 : presets.Contains(value) ? Array.IndexOf(presets, value) + 1 : select.Items.Count - 1;
+            width = Field(name + "Width", "ImageWidth", null); height = Field(name + "Height", "ImageHeight", null);
+            foreach (var field in new[] { width, height })
+            {
+                field.InputScope = new InputScope { Names = { new InputScopeName { NameValue = InputScopeNameValue.Number } } };
+                AutomationProperties.SetName(field, DesktopResources.Get(label) + ": " + field.Header);
+                ControlAppearance.Stock(field);
+            }
+            AutomationProperties.SetName(select, DesktopResources.Get(label)); ControlAppearance.Stock(select);
+            SetParts(value);
+            select.SelectionChanged += (_, _) =>
+            {
+                if (updating) return;
+                var choice = (string)((ComboBoxItem)select.SelectedItem).Tag;
+                // Entering Custom from provider default starts with a complete, editable pair.
+                SetParts(choice == "custom" ? string.IsNullOrEmpty(width.Text) || string.IsNullOrEmpty(height.Text) ? presets[0] : Value : choice);
+            };
+            width.TextChanged += (_, _) => SelectFromParts(); height.TextChanged += (_, _) => SelectFromParts();
+
+            var row = new Grid { Name = name + "Fields", ColumnSpacing = 12, RowSpacing = 12 };
+            for (var column = 0; column < 2; column++) row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+            row.RowDefinitions.Add(new() { Height = GridLength.Auto }); row.RowDefinitions.Add(new() { Height = GridLength.Auto });
+            row.Children.Add(select); row.Children.Add(width); row.Children.Add(height);
+            Grid.SetColumnSpan(select, 2); Grid.SetRow(width, 1); Grid.SetRow(height, 1); Grid.SetColumn(height, 1);
+            panel.Children.Add(row);
+        }
+
+        private void SetParts(string? value)
+        {
+            updating = true;
+            var parts = value?.Split(separator, 2);
+            width.Text = parts?[0] ?? ""; height.Text = parts is { Length: 2 } ? parts[1] : "";
+            width.IsEnabled = height.IsEnabled = select.SelectedIndex != 0;
+            updating = false;
+        }
+
+        private void SelectFromParts()
+        {
+            if (updating) return;
+            updating = true;
+            var value = width.Text.Trim() + separator + height.Text.Trim();
+            select.SelectedItem = select.Items.Cast<ComboBoxItem>().FirstOrDefault(item => (string)item.Tag == value) ?? select.Items[^1];
+            updating = false;
+        }
     }
     private void Build()
     {
-        validation.Visibility = Visibility.Collapsed; tabs.Children.Clear();
+        validation.Visibility = Visibility.Collapsed; tabs.Children.Clear(); sections.Clear();
         var general = new StackPanel { Spacing = 16 };
-        size = Dimensions(Card(general, "ImageSize"), "ImageSize", "ImageSize", draft.Size, ImagePreferences.SizePresets);
-        aspect = Dimensions(Card(general, "ImageAspectRatio"), "ImageAspectRatio", "ImageAspectRatio", draft.AspectRatio, ImagePreferences.AspectPresets);
-        var output = Card(general, "ImageOutput");
-        var countLabel = new TextBlock { Text = DesktopResources.Format("ImageCount", draft.N) }; output.Children.Add(countLabel);
+        size = new(Section(general, "ImageSize"), "ImageSize", "ImageSize", draft.Size, ImagePreferences.SizePresets, 'x');
+        aspect = new(Section(general, "ImageAspectRatio"), "ImageAspectRatio", "ImageAspectRatio", draft.AspectRatio, ImagePreferences.AspectPresets, ':');
+        var output = Section(general, "ImageOutput");
+        var outputFields = new StackPanel { Name = "ImageOutputFields", Spacing = 12 };
+        var countPanel = new StackPanel { Spacing = 8 };
+        var countLabel = new TextBlock { Text = DesktopResources.Format("ImageCount", draft.N), TextWrapping = TextWrapping.Wrap }; countPanel.Children.Add(countLabel);
         count = new Slider { Name = "ImageCount", Minimum = 1, Maximum = 20, StepFrequency = 1, Value = draft.N };
         AutomationProperties.SetName(count, DesktopResources.Get("ImageOutput")); count.ValueChanged += (_, _) => countLabel.Text = DesktopResources.Format("ImageCount", (int)count.Value);
-        output.Children.Add(count);
-        batch = Field("ImageBatchLimit", "ImageBatchLimit", draft.MaxImagesPerCall?.ToString(CultureInfo.InvariantCulture)); output.Children.Add(batch);
-        var other = Card(general, "ImageOther"); seed = Field("ImageSeed", "ImageSeed", draft.Seed?.ToString(CultureInfo.InvariantCulture)); other.Children.Add(seed);
+        countPanel.Children.Add(count); outputFields.Children.Add(countPanel);
+        batch = Field("ImageBatchLimit", "ImageBatchLimit", draft.MaxImagesPerCall?.ToString(CultureInfo.InvariantCulture)); outputFields.Children.Add(batch); output.Children.Add(outputFields);
+        var other = Section(general, "ImageOther"); seed = Field("ImageSeed", "ImageSeed", draft.Seed?.ToString(CultureInfo.InvariantCulture)); other.Children.Add(seed);
         var maskRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         var pickMask = new Button { Name = "ImagePickMask", Content = DesktopResources.Get("ImageMask") };
         var clearMask = new Button { Name = "ImageClearMask", Content = DesktopResources.Get("Delete") };
@@ -168,12 +221,19 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
             providerTab = new() { Name = "ImageProviderTab", Content = providerForm.Title }; tabs.Children.Add(providerTab); ControlAppearance.Stock(providerTab);
             providerTab.Click += (_, _) => { generalTab.IsChecked = false; providerTab.IsChecked = true; page.Content = providerForm.View; page.ChangeView(null, 0, null); };
         }
-        generalTab.Click += (_, _) => { generalTab.IsChecked = true; if (providerTab is not null) providerTab.IsChecked = false; page.Content = general; page.ChangeView(null, 0, null); };
+        showGeneral = () => { generalTab.IsChecked = true; if (providerTab is not null) providerTab.IsChecked = false; page.Content = general; };
+        generalTab.Click += (_, _) => { showGeneral(); page.ChangeView(null, 0, null); };
         page.Content = general;
     }
     private bool IsOwnedMask(string path) => Path.GetFullPath(path).StartsWith(Path.GetFullPath(maskDirectory) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     private void InitializePicker(object picker) => WinRT.Interop.InitializeWithWindow.Initialize(picker, Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId));
     private void Error(string text) { validation.Text = text; validation.Visibility = Visibility.Visible; }
+    private void RevealInvalidField(Control field)
+    {
+        showGeneral();
+        foreach (var (expander, body) in sections) if (NativeSettingsSurface.Contains(body, field)) expander.IsExpanded = true;
+        DispatcherQueue.TryEnqueue(() => { layout.UpdateLayout(); field.Focus(FocusState.Programmatic); field.StartBringIntoView(); });
+    }
     private async void CommitOnClose(ContentDialog sender, ContentDialogClosingEventArgs args)
     {
         if (DiscardOnShutdown) { lifetime.Cancel(); return; }
@@ -181,10 +241,15 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
         var deferral = args.GetDeferral(); string? createdMask = null;
         try
         {
-            draft.Size = string.IsNullOrWhiteSpace(size.Text) ? null : size.Text.Trim(); draft.AspectRatio = string.IsNullOrWhiteSpace(aspect.Text) ? null : aspect.Text.Trim(); draft.N = (int)count.Value;
-            if (!string.IsNullOrWhiteSpace(batch.Text) && (!int.TryParse(batch.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var limit) || limit < 1)
-                || !string.IsNullOrWhiteSpace(seed.Text) && !int.TryParse(seed.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+            draft.Size = size.Value; draft.AspectRatio = aspect.Value; draft.N = (int)count.Value;
+            var invalid = size.InvalidField ?? aspect.InvalidField;
+            if (invalid is null && !string.IsNullOrWhiteSpace(batch.Text) && (!int.TryParse(batch.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var limit) || limit < 1)) invalid = batch;
+            if (invalid is null && !string.IsNullOrWhiteSpace(seed.Text) && !int.TryParse(seed.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out _)) invalid = seed;
+            if (invalid is not null)
+            {
+                RevealInvalidField(invalid);
                 throw new InvalidOperationException(DesktopResources.Get("ImageSettingsInvalid"));
+            }
             draft.MaxImagesPerCall = string.IsNullOrWhiteSpace(batch.Text) ? null : int.Parse(batch.Text, CultureInfo.InvariantCulture);
             draft.Seed = string.IsNullOrWhiteSpace(seed.Text) ? null : int.Parse(seed.Text, CultureInfo.InvariantCulture); draft.Validate(); providerForm?.Commit(draft);
             Directory.CreateDirectory(draft.EffectiveRoot);

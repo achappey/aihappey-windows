@@ -783,9 +783,11 @@
   <data name="ImageProviderDefault" xml:space="preserve"><value>Provider default</value></data>
   <data name="ImageOutput" xml:space="preserve"><value>Output</value></data>
   <data name="ImageCount" xml:space="preserve"><value>Number of images: {0}</value></data>
-  <data name="ImageBatchLimit" xml:space="preserve"><value>Maximum images per call (optional)</value></data>
+  <data name="ImageWidth" xml:space="preserve"><value>Width</value></data>
+  <data name="ImageHeight" xml:space="preserve"><value>Height</value></data>
+  <data name="ImageBatchLimit" xml:space="preserve"><value>Maximum images per call</value></data>
   <data name="ImageOther" xml:space="preserve"><value>Other</value></data>
-  <data name="ImageSeed" xml:space="preserve"><value>Seed (optional)</value></data>
+  <data name="ImageSeed" xml:space="preserve"><value>Seed</value></data>
   <data name="ImageMask" xml:space="preserve"><value>Select image mask</value></data>
   <data name="ImageMaskFailed" xml:space="preserve"><value>The image mask could not be read.</value></data>
   <data name="ImageStorage" xml:space="preserve"><value>Storage</value></data>

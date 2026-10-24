@@ -779,9 +779,11 @@
   <data name="ImageProviderDefault" xml:space="preserve"><value>Standaard van provider</value></data>
   <data name="ImageOutput" xml:space="preserve"><value>Uitvoer</value></data>
   <data name="ImageCount" xml:space="preserve"><value>Aantal afbeeldingen: {0}</value></data>
-  <data name="ImageBatchLimit" xml:space="preserve"><value>Maximum afbeeldingen per aanvraag (optioneel)</value></data>
+  <data name="ImageWidth" xml:space="preserve"><value>Breedte</value></data>
+  <data name="ImageHeight" xml:space="preserve"><value>Hoogte</value></data>
+  <data name="ImageBatchLimit" xml:space="preserve"><value>Maximum afbeeldingen per aanvraag</value></data>
   <data name="ImageOther" xml:space="preserve"><value>Overig</value></data>
-  <data name="ImageSeed" xml:space="preserve"><value>Seed (optioneel)</value></data>
+  <data name="ImageSeed" xml:space="preserve"><value>Seed</value></data>
   <data name="ImageMask" xml:space="preserve"><value>Afbeeldingsmasker selecteren</value></data>
   <data name="ImageMaskFailed" xml:space="preserve"><value>Het afbeeldingsmasker kon niet worden gelezen.</value></data>
   <data name="ImageStorage" xml:space="preserve"><value>Opslag</value></data>
