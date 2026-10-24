@@ -31,6 +31,8 @@ public partial class App
 
     private async Task CheckCompactSidebarAsync(ChatShell shell, ElementTheme theme, string context)
     {
+        Check(Field<TextBlock>(shell, "disclaimer").Text == "UI image app can make mistakes. Check important information.",
+            context + ": chat footer uses the injected app name and retains the warning");
         var split = Field<SplitView>(shell, "split");
         var pane = (Grid)split.Pane;
         var toggle = Descendants(pane).OfType<Button>().Single(button => button.Name == "SidebarToggle");

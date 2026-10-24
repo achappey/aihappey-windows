@@ -4,10 +4,16 @@ namespace AIHappey.Desktop.Core;
 
 public static class DesktopBranding
 {
-    public static string AppName { get; } = ResolveName(Assembly.GetEntryAssembly()?
-        .GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(value => value.Key == "DesktopAppName")?.Value);
+    private static readonly string? configuredAppName = Assembly.GetEntryAssembly()?
+        .GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(value => value.Key == "DesktopAppName")?.Value;
+
+    public static string AppName { get; } = ResolveName(configuredAppName);
+
+    public static string DisclaimerName { get; } = ResolveDisclaimerName(configuredAppName);
 
     public static string ResolveName(string? name) => string.IsNullOrWhiteSpace(name) ? "aihappey" : name.Trim();
+
+    public static string ResolveDisclaimerName(string? name) => string.IsNullOrWhiteSpace(name) ? "AI" : name.Trim();
 
     public static string StorageFolderName { get; } = ResolveStorageFolderName(AppName);
 

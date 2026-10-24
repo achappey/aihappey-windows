@@ -37,6 +37,19 @@ internal static class ElicitationRegressionTests
         var keys = en.Keys.Where(k => k.StartsWith("Elicitation") || k.StartsWith("SettingsMcp") || k.StartsWith("SettingsModelContext")).ToArray();
         check(keys.Length >= 37 && keys.All(k => !string.IsNullOrWhiteSpace(en[k]) && nl.TryGetValue(k, out var text) && !string.IsNullOrWhiteSpace(text)),
             "all Model context and elicitation resources have English and Dutch translations");
+        check(en["SettingsMcpFormElicitation.Header"] == "Form" && en["SettingsMcpUrlElicitation.Header"] == "URL"
+            && en["SettingsMcpElicitation.Text"] == "Elicitation" && nl["SettingsMcpFormElicitation.Header"] == "Formulier"
+            && nl["SettingsMcpUrlElicitation.Header"] == "URL", "elicitation toggle labels omit the repeated card heading");
+        check(DesktopBranding.DisclaimerName == "Image regression app" && DesktopBranding.ResolveDisclaimerName("  Contoso AI  ") == "Contoso AI",
+            "footer uses the injected display name without altering its content");
+        foreach (var missingName in new string?[] { null, "", " \t\r\n" })
+            check(DesktopBranding.ResolveDisclaimerName(missingName) == "AI" && DesktopBranding.ResolveName(missingName) == "aihappey",
+                "missing footer branding falls back to AI without changing sidebar branding");
+        foreach (var (resources, warning) in new[] { (en, " can make mistakes. Check important information."), (nl, " kan fouten maken. Controleer belangrijke informatie.") })
+            foreach (var name in new string?[] { null, "", " ", "  Contoso AI {test}  " })
+                check(string.Format(resources["Disclaimer"], DesktopBranding.ResolveDisclaimerName(name))
+                    == (string.IsNullOrWhiteSpace(name) ? "AI" : name.Trim()) + warning,
+                    "localized footer preserves the warning with branded and fallback names");
         var settings = JsonSerializer.Deserialize<DesktopSettings>("{}", JsonSerializerOptions.Web)!;
         check(settings.ModelContext.EnableFormElicitation && settings.ModelContext.EnableApps && settings.ModelContext.EnableSkills
             && settings.ModelContext.ResetTimeoutOnProgress && settings.ModelContext.ToolTimeoutMinutes == 5, "older settings receive browser-aligned Model context defaults");

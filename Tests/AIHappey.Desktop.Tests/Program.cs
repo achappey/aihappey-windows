@@ -19,6 +19,12 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--elicitation-only"))
+    {
+        await ElicitationRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} elicitation checks passed.");
+        return;
+    }
     if (args.Contains("--chat-streaming-only"))
     {
         await ChatFileRegressionTests.RunAsync(Check, root);
@@ -134,12 +140,6 @@ try
     if (args.Contains("--providers-only")) { Console.WriteLine($"All {tests} provider checks passed."); return; }
     await ModelsOverviewRegressionTests.RunAsync(Check, root);
     await AgentRegressionTests.RunAsync(Check, root);
-    if (args.Contains("--elicitation-only"))
-    {
-        await ElicitationRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} elicitation checks passed.");
-        return;
-    }
     TranscriptRegressionTests.Run(Check);
     await ToolApprovalRegressionTests.RunAsync(Check, root);
     await McpPresentationRegressionTests.RunAsync(Check, root);

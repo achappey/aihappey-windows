@@ -117,7 +117,7 @@
   <data name="AppAgentNone" xml:space="preserve"><value>Geen</value></data>
   <data name="AppAgentUnavailable" xml:space="preserve"><value>Deze agent is niet beschikbaar. De app gebruikt de standaardtekst.</value></data>
   <data name="AppAgentNotActive" xml:space="preserve"><value>Deze instelling wordt bewaard voor een volgende stap; deze helper is nog niet actief in Windows.</value></data>
-  <data name="Disclaimer" xml:space="preserve"><value>AI kan fouten maken. Controleer belangrijke informatie.</value></data>
+  <data name="Disclaimer" xml:space="preserve"><value>{0} kan fouten maken. Controleer belangrijke informatie.</value></data>
   <data name="GeneratedByAi" xml:space="preserve"><value>Door AI gegenereerd</value></data>
   <data name="GeneratedByAiWarning" xml:space="preserve"><value>Door AI gegenereerde inhoud is mogelijk onjuist</value></data>
   <data name="TimeJustNow" xml:space="preserve"><value>Zojuist</value></data>

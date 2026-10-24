@@ -40,6 +40,9 @@ public partial class App
         Check(nested.PaneDisplayMode == NavigationViewPaneDisplayMode.Top && nested.MenuItems.Count == 2, context + ": vertical Model context opens horizontal Client/Extensions navigation");
         Check(((ToggleSwitch)settings.FindName("FormElicitation")).IsOn && !((ToggleSwitch)settings.FindName("UrlElicitation")).IsOn
             && !((ToggleSwitch)settings.FindName("UrlElicitation")).IsEnabled, context + ": form enabled by default and URL off/disabled");
+        Check(((ToggleSwitch)settings.FindName("FormElicitation")).Header?.ToString() == "Form"
+            && ((ToggleSwitch)settings.FindName("UrlElicitation")).Header?.ToString() == "URL",
+            context + ": elicitation toggles use concise Form and URL labels");
         Check(((NumberBox)settings.FindName("ToolTimeout")).Value == 5 && ((ToggleSwitch)settings.FindName("ResetTimeoutOnProgress")).IsOn,
             context + ": browser-aligned tool defaults");
         Check(Descendants(settings).OfType<TextBlock>().Any(t => t.Text == "Elicitation") && Descendants(settings).OfType<TextBlock>().Any(t => t.Text == "Tools"),
