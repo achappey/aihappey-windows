@@ -219,7 +219,7 @@ public static class AgentPluginPackages
         using (var zip = new ZipArchive(output, ZipArchiveMode.Create, true))
         {
             var entries = plugin.Files.Concat(new[] { new DesktopSkillFile("plugin.json", JsonSerializer.SerializeToUtf8Bytes(plugin.Manifest, new JsonSerializerOptions { WriteIndented = true })) });
-            if (plugin.Mcp is not null) entries = entries.Append(new("mcp.json", JsonSerializer.SerializeToUtf8Bytes(plugin.Mcp, new JsonSerializerOptions { WriteIndented = true })));
+            if (plugin.Mcp is not null) entries = entries.Append(new DesktopSkillFile("mcp.json", JsonSerializer.SerializeToUtf8Bytes(plugin.Mcp, new JsonSerializerOptions { WriteIndented = true })));
             foreach (var file in entries.OrderBy(f => f.Path, StringComparer.Ordinal))
             { var entry = zip.CreateEntry(PackagePath(file.Path), CompressionLevel.Optimal); entry.LastWriteTime = new(1980, 1, 1, 0, 0, 0, TimeSpan.Zero); using var stream = entry.Open(); stream.Write(file.Data); }
         }

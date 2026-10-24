@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0-windows10.0.26100.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimePreferences.cs" Link="Core/RealtimePreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeSession.cs" Link="Core/RealtimeSession.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeAudio.cs" Link="Core/RealtimeAudio.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimePcmInput.cs" Link="Core/RealtimePcmInput.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimePcmPlayback.cs" Link="Core/RealtimePcmPlayback.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeFailureException.cs" Link="Core/RealtimeFailureException.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/NavigationPreferences.cs" Link="Core/NavigationPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/OpenAiRealtimeSession.cs" Link="Core/OpenAiRealtimeSession.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/GoogleRealtimeSession.cs" Link="Core/GoogleRealtimeSession.cs" />
+    <PackageReference Include="SIPSorcery.OpenAI.Realtime" Version="10.0.17" />
+    <PackageReference Include="SIPSorceryMedia.Windows" Version="10.0.17" />
+  </ItemGroup>
+</Project>

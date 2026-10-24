@@ -143,6 +143,11 @@ public partial class App : Application
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckVideosAsync(theme);
                 results.Add("All videos UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
             }
+            if (Environment.GetCommandLineArgs().Contains("--realtime-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckRealtimeAsync(theme);
+                results.Add("All realtime native UI checks passed."); File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--overview-tabs-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckOverviewTabsAsync(theme);

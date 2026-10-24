@@ -91,6 +91,7 @@ public sealed partial class ChatShell : UserControl
         PrepareVideos();
         PrepareSpeech();
         PrepareTranscriptions();
+        PrepareRealtime();
         PrepareModelsOverview();
         PrepareProvidersOverview();
         PrepareSystemContext();
@@ -322,6 +323,7 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(videoModelToolbar, 1); top.Children.Add(videoModelToolbar);
         Grid.SetColumn(speechTarget, 1); top.Children.Add(speechTarget);
         Grid.SetColumn(transcriptionTarget, 1); top.Children.Add(transcriptionTarget);
+        Grid.SetColumn(realtimeHeader, 1); top.Children.Add(realtimeHeader);
         AutomationProperties.SetName(progress, DesktopResources.Get("Working"));
         Grid.SetColumn(progress, 3); top.Children.Add(progress);
         var profileMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
@@ -360,6 +362,8 @@ public sealed partial class ChatShell : UserControl
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
         composer.Children.Add(welcome); composer.Children.Add(contextTagScroll); composer.Children.Add(composerBadgeRow);
         composer.Children.Add(input);
+        composer.Children.Add(realtimePreview);
+        composer.Children.Add(realtimeControls);
         var actions = new Grid();
         actions.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         actions.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
@@ -396,6 +400,7 @@ public sealed partial class ChatShell : UserControl
 
     private async Task ReloadAccountAsync(CancellationToken ct, bool connectServices = true)
     {
+        await StopRealtimeAsync();
         var ready = !session.Host.RequiresSignIn;
         if (ready && connectServices) await StartVideoJobsAsync(ct);
         UpdateAccountMenu();
@@ -479,6 +484,7 @@ public sealed partial class ChatShell : UserControl
 
     private async Task SendAsync(McpSelectedPrompt? selectedPrompt = null)
     {
+        if (activePage == DesktopPage.Realtime) { await SendRealtimeAsync(selectedPrompt); return; }
         if (busy || closing || historyDialogOpen || catalogDialog is not null
             || selectedPrompt is null && string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
         UpdateTargetSuggestions();
@@ -844,6 +850,7 @@ public sealed partial class ChatShell : UserControl
         stop.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         send.Visibility = inference ? Visibility.Collapsed : Visibility.Visible;
         if (!value) ControlAppearance.RefreshItems(chats);
+        UpdateRealtimeControls();
     }
 
     private void Show(string message, InfoBarSeverity severity)
@@ -872,6 +879,9 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        Microsoft.Win32.SystemEvents.PowerModeChanged -= RealtimePowerChanged;
+        await StopRealtimeAsync();
+        await realtimeCleanup;
         runtimeWarmupLifetime.Cancel();
         await runtimeWarmup;
         runtimeWarmupLifetime.Dispose();

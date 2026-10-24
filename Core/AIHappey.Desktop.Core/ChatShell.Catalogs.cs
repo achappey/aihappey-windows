@@ -11,7 +11,7 @@ using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
 
-internal enum DesktopPage { Chat, Images, Videos, Speech, Transcriptions, Agents, Skills, Plugins, Mcp, Models, Providers, Files, Usage }
+internal enum DesktopPage { Chat, Images, Videos, Speech, Transcriptions, Realtime, Agents, Skills, Plugins, Mcp, Models, Providers, Files, Usage }
 
 public sealed partial class ChatShell
 {
@@ -37,11 +37,11 @@ public sealed partial class ChatShell
     {
         var primary = CreateNavigationGroup("Primary", pageNavigation);
         AddNavigationLink(primary, "new", newChat, Icon.Add, () => { NewConversation(); return Task.CompletedTask; });
-        AddNavigationLink(primary, "search-conversations", searchChats, Icon.Search, SearchConversationsAsync);
         var agentLinks = CreateNavigationGroup("Agents", expandedPageNavigation, DesktopResources.Get("Agents"));
         var resourceLinks = CreateNavigationGroup("Files", expandedPageNavigation);
         foreach (var (page, label, icon) in new[]
         {
+            (DesktopPage.Realtime, DesktopResources.Get("RealtimeTitle"), (IconElement)DesktopIcons.Create(Icon.Mic)),
             (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)DesktopIcons.Create(Icon.Image)),
             (DesktopPage.Videos, DesktopResources.Get("Videos"), (IconElement)DesktopIcons.Create(Icon.Video)),
             (DesktopPage.Speech, DesktopResources.Get("Speech"), (IconElement)DesktopIcons.Create(Icon.Speaker2)),
@@ -92,10 +92,12 @@ public sealed partial class ChatShell
                 AddNavigationLink(group, key, button, page switch
                 {
                     DesktopPage.Images => Icon.Image, DesktopPage.Videos => Icon.Video, DesktopPage.Speech => Icon.Speaker2,
-                    DesktopPage.Transcriptions => Icon.Mic, DesktopPage.Agents => Icon.Bot, DesktopPage.Mcp => Icon.Connector,
+                    DesktopPage.Transcriptions or DesktopPage.Realtime => Icon.Mic, DesktopPage.Agents => Icon.Bot, DesktopPage.Mcp => Icon.Connector,
                     DesktopPage.Skills => Icon.Star, DesktopPage.Plugins => Icon.PuzzlePiece, _ => Icon.Folder
                 }, () => NavigateAsync(page));
             }
+            if (page == DesktopPage.Realtime)
+                AddNavigationLink(primary, "search-conversations", searchChats, Icon.Search, SearchConversationsAsync);
         }
         expandedPageNavigation.Children.Add(SidebarSeparator("ChatsSeparator"));
         expandedPageNavigation.Children.Add(SidebarHeading(DesktopResources.Get("Chats")));
@@ -134,12 +136,20 @@ public sealed partial class ChatShell
 
     private void ShowPage(DesktopPage page)
     {
+        if (page != DesktopPage.Realtime && realtime is not null) realtimeCleanup = StopRealtimeAsync();
+        if (page == DesktopPage.Realtime && activePage != DesktopPage.Realtime)
+        {
+            if (Service != ServiceKind.Ai) UpdateMode(ServiceKind.Ai);
+            current = new() { Service = ServiceKind.Ai };
+        }
         ResetFileDrop();
         details.IsPaneOpen = false;
         activePage = page;
-        var chat = page == DesktopPage.Chat;
+        var chat = page is DesktopPage.Chat or DesktopPage.Realtime;
         overviewHost.Visibility = chat ? Visibility.Collapsed : Visibility.Visible;
         chatModes.Visibility = target.Visibility = composer.Visibility = disclaimer.Visibility = chat ? Visibility.Visible : Visibility.Collapsed;
+        if (page == DesktopPage.Realtime) chatModes.Visibility = target.Visibility = Visibility.Collapsed;
+        else { dictate.Visibility = Visibility.Visible; input.PlaceholderText = DesktopResources.Get("AskAnything"); ToolbarControls.Label(send, DesktopResources.Get("SendMessage")); }
         target.IsSuggestionListOpen = false;
         scroll.Visibility = chat && current.Messages.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         agentsOverview.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
@@ -167,6 +177,8 @@ public sealed partial class ChatShell
         transcriptionsPage.Visibility = transcriptionTarget.Visibility = page == DesktopPage.Transcriptions ? Visibility.Visible : Visibility.Collapsed;
         RefreshConversationActivity();
         UpdatePageButtons();
+        UpdateRealtimeControls();
+        if (page == DesktopPage.Realtime) RenderTranscript();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
         { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Speech => "SpeechRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Files => "FilesRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", DesktopPage.Usage => "UsageRefresh", _ => "RefreshSkills" }));
     }
@@ -205,6 +217,8 @@ public sealed partial class ChatShell
 
     private void InvalidateCatalogs()
     {
+        if (realtime is not null) realtimeCleanup = StopRealtimeAsync();
+        realtimeModels = []; realtimeTarget.Text = "";
         catalogs.Clear(); favorites.Clear(); catalogPartition = null;
         InvalidateImages();
         InvalidateVideos();

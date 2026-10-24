@@ -42,8 +42,8 @@ public partial class App
         var search = Field<Button>(shell, "searchChats");
         var primary = Descendants(navigation).OfType<StackPanel>().Single(panel => panel.Name == "NavigationGroupPrimary");
         var pages = Descendants(primary).OfType<ToggleButton>().ToArray();
-        var buttons = new ButtonBase[] { newChat, search }.Concat(pages).ToArray();
-        Check(buttons.Select(AutomationProperties.GetName).SequenceEqual(new[] { "New chat", "Search chats", "Images", "Videos", "Speech", "Transcriptions" }),
+        var buttons = primary.Children.OfType<Grid>().Select(row => row.Children.OfType<ButtonBase>().First()).ToArray();
+        Check(buttons.Select(AutomationProperties.GetName).SequenceEqual(new[] { "New chat", "Realtime", "Search chats", "Images", "Videos", "Speech", "Transcriptions" }),
             context + ": compact actions match primary navigation order");
         var header = Descendants(pane).OfType<Grid>().Single(grid => grid.Children.Contains(toggle));
         split.IsPaneOpen = false;

@@ -1705,4 +1705,51 @@
   <data name="ChatForm_anthropic_contextManagement_summaries_pauseAfterCompactionTrue" xml:space="preserve"><value>Pauzeren na compactie: waar</value></data>
   <data name="ChatForm_anthropic_contextManagement_summaries_pauseAfterCompactionFalse" xml:space="preserve"><value>Pauzeren na compactie: onwaar</value></data>
   <data name="ChatForm_anthropic_contextManagement_summaries_instructions" xml:space="preserve"><value>Instructies ingesteld</value></data>
+  <data name="RealtimeTitle" xml:space="preserve"><value>Realtime</value></data>
+  <data name="RealtimeFavorite" xml:space="preserve"><value>Audiomodel als favoriet instellen of verwijderen</value></data>
+  <data name="RealtimeMute" xml:space="preserve"><value>Microfoon dempen of inschakelen</value></data>
+  <data name="RealtimeCamera" xml:space="preserve"><value>Camera delen of stoppen</value></data>
+  <data name="RealtimeScreen" xml:space="preserve"><value>Scherm of venster delen / delen stoppen</value></data>
+  <data name="RealtimeSettings" xml:space="preserve"><value>Realtime-instellingen</value></data>
+  <data name="RealtimeReady" xml:space="preserve"><value>Klaar om te starten</value></data>
+  <data name="RealtimeConnected" xml:space="preserve"><value>Verbonden · microfoon actief</value></data>
+  <data name="RealtimeConnecting" xml:space="preserve"><value>Verbinden…</value></data>
+  <data name="RealtimeStart" xml:space="preserve"><value>Realtimegesprek starten</value></data>
+  <data name="RealtimeStartHint" xml:space="preserve"><value>Start realtime of typ een eerste bericht…</value></data>
+  <data name="RealtimeConversation" xml:space="preserve"><value>Realtimegesprek</value></data>
+  <data name="RealtimeNoModels" xml:space="preserve"><value>Er zijn geen ondersteunde OpenAI- of Google-audiomodellen beschikbaar. Controleer de ingeschakelde audioproviders, het account en de API-sleutels.</value></data>
+  <data name="RealtimeFailed" xml:space="preserve"><value>De realtimesessie kon niet starten of de verbinding is verbroken. Controleer microfoontoegang, account en netwerk. Start opnieuw om verbinding te maken. Het opgeslagen transcript blijft behouden.</value></data>
+  <data name="RealtimeHeadphones" xml:space="preserve"><value>Live microfoonaudio wordt rechtstreeks naar de geselecteerde provider verzonden. Windows-communicatieverwerking en een lokaal ruisfilter zijn ingeschakeld. Een hoofdtelefoon wordt aanbevolen, vooral zonder echo-onderdrukking. Bij het verlaten van deze pagina stopt alle opname.</value></data>
+  <data name="RealtimeAecUnavailable" xml:space="preserve"><value>Deze microfoon meldt geen actieve Windows-echo-onderdrukking. Gebruik een hoofdtelefoon om te voorkomen dat de AI zichzelf hoort. Een radio of andere luidspreker kan nog steeds als spraak worden herkend.</value></data>
+  <data name="RealtimeAecAvailable" xml:space="preserve"><value>Windows meldt akoestische echo-onderdrukking voor deze communicatiemicrofoon.</value></data>
+  <data name="RealtimeAecReference" xml:space="preserve"><value>De echoreferentie is ingesteld op het afspeelapparaat van het gesprek.</value></data>
+  <data name="RealtimeDevices" xml:space="preserve"><value>Microfoon: {0}
+Luidspreker: {1}</value></data>
+  <data name="RealtimeReconnecting" xml:space="preserve"><value>Opnieuw verbinden… microfoonupload gepauzeerd</value></data>
+  <data name="RealtimeMuted" xml:space="preserve"><value>Verbonden · microfoon gedempt</value></data>
+  <data name="RealtimeUnsupportedAttachment" xml:space="preserve"><value>Realtime ondersteunt tekst en ingesloten afbeeldingen. Zet andere bijlagen eerst om naar tekst; niet-ondersteunde inhoud is niet verzonden.</value></data>
+  <data name="RealtimeVideoEnded" xml:space="preserve"><value>Beeld delen is gestopt. Het audiogesprek kan doorgaan.</value></data>
+  <data name="RealtimeVideoFailed" xml:space="preserve"><value>Beeld delen kon niet starten. Controleer cameramachtigingen in Windows of selecteer een beschikbaar scherm/venster. Audio kan doorgaan.</value></data>
+  <data name="RealtimeSharingScreen" xml:space="preserve"><value>Geselecteerd scherm/venster wordt gedeeld</value></data>
+  <data name="RealtimeSharingCamera" xml:space="preserve"><value>Camera wordt gedeeld</value></data>
+  <data name="RealtimeSettingsHint" xml:space="preserve"><value>Instellingen gelden voor de volgende verbinding. Camera en scherm delen blijven uit tot u ze inschakelt. Hulpmiddelen en systeemcontext worden bij het starten vastgelegd.</value></data>
+  <data name="RealtimeSettingsFailed" xml:space="preserve"><value>Instellingen konden niet worden opgeslagen. Controleer de waarden en probeer opnieuw.</value></data>
+  <data name="RealtimeVoice" xml:space="preserve"><value>Stem</value></data>
+  <data name="RealtimeVad" xml:space="preserve"><value>Beurtdetectie</value></data>
+  <data name="RealtimeEagerness" xml:space="preserve"><value>Reactiesnelheid semantische VAD</value></data>
+  <data name="RealtimeInterrupt" xml:space="preserve"><value>Spraak mag het antwoord onderbreken</value></data>
+  <data name="RealtimeAutomaticResponse" xml:space="preserve"><value>Automatisch antwoorden na spraak</value></data>
+  <data name="RealtimeInputTranscription" xml:space="preserve"><value>Invoeraudio transcriberen</value></data>
+  <data name="RealtimeOutputTranscription" xml:space="preserve"><value>Uitvoeraudio transcriberen</value></data>
+  <data name="RealtimeThreshold" xml:space="preserve"><value>Drempel server-VAD</value></data>
+  <data name="RealtimeSilence" xml:space="preserve"><value>Stilteduur (ms)</value></data>
+  <data name="RealtimePrefix" xml:space="preserve"><value>Voorlooptijd (ms)</value></data>
+  <data name="RealtimeGoogleSearch" xml:space="preserve"><value>Google Zoeken</value></data>
+  <data name="RealtimeAutomaticVad" xml:space="preserve"><value>Automatische spraakdetectie</value></data>
+  <data name="RealtimeCompression" xml:space="preserve"><value>Contextcompressie met schuivend venster</value></data>
+  <data name="RealtimeResumption" xml:space="preserve"><value>Google-sessies hervatten na een verbindingswijziging</value></data>
+  <data name="RealtimeCameraFps" xml:space="preserve"><value>Beelden per seconde (0,1–1)</value></data>
+  <data name="RealtimeJpegQuality" xml:space="preserve"><value>JPEG-kwaliteit (0,1–1)</value></data>
+  <data name="RealtimeExpiry" xml:space="preserve"><value>Tokenvervaltijd (bijv. 30m of RFC3339)</value></data>
+  <data name="RealtimeReset" xml:space="preserve"><value>Providerstandaarden herstellen</value></data>
 </root>

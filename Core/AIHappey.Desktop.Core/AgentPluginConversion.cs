@@ -27,7 +27,7 @@ public static class DesktopAgentPluginSnapshots
                 var data = DesktopAgent.Text(entry?["source"]?["data"]); if (data.Length > AgentPluginPackages.MaxBytes * 4L / 3 + 4) throw new InvalidDataException("Inline skill archive too large.");
                 var imported = await DesktopSkillPackages.ImportAsync(Convert.FromBase64String(data), ct);
                 if (imported.Skills.Count == 0 || imported.Diagnostics.Count > 0) throw new InvalidDataException("Inline agent skill is invalid.");
-                snapshot = imported.Skills.SelectMany(s => s.Files.Append(new("SKILL.md", Encoding.UTF8.GetBytes(DesktopSkillPackages.Markdown(s)))).Select(f => new DesktopSkillFile("skills/" + s.Name + "/" + f.Path, f.Data))).ToArray();
+                snapshot = imported.Skills.SelectMany(s => s.Files.Append(new DesktopSkillFile("SKILL.md", Encoding.UTF8.GetBytes(DesktopSkillPackages.Markdown(s)))).Select(f => new DesktopSkillFile("skills/" + s.Name + "/" + f.Path, f.Data))).ToArray();
             }
             else throw new InvalidDataException("Agent skill cannot be snapshotted.");
             foreach (var group in snapshot.GroupBy(f => f.Path.Split('/')[1]))

@@ -134,7 +134,7 @@ internal sealed class NativeWindowsCapture(DispatcherQueue dispatcher, Func<nint
             throw new LocalToolException(DesktopResources.Get("LocalCaptureTooLarge"));
     }
 
-    private static IDirect3DDevice CreateDevice()
+    internal static IDirect3DDevice CreateDevice()
     {
         nint device = 0, context = 0, dxgi = 0, inspectable = 0;
         try

@@ -28,6 +28,8 @@ public sealed class DesktopSettings
     public TranscriptionPreferences Transcriptions { get => transcriptions; set => transcriptions = value ?? new(); }
     private SpeechPreferences speech = new();
     public SpeechPreferences Speech { get => speech; set => speech = value ?? new(); }
+    private RealtimePreferences realtime = new();
+    public RealtimePreferences Realtime { get => realtime; set => realtime = value ?? new(); }
     private AiModelPreferences aiModels = new();
     public AiModelPreferences AiModels { get => aiModels; set => aiModels = value ?? new(); }
     private Dictionary<string, string[]> enabledProvidersByType = new(StringComparer.Ordinal);
@@ -53,7 +55,7 @@ public sealed class DesktopSettings
         Ai = new() { Location = Ai.Location, RemoteUrl = Ai.RemoteUrl },
         Agents = new() { Location = Agents.Location, RemoteUrl = Agents.RemoteUrl },
         Language = Language, ConvertAttachmentsToText = ConvertAttachmentsToText,
-        Chat = Chat.Clone(), Images = Images.Clone(), Videos = Videos.Clone(), Transcriptions = Transcriptions.Clone(), Speech = Speech.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
+        Chat = Chat.Clone(), Images = Images.Clone(), Videos = Videos.Clone(), Transcriptions = Transcriptions.Clone(), Speech = Speech.Clone(), Realtime = Realtime.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
         SideInferenceAgentNames = SideInferenceAgentNames.Clone(),
         AgentWorkflow = AgentWorkflow.Clone(),
         Navigation = Navigation.Clone(),

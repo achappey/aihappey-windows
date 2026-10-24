@@ -19,6 +19,8 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    await RealtimeRegressionTests.RunAsync(Check, root);
+    if (args.Contains("--realtime-only")) { Console.WriteLine($"All {tests} realtime history/security checks passed."); return; }
     if (args.Contains("--elicitation-only"))
     {
         await ElicitationRegressionTests.RunAsync(Check, root);
