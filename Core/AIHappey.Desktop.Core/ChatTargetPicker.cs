@@ -103,9 +103,15 @@ public sealed class ChatTargetPicker : Button
     public void Configure(bool agents, bool multiselect, IReadOnlySet<string> favoriteIds, bool canRoute, string routeLabel)
     {
         agentMode = agents; multiple = multiselect; favorites = favoriteIds; routerAvailable = canRoute; routerLabel = routeLabel;
-        // Do not silently discard an existing multi-selection if routing becomes unavailable. Send validates it.
-        list.SelectionMode = multiple ? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single;
-        list.IsMultiSelectCheckBoxEnabled = multiple; Rebuild();
+        // Changing native selection mode can raise SelectionChanged. It must not edit the canonical IDs.
+        updating = true;
+        try
+        {
+            list.SelectionMode = multiple ? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single;
+            list.IsMultiSelectCheckBoxEnabled = multiple;
+        }
+        finally { updating = false; }
+        Rebuild();
     }
     public void SetSelection(IEnumerable<string> ids, bool favoriteRouter = false)
     { Selection.Replace(ids); Selection.FavoriteRouter = favoriteRouter; SyncSelectedRows(); UpdateSummary(); }
@@ -160,6 +166,11 @@ public sealed class ChatTargetPicker : Button
         var before = updating; updating = true;
         try
         {
+            if (!multiple)
+            {
+                list.SelectedItem = groups.SelectMany(g => g).FirstOrDefault(i => !Selection.FavoriteRouter && Selection.Ids.Contains(i.Id));
+                return;
+            }
             list.SelectedItems.Clear();
             foreach (var row in groups.SelectMany(g => g).Where(i => !Selection.FavoriteRouter && Selection.Ids.Contains(i.Id)))
             {

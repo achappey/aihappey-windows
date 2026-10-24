@@ -141,7 +141,8 @@ public sealed partial class ChatShell
         NativeCardSurface.Action(explain); ToolbarControls.Label(explain, DesktopResources.Format("ExplainToolCall", name));
         explain.IsEnabled = !explainingTools.Contains(key);
         explain.Click += async (_, _) => await ExplainToolAsync(item, key);
-        actions.Children.Add(explain); body.Children.Add(actions);
+        if (AssignedAppAgent(AppAgentRole.ExplainToolCall) is not null) actions.Children.Add(explain);
+        body.Children.Add(actions);
         var card = new Border { Name = "ConversationToolCard", Child = body };
         NativeCardSurface.Card(card); AutomationProperties.SetName(card, name); return card;
     }
@@ -184,6 +185,9 @@ public sealed partial class ChatShell
     private async Task ExplainToolAsync(ConversationActivityItem item, string key)
     {
         if (closing || explainingTools.Contains(key)) return;
+        var agent = AssignedAppAgent(AppAgentRole.ExplainToolCall);
+        if (agent is null) return;
+        var assignment = session.Settings.SideInferenceAgentNames.Get(AppAgentRole.ExplainToolCall);
         var conversationId = current.Id;
         var partition = session.HistoryPartition;
         var raw = PortableConversations.Element(item.Part).Clone();
@@ -192,12 +196,12 @@ public sealed partial class ChatShell
         lifetime.CancelAfter(TimeSpan.FromSeconds(30));
         try
         {
-            var agent = AssignedAppAgent(AppAgentRole.ExplainToolCall);
             var models = aiModelTargets ?? await client.ListAsync(ServiceKind.Ai, lifetime.Token);
             var language = session.ActiveLanguage == "nl" ? "Nederlands" : "English";
             var input = DesktopAppAgentClient.ToolExplanationInput(raw, null, language);
             var explanation = await appAgentClient.InvokeAsync(agent, models, input, DesktopResources.Get("ToolExplanationFallback"), lifetime.Token);
-            if (!closing && !lifetime.IsCancellationRequested && current.Id == conversationId && session.HistoryPartition == partition)
+            if (!closing && !lifetime.IsCancellationRequested && current.Id == conversationId && session.HistoryPartition == partition
+                && session.Settings.SideInferenceAgentNames.Get(AppAgentRole.ExplainToolCall) == assignment)
                 toolExplanations[key] = explanation;
         }
         catch (OperationCanceledException) { }

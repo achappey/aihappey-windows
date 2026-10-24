@@ -152,6 +152,11 @@ public sealed partial class ChatShell
         var favoriteIds = SelectionFavorites(agentMode);
         var visible = agentMode ? targets.Where(t => AgentVisible(t, favoriteIds)).ToArray()
             : AiModelCatalog.ChatSuggestions(PickerModels(targets), session.Settings.AiModels);
+        if (session.Settings.SideInferenceAgentNames.Get(agentMode ? AppAgentRole.SelectFavorite : AppAgentRole.SelectModel).Length == 0)
+        {
+            target.Selection.UseManualSelection(visible, agentMode, current.Service == Service ? current.Target : null,
+                agentMode ? null : AiModelCatalog.NewChatModel(PickerModels(targets), session.Settings.AiModels));
+        }
         target.Configure(agentMode, agentMode || decision is not null, favoriteIds,
             decision is not null && (!agentMode || visible.Count(t => favoriteIds.Contains(t.Id)) >= 2), routerAgent?.Name ?? "");
         target.ItemsSource = visible;

@@ -7,6 +7,17 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class ChatShell
 {
     private readonly Dictionary<ServiceKind, ChatSelection> rememberedSelections = [];
+    private void ReconcileRememberedSelections()
+    {
+        if (session.Settings.SideInferenceAgentNames.Get(AppAgentRole.SelectModel).Length == 0
+            && rememberedSelections.TryGetValue(ServiceKind.Ai, out var models))
+        {
+            var available = PickerModels(aiModelTargets ?? []).Where(m => session.Settings.AiModels.AllowsChat(m.ModelType ?? "language")).ToArray();
+            models.UseManualSelection(available, false, fallback: AiModelCatalog.NewChatModel(available, session.Settings.AiModels));
+        }
+        if (session.Settings.SideInferenceAgentNames.Get(AppAgentRole.SelectFavorite).Length == 0
+            && rememberedSelections.TryGetValue(ServiceKind.Agents, out var agents)) agents.FavoriteRouter = false;
+    }
     private void RememberSelection()
     {
         var saved = new ChatSelection { FavoriteRouter = target.Selection.FavoriteRouter };
@@ -89,5 +100,6 @@ public sealed partial class ChatShell
         if (!saved.TryGetProperty("ids", out var ids) || ids.ValueKind != JsonValueKind.Array) return;
         target.SetSelection(ids.EnumerateArray().Where(id => id.ValueKind == JsonValueKind.String).Select(id => id.GetString()!),
             Service == ServiceKind.Agents && saved.TryGetProperty("favoriteRouter", out var router) && router.ValueKind == JsonValueKind.True);
+        UpdateTargetSuggestions();
     }
 }

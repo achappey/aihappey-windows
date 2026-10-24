@@ -60,6 +60,7 @@ public sealed partial class ChatShell
     {
         var agent = AssignedAppAgent(AppAgentRole.ConversationName);
         if (agent is null || closing || partition != session.HistoryPartition || conversation.Title != expectedTitle) return;
+        var assignment = session.Settings.SideInferenceAgentNames.Get(AppAgentRole.ConversationName);
         var language = session.ActiveLanguage;
         var input = DesktopAppAgentClient.ConversationNameInput(string.Join("\n\n", firstMessage.Parts.Where(p => p.Type == "text")
             .Select(PortableConversations.Text)), language);
@@ -80,13 +81,15 @@ public sealed partial class ChatShell
             // itself never locks the composer while its network request is in flight.
             while (!closing && (busy || historyDialogOpen || catalogDialog is not null))
                 await Task.Delay(20, appAgentLifetime.Token);
-            if (closing || partition != session.HistoryPartition) return;
+            if (closing || partition != session.HistoryPartition
+                || session.Settings.SideInferenceAgentNames.Get(AppAgentRole.ConversationName) != assignment) return;
             await RunAsync(async ct =>
             {
                 var stored = await history.GetAsync(partition, conversation.Id, ct);
                 // Re-read the latest document, not the first-turn snapshot. Never recreate a
                 // deleted chat or overwrite a user rename or another turn's saved messages.
                 if (closing || partition != session.HistoryPartition || stored is null || stored.Title != expectedTitle
+                    || session.Settings.SideInferenceAgentNames.Get(AppAgentRole.ConversationName) != assignment
                     || current.Id == conversation.Id && current.Title != expectedTitle) return;
                 stored.Title = name;
                 await history.SaveAsync(partition, stored, ct);

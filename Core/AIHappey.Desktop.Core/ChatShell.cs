@@ -481,6 +481,7 @@ public sealed partial class ChatShell : UserControl
     {
         if (busy || closing || historyDialogOpen || catalogDialog is not null
             || selectedPrompt is null && string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
+        UpdateTargetSuggestions();
         var selected = TargetId;
         var selectedIds = target.Selection.Ids.ToArray();
         var favoriteRouter = target.Selection.FavoriteRouter;
@@ -775,6 +776,7 @@ public sealed partial class ChatShell : UserControl
             }
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
+            ReconcileRememberedSelections();
             RenderTranscript();
             RefreshWelcome();
             RefreshProviderFiltering();

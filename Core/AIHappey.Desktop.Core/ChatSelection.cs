@@ -21,6 +21,21 @@ public sealed class ChatSelection
         if (!ids.Contains(id)) ids.Add(id);
         else if (allowEmpty || ids.Count > 1) ids.Remove(id);
     }
+    public void UseManualSelection(IReadOnlyList<ChatTarget> available, bool agentMode, string? current = null, string? fallback = null)
+    {
+        var wasRouter = FavoriteRouter;
+        FavoriteRouter = false;
+        bool Valid(string? id) => id is not null && available.Any(item => item.Id == id);
+        if (agentMode)
+        {
+            // Manual multi-agent teams are independent of the optional favorite router.
+            if (wasRouter && !ids.Any(Valid)) Replace(Valid(current) ? [current!] : available.Take(1).Select(item => item.Id));
+            return;
+        }
+        var selected = Valid(current) ? current : ids.FirstOrDefault(Valid)
+            ?? (Valid(fallback) ? fallback : available.FirstOrDefault()?.Id);
+        Replace(selected is null ? [] : [selected]);
+    }
     public static string Display(ChatTarget item) => string.IsNullOrWhiteSpace(item.Label)
         ? ModelOverviewCatalog.DisplayId(item) : item.Label;
 }
