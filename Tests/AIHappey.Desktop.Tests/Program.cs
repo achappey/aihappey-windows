@@ -19,6 +19,13 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--chat-streaming-only"))
+    {
+        await ChatFileRegressionTests.RunAsync(Check, root);
+        await ChatErrorRegressionTests.RunAsync(Check, root);
+        TranscriptRegressionTests.Run(Check);
+        Console.WriteLine($"All {tests} chat streaming/file/error/presentation checks passed."); return;
+    }
     if (args.Contains("--mcp-auth-only"))
     {
         await McpAuthenticationRegressionTests.RunAsync(Check, root);

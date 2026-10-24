@@ -3,7 +3,6 @@ using AIHappey.Vercel.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace AIHappey.Desktop.Core;
@@ -13,7 +12,7 @@ public sealed partial class ChatShell
     // Retained only during a stream (including its final status update), never across conversations.
     private Conversation? streamingConversation;
     private List<StreamingRow>? streamingRows;
-    private readonly Dictionary<ConversationMessage, ProgressBar> streamingIndicators = [];
+    private readonly Dictionary<ConversationMessage, (ProgressBar Indicator, StackPanel Owner)> streamingIndicators = [];
 
     private sealed class StreamingRow(TranscriptRow projected)
     {
@@ -87,23 +86,27 @@ public sealed partial class ChatShell
             // Only the final projected block of each message owns its indicator.
             if (next.Last(candidate => ReferenceEquals(candidate.Projected.Message, message)) != view) continue;
             liveMessages.Add(message);
-            if (!streamingIndicators.TryGetValue(message, out var indicator))
+            if (!streamingIndicators.TryGetValue(message, out var entry))
             {
-                indicator = new ProgressBar { Name = "AssistantStreamingProgress", IsIndeterminate = true, Height = 4 };
+                var indicator = new ProgressBar { Name = "AssistantStreamingProgress", IsIndeterminate = true, Height = 4 };
                 AutomationProperties.SetName(indicator, DesktopResources.Get("Working"));
-                streamingIndicators.Add(message, indicator);
+                view.Content.Children.Add(indicator);
+                streamingIndicators.Add(message, (indicator, view.Content));
             }
-            if (!view.Content.Children.Contains(indicator))
+            else if (!ReferenceEquals(entry.Owner, view.Content))
             {
                 // Reparent only when a new block appears, never for ordinary content chunks.
-                if (VisualTreeHelper.GetParent(indicator) is Panel parent) parent.Children.Remove(indicator);
-                view.Content.Children.Add(indicator);
+                // A removed details row is no longer in the visual tree, but its content panel
+                // still owns the indicator. Detach through that owner before adding it elsewhere.
+                entry.Owner.Children.Remove(entry.Indicator);
+                view.Content.Children.Add(entry.Indicator);
+                streamingIndicators[message] = (entry.Indicator, view.Content);
             }
         }
         foreach (var message in streamingIndicators.Keys.Where(message => !liveMessages.Contains(message)).ToArray())
         {
-            var indicator = streamingIndicators[message];
-            if (VisualTreeHelper.GetParent(indicator) is Panel parent) parent.Children.Remove(indicator);
+            var entry = streamingIndicators[message];
+            entry.Owner.Children.Remove(entry.Indicator);
             streamingIndicators.Remove(message);
         }
         foreach (var key in activityPages.Keys.Where(key => !liveActivity.Contains(key)).ToArray()) activityPages.Remove(key);

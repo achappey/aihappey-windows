@@ -38,6 +38,12 @@ public partial class App : Application
             // Native brushes stay valid: toolkit and transcript consume WinUI resources.
             Resources["SubtleButtonStyle"] = "deliberately not a Style";
             window = new Window { Title = "AIHappey native UI regression checks" };
+            if (Environment.GetCommandLineArgs().Contains("--streaming-attachments-only"))
+            {
+                foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckStreamingAttachmentsAsync(theme);
+                results.Add("All streaming attachment UI checks passed.");
+                File.WriteAllLines(report, results); window.Close(); Exit(); return;
+            }
             if (Environment.GetCommandLineArgs().Contains("--chat-settings-scrolling-only"))
             {
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark }) await CheckChatSettingsScrollingAsync(theme);
@@ -192,7 +198,7 @@ public partial class App : Application
                 }
             if (!Environment.GetCommandLineArgs().Contains("--transcript-only"))
                 foreach (var theme in new[] { ElementTheme.Light, ElementTheme.Dark })
-                { await CheckIconsAsync(theme); await CheckOverviewTabsAsync(theme); await CheckUsageAsync(theme); await CheckProvidersAsync(theme); await CheckAgentsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckLocalToolsAsync(theme); await CheckImagesAsync(theme); await CheckVideosAsync(theme); }
+                { await CheckStreamingAttachmentsAsync(theme); await CheckIconsAsync(theme); await CheckOverviewTabsAsync(theme); await CheckUsageAsync(theme); await CheckProvidersAsync(theme); await CheckAgentsAsync(theme); await CheckMcpPresentationAsync(theme); await CheckElicitationAsync(theme); await CheckAiModelsAsync(theme); await CheckSkillsAsync(theme); await CheckLocalToolsAsync(theme); await CheckImagesAsync(theme); await CheckVideosAsync(theme); }
             results.Add("All native UI checks passed.");
             File.WriteAllLines(report, results);
             window.Close();
