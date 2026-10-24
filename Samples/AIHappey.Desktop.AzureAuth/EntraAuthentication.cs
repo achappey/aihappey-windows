@@ -102,6 +102,31 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
         catch (MsalException) { throw new InvalidOperationException(DesktopResources.Get("TokenAcquisitionFailed")); }
     }
 
+    public async Task AuthenticateMcpAsync(HttpRequestMessage request, ServiceKind service, bool interactive, CancellationToken cancellationToken)
+    {
+        await InitializeAsync(cancellationToken);
+        config.ValidateDestination(request.RequestUri, service);
+        if (account is null) throw new McpSignInRequiredException();
+        try
+        {
+            var scopes = service == ServiceKind.Ai ? config.AiScopes : config.AgentsScopes;
+            AuthenticationResult result;
+            try { result = await app!.AcquireTokenSilent(scopes, account).ExecuteAsync(cancellationToken); }
+            catch (MsalUiRequiredException)
+            {
+                if (!interactive) throw new McpSignInRequiredException();
+                result = await app!.AcquireTokenInteractive(scopes).WithAccount(account)
+                    .WithUseEmbeddedWebView(false).ExecuteAsync(cancellationToken);
+            }
+            // MCP sign-in cannot silently switch the desktop's active identity/partition.
+            if (result.Account.HomeAccountId.Identifier != account.HomeAccountId.Identifier)
+                throw new McpSignInRequiredException();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+        }
+        catch (MsalClientException e) when (e.ErrorCode == "authentication_canceled") { throw new McpSignInRequiredException(); }
+        catch (MsalException) { throw new InvalidOperationException(DesktopResources.Get("TokenAcquisitionFailed")); }
+    }
+
     public async Task ManageAccountAsync(object xamlRoot, CancellationToken cancellationToken)
     {
         await InitializeAsync();

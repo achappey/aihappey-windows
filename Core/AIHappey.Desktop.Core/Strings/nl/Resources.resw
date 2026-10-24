@@ -658,10 +658,17 @@
   <data name="McpStateConnecting" xml:space="preserve"><value>Verbinden</value></data>
   <data name="McpStateConnected" xml:space="preserve"><value>Verbonden</value></data>
   <data name="McpStateError" xml:space="preserve"><value>Verbinding mislukt</value></data>
+  <data name="McpStateAuthenticationRequired" xml:space="preserve"><value>Aanmelden vereist</value></data>
+  <data name="McpStateSigningIn" xml:space="preserve"><value>Bezig met aanmelden</value></data>
+  <data name="McpSignIn" xml:space="preserve"><value>Aanmelden</value></data>
+  <data name="McpSigningInHint" xml:space="preserve"><value>Voltooi het aanmelden in je browser. Dit venster maakt automatisch opnieuw verbinding. Kies Annuleren om te stoppen met wachten.</value></data>
+  <data name="McpBrowserComplete" xml:space="preserve"><value>De aanmelding is ontvangen. Ga terug naar AIHappey. Je kunt dit browsertabblad sluiten.</value></data>
+  <data name="McpBrowserDenied" xml:space="preserve"><value>Het aanmelden is niet voltooid. Ga terug naar AIHappey. Je kunt dit browsertabblad sluiten.</value></data>
+  <data name="McpAccessDenied" xml:space="preserve"><value>Toegang geweigerd. Je account heeft geen toestemming om deze server te gebruiken.</value></data>
   <data name="McpDisconnect" xml:space="preserve"><value>Verbinding met {0} verbreken</value></data>
   <data name="McpToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
   <data name="McpServerUrl" xml:space="preserve"><value>Streamable HTTP-server-URL</value></data>
-  <data name="McpHeadersHint" xml:space="preserve"><value>Optionele headers gaan alleen naar deze MCP-server en worden met je Windows-account beveiligd. Gatewaygegevens worden nooit doorgestuurd. Deze versie ondersteunt geen OAuth.</value></data>
+  <data name="McpHeadersHint" xml:space="preserve"><value>Optionele headers gaan alleen naar deze MCP-server en worden met je Windows-account beveiligd. Eigen headers krijgen voorrang op automatische authenticatie. AI/Agents-gegevens gaan alleen naar de ingestelde diensten; andere servers gebruiken hun eigen OAuth-aanmelding.</value></data>
   <data name="McpAddHeader" xml:space="preserve"><value>Header toevoegen</value></data>
   <data name="McpRemoveHeader" xml:space="preserve"><value>Header verwijderen</value></data>
   <data name="McpHeaderName" xml:space="preserve"><value>Headernaam</value></data>
@@ -670,7 +677,7 @@
   <data name="McpInvalidHeaders" xml:space="preserve"><value>Controleer headernamen en waarden. Dubbele headers, besturingstekens, cookies en transport- of sessieheaders van de SDK zijn niet toegestaan.</value></data>
   <data name="McpInvalidName" xml:space="preserve"><value>Een servernaam is verplicht (maximaal 256 tekens).</value></data>
   <data name="McpServerLimit" xml:space="preserve"><value>Je kunt maximaal 200 verschillende servers installeren.</value></data>
-  <data name="McpAuthRequired" xml:space="preserve"><value>Deze server vereist authenticatie. Configureer de headers; interactieve MCP-OAuth wordt nog niet ondersteund.</value></data>
+  <data name="McpAuthRequired" xml:space="preserve"><value>Deze server vereist authenticatie. Kies Aanmelden om door te gaan of wijzig de authenticatieheaders. Meld je voor AI/Agents eerst aan bij het app-account.</value></data>
   <data name="McpTimedOut" xml:space="preserve"><value>De MCP-bewerking is geannuleerd of heeft een time-out. Een toolaanroep is niet opnieuw geprobeerd.</value></data>
   <data name="McpConnectionFailed" xml:space="preserve"><value>De MCP-bewerking is mislukt. Controleer de server-URL, headers en verbinding. Toolaanroepen worden niet automatisch opnieuw geprobeerd.</value></data>
   <data name="McpDisconnected" xml:space="preserve"><value>De MCP-server is niet meer verbonden.</value></data>

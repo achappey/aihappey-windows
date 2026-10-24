@@ -44,6 +44,8 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpIcons.cs" Link="Core/McpIcons.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpStore.cs" Link="Core/McpStore.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpClient.cs" Link="Core/McpClient.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/McpAuthentication.cs" Link="Core/McpAuthentication.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/McpOAuthBrowser.cs" Link="Core/McpOAuthBrowser.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpTools.cs" Link="Core/McpTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Skills.cs" Link="Core/Skills.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalSkills.cs" Link="Core/LocalSkills.cs" />

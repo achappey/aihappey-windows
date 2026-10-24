@@ -100,6 +100,9 @@ public interface IDesktopHost
     void ApplySettingsPolicy(DesktopSettings settings) { }
     Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     Task AuthenticateAsync(HttpRequestMessage request, ServiceKind service, CancellationToken cancellationToken);
+    /// <summary>Interactive permission is granted only by an explicit MCP enable/sign-in gesture.</summary>
+    Task AuthenticateMcpAsync(HttpRequestMessage request, ServiceKind service, bool interactive, CancellationToken cancellationToken) =>
+        AuthenticateAsync(request, service, cancellationToken);
     Task ManageAccountAsync(object xamlRoot, CancellationToken cancellationToken);
 }
 
@@ -107,6 +110,8 @@ public interface IDesktopHost
 public interface IRuntimeResolver : IAsyncDisposable
 {
     Task<Uri> ResolveAsync(ServiceKind service, DesktopSettings settings, CancellationToken cancellationToken);
+    /// <summary>Must not start a service just to classify an unrelated MCP URL.</summary>
+    Uri? GetRunningEndpoint(ServiceKind service) => null;
 }
 
 public sealed class RemoteRuntimeResolver : IRuntimeResolver
@@ -134,7 +139,12 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     public string PluginPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
     public string PluginExtensionNamespace { get; set; } = AgentPluginPackages.DefaultNamespace;
     public ISystemContextComposer ContextComposer { get; set; } = new DesktopSystemContextComposer();
-    public IDesktopMcpClientFactory McpClientFactory { get; set; } = new DesktopMcpClientFactory();
+    private IDesktopMcpClientFactory? mcpClientFactory;
+    public IDesktopMcpClientFactory McpClientFactory
+    {
+        get => mcpClientFactory ??= new DesktopMcpClientFactory(new DesktopMcpAuthentication(this));
+        set => mcpClientFactory = value;
+    }
     public DesktopToolApprovalPolicy ToolApprovals { get; } = new();
     public DesktopMcpManager? Mcp { get; private set; }
     public DesktopElicitationHandler? ElicitationHandler { get; set; }

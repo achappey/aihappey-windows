@@ -70,7 +70,7 @@ public sealed partial class AgentEditDialog
                         Headers = (server["headers"] as JsonObject ?? new()).ToDictionary(p => p.Key, p => DesktopAgent.Text(p.Value)) };
                     // Temporary discovery never installs/changes globally configured servers or
                     // negotiates elicitation into another modal while this editor is open.
-                    var factory = session.McpClientFactory is DesktopMcpClientFactory ? new DesktopMcpClientFactory() : session.McpClientFactory;
+                    var factory = session.McpClientFactory is DesktopMcpClientFactory sdk ? sdk.ForDiscovery() : session.McpClientFactory;
                     await using var connection = await factory.ConnectAsync(descriptor, ct);
                     var discovery = await connection.DiscoverAsync(ct); ct.ThrowIfCancellationRequested();
                     discoveredAgentTools[url] = discovery.Tools.Select(t => CatalogProjection.Text(t, "name") ?? "").Where(n => n.Length > 0).Distinct().ToArray();

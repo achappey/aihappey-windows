@@ -9,7 +9,7 @@ namespace AIHappey_Desktop_HeaderAuth;
 public sealed class ManagedLocalRuntime : IRuntimeResolver
 {
     private readonly SemaphoreSlim gate = new(1, 1);
-    private readonly Dictionary<ServiceKind, (Process Process, Uri Endpoint)> children = [];
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<ServiceKind, (Process Process, Uri Endpoint)> children = new();
     private readonly string root;
     private readonly string stateRoot;
     private OwnedProcessJob? job;
@@ -19,6 +19,12 @@ public sealed class ManagedLocalRuntime : IRuntimeResolver
     {
         this.root = root; this.stateRoot = stateRoot;
         AppDomain.CurrentDomain.ProcessExit += (_, _) => StopOwned();
+    }
+
+    public Uri? GetRunningEndpoint(ServiceKind service)
+    {
+        try { return children.TryGetValue(service, out var child) && !child.Process.HasExited ? child.Endpoint : null; }
+        catch (InvalidOperationException) { return null; }
     }
 
     public async Task<Uri> ResolveAsync(ServiceKind service, DesktopSettings settings, CancellationToken ct)
@@ -44,7 +50,7 @@ public sealed class ManagedLocalRuntime : IRuntimeResolver
         {
             if (!existing.Process.HasExited) return existing.Endpoint;
             var exitCode = existing.Process.ExitCode;
-            existing.Process.Dispose(); children.Remove(service);
+            existing.Process.Dispose(); children.TryRemove(service, out _);
             // A fresh request can explicitly restart; do not silently repeat inference after a crash.
             throw new InvalidOperationException(DesktopResources.Format("ManagedExited", service, exitCode));
         }
@@ -87,7 +93,7 @@ public sealed class ManagedLocalRuntime : IRuntimeResolver
             job.Assign(process);
             process.OutputDataReceived += (_, _) => { }; process.ErrorDataReceived += (_, _) => { };
             process.BeginOutputReadLine(); process.BeginErrorReadLine();
-            children.Add(service, (process, endpoint));
+            children[service] = (process, endpoint);
             using var readiness = CancellationTokenSource.CreateLinkedTokenSource(ct);
             readiness.CancelAfter(TimeSpan.FromSeconds(60));
             while (true)
@@ -108,7 +114,7 @@ public sealed class ManagedLocalRuntime : IRuntimeResolver
         }
         catch
         {
-            children.Remove(service); Stop(process); throw;
+            children.TryRemove(service, out _); Stop(process); throw;
         }
     }
 

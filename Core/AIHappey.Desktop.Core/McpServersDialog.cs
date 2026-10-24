@@ -18,6 +18,7 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     private readonly List<(TextBox Key, PasswordBox Value)> headers = [];
     private DesktopMcpServer? draft;
     private bool working, closed;
+    private CancellationTokenSource? operation;
     public McpServersDialog(DesktopMcpManager manager, bool add = false)
     {
         this.manager = manager;
@@ -30,12 +31,17 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
         foreach (var control in new Control[] { name, url }) ControlAppearance.Native(control);
         manager.Changed += ManagerChanged;
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; };
-        Closing += (_, args) => { if (working && !closed) args.Cancel = true; };
+        Closing += (_, args) => { if (working && !closed) { operation?.Cancel(); args.Cancel = true; } };
         Closed += (_, _) => { closed = true; lifetime.Cancel(); manager.Changed -= ManagerChanged; XamlRoot.Changed -= RootChanged; };
         if (add) Edit(new()); else Render();
     }
     public void Shutdown() { closed = true; lifetime.Cancel(); Hide(); }
-    private void ManagerChanged() => DispatcherQueue.TryEnqueue(() => { if (!closed && draft is null && !working) Render(); });
+    private void ManagerChanged() => DispatcherQueue.TryEnqueue(() =>
+    {
+        if (closed) return;
+        if (working && manager.Servers.Any(s => s.State == McpConnectionState.SigningIn)) status.Text = DesktopResources.Get("McpSigningInHint");
+        else if (draft is null && !working) Render();
+    });
     private Button Button(string key, Action action)
     {
         var button = new Button { Name = key, Content = DesktopResources.Get(key) }; ControlAppearance.Native(button);
@@ -63,7 +69,7 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
                 HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
             ControlAppearance.Stock(toggle); AutomationProperties.SetAutomationId(toggle, server.Id + ":Enabled");
             AutomationProperties.SetName(toggle, server.Name);
-            toggle.Toggled += async (_, _) => await ActAsync(ct => manager.SetEnabledAsync(server.Id, toggle.IsOn, ct));
+            toggle.Toggled += async (_, _) => await ActAsync(ct => manager.SetEnabledAsync(server.Id, toggle.IsOn, ct, interactive: true));
             Grid.SetColumn(toggle, 1); header.Children.Add(toggle); panel.Children.Add(header);
             var address = new TextBlock { Text = server.Url, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
             NativeCardSurface.Secondary(address); panel.Children.Add(address);
@@ -73,7 +79,11 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
             var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
             actions.Children.Add(Button("Edit", () => Edit(server.Clone())));
             actions.Children.Add(Button("McpRemove", async () => await ActAsync(ct => manager.RemoveAsync(server.Id, ct))));
-            if (server.Enabled) actions.Children.Add(Button("Retry", async () => await ActAsync(ct => manager.SetEnabledAsync(server.Id, true, ct))));
+            if (server.Enabled && view.State == McpConnectionState.AuthenticationRequired)
+                actions.Children.Add(Button("McpSignIn", async () => await ActAsync(ct => manager.SignInAsync(server.Id, ct))));
+            else if (view.State == McpConnectionState.SigningIn)
+                actions.Children.Add(Button("Cancel", () => manager.CancelSignIn(server.Id)));
+            else if (server.Enabled) actions.Children.Add(Button("Retry", async () => await ActAsync(ct => manager.SetEnabledAsync(server.Id, true, ct))));
             panel.Children.Add(actions);
             if (view.Discovery is { } discovery)
             {
@@ -131,14 +141,16 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     private async Task ActAsync(Func<CancellationToken, Task> action, bool saved = false)
     {
         if (working || closed) return;
-        working = true; CloseButtonText = ""; status.Text = DesktopResources.Get("Working");
+        using var currentOperation = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+        operation = currentOperation;
+        working = true; CloseButtonText = DesktopResources.Get("Cancel"); status.Text = DesktopResources.Get("Working");
         foreach (var control in ControlAppearance.Descendants(body).OfType<Control>()) control.IsEnabled = false;
-        try { await action(lifetime.Token); if (saved) draft = null; status.Text = ""; }
+        try { await action(currentOperation.Token); if (saved) draft = null; status.Text = ""; }
         catch (OperationCanceledException) { status.Text = DesktopResources.Get("OperationCanceled"); }
         catch (Exception e) { status.Text = DesktopMcpManager.SafeError(e); }
         finally
         {
-            working = false; CloseButtonText = DesktopResources.Get("Close");
+            operation = null; working = false; CloseButtonText = DesktopResources.Get("Close");
             if (!closed)
             {
                 if (draft is null) Render();

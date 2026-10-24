@@ -662,10 +662,17 @@
   <data name="McpStateConnecting" xml:space="preserve"><value>Connecting</value></data>
   <data name="McpStateConnected" xml:space="preserve"><value>Connected</value></data>
   <data name="McpStateError" xml:space="preserve"><value>Connection failed</value></data>
+  <data name="McpStateAuthenticationRequired" xml:space="preserve"><value>Sign in required</value></data>
+  <data name="McpStateSigningIn" xml:space="preserve"><value>Signing in</value></data>
+  <data name="McpSignIn" xml:space="preserve"><value>Sign in</value></data>
+  <data name="McpSigningInHint" xml:space="preserve"><value>Complete sign-in in your browser. This window will reconnect automatically. Choose Cancel to stop waiting.</value></data>
+  <data name="McpBrowserComplete" xml:space="preserve"><value>Sign-in received. Return to AIHappey. You can close this browser tab.</value></data>
+  <data name="McpBrowserDenied" xml:space="preserve"><value>Sign-in was not completed. Return to AIHappey. You can close this browser tab.</value></data>
+  <data name="McpAccessDenied" xml:space="preserve"><value>Access denied. Your account does not have permission to use this server.</value></data>
   <data name="McpDisconnect" xml:space="preserve"><value>Disconnect {0}</value></data>
   <data name="McpToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
   <data name="McpServerUrl" xml:space="preserve"><value>Streamable HTTP server URL</value></data>
-  <data name="McpHeadersHint" xml:space="preserve"><value>Optional headers are sent only to this MCP server and protected with your Windows account. Gateway credentials are never forwarded. OAuth is not supported in this version.</value></data>
+  <data name="McpHeadersHint" xml:space="preserve"><value>Optional headers are sent only to this MCP server and protected with your Windows account. Explicit headers take precedence over automatic authentication. AI/Agents credentials are used only for their configured services; other servers use their own OAuth sign-in.</value></data>
   <data name="McpAddHeader" xml:space="preserve"><value>Add header</value></data>
   <data name="McpRemoveHeader" xml:space="preserve"><value>Remove header</value></data>
   <data name="McpHeaderName" xml:space="preserve"><value>Header name</value></data>
@@ -674,7 +681,7 @@
   <data name="McpInvalidHeaders" xml:space="preserve"><value>Check header names and values. Duplicate, control-character, cookie, and SDK-owned transport/session headers are not allowed.</value></data>
   <data name="McpInvalidName" xml:space="preserve"><value>A server name is required (up to 256 characters).</value></data>
   <data name="McpServerLimit" xml:space="preserve"><value>Up to 200 distinct servers can be installed.</value></data>
-  <data name="McpAuthRequired" xml:space="preserve"><value>This server requires authentication. Configure its headers; interactive MCP OAuth is not yet supported.</value></data>
+  <data name="McpAuthRequired" xml:space="preserve"><value>This server requires authentication. Choose Sign in to continue, or edit its authentication headers. For AI/Agents, sign in to the app account first.</value></data>
   <data name="McpTimedOut" xml:space="preserve"><value>The MCP operation was canceled or timed out. A tool call was not retried.</value></data>
   <data name="McpConnectionFailed" xml:space="preserve"><value>The MCP operation failed. Check the server URL, headers, and connection. Tool calls are not retried automatically.</value></data>
   <data name="McpDisconnected" xml:space="preserve"><value>The MCP server is no longer connected.</value></data>

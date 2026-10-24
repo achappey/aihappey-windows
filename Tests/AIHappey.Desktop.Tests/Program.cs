@@ -19,6 +19,11 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--mcp-auth-only"))
+    {
+        await McpAuthenticationRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} MCP authentication checks passed."); return;
+    }
     if (args.Contains("--windows-tools-only"))
     {
         await WindowsToolRegressionTests.RunAsync(Check, root);
@@ -131,6 +136,7 @@ try
     TranscriptRegressionTests.Run(Check);
     await ToolApprovalRegressionTests.RunAsync(Check, root);
     await McpPresentationRegressionTests.RunAsync(Check, root);
+    await McpAuthenticationRegressionTests.RunAsync(Check, root);
     await ElicitationRegressionTests.RunAsync(Check, root);
     await SkillRegressionTests.RunAsync(Check, root);
     await ImageRegressionTests.RunAsync(Check, root);

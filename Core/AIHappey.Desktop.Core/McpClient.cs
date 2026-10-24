@@ -7,11 +7,13 @@ using ModelContextProtocol.Protocol;
 
 namespace AIHappey.Desktop.Core;
 
-/// <summary>Hosts may configure SDK OAuth or provide a custom delegating handler later.
-/// The supplied handler must enforce the endpoint's credential boundary. Never use gateway authentication.</summary>
+/// <summary>The supplied handler must enforce the endpoint's credential boundary.</summary>
 public interface IDesktopMcpAuthentication
 {
     Task<HttpMessageHandler> ConfigureAsync(DesktopMcpServer server, HttpClientTransportOptions options, CancellationToken ct);
+    Task<HttpMessageHandler> ConfigureAsync(DesktopMcpServer server, HttpClientTransportOptions options, bool interactive, CancellationToken ct) =>
+        ConfigureAsync(server, options, ct);
+    Task ForgetAsync(DesktopMcpServer server, CancellationToken ct) => Task.CompletedTask;
 }
 
 public sealed class DesktopMcpHeaderAuthentication : IDesktopMcpAuthentication
@@ -51,6 +53,8 @@ public interface IDesktopMcpConnection : IAsyncDisposable
 public interface IDesktopMcpClientFactory
 {
     Task<IDesktopMcpConnection> ConnectAsync(DesktopMcpServer server, CancellationToken ct);
+    Task<IDesktopMcpConnection> ConnectAsync(DesktopMcpServer server, bool interactive, CancellationToken ct) => ConnectAsync(server, ct);
+    Task ForgetAsync(DesktopMcpServer server, CancellationToken ct) => Task.CompletedTask;
 }
 
 public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentication = null) : IDesktopMcpClientFactory
@@ -62,11 +66,15 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
     {
         this.preferences = preferences; this.elicitation = elicitation;
     }
-    public async Task<IDesktopMcpConnection> ConnectAsync(DesktopMcpServer server, CancellationToken ct)
+    /// <summary>Temporary discovery shares authentication, but not elicitation/modal capabilities.</summary>
+    public DesktopMcpClientFactory ForDiscovery() => new(authentication);
+    public Task ForgetAsync(DesktopMcpServer server, CancellationToken ct) => authentication.ForgetAsync(server, ct);
+    public Task<IDesktopMcpConnection> ConnectAsync(DesktopMcpServer server, CancellationToken ct) => ConnectAsync(server, false, ct);
+    public async Task<IDesktopMcpConnection> ConnectAsync(DesktopMcpServer server, bool interactive, CancellationToken ct)
     {
         server = server.Clone(); server.Validate();
         var options = new HttpClientTransportOptions { Endpoint = server.PluginId is null ? McpValidation.Endpoint(server.Url) : new Uri(server.Url), TransportMode = HttpTransportMode.StreamableHttp };
-        var handler = await authentication.ConfigureAsync(server, options, ct);
+        var handler = await authentication.ConfigureAsync(server, options, interactive, ct);
         var http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan, MaxResponseContentBufferSize = 8 * 1024 * 1024 };
         var transport = new HttpClientTransport(options, http, ownsHttpClient: true);
         var formEnabled = preferences().EnableFormElicitation && elicitation is not null;
@@ -89,6 +97,7 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
                     } : null
                 }
             }, cancellationToken: ct);
+            if (handler is McpAuthenticationHandler authenticated) authenticated.CompleteHandshake();
             return new SdkConnection(client, preferences, requests);
         }
         catch { requests.Dispose(); await transport.DisposeAsync(); throw; }
@@ -246,7 +255,7 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
     }
 }
 
-public enum McpConnectionState { Disabled, Connecting, Connected, Error }
+public enum McpConnectionState { Disabled, Connecting, Connected, Error, AuthenticationRequired, SigningIn }
 public sealed record McpConnectionView(DesktopMcpServer Server, McpConnectionState State, McpDiscovery? Discovery, string? Error);
 
 /// <summary>One manager per desktop session. Mutations are serialized; epochs reject stale discovery/turn snapshots.</summary>
@@ -302,7 +311,11 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
             var next = Entries().Select(e => e.Server.Clone()).Where(s => s.Id != server.Id).Append(server).ToArray();
             await store.SaveAsync(partition ?? throw new InvalidOperationException("MCP state is not initialized."), next, ct);
             Entry? previous; lock (sync) entries.TryGetValue(server.Id, out previous);
-            if (previous is not null) await DisconnectAsync(previous);
+            if (previous is not null)
+            {
+                await DisconnectAsync(previous);
+                if (previous.Server.Url != server.Url) await factory.ForgetAsync(previous.Server, ct);
+            }
             var entry = new Entry(server);
             lock (sync) entries[server.Id] = entry;
             Changed?.Invoke();
@@ -310,7 +323,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         }
         finally { gate.Release(); }
     }
-    public async Task SetEnabledAsync(string id, bool enabled, CancellationToken ct)
+    public async Task SetEnabledAsync(string id, bool enabled, CancellationToken ct, bool interactive = false)
     {
         await gate.WaitAsync(ct);
         try
@@ -326,6 +339,29 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
             if (enabled) await ConnectAsync(entry, ct);
         }
         finally { gate.Release(); }
+        if (enabled && interactive && Servers.Any(s => s.Server.Id == id && s.State == McpConnectionState.AuthenticationRequired))
+            await SignInAsync(id, ct);
+    }
+    /// <summary>Never hold the mutation gate while waiting for a browser. Entry identity rejects stale callbacks.</summary>
+    public async Task SignInAsync(string id, CancellationToken ct)
+    {
+        Entry entry;
+        await gate.WaitAsync(ct);
+        try
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            lock (sync) entry = entries[id];
+            if (!entry.Server.Enabled || entry.State == McpConnectionState.SigningIn) return;
+            await DisconnectAsync(entry);
+            entry = new(entry.Server.Clone()) { State = McpConnectionState.SigningIn };
+            lock (sync) entries[id] = entry;
+        }
+        finally { gate.Release(); }
+        await ConnectAsync(entry, ct, interactive: true);
+    }
+    public void CancelSignIn(string id)
+    {
+        lock (sync) if (entries.TryGetValue(id, out var entry) && entry.State == McpConnectionState.SigningIn) entry.Lifetime.Cancel();
     }
     public async Task RemoveAsync(string id, CancellationToken ct)
     {
@@ -337,7 +373,9 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
             if (entry is null) return;
             if (entry.Server.PluginId is not null) throw new InvalidOperationException("Plugin servers are managed by their package.");
             await store.SaveAsync(partition!, Entries().Where(e => e != entry).Select(e => e.Server), ct);
-            await DisconnectAsync(entry); lock (sync) entries.Remove(id);
+            await DisconnectAsync(entry);
+            await factory.ForgetAsync(entry.Server, ct);
+            lock (sync) entries.Remove(id);
             Changed?.Invoke();
         }
         finally { gate.Release(); }
@@ -390,19 +428,24 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         await gate.WaitAsync(ct);
         try { await ClearAsync(); } finally { gate.Release(); }
     }
-    private async Task ConnectAsync(Entry entry, CancellationToken ct)
+    private bool Current(Entry entry) => !disposed && entries.TryGetValue(entry.Server.Id, out var current) && current == entry;
+    private async Task ConnectAsync(Entry entry, CancellationToken ct, bool interactive = false)
     {
-        lock (sync) { entry.State = McpConnectionState.Connecting; entry.Error = null; }
+        lock (sync) { entry.State = interactive ? McpConnectionState.SigningIn : McpConnectionState.Connecting; entry.Error = null; }
         Changed?.Invoke();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct, entry.Lifetime.Token);
-        timeout.CancelAfter(TimeSpan.FromSeconds(30));
+        timeout.CancelAfter(interactive ? TimeSpan.FromMinutes(5) : TimeSpan.FromSeconds(30));
         IDesktopMcpConnection? connection = null;
         try
         {
-            connection = await factory.ConnectAsync(entry.Server, timeout.Token);
+            connection = await factory.ConnectAsync(entry.Server, interactive, timeout.Token);
             var discovery = await connection.DiscoverAsync(timeout.Token);
             timeout.Token.ThrowIfCancellationRequested();
-            lock (sync) { entry.Connection = connection; entry.Discovery = discovery; entry.State = McpConnectionState.Connected; }
+            lock (sync)
+            {
+                if (!Current(entry)) throw new OperationCanceledException(entry.Lifetime.Token);
+                entry.Connection = connection; entry.Discovery = discovery; entry.State = McpConnectionState.Connected;
+            }
             entry.Changed = () => _ = RefreshAsync(entry);
             connection.ToolsChanged += entry.Changed;
             connection.ResourcesChanged += entry.Changed;
@@ -411,7 +454,13 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         }
         catch (Exception e)
         {
-            lock (sync) { entry.State = McpConnectionState.Error; entry.Discovery = null; entry.Error = SafeError(e); }
+            lock (sync) if (Current(entry))
+            {
+                entry.State = RequiresAuthentication(e) || interactive && e is OperationCanceledException
+                    ? McpConnectionState.AuthenticationRequired : McpConnectionState.Error;
+                entry.Discovery = null; entry.Error = e is OperationCanceledException && interactive
+                    ? DesktopResources.Get("OperationCanceled") : SafeError(e);
+            }
             if (connection is not null) await connection.DisposeAsync();
             if (ct.IsCancellationRequested) throw new OperationCanceledException(ct);
         }
@@ -433,7 +482,7 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
                 Changed?.Invoke();
             }
             catch (Exception e) when (!entry.Lifetime.IsCancellationRequested)
-            { lock (sync) { entry.State = McpConnectionState.Error; entry.Discovery = null; entry.Error = SafeError(e); } Changed?.Invoke(); }
+            { lock (sync) { entry.State = RequiresAuthentication(e) ? McpConnectionState.AuthenticationRequired : McpConnectionState.Error; entry.Discovery = null; entry.Error = SafeError(e); } Changed?.Invoke(); }
             finally { gate.Release(); }
         }
         catch (OperationCanceledException) { }
@@ -508,15 +557,20 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
         catch (Exception e)
         {
-            if (e is HttpRequestException or IOException)
-            { lock (sync) { entry.State = McpConnectionState.Error; entry.Discovery = null; entry.Error = SafeError(e); } Changed?.Invoke(); }
+            if (e is HttpRequestException or IOException || RequiresAuthentication(e))
+            { lock (sync) if (Current(entry)) { entry.State = RequiresAuthentication(e) ? McpConnectionState.AuthenticationRequired : McpConnectionState.Error; entry.Discovery = null; entry.Error = SafeError(e); } Changed?.Invoke(); }
             throw new InvalidOperationException(SafeError(e), e);
         }
     }
-    public static string SafeError(Exception error) => error is InvalidOperationException { InnerException: { } inner }
+    public static bool RequiresAuthentication(Exception error) => error is McpSignInRequiredException
+        or HttpRequestException { StatusCode: HttpStatusCode.Unauthorized }
+        || error.InnerException is { } inner && RequiresAuthentication(inner);
+    public static string SafeError(Exception error) => error.InnerException is { } inner
         ? SafeError(inner) : DesktopResources.Get(error switch
     {
-        HttpRequestException { StatusCode: HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden } => "McpAuthRequired",
+        McpSignInRequiredException => "McpAuthRequired",
+        HttpRequestException { StatusCode: HttpStatusCode.Unauthorized } => "McpAuthRequired",
+        HttpRequestException { StatusCode: HttpStatusCode.Forbidden } => "McpAccessDenied",
         OperationCanceledException => "McpTimedOut", _ => "McpConnectionFailed"
     });
     private async Task DisconnectAsync(Entry entry)
