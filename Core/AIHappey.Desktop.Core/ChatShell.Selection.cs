@@ -34,12 +34,7 @@ public sealed partial class ChatShell
     {
         var partition = session.HistoryPartition;
         if (localAgentPartition != session.AgentPartition) await LoadLocalAgentsAsync(ct);
-        if (modelFavoritesPartition != partition)
-        {
-            var saved = await modelFavoritesStore.LoadAsync(partition, ct);
-            ct.ThrowIfCancellationRequested(); if (partition != session.HistoryPartition || closing) throw new OperationCanceledException(ct);
-            modelFavorites = saved; modelFavoritesPartition = partition;
-        }
+        await LoadModelFavoritesAsync(ct);
         if (catalogPartition != partition)
         {
             var saved = await catalogFavorites.LoadAsync(partition, ct);

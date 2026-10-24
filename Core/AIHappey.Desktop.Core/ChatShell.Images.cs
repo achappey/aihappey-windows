@@ -13,7 +13,7 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class ChatShell
 {
     private readonly ImagesPage imagesPage = new() { Visibility = Visibility.Collapsed };
-    private readonly AutoSuggestBox imageTarget = new() { Name = "ImageModelPicker", PlaceholderText = DesktopResources.Get("SelectModel"),
+    private readonly ChatTargetPicker imageTarget = new() { Name = "ImageModelPicker", PlaceholderText = DesktopResources.Get("SelectModel"),
         MinWidth = 120, MaxWidth = 420, Height = 40, Visibility = Visibility.Collapsed, HorizontalAlignment = HorizontalAlignment.Stretch };
     private IReadOnlyList<ChatTarget> imageModels = [];
     private IReadOnlyList<LibraryImage> libraryImages = [];
@@ -29,13 +29,9 @@ public sealed partial class ChatShell
 
     private void PrepareImages()
     {
-        ToolbarControls.Outline(imageTarget); ToolbarControls.Label(imageTarget, DesktopResources.Get("SelectModel"));
-        imageTarget.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
-        imageTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) ImageModelSuggestions(imageTarget.Text); imagesPage.SetModelAvailable(SelectedImageModel is not null); };
-        imageTarget.GotFocus += (_, _) => { ImageModelSuggestions(); imageTarget.IsSuggestionListOpen = true; };
-        imageTarget.SuggestionChosen += (_, args) => { imageTarget.Text = ((ChatTarget)args.SelectedItem).Id; imagesPage.SetModelAvailable(SelectedImageModel is not null); };
-        imageTarget.QuerySubmitted += (_, args) =>
-        { if (args.ChosenSuggestion is ChatTarget model) imageTarget.Text = model.Id; else { ImageModelSuggestions(imageTarget.Text); imageTarget.IsSuggestionListOpen = true; } };
+        ControlAppearance.Stock(imageTarget); ToolbarControls.Label(imageTarget, DesktopResources.Get("SelectModel"));
+        imageTarget.Opening = () => ImageModelSuggestions();
+        imageTarget.SelectionChanged += () => { imagesPage.SetModelAvailable(SelectedImageModel is not null); UpdateModelFavorites(); };
         imagesPage.SendRequested = SendImagesAsync;
         imagesPage.StopRequested = () => operation?.Cancel();
         imagesPage.PickRequested = PickImageAttachmentsAsync;
@@ -45,8 +41,7 @@ public sealed partial class ChatShell
         imagesPage.PreviewRequested = PreviewImageAsync;
         imagesPage.AttachmentDataRequested = AdmitImageDataAsync;
     }
-    private void ImageModelSuggestions(string query = "") => imageTarget.ItemsSource = PickerModels(imageModels).Where(m => string.IsNullOrWhiteSpace(query)
-        || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
+    private void ImageModelSuggestions(string query = "") => ConfigurePrimitivePicker(imageTarget, imageModels, "image");
     private void InvalidateImages()
     {
         imageModels = []; imageTarget.Text = ""; imageTarget.ItemsSource = null;
@@ -62,6 +57,7 @@ public sealed partial class ChatShell
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != ImageLibraryStore.Partition(session)) return;
         aiModelTargets = available; imageModels = AiModelCatalog.OfType(available, "image");
+        await LoadSelectionCatalogsAsync(ct);
         if (SelectedImageModel is null) imageTarget.Text = InitialModel(imageModels, "image");
         ImageModelSuggestions(); imagesPage.SetModelAvailable(SelectedImageModel is not null);
     }
@@ -73,12 +69,13 @@ public sealed partial class ChatShell
     }
     private async Task SendImagesAsync()
     {
-        if (!CanUseImages || SelectedImageModel is not { } model || string.IsNullOrWhiteSpace(imagesPage.PromptText)) return;
+        if (!CanUseImages || SelectedImageModel is null || string.IsNullOrWhiteSpace(imagesPage.PromptText)) return;
         var prompt = imagesPage.PromptText; var files = imagesPage.Attachments; var preferences = session.Settings.Images.Clone();
         var partition = ImageLibraryStore.Partition(session); var store = new ImageLibraryStore(preferences.EffectiveRoot, partition);
         imagesPage.ClearNotices();
         await RunAsync(async ct =>
         {
+            var model = await ResolvePrimitiveModelAsync(imageTarget, imageModels, "image", prompt, ct);
             preferences.Validate(); Directory.CreateDirectory(store.Folder);
             ComposerAttachment? mask = null;
             if (preferences.MaskPath is { } path && Path.GetFullPath(path).StartsWith(Path.GetFullPath(ImageMaskDirectory) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))

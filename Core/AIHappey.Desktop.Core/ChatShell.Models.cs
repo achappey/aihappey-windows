@@ -84,15 +84,7 @@ public sealed partial class ChatShell
     private async Task ToggleModelFavoriteAsync(ChatTarget model)
     {
         if (!CanUseModelOverview || modelFavoritesPartition != session.HistoryPartition) return;
-        await RunAsync(async ct =>
-        {
-            var partition = session.HistoryPartition;
-            var next = new HashSet<string>(modelFavorites, StringComparer.Ordinal);
-            var key = ModelOverviewCatalog.FavoriteKey(model); if (!next.Remove(key)) next.Add(key);
-            await modelFavoritesStore.SaveAsync(partition, next, ct);
-            if (closing || session.HistoryPartition != partition) return;
-            modelFavorites = next; modelsOverview.SetFavorites(next);
-        });
+        await RunAsync(ct => SaveModelFavoriteAsync(model, ct));
     }
     private async Task LaunchModelAsync(ChatTarget requested)
     {
@@ -160,6 +152,7 @@ public sealed partial class ChatShell
         target.Configure(agentMode, agentMode || decision is not null, favoriteIds,
             decision is not null && (!agentMode || visible.Count(t => favoriteIds.Contains(t.Id)) >= 2), routerAgent?.Name ?? "");
         target.ItemsSource = visible;
+        UpdateModelFavorites();
     }
 
     private void SelectNewChatModel()

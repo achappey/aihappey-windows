@@ -12,7 +12,7 @@ namespace AIHappey.Desktop.Core;
 
 public sealed partial class ChatShell
 {
-    private readonly StackPanel realtimeHeader = new() { Name = "RealtimeHeader", Orientation = Orientation.Horizontal, Spacing = 8, Visibility = Visibility.Collapsed };
+    private readonly Grid realtimeHeader = new() { Name = "RealtimeHeader", Visibility = Visibility.Collapsed };
     private readonly AutoSuggestBox realtimeTarget = new() { Name = "RealtimeModelPicker", MinWidth = 180, MaxWidth = 420, PlaceholderText = DesktopResources.Get("SelectModel") };
     private readonly Button realtimeFavorite = new() { Name = "RealtimeFavorite", Content = DesktopIcons.Create(Icon.Star), Width = 40, Height = 40 };
     private readonly StackPanel realtimeControls = new() { Name = "RealtimeControls", Orientation = Orientation.Horizontal, Spacing = 8, Visibility = Visibility.Collapsed };
@@ -53,7 +53,6 @@ public sealed partial class ChatShell
     private bool RealtimeCurrent(RealtimeState state) => ReferenceEquals(realtime, state) && !closing && state.Partition == session.HistoryPartition && ReferenceEquals(current, state.Conversation) && !state.Lifetime.IsCancellationRequested;
     private void PrepareRealtime()
     {
-        realtimeHeader.Children.Add(realtimeTarget); realtimeHeader.Children.Add(realtimeFavorite);
         foreach (var (control, key) in new (Control, string)[] { (realtimeTarget, "SelectModel"), (realtimeFavorite, "RealtimeFavorite"), (realtimeMute, "RealtimeMute"),
             (realtimeCamera, "RealtimeCamera"), (realtimeScreen, "RealtimeScreen"), (realtimeStop, "Stop"), (realtimeSettings, "RealtimeSettings") })
         { ControlAppearance.Native(control); ToolbarControls.Label(control, DesktopResources.Get(key)); }
@@ -66,17 +65,6 @@ public sealed partial class ChatShell
         };
         realtimeTarget.GotFocus += (_, _) => { realtimeTarget.ItemsSource = PickerModels(realtimeModels); realtimeTarget.IsSuggestionListOpen = true; };
         realtimeTarget.SuggestionChosen += (_, args) => realtimeTarget.Text = ((ChatTarget)args.SelectedItem).Id;
-        realtimeFavorite.Click += async (_, _) =>
-        {
-            if (realtime is not null || realtimeModels.FirstOrDefault(m => m.Id == realtimeTarget.Text) is not { } model) return;
-            await RunAsync(async ct =>
-            {
-                var partition = session.HistoryPartition;
-                var next = await modelFavoritesStore.LoadAsync(partition, ct);
-                var key = ModelOverviewCatalog.FavoriteKey(model); if (!next.Remove(key)) next.Add(key);
-                await modelFavoritesStore.SaveAsync(partition, next, ct); modelFavorites = next; modelFavoritesPartition = partition;
-            });
-        };
         realtimeMute.Click += async (_, _) => { if (realtime?.Connection is { } connection) try { await connection.SetMutedAsync(realtimeMute.IsChecked == true); } catch { await RealtimeFailedAsync(); } };
         realtimeStop.Click += async (_, _) => await StopRealtimeAsync();
         realtimeCamera.Click += async (_, _) => await ChangeRealtimeVideoAsync(false);
@@ -95,6 +83,7 @@ public sealed partial class ChatShell
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
         if (closing || partition != session.HistoryPartition) return;
         aiModelTargets = available;
+        await LoadModelFavoritesAsync(ct);
         realtimeModels = ProviderPreferences.Filter(AiModelCatalog.OfType(available, "audio"), session.Settings).Where(m => RealtimeConfiguration.Supported(m.Id)).ToArray();
         if (!realtimeModels.Any(m => m.Id == realtimeTarget.Text))
             realtimeTarget.Text = new[] { session.Settings.AiModels.AudioModel, session.Settings.Realtime.Model, "openai/gpt-realtime-2" }.FirstOrDefault(id => realtimeModels.Any(m => m.Id == id)) ?? realtimeModels.FirstOrDefault()?.Id ?? "";
@@ -108,7 +97,7 @@ public sealed partial class ChatShell
         if (!visible) { realtimePreview.Visibility = Visibility.Collapsed; return; }
         var connected = realtime?.Connected == true;
         realtimeTarget.IsEnabled = realtime is null && !busy;
-        realtimeFavorite.IsEnabled = realtime is null && !busy;
+        UpdateModelFavorites();
         realtimeSettings.IsEnabled = realtime is null && !busy;
         realtimeMute.IsEnabled = connected;
         var google = RealtimeConfiguration.Provider(realtime?.Model ?? realtimeTarget.Text) == "google";

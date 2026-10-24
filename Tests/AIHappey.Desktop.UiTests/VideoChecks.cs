@@ -129,7 +129,7 @@ public partial class App
             await (Task)Call(shell, "LoadVideosAsync", CancellationToken.None, true)!;
             var pageType = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.DesktopPage")!;
             Call(shell, "ShowPage", Enum.Parse(pageType, "Videos"));
-            var picker = Field<AutoSuggestBox>(shell, "videoTarget"); var page = Field<VideosPage>(shell, "videosPage");
+            var picker = Field<ChatTargetPicker>(shell, "videoTarget"); var page = Field<VideosPage>(shell, "videosPage");
             Check(picker.Text == "p/video" && picker.ItemsSource is IEnumerable<ChatTarget> models && models.All(m => m.ModelType == "video") && page.Visibility == Visibility.Visible, context + ": video-only picker and native navigation are wired");
             var request = new VideoPreferences().Requests(new("p/video", "Video") { ModelType = "video" }, "queued fixture", null, [], null, null);
             await jobs.SubmitAsync(request, directory); await jobs.PollOnceAsync();
@@ -138,6 +138,7 @@ public partial class App
                 && Field<StackPanel>(shell, "pageNavigation").Children.OfType<ToggleButton>().All(b => b.IsEnabled), context + ": polling continues on Chat without blocking sidebar navigation");
             Call(shell, "ShowPage", Enum.Parse(pageType, "Videos")); await (Task)Call(shell, "ReloadVideoLibraryAsync", CancellationToken.None)!;
             Check(((GridView)page.FindName("LibraryGrid")).Items.Count == 1, context + ": returning to Videos restores saved queued placeholders");
+            await CheckModelHeadersAsync(shell, session, theme);
         }
         finally { await shell.ShutdownAsync(); window.Content = null; }
     }

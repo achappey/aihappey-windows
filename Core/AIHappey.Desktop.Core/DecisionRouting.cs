@@ -83,6 +83,15 @@ public static class DecisionRouting
             Questions = new() { ["favorite"] = new DecisionChoiceQuestion { Instructions = instructions,
                 Criteria = candidates.ToDictionary(c => DesktopAgent.Text(c["id"]), c => (DecisionInput?)new DecisionInput(c.ToJsonString()), StringComparer.Ordinal) } } };
     }
+    public static DecisionRequest PrimitiveRequest(string model, string instructions, string prompt, IReadOnlyList<ChatTarget> candidates)
+    {
+        var request = Request(model, instructions, [], candidates.Select(ModelCandidate).ToArray());
+        request.State = new DecisionInput(JsonSerializer.SerializeToElement(new
+        {
+            conversation = new[] { new { role = "user", parts = new[] { new { type = "text", text = prompt } } } }
+        }));
+        return request;
+    }
     public static string Winner(JsonElement response, IReadOnlyCollection<string> candidates)
     {
         GatewayException Invalid() => new(DesktopResources.Get("RoutingInvalidResponse"));

@@ -11,7 +11,7 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class ChatShell
 {
     private readonly SpeechPage speechPage = new() { Visibility = Visibility.Collapsed };
-    private readonly AutoSuggestBox speechTarget = new() { Name = "SpeechModelPicker", PlaceholderText = DesktopResources.Get("SelectModel"), MinWidth = 120, MaxWidth = 420, Height = 40, Visibility = Visibility.Collapsed, HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly ChatTargetPicker speechTarget = new() { Name = "SpeechModelPicker", PlaceholderText = DesktopResources.Get("SelectModel"), MinWidth = 120, MaxWidth = 420, Height = 40, Visibility = Visibility.Collapsed, HorizontalAlignment = HorizontalAlignment.Stretch };
     private IReadOnlyList<ChatTarget> speechModels = []; private IReadOnlyList<LibrarySpeech> librarySpeech = []; private string? speechPartition; private SpeechLibraryStore? speechLibrary;
     private SpeechSettingsDialog? speechSettingsDialog; private SpeechDetailsDialog? speechDetailsDialog; private int pendingSpeech;
     private string SpeechRoot => Path.Combine(session.DataDirectory, "speech");
@@ -19,10 +19,9 @@ public sealed partial class ChatShell
     private ChatTarget? SelectedSpeechModel => speechModels.FirstOrDefault(m => m.Id == speechTarget.Text.Trim());
     private void PrepareSpeech()
     {
-        ToolbarControls.Outline(speechTarget); ToolbarControls.Label(speechTarget, DesktopResources.Get("SelectModel")); speechTarget.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
-        speechTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) SpeechModelSuggestions(speechTarget.Text); speechPage.SetModelAvailable(SelectedSpeechModel is not null); };
-        speechTarget.GotFocus += (_, _) => { SpeechModelSuggestions(); speechTarget.IsSuggestionListOpen = true; }; speechTarget.SuggestionChosen += (_, args) => speechTarget.Text = ((ChatTarget)args.SelectedItem).Id;
-        speechTarget.QuerySubmitted += (_, args) => { if (args.ChosenSuggestion is ChatTarget model) speechTarget.Text = model.Id; else { SpeechModelSuggestions(speechTarget.Text); speechTarget.IsSuggestionListOpen = true; } };
+        ControlAppearance.Stock(speechTarget); ToolbarControls.Label(speechTarget, DesktopResources.Get("SelectModel"));
+        speechTarget.Opening = () => SpeechModelSuggestions();
+        speechTarget.SelectionChanged += () => { speechPage.SetModelAvailable(SelectedSpeechModel is not null); UpdateModelFavorites(); };
         speechPage.SendRequested = SendSpeechAsync; speechPage.StopRequested = () => operation?.Cancel(); speechPage.ImportRequested = PickSpeechDocumentsAsync; speechPage.FilesDropped = DropSpeechDocumentsAsync;
         speechPage.SettingsRequested = EditSpeechSettingsAsync; speechPage.FolderRequested = OpenSpeechFolderAsync; speechPage.PlayRequested = ViewSpeechAsync; speechPage.DetailsRequested = ViewSpeechAsync; speechPage.DownloadRequested = DownloadSpeechAsync; speechPage.DeleteRequested = DeleteSpeechAsync;
         speechPage.DictationRequested = () =>
@@ -32,7 +31,7 @@ public sealed partial class ChatShell
             return Task.CompletedTask;
         };
     }
-    private void SpeechModelSuggestions(string query = "") => speechTarget.ItemsSource = PickerModels(speechModels).Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
+    private void SpeechModelSuggestions(string query = "") => ConfigurePrimitivePicker(speechTarget, speechModels, "speech");
     private void InvalidateSpeech() { speechModels = []; speechTarget.Text = ""; speechTarget.ItemsSource = null; librarySpeech = []; speechLibrary = null; speechPartition = null; pendingSpeech = 0; speechPage.ClearNotices(); speechPage.SetItems([]); speechPage.SetModelAvailable(false); }
     private async Task LoadSpeechAsync(CancellationToken ct, bool useCache = false)
     {
@@ -40,13 +39,14 @@ public sealed partial class ChatShell
         speechLibrary = new(SpeechRoot, partition); librarySpeech = await speechLibrary.ListAsync(ct); speechPage.SetItems(librarySpeech, pendingSpeech);
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct); ct.ThrowIfCancellationRequested(); if (closing || partition != SpeechLibraryStore.Partition(session)) return;
         aiModelTargets = available; speechModels = AiModelCatalog.OfType(available, "speech");
+        await LoadSelectionCatalogsAsync(ct);
         if (SelectedSpeechModel is null) speechTarget.Text = InitialModel(speechModels, "speech", "openai/gpt-4o-mini-tts");
         SpeechModelSuggestions(); speechPage.SetModelAvailable(SelectedSpeechModel is not null);
     }
     private async Task SendSpeechAsync()
     {
-        if (!CanUseSpeech || SelectedSpeechModel is not { } model || string.IsNullOrWhiteSpace(speechPage.PromptText)) return; var text = speechPage.PromptText; var preferences = session.Settings.Speech.Clone(); var partition = SpeechLibraryStore.Partition(session); var store = new SpeechLibraryStore(SpeechRoot, partition); speechPage.ClearNotices();
-        await RunAsync(async ct => { pendingSpeech = 1; speechPage.SetItems(librarySpeech, 1); try { var result = await new DesktopSpeechClient(client, http).GenerateAsync(model, text, preferences, ct); await store.SaveAsync(result); librarySpeech = await store.ListAsync(); if (!closing && partition == SpeechLibraryStore.Partition(session)) { foreach (var warning in result.Warnings) speechPage.Notice(warning, InfoBarSeverity.Warning); } } finally { pendingSpeech = 0; if (!closing && partition == SpeechLibraryStore.Partition(session)) speechPage.SetItems(librarySpeech); } }, inference: true);
+        if (!CanUseSpeech || SelectedSpeechModel is null || string.IsNullOrWhiteSpace(speechPage.PromptText)) return; var text = speechPage.PromptText; var preferences = session.Settings.Speech.Clone(); var partition = SpeechLibraryStore.Partition(session); var store = new SpeechLibraryStore(SpeechRoot, partition); speechPage.ClearNotices();
+        await RunAsync(async ct => { pendingSpeech = 1; speechPage.SetItems(librarySpeech, 1); try { var model = await ResolvePrimitiveModelAsync(speechTarget, speechModels, "speech", text, ct); var result = await new DesktopSpeechClient(client, http).GenerateAsync(model, text, preferences, ct); await store.SaveAsync(result); librarySpeech = await store.ListAsync(); if (!closing && partition == SpeechLibraryStore.Partition(session)) { foreach (var warning in result.Warnings) speechPage.Notice(warning, InfoBarSeverity.Warning); } } finally { pendingSpeech = 0; if (!closing && partition == SpeechLibraryStore.Partition(session)) speechPage.SetItems(librarySpeech); } }, inference: true);
     }
     private async Task PickSpeechDocumentsAsync()
     {

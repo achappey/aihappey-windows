@@ -26,7 +26,7 @@ public sealed partial class ChatShell
     private void PrepareTranscriptions()
     {
         ToolbarControls.Outline(transcriptionTarget); ToolbarControls.Label(transcriptionTarget, DesktopResources.Get("SelectModel")); transcriptionTarget.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
-        transcriptionTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) TranscriptionModelSuggestions(transcriptionTarget.Text); transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null); };
+        transcriptionTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) TranscriptionModelSuggestions(transcriptionTarget.Text); transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null); UpdateModelFavorites(); };
         transcriptionTarget.GotFocus += (_, _) => { TranscriptionModelSuggestions(); transcriptionTarget.IsSuggestionListOpen = true; };
         transcriptionTarget.SuggestionChosen += (_, args) => transcriptionTarget.Text = ((ChatTarget)args.SelectedItem).Id;
         transcriptionTarget.QuerySubmitted += (_, args) => { if (args.ChosenSuggestion is ChatTarget model) transcriptionTarget.Text = model.Id; else { TranscriptionModelSuggestions(transcriptionTarget.Text); transcriptionTarget.IsSuggestionListOpen = true; } };
@@ -51,8 +51,10 @@ public sealed partial class ChatShell
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != TranscriptionLibraryStore.Partition(session)) return;
         aiModelTargets = available; transcriptionModels = AiModelCatalog.OfType(available, "transcription");
+        await LoadModelFavoritesAsync(ct);
         if (SelectedTranscriptionModel is null) transcriptionTarget.Text = InitialModel(transcriptionModels, "transcription", "openai/gpt-transcribe");
         TranscriptionModelSuggestions(); transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null);
+        UpdateModelFavorites();
     }
     private async Task PickTranscriptionFilesAsync()
     {

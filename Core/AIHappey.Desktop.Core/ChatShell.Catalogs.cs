@@ -151,6 +151,7 @@ public sealed partial class ChatShell
         if (page == DesktopPage.Realtime) chatModes.Visibility = target.Visibility = Visibility.Collapsed;
         else { dictate.Visibility = Visibility.Visible; input.PlaceholderText = DesktopResources.Get("AskAnything"); ToolbarControls.Label(send, DesktopResources.Get("SendMessage")); }
         target.IsSuggestionListOpen = false;
+        chatModelToolbar.Visibility = page == DesktopPage.Chat ? Visibility.Visible : Visibility.Collapsed;
         scroll.Visibility = chat && current.Messages.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         agentsOverview.Visibility = page == DesktopPage.Agents ? Visibility.Visible : Visibility.Collapsed;
         skillsOverview.Visibility = page == DesktopPage.Skills ? Visibility.Visible : Visibility.Collapsed;
@@ -175,6 +176,10 @@ public sealed partial class ChatShell
         videosPage.RefreshShimmers();
         speechPage.Visibility = speechTarget.Visibility = page == DesktopPage.Speech ? Visibility.Visible : Visibility.Collapsed;
         transcriptionsPage.Visibility = transcriptionTarget.Visibility = page == DesktopPage.Transcriptions ? Visibility.Visible : Visibility.Collapsed;
+        imageModelToolbar.Visibility = imageTarget.Visibility;
+        speechModelToolbar.Visibility = speechTarget.Visibility;
+        transcriptionModelToolbar.Visibility = transcriptionTarget.Visibility;
+        UpdateModelFavorites();
         RefreshConversationActivity();
         UpdatePageButtons();
         UpdateRealtimeControls();

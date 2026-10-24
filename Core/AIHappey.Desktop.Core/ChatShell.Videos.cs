@@ -15,8 +15,8 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class ChatShell
 {
     private readonly VideosPage videosPage = new() { Visibility = Visibility.Collapsed };
-    private readonly AutoSuggestBox videoTarget = new() { Name = "VideoModelPicker", PlaceholderText = DesktopResources.Get("SelectModel"), MinWidth = 120, MaxWidth = 420, Height = 40, HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly StackPanel videoModelToolbar = new() { Name = "VideoModelToolbar", Orientation = Orientation.Horizontal, Spacing = 8, Visibility = Visibility.Collapsed };
+    private readonly ChatTargetPicker videoTarget = new() { Name = "VideoModelPicker", PlaceholderText = DesktopResources.Get("SelectModel"), MinWidth = 120, MaxWidth = 420, Height = 40, HorizontalAlignment = HorizontalAlignment.Stretch };
+    private readonly Grid videoModelToolbar = new() { Name = "VideoModelToolbar", Visibility = Visibility.Collapsed };
     private readonly Button videoFavorite = new() { Name = "VideoModelFavorite", Content = DesktopIcons.Create(Icon.Star), Width = 40, Height = 40, Padding = new Thickness(0) };
     private IReadOnlyList<ChatTarget> videoModels = [];
     private string? videoPartition;
@@ -34,36 +34,15 @@ public sealed partial class ChatShell
     private ChatTarget? SelectedVideoModel => videoModels.FirstOrDefault(m => m.Id == videoTarget.Text.Trim());
     private void PrepareVideos()
     {
-        ToolbarControls.Outline(videoTarget); ToolbarControls.Label(videoTarget, DesktopResources.Get("SelectModel")); ToolbarControls.Subtle(videoFavorite);
-        videoModelToolbar.Children.Add(videoTarget); videoModelToolbar.Children.Add(videoFavorite);
-        videoTarget.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
-        videoTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) VideoModelSuggestions(videoTarget.Text); videosPage.SetModelAvailable(SelectedVideoModel is not null); UpdateVideoFavorite(); };
-        videoTarget.GotFocus += (_, _) => { VideoModelSuggestions(); videoTarget.IsSuggestionListOpen = true; };
-        videoTarget.SuggestionChosen += (_, args) => videoTarget.Text = ((ChatTarget)args.SelectedItem).Id;
-        videoTarget.QuerySubmitted += (_, args) => { if (args.ChosenSuggestion is ChatTarget model) videoTarget.Text = model.Id; else { VideoModelSuggestions(videoTarget.Text); videoTarget.IsSuggestionListOpen = true; } };
-        videoFavorite.Click += async (_, _) =>
-        {
-            if (!CanUseVideos || SelectedVideoModel is not { } model) return;
-            await RunAsync(async ct =>
-            {
-                var partition = session.HistoryPartition; var next = new HashSet<string>(modelFavorites, StringComparer.Ordinal);
-                var key = ModelOverviewCatalog.FavoriteKey(model); if (!next.Remove(key)) next.Add(key);
-                await modelFavoritesStore.SaveAsync(partition, next, ct); if (closing || partition != session.HistoryPartition) return;
-                modelFavorites = next; modelFavoritesPartition = partition; modelsOverview.SetFavorites(next); UpdateVideoFavorite();
-            });
-        };
+        ControlAppearance.Stock(videoTarget); ToolbarControls.Label(videoTarget, DesktopResources.Get("SelectModel")); ToolbarControls.Subtle(videoFavorite);
+        videoTarget.Opening = () => VideoModelSuggestions();
+        videoTarget.SelectionChanged += () => { videosPage.SetModelAvailable(SelectedVideoModel is not null); UpdateVideoFavorite(); };
         videosPage.SendRequested = () => videoSubmission = SendVideosAsync(); videosPage.PickRequested = PickVideoAttachmentsAsync;
         videosPage.LinkRequested = AddVideoLinkAsync; videosPage.AttachmentDataRequested = AdmitVideoDataAsync;
         videosPage.SettingsRequested = EditVideoSettingsAsync; videosPage.FolderRequested = OpenVideosFolderAsync; videosPage.PreviewRequested = PreviewVideoAsync;
     }
-    private void VideoModelSuggestions(string query = "") => videoTarget.ItemsSource = PickerModels(videoModels).Where(m => string.IsNullOrWhiteSpace(query)
-        || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
-    private void UpdateVideoFavorite()
-    {
-        var selected = SelectedVideoModel; var favorite = selected is not null && modelFavorites.Contains(ModelOverviewCatalog.FavoriteKey(selected));
-        videoFavorite.Content = DesktopIcons.Create(Icon.Star, variant: favorite ? IconVariant.Filled : IconVariant.Regular);
-        ToolbarControls.Label(videoFavorite, DesktopResources.Get(favorite ? "RemoveFavorite" : "AddFavorite")); videoFavorite.IsEnabled = !busy && selected is not null;
-    }
+    private void VideoModelSuggestions(string query = "") => ConfigurePrimitivePicker(videoTarget, videoModels, "video");
+    private void UpdateVideoFavorite() => UpdateModelFavorites();
     private async Task StartVideoJobsAsync(CancellationToken ct)
     {
         if (closing) return;
@@ -98,6 +77,7 @@ public sealed partial class ChatShell
         var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != ImageLibraryStore.Partition(session)) return;
         aiModelTargets = available; videoModels = AiModelCatalog.OfType(available, "video");
+        await LoadSelectionCatalogsAsync(ct);
         if (SelectedVideoModel is null) videoTarget.Text = InitialModel(videoModels, "video");
         if (modelFavoritesPartition != session.HistoryPartition) { modelFavorites = await modelFavoritesStore.LoadAsync(session.HistoryPartition, ct); modelFavoritesPartition = session.HistoryPartition; }
         VideoModelSuggestions(); videosPage.SetModelAvailable(SelectedVideoModel is not null); UpdateVideoFavorite();
@@ -117,12 +97,13 @@ public sealed partial class ChatShell
     }
     private async Task SendVideosAsync()
     {
-        if (!CanUseVideos || videoSubmitting || SelectedVideoModel is not { } model || string.IsNullOrWhiteSpace(videosPage.PromptText)) return;
+        if (!CanUseVideos || videoSubmitting || SelectedVideoModel is null || string.IsNullOrWhiteSpace(videosPage.PromptText)) return;
         var prompt = videosPage.PromptText; var attachments = videosPage.Attachments; var preferences = session.Settings.Videos.Clone();
-        var partition = ImageLibraryStore.Partition(session); var inputs = VideoInputs; videoSubmitting = true; videosPage.SetSubmitting(true); videosPage.ClearNotices();
+        var partition = ImageLibraryStore.Partition(session); var inputs = VideoInputs; videoSubmitting = true; videoTarget.IsEnabled = false; UpdateModelFavorites(); videosPage.SetSubmitting(true); videosPage.ClearNotices();
         try
         {
             var ct = videoWorkLifetime.Token; preferences.Validate();
+            var model = await ResolvePrimitiveModelAsync(videoTarget, videoModels, "video", prompt, ct);
             var references = new List<ComposerAttachment>(); foreach (var file in preferences.InputReferences) references.Add(await inputs.ReadAsync(file, ct));
             references.AddRange(attachments.Where(f => f.IsLink));
             var first = preferences.FirstFrame is null ? null : await inputs.ReadAsync(preferences.FirstFrame, ct);
@@ -138,7 +119,7 @@ public sealed partial class ChatShell
         catch (Exception error) { if (!closing && partition == ImageLibraryStore.Partition(session)) videosPage.Notice(error is GatewayException or InvalidOperationException ? error.Message : DesktopResources.Get("VideoGenerationFailed"), InfoBarSeverity.Error); }
         finally
         {
-            videoSubmitting = false; if (!closing) { videosPage.SetSubmitting(false); VideoJobsChanged(); }
+            videoSubmitting = false; if (!closing) { videoTarget.IsEnabled = !busy; UpdateModelFavorites(); videosPage.SetSubmitting(false); VideoJobsChanged(); }
         }
     }
     private async Task PickVideoAttachmentsAsync()

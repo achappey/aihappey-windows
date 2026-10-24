@@ -203,7 +203,7 @@ public sealed partial class ChatShell : UserControl
         models.Unchecked += (_, _) => { if (!updatingMode) UpdateMode(Service); };
         agents.Unchecked += (_, _) => { if (!updatingMode) UpdateMode(Service); };
         target.Opening = () => UpdateTargetSuggestions();
-        target.SelectionChanged += () => { if (!busy) RememberSelection(); };
+        target.SelectionChanged += () => { if (!busy) RememberSelection(); UpdateModelFavorites(); };
         chats.SelectionChanged += async (_, _) =>
         {
             if (suppress || busy || chats.SelectedItem is not Conversation selected) return;
@@ -318,11 +318,17 @@ public sealed partial class ChatShell : UserControl
         top.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         chatModes.Children.Add(models); chatModes.Children.Add(agents); top.Children.Add(chatModes);
         ControlAppearance.Stock(target);
-        Grid.SetColumn(target, 1); top.Children.Add(target);
-        Grid.SetColumn(imageTarget, 1); top.Children.Add(imageTarget);
+        ModelHeader(chatModelToolbar, target, () => Service == ServiceKind.Ai && target.Selection.Ids.Count == 1 ? targets.FirstOrDefault(m => m.Id == target.Text) : null, () => activePage == DesktopPage.Chat);
+        ModelHeader(imageModelToolbar, imageTarget, () => imageTarget.Selection.Ids.Count == 1 ? SelectedImageModel : null, () => CanUseImages);
+        ModelHeader(videoModelToolbar, videoTarget, () => videoTarget.Selection.Ids.Count == 1 ? SelectedVideoModel : null, () => CanUseVideos && !videoSubmitting, videoFavorite);
+        ModelHeader(speechModelToolbar, speechTarget, () => speechTarget.Selection.Ids.Count == 1 ? SelectedSpeechModel : null, () => CanUseSpeech);
+        ModelHeader(transcriptionModelToolbar, transcriptionTarget, () => SelectedTranscriptionModel, () => CanUseTranscriptions);
+        ModelHeader(realtimeHeader, realtimeTarget, () => realtimeModels.FirstOrDefault(m => m.Id == realtimeTarget.Text), () => activePage == DesktopPage.Realtime && realtime is null, realtimeFavorite);
+        Grid.SetColumn(chatModelToolbar, 1); top.Children.Add(chatModelToolbar);
+        Grid.SetColumn(imageModelToolbar, 1); top.Children.Add(imageModelToolbar);
         Grid.SetColumn(videoModelToolbar, 1); top.Children.Add(videoModelToolbar);
-        Grid.SetColumn(speechTarget, 1); top.Children.Add(speechTarget);
-        Grid.SetColumn(transcriptionTarget, 1); top.Children.Add(transcriptionTarget);
+        Grid.SetColumn(speechModelToolbar, 1); top.Children.Add(speechModelToolbar);
+        Grid.SetColumn(transcriptionModelToolbar, 1); top.Children.Add(transcriptionModelToolbar);
         Grid.SetColumn(realtimeHeader, 1); top.Children.Add(realtimeHeader);
         AutomationProperties.SetName(progress, DesktopResources.Get("Working"));
         Grid.SetColumn(progress, 3); top.Children.Add(progress);
@@ -843,6 +849,7 @@ public sealed partial class ChatShell : UserControl
         videoTarget.IsEnabled = !value; videosPage.SetBusy(value); UpdateVideoFavorite();
         transcriptionTarget.IsEnabled = !value;
         speechTarget.IsEnabled = !value;
+        UpdateModelFavorites();
         speechPage.SetBusy(value, inference && activePage == DesktopPage.Speech);
         transcriptionsPage.SetBusy(value, inference && activePage == DesktopPage.Transcriptions);
         progress.IsActive = value;
