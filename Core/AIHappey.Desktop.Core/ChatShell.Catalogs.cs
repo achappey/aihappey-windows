@@ -41,7 +41,7 @@ public sealed partial class ChatShell
         var resourceLinks = CreateNavigationGroup("Files", expandedPageNavigation);
         foreach (var (page, label, icon) in new[]
         {
-            (DesktopPage.Realtime, DesktopResources.Get("RealtimeTitle"), (IconElement)DesktopIcons.Create(Icon.Mic)),
+            (DesktopPage.Realtime, DesktopResources.Get("RealtimeTitle"), (IconElement)DesktopIcons.Create(Icon.Live)),
             (DesktopPage.Images, DesktopResources.Get("Images"), (IconElement)DesktopIcons.Create(Icon.Image)),
             (DesktopPage.Videos, DesktopResources.Get("Videos"), (IconElement)DesktopIcons.Create(Icon.Video)),
             (DesktopPage.Speech, DesktopResources.Get("Speech"), (IconElement)DesktopIcons.Create(Icon.Speaker2)),
@@ -92,7 +92,7 @@ public sealed partial class ChatShell
                 AddNavigationLink(group, key, button, page switch
                 {
                     DesktopPage.Images => Icon.Image, DesktopPage.Videos => Icon.Video, DesktopPage.Speech => Icon.Speaker2,
-                    DesktopPage.Transcriptions or DesktopPage.Realtime => Icon.Mic, DesktopPage.Agents => Icon.Bot, DesktopPage.Mcp => Icon.Connector,
+                    DesktopPage.Realtime => Icon.Live, DesktopPage.Transcriptions => Icon.Mic, DesktopPage.Agents => Icon.Bot, DesktopPage.Mcp => Icon.Connector,
                     DesktopPage.Skills => Icon.Star, DesktopPage.Plugins => Icon.PuzzlePiece, _ => Icon.Folder
                 }, () => NavigateAsync(page));
             }

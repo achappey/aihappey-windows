@@ -3,6 +3,8 @@ using System.Text.Json.Nodes;
 using AIHappey.Vercel.Models;
 using FluentIcons.Common;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
@@ -15,13 +17,12 @@ public sealed partial class ChatShell
     private readonly Grid realtimeHeader = new() { Name = "RealtimeHeader", Visibility = Visibility.Collapsed };
     private readonly AutoSuggestBox realtimeTarget = new() { Name = "RealtimeModelPicker", MinWidth = 180, MaxWidth = 420, PlaceholderText = DesktopResources.Get("SelectModel") };
     private readonly Button realtimeFavorite = new() { Name = "RealtimeFavorite", Content = DesktopIcons.Create(Icon.Star), Width = 40, Height = 40 };
-    private readonly StackPanel realtimeControls = new() { Name = "RealtimeControls", Orientation = Orientation.Horizontal, Spacing = 8, Visibility = Visibility.Collapsed };
-    private readonly ToggleButton realtimeMute = new() { Name = "RealtimeMute", Content = DesktopIcons.Create(Icon.Mic), Width = 40, Height = 40 };
-    private readonly ToggleButton realtimeCamera = new() { Name = "RealtimeCamera", Content = DesktopIcons.Create(Icon.Video), Width = 40, Height = 40 };
-    private readonly ToggleButton realtimeScreen = new() { Name = "RealtimeScreen", Content = DesktopIcons.Create(Icon.Desktop), Width = 40, Height = 40 };
-    private readonly Button realtimeStop = new() { Name = "RealtimeStop", Content = DesktopIcons.Create(Icon.Stop), Width = 40, Height = 40 };
-    private readonly Button realtimeSettings = new() { Name = "RealtimeSettings", Content = DesktopIcons.Create(Icon.Settings), Width = 40, Height = 40 };
-    private readonly TextBlock realtimeStatus = new() { Name = "RealtimeStatus", TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+    private readonly StackPanel realtimeControls = new() { Name = "RealtimeControls", Orientation = Orientation.Horizontal, Spacing = 4, Visibility = Visibility.Collapsed };
+    private readonly ToggleButton realtimeMute = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Mic), DesktopResources.Get("RealtimeMute"));
+    private readonly ToggleButton realtimeCamera = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Video), DesktopResources.Get("RealtimeCamera"));
+    private readonly ToggleButton realtimeScreen = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Desktop), DesktopResources.Get("RealtimeScreen"));
+    private readonly Button realtimeStop = new() { Name = "RealtimeStop", Content = DesktopIcons.Create(Icon.Stop), Width = 40, Height = 40, Padding = new Thickness(0), CornerRadius = new CornerRadius(6), Visibility = Visibility.Collapsed };
+    private string realtimeStatus = "", realtimeDevices = "";
     private readonly Image realtimePreview = new() { Name = "RealtimePreview", Height = 160, MaxWidth = 280, Stretch = Stretch.Uniform, HorizontalAlignment = HorizontalAlignment.Right, Visibility = Visibility.Collapsed };
     private IReadOnlyList<ChatTarget> realtimeModels = [];
     private RealtimeState? realtime;
@@ -53,10 +54,13 @@ public sealed partial class ChatShell
     private bool RealtimeCurrent(RealtimeState state) => ReferenceEquals(realtime, state) && !closing && state.Partition == session.HistoryPartition && ReferenceEquals(current, state.Conversation) && !state.Lifetime.IsCancellationRequested;
     private void PrepareRealtime()
     {
+        realtimeMute.Name = "RealtimeMute"; realtimeCamera.Name = "RealtimeCamera"; realtimeScreen.Name = "RealtimeScreen";
         foreach (var (control, key) in new (Control, string)[] { (realtimeTarget, "SelectModel"), (realtimeFavorite, "RealtimeFavorite"), (realtimeMute, "RealtimeMute"),
-            (realtimeCamera, "RealtimeCamera"), (realtimeScreen, "RealtimeScreen"), (realtimeStop, "Stop"), (realtimeSettings, "RealtimeSettings") })
+            (realtimeCamera, "RealtimeCamera"), (realtimeScreen, "RealtimeScreen"), (realtimeStop, "Stop") })
         { ControlAppearance.Native(control); ToolbarControls.Label(control, DesktopResources.Get(key)); }
-        foreach (var control in new UIElement[] { realtimeSettings, realtimeMute, realtimeCamera, realtimeScreen, realtimeStop, realtimeStatus }) realtimeControls.Children.Add(control);
+        ToolbarControls.Subtle(realtimeStop);
+        AutomationProperties.SetLiveSetting(realtimeMute, AutomationLiveSetting.Polite);
+        foreach (var control in new UIElement[] { realtimeMute, realtimeCamera, realtimeScreen, realtimeStop }) realtimeControls.Children.Add(control);
         realtimeTarget.TextChanged += (_, args) =>
         {
             if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
@@ -65,11 +69,14 @@ public sealed partial class ChatShell
         };
         realtimeTarget.GotFocus += (_, _) => { realtimeTarget.ItemsSource = PickerModels(realtimeModels); realtimeTarget.IsSuggestionListOpen = true; };
         realtimeTarget.SuggestionChosen += (_, args) => realtimeTarget.Text = ((ChatTarget)args.SelectedItem).Id;
-        realtimeMute.Click += async (_, _) => { if (realtime?.Connection is { } connection) try { await connection.SetMutedAsync(realtimeMute.IsChecked == true); } catch { await RealtimeFailedAsync(); } };
+        realtimeMute.Click += async (_, _) =>
+        {
+            UpdateRealtimeControls();
+            if (realtime?.Connection is { } connection) try { await connection.SetMutedAsync(realtimeMute.IsChecked == true); } catch { await RealtimeFailedAsync(); }
+        };
         realtimeStop.Click += async (_, _) => await StopRealtimeAsync();
         realtimeCamera.Click += async (_, _) => await ChangeRealtimeVideoAsync(false);
         realtimeScreen.Click += async (_, _) => await ChangeRealtimeVideoAsync(true);
-        realtimeSettings.Click += async (_, _) => await EditRealtimeSettingsAsync();
         Unloaded += (_, _) => { if (realtime is not null) realtimeCleanup = StopRealtimeAsync(); };
         Microsoft.Win32.SystemEvents.PowerModeChanged += RealtimePowerChanged;
     }
@@ -94,21 +101,43 @@ public sealed partial class ChatShell
     {
         var visible = activePage == DesktopPage.Realtime;
         realtimeHeader.Visibility = realtimeControls.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-        if (!visible) { realtimePreview.Visibility = Visibility.Collapsed; return; }
+        if (!visible)
+        {
+            realtimePreview.Visibility = Visibility.Collapsed;
+            ((FluentIcons.WinUI.FluentIcon)send.Content).Icon = Icon.Send;
+            AutomationProperties.SetHelpText(send, "");
+            return;
+        }
         var connected = realtime?.Connected == true;
         realtimeTarget.IsEnabled = realtime is null && !busy;
         UpdateModelFavorites();
-        realtimeSettings.IsEnabled = realtime is null && !busy;
         realtimeMute.IsEnabled = connected;
         var google = RealtimeConfiguration.Provider(realtime?.Model ?? realtimeTarget.Text) == "google";
         realtimeCamera.Visibility = realtimeScreen.Visibility = google ? Visibility.Visible : Visibility.Collapsed;
         realtimeCamera.IsEnabled = realtimeScreen.IsEnabled = connected && !realtimeVideoChanging;
         realtimeStop.IsEnabled = realtime is not null;
-        realtimeStatus.Text = DesktopResources.Get(realtime is null ? "RealtimeReady" : realtime.Reconnecting ? "RealtimeReconnecting"
+        var status = DesktopResources.Get(realtime is null ? "RealtimeReady" : realtime.Reconnecting ? "RealtimeReconnecting"
             : realtimeCapture is not null ? realtimeScreen.IsChecked == true ? "RealtimeSharingScreen" : "RealtimeSharingCamera"
             : connected ? realtimeMute.IsChecked == true ? "RealtimeMuted" : "RealtimeConnected" : "RealtimeConnecting");
+        ((FluentIcons.WinUI.FluentIcon)realtimeMute.Content).Icon = realtimeMute.IsChecked == true ? Icon.MicOff : Icon.Mic;
+        var muteLabel = DesktopResources.Get(realtimeMute.IsChecked == true ? "RealtimeUnmute" : "RealtimeMute");
+        ToolbarControls.Label(realtimeMute, muteLabel);
+        if (realtimeDevices.Length > 0) ToolTipService.SetToolTip(realtimeMute, new ToolTip { Content = muteLabel + "\n" + realtimeDevices });
+        ToolbarControls.Label(realtimeCamera, DesktopResources.Get(realtimeCamera.IsChecked == true ? "RealtimeStopCamera" : "RealtimeCamera"));
+        ToolbarControls.Label(realtimeScreen, DesktopResources.Get(realtimeScreen.IsChecked == true ? "RealtimeStopScreen" : "RealtimeScreen"));
+        AutomationProperties.SetItemStatus(realtimeMute, status);
+        AutomationProperties.SetHelpText(realtimeMute, realtimeDevices);
+        AutomationProperties.SetHelpText(send, status);
+        if (status != realtimeStatus)
+        {
+            realtimeStatus = status;
+            FrameworkElementAutomationPeer.FromElement(realtimeMute)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
+        }
         realtimeStop.Visibility = realtime is null ? Visibility.Collapsed : Visibility.Visible;
+        // The session stop cancels connection startup as well; never show a second operation-stop button here.
+        stop.Visibility = Visibility.Collapsed;
         input.PlaceholderText = DesktopResources.Get(connected ? "AskAnything" : "RealtimeStartHint");
+        ((FluentIcons.WinUI.FluentIcon)send.Content).Icon = connected ? Icon.Send : Icon.Live;
         ToolbarControls.Label(send, DesktopResources.Get(connected ? "SendMessage" : "RealtimeStart"));
         send.IsEnabled = initialized && !busy && !realtimeSending && (realtime is null || connected) && realtimeModels.Any(m => m.Id == realtimeTarget.Text);
         dictate.Visibility = Visibility.Collapsed;
@@ -210,8 +239,10 @@ public sealed partial class ChatShell
                     var aec = value["echoCancellationAvailable"]?.GetValue<bool>() == true;
                     var reference = value["echoReferenceConfigured"]?.GetValue<bool>() == true;
                     var devices = DesktopResources.Format("RealtimeDevices", value["inputDevice"]?.ToString() ?? "", value["outputDevice"]?.ToString() ?? "");
-                    ToolTipService.SetToolTip(realtimeStatus, devices + "\n" + DesktopResources.Get(aec ? "RealtimeAecAvailable" : "RealtimeAecUnavailable")
-                        + (reference ? "\n" + DesktopResources.Get("RealtimeAecReference") : ""));
+                    realtimeDevices = devices + "\n" + DesktopResources.Get(aec ? "RealtimeAecAvailable" : "RealtimeAecUnavailable")
+                        + (reference ? "\n" + DesktopResources.Get("RealtimeAecReference") : "");
+                    AutomationProperties.SetHelpText(realtimeMute, realtimeDevices);
+                    ToolTipService.SetToolTip(realtimeMute, new ToolTip { Content = AutomationProperties.GetName(realtimeMute) + "\n" + realtimeDevices });
                     if (!aec) Show(DesktopResources.Get("RealtimeAecUnavailable"), InfoBarSeverity.Warning);
                     continue;
                 }
@@ -292,6 +323,8 @@ public sealed partial class ChatShell
     {
         var state = realtime; realtime = null;
         state?.Lifetime.Cancel();
+        realtimeDevices = "";
+        UpdateRealtimeControls();
         // Detach synchronously, and make the next Start wait for all previous device teardown.
         if (state is null && realtimeCapture is null) return realtimeCleanup;
         return realtimeCleanup = FinishRealtimeStopAsync(state);
@@ -354,7 +387,6 @@ public sealed partial class ChatShell
                 }), state.Lifetime.Token);
             if (!started || !RealtimeCurrent(state)) { await StopRealtimeVideoAsync(); return; }
             realtimeScreen.IsChecked = screen; realtimeCamera.IsChecked = !screen;
-            realtimeStatus.Text = DesktopResources.Get(screen ? "RealtimeSharingScreen" : "RealtimeSharingCamera");
         }
         catch (OperationCanceledException) { await StopRealtimeVideoAsync(); }
         catch { await StopRealtimeVideoAsync(); Show(DesktopResources.Get("RealtimeVideoFailed"), InfoBarSeverity.Warning); }
@@ -366,18 +398,5 @@ public sealed partial class ChatShell
         realtimeCamera.IsChecked = realtimeScreen.IsChecked = false;
         realtimePreview.Source = null; realtimePreview.Visibility = Visibility.Collapsed;
         if (capture is not null) await capture.DisposeAsync();
-    }
-    private async Task EditRealtimeSettingsAsync()
-    {
-        if (realtime is not null || busy || closing || historyDialogOpen) return;
-        var partition = session.HistoryPartition;
-        var dialog = new RealtimeSettingsDialog(session.Settings.Realtime, RealtimeConfiguration.Provider(realtimeTarget.Text)) { XamlRoot = XamlRoot };
-        dialog.SaveAsync = async preferences =>
-        {
-            if (closing || partition != session.HistoryPartition) throw new OperationCanceledException();
-            var next = session.Settings.Clone(); next.Realtime = preferences; await SettingsStore.SaveAsync(session.DataDirectory, next); session.Settings = next;
-        };
-        SystemAppearance.PrepareDialog(dialog); historyDialogOpen = true;
-        try { await dialog.ShowAsync(); } finally { historyDialogOpen = false; }
     }
 }

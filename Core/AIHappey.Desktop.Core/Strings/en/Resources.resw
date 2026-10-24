@@ -1712,9 +1712,12 @@
   <data name="ChatForm_anthropic_contextManagement_summaries_instructions" xml:space="preserve"><value>Instructions set</value></data>
   <data name="RealtimeTitle" xml:space="preserve"><value>Realtime</value></data>
   <data name="RealtimeFavorite" xml:space="preserve"><value>Toggle favorite audio model</value></data>
-  <data name="RealtimeMute" xml:space="preserve"><value>Mute or unmute microphone</value></data>
-  <data name="RealtimeCamera" xml:space="preserve"><value>Start or stop camera sharing</value></data>
-  <data name="RealtimeScreen" xml:space="preserve"><value>Share a screen or window / stop sharing</value></data>
+  <data name="RealtimeMute" xml:space="preserve"><value>Mute microphone</value></data>
+  <data name="RealtimeUnmute" xml:space="preserve"><value>Unmute microphone</value></data>
+  <data name="RealtimeCamera" xml:space="preserve"><value>Share camera</value></data>
+  <data name="RealtimeStopCamera" xml:space="preserve"><value>Stop sharing camera</value></data>
+  <data name="RealtimeScreen" xml:space="preserve"><value>Share a screen or window</value></data>
+  <data name="RealtimeStopScreen" xml:space="preserve"><value>Stop sharing screen or window</value></data>
   <data name="RealtimeSettings" xml:space="preserve"><value>Realtime settings</value></data>
   <data name="RealtimeReady" xml:space="preserve"><value>Ready to start</value></data>
   <data name="RealtimeConnected" xml:space="preserve"><value>Connected · microphone active</value></data>
@@ -1738,6 +1741,7 @@ Speaker: {1}</value></data>
   <data name="RealtimeSharingScreen" xml:space="preserve"><value>Sharing selected screen/window</value></data>
   <data name="RealtimeSharingCamera" xml:space="preserve"><value>Sharing camera</value></data>
   <data name="RealtimeSettingsHint" xml:space="preserve"><value>Settings apply to the next connection. Camera and screen sharing are off until explicitly enabled. Tools and system context are captured when the session starts.</value></data>
+  <data name="RealtimeSettingsLocked" xml:space="preserve"><value>Stop the realtime session to change provider settings.</value></data>
   <data name="RealtimeSettingsFailed" xml:space="preserve"><value>Settings could not be saved. Check the values and try again.</value></data>
   <data name="RealtimeVoice" xml:space="preserve"><value>Voice</value></data>
   <data name="RealtimeVad" xml:space="preserve"><value>Turn detection</value></data>
@@ -1757,4 +1761,10 @@ Speaker: {1}</value></data>
   <data name="RealtimeJpegQuality" xml:space="preserve"><value>JPEG quality (0.1–1)</value></data>
   <data name="RealtimeExpiry" xml:space="preserve"><value>Token expiry (e.g. 30m or RFC3339)</value></data>
   <data name="RealtimeReset" xml:space="preserve"><value>Reset provider defaults</value></data>
+  <data name="RealtimeSectionAudio" xml:space="preserve"><value>Audio</value></data>
+  <data name="RealtimeSectionTurnDetection" xml:space="preserve"><value>Turn detection</value></data>
+  <data name="RealtimeSectionResponses" xml:space="preserve"><value>Response behavior</value></data>
+  <data name="RealtimeSectionTools" xml:space="preserve"><value>Tools</value></data>
+  <data name="RealtimeSectionSession" xml:space="preserve"><value>Session</value></data>
+  <data name="RealtimeSectionVideo" xml:space="preserve"><value>Video sharing</value></data>
 </root>

@@ -1,4 +1,4 @@
-param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly, [switch]$AuthoringToolsOnly, [switch]$ToolOutputOnly, [switch]$ChatFilesOnly, [switch]$ContextSearchOnly, [switch]$SettingsAppearanceOnly, [switch]$UsageOnly, [switch]$ChartsOnly, [switch]$ChatProviderFormsOnly)
+param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly, [switch]$AuthoringToolsOnly, [switch]$ToolOutputOnly, [switch]$ChatFilesOnly, [switch]$ContextSearchOnly, [switch]$SettingsAppearanceOnly, [switch]$UsageOnly, [switch]$ChartsOnly, [switch]$ChatProviderFormsOnly, [switch]$RealtimeOnly)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $output = Join-Path $repo 'artifacts\Debug\UiTests'
@@ -14,6 +14,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Usage resource key audit failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Overview/browser resource parity failed.' }
 & node (Join-Path $PSScriptRoot 'check-chat-provider-resources.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Native chat-provider label parity failed.' }
+& node (Join-Path $PSScriptRoot 'check-realtime-resources.cjs')
+if ($LASTEXITCODE -ne 0) { throw 'Realtime resource audit failed.' }
 
 # Guard against reintroducing the resource-lookup patterns behind the startup/rendering crashes.
 $unsafe = Get-ChildItem (Join-Path $repo 'Core\AIHappey.Desktop.Core') -Filter '*.cs' |
@@ -49,6 +51,7 @@ try {
     if ($AuthoringToolsOnly) { $arguments += '--authoring-tools-only' }
     if ($ChatSettingsOnly) { $arguments += '--chat-settings-only' }
     if ($ChatProviderFormsOnly) { $arguments += '--chat-provider-forms-only' }
+    if ($RealtimeOnly) { $arguments += '--realtime-only' }
     if ($ToolOutputOnly) { $arguments += '--tool-output-only' }
     if ($ChatFilesOnly) { $arguments += '--chat-files-only' }
     if ($SidebarOnly) { $arguments += '--sidebar-only' }

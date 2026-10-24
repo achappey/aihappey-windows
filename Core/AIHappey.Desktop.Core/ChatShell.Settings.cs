@@ -12,27 +12,36 @@ public sealed partial class ChatShell
     private void PrepareChatSettings()
     {
         ToolbarControls.Subtle(chatSettings); ToolbarControls.Label(chatSettings, DesktopResources.Get("ChatSettings"));
-        chatSettings.Click += async (_, _) => { if (Service == ServiceKind.Agents) await EditAgentWorkflowAsync(); else await EditChatSettingsAsync(); };
+        chatSettings.Click += async (_, _) => { if (Service == ServiceKind.Agents && activePage != DesktopPage.Realtime) await EditAgentWorkflowAsync(); else await EditChatSettingsAsync(); };
     }
     private async Task EditChatSettingsAsync()
     {
-        if (busy || closing || historyDialogOpen || catalogDialog is not null || Service != ServiceKind.Ai) return;
+        var isRealtime = activePage == DesktopPage.Realtime;
+        if (busy || closing || historyDialogOpen || catalogDialog is not null || !isRealtime && Service != ServiceKind.Ai) return;
         historyDialogOpen = true;
+        var partition = session.HistoryPartition;
         var selected = targets.FirstOrDefault(t => t.Id == target.Text.Trim());
-        var provider = selected is null ? null : ChatPreferences.ResolveProvider(Service, selected.Id, selected.ProviderKey);
+        var provider = isRealtime ? RealtimeConfiguration.Provider(realtime?.Model ?? realtimeTarget.Text)
+            : selected is null ? null : ChatPreferences.ResolveProvider(Service, selected.Id, selected.ProviderKey);
         var dialog = new ChatSettingsDialog(session.Settings.Chat, provider, LoadSkillSelectionAsync, PrefetchSkillAsync, agentPlugins,
-            AvailableChatTools, Service) { XamlRoot = XamlRoot };
+            AvailableChatTools, isRealtime ? ServiceKind.Ai : Service,
+            isRealtime ? session.Settings.Realtime : null, realtime is not null) { XamlRoot = XamlRoot };
         chatSettingsDialog = dialog;
-        dialog.SaveAsync = async preferences =>
+        async Task SaveAsync(ChatPreferences preferences, RealtimePreferences? realtimePreferences)
         {
             // Save first so a disk error retains both the open draft and previous live preferences.
+            if (closing || partition != session.HistoryPartition) throw new OperationCanceledException();
             var next = session.Settings.Clone();
             next.Chat = preferences.Clone();
+            if (realtimePreferences is not null) next.Realtime = realtimePreferences.Clone();
             await SettingsStore.SaveAsync(session.DataDirectory, next);
+            if (closing || partition != session.HistoryPartition) throw new OperationCanceledException();
             session.Settings = next;
             await LoadPluginsAsync(downloadLifetime.Token);
             RenderContextTags();
-        };
+        }
+        dialog.SaveAsync = preferences => SaveAsync(preferences, null);
+        dialog.SaveWithRealtimeAsync = (preferences, realtimePreferences) => SaveAsync(preferences, realtimePreferences);
         SystemAppearance.PrepareDialog(dialog);
         try { await dialog.ShowAsync(); }
         finally

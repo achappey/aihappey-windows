@@ -11,6 +11,11 @@ for (const file of fs.readdirSync(core).filter(f => /Realtime/.test(f) && f.ends
   }
 }
 for (const [key] of en) if (key.startsWith('Realtime')) assert(nl.has(key), key);
+const form = fs.readFileSync(path.join(core, 'RealtimeSettingsForm.cs'), 'utf8');
+for (const [, section] of form.matchAll(/Section\("([^"]+)"\)/g)) {
+  for (const [language, strings] of [['English', en], ['Dutch', nl]])
+    assert(strings.has('RealtimeSection' + section), `Missing ${language} realtime section ${section}`);
+}
 const audio = fs.readFileSync(path.join(core, 'RealtimeAudio.cs'), 'utf8');
 assert(audio.includes('.WithCommunicationsMode()') && audio.includes('SetReferenceEndpoint(renderDevice)'), 'Capture must request communications processing with the real playback reference.');
 assert(!audio.includes('WithLoopbackCapture(') && !audio.includes('WithRawMode('), 'Microphone input must not be loopback or bypass voice processing.');

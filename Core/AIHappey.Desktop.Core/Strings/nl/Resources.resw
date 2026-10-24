@@ -1707,9 +1707,12 @@
   <data name="ChatForm_anthropic_contextManagement_summaries_instructions" xml:space="preserve"><value>Instructies ingesteld</value></data>
   <data name="RealtimeTitle" xml:space="preserve"><value>Realtime</value></data>
   <data name="RealtimeFavorite" xml:space="preserve"><value>Audiomodel als favoriet instellen of verwijderen</value></data>
-  <data name="RealtimeMute" xml:space="preserve"><value>Microfoon dempen of inschakelen</value></data>
-  <data name="RealtimeCamera" xml:space="preserve"><value>Camera delen of stoppen</value></data>
-  <data name="RealtimeScreen" xml:space="preserve"><value>Scherm of venster delen / delen stoppen</value></data>
+  <data name="RealtimeMute" xml:space="preserve"><value>Microfoon dempen</value></data>
+  <data name="RealtimeUnmute" xml:space="preserve"><value>Microfoon inschakelen</value></data>
+  <data name="RealtimeCamera" xml:space="preserve"><value>Camera delen</value></data>
+  <data name="RealtimeStopCamera" xml:space="preserve"><value>Camera delen stoppen</value></data>
+  <data name="RealtimeScreen" xml:space="preserve"><value>Scherm of venster delen</value></data>
+  <data name="RealtimeStopScreen" xml:space="preserve"><value>Scherm of venster delen stoppen</value></data>
   <data name="RealtimeSettings" xml:space="preserve"><value>Realtime-instellingen</value></data>
   <data name="RealtimeReady" xml:space="preserve"><value>Klaar om te starten</value></data>
   <data name="RealtimeConnected" xml:space="preserve"><value>Verbonden · microfoon actief</value></data>
@@ -1733,6 +1736,7 @@ Luidspreker: {1}</value></data>
   <data name="RealtimeSharingScreen" xml:space="preserve"><value>Geselecteerd scherm/venster wordt gedeeld</value></data>
   <data name="RealtimeSharingCamera" xml:space="preserve"><value>Camera wordt gedeeld</value></data>
   <data name="RealtimeSettingsHint" xml:space="preserve"><value>Instellingen gelden voor de volgende verbinding. Camera en scherm delen blijven uit tot u ze inschakelt. Hulpmiddelen en systeemcontext worden bij het starten vastgelegd.</value></data>
+  <data name="RealtimeSettingsLocked" xml:space="preserve"><value>Stop de realtime-sessie om providerinstellingen te wijzigen.</value></data>
   <data name="RealtimeSettingsFailed" xml:space="preserve"><value>Instellingen konden niet worden opgeslagen. Controleer de waarden en probeer opnieuw.</value></data>
   <data name="RealtimeVoice" xml:space="preserve"><value>Stem</value></data>
   <data name="RealtimeVad" xml:space="preserve"><value>Beurtdetectie</value></data>
@@ -1752,4 +1756,10 @@ Luidspreker: {1}</value></data>
   <data name="RealtimeJpegQuality" xml:space="preserve"><value>JPEG-kwaliteit (0,1–1)</value></data>
   <data name="RealtimeExpiry" xml:space="preserve"><value>Tokenvervaltijd (bijv. 30m of RFC3339)</value></data>
   <data name="RealtimeReset" xml:space="preserve"><value>Providerstandaarden herstellen</value></data>
+  <data name="RealtimeSectionAudio" xml:space="preserve"><value>Audio</value></data>
+  <data name="RealtimeSectionTurnDetection" xml:space="preserve"><value>Beurtdetectie</value></data>
+  <data name="RealtimeSectionResponses" xml:space="preserve"><value>Antwoordgedrag</value></data>
+  <data name="RealtimeSectionTools" xml:space="preserve"><value>Hulpmiddelen</value></data>
+  <data name="RealtimeSectionSession" xml:space="preserve"><value>Sessie</value></data>
+  <data name="RealtimeSectionVideo" xml:space="preserve"><value>Video delen</value></data>
 </root>
