@@ -93,6 +93,32 @@ internal static class AgentRegressionTests
         check(legacy.Definition["model"]?["providerHeaders"]?["X-Test"]?.ToJsonString() == "\"value\"" && legacy.Definition["model"]?["providerHeaders"]?["openai"] is null, "legacy keyed headers normalize to browser-unkeyed agent model headers");
         check(legacy.Definition["mcpClient"]?["capabilities"]?["elicitation"] is null && legacy.Definition["mcpClient"]?["capabilities"]?["other"] is JsonObject,
             "malformed elicitation is discarded without losing other capabilities");
+        foreach (var json in new[] {
+            """{"name":"Decision","description":"D","instructions":"I","model":{"id":"router/model","type":"decision","providerMetadata":{"keep":7},"providerHeaders":{"x-keep":"yes"},"future":true}}""",
+            """{"name":"Decision","description":"D","instructions":"I","models":[{"id":"router/model","type":"decision","providerMetadata":{"keep":7},"providerHeaders":{"x-keep":"yes"},"future":true}]}""" })
+        {
+            var decisionAgent = DesktopAgent.Parse(json);
+            var before = decisionAgent.Definition.DeepClone();
+            var hasLegacy = decisionAgent.Definition["model"] is not null;
+            decisionAgent.SyncLegacyModel();
+            check(decisionAgent.IsValid && decisionAgent.ModelId == "router/model" && JsonNode.DeepEquals(decisionAgent.Definition, before),
+                "decision-only primary and legacy synchronization preserve an unchanged document");
+            decisionAgent.SelectModels([("router/model", "decision")]);
+            check(JsonNode.DeepEquals(decisionAgent.Models[0], (before[hasLegacy ? "model" : "models"] is JsonArray array ? array[0] : before["model"]))
+                && (decisionAgent.Definition["model"] is not null) == hasLegacy,
+                "decision-only selection retains metadata, headers, unknown fields, and legacy-field presence");
+            decisionAgent.SelectModels([("router/model", "decision"), ("openai/first", "language"), ("other/second", "language")]);
+            var router = decisionAgent.Models[0].DeepClone();
+            decisionAgent.SelectModels([("router/model", "decision"), ("openai/first", "language")]);
+            check(decisionAgent.ModelIds.SequenceEqual(["router/model", "openai/first"]) && JsonNode.DeepEquals(decisionAgent.Models[0], router),
+                "explicit model changes retain a routing decision when answer count drops");
+            decisionAgent.SelectModels([("router/model", "decision")]); decisionAgent.SyncLegacyModel();
+            check(decisionAgent.IsValid && JsonNode.DeepEquals(decisionAgent.Models[0], router)
+                && (!hasLegacy || JsonNode.DeepEquals(decisionAgent.Definition["model"], router)),
+                "returning to a standalone decision preserves its full primary configuration");
+            check(JsonNode.DeepEquals(DesktopAgent.Parse(decisionAgent.Definition.ToJsonString()).Definition, decisionAgent.Definition),
+                "standalone decision export/import retains its serialization");
+        }
         var target = JsonNode.Parse("""{"reasoning":{"effort":"low","future":1},"plugins":{"keep":true}}""")!.AsObject();
         DesktopAgent.ApplyChanges(target, JsonNode.Parse("""{"reasoning":{"effort":"low"}}""")!.AsObject(), JsonNode.Parse("""{"reasoning":{"effort":"high"}}""")!.AsObject());
         check(target["reasoning"]?["effort"]?.ToJsonString() == "\"high\"" && target["reasoning"]?["future"]?.ToJsonString() == "1" && target["plugins"] is JsonObject,

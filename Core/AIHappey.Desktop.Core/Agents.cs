@@ -152,13 +152,13 @@ public sealed class DesktopAgent
             }).ToArray();
         Definition["models"] = new JsonArray(next.Select(model => (JsonNode)model).ToArray());
         if (Definition["model"] is not null)
-            Definition["model"] = next.FirstOrDefault(model => Text(model["type"]) != "decision")?.DeepClone();
+            Definition["model"] = (next.FirstOrDefault(model => Text(model["type"]) != "decision") ?? next.FirstOrDefault())?.DeepClone();
     }
     public void SyncLegacyModel()
     {
         // Existing single-model agents remain readable by older clients; collection-only imports stay collection-only.
         if (Definition["model"] is not null)
-            Definition["model"] = Models.FirstOrDefault(model => Text(model["type"]) != "decision")?.DeepClone();
+            Definition["model"] = (Models.FirstOrDefault(model => Text(model["type"]) != "decision") ?? Models.FirstOrDefault())?.DeepClone();
     }
     public void ToggleTool(string type, bool enabled)
     {

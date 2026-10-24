@@ -1429,6 +1429,7 @@
   <data name="AgentModels" xml:space="preserve"><value>Models</value></data>
   <data name="AgentDecisionModel" xml:space="preserve"><value>Decision</value></data>
   <data name="AgentDecisionModelRequired" xml:space="preserve"><value>Select one decision model to choose between the selected models.</value></data>
+  <data name="AgentModelCombinationInvalid" xml:space="preserve"><value>Select a single model (language or decision), or multiple non-decision models with exactly one decision model. Remove or select models explicitly to resolve this combination; no models have been removed automatically.</value></data>
   <data name="AgentDecisionRouter" xml:space="preserve"><value>Decision router</value></data>
   <data name="AgentModelRoutingHint" xml:space="preserve"><value>Select answer models and optionally a decision model to choose between them. Without a router, the first answer model is used.</value></data>
   <data name="AgentProviderMetadata" xml:space="preserve"><value>Provider metadata</value></data>

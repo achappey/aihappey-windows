@@ -50,8 +50,6 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         // for untyped legacy configurations; picker commits always carry their own type.
         catalogModelTypes = models.GroupBy(model => model.Id).ToDictionary(group => group.Key,
             group => group.FirstOrDefault(model => model.ModelType == "language")?.ModelType ?? group.First().ModelType);
-        if (AnswerModels.Count <= 1 && DecisionModels.Count > 0)
-            draft.SelectModels(AnswerModels.Select(model => (DesktopAgent.Text(model["id"]), ModelType(DesktopAgent.Text(model["id"])))));
         this.localSkills = localSkills ?? []; this.localSkillArchive = localSkillArchive;
         this.availableAgents = availableAgents ?? [];
         partition = session.AgentPartition;
@@ -109,7 +107,8 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
     }
     private IReadOnlyList<JsonObject> AnswerModels => draft.Models.Where(model => ModelType(DesktopAgent.Text(model["id"])) != "decision").ToArray();
     private IReadOnlyList<JsonObject> DecisionModels => draft.Models.Where(model => ModelType(DesktopAgent.Text(model["id"])) == "decision").ToArray();
-    private bool HasValidEditorModels => AnswerModels.Count > 0 && DecisionModels.Count == (AnswerModels.Count > 1 ? 1 : 0);
+    private IReadOnlyList<JsonObject> MainModels => AnswerModels.Count > 1 && DecisionModels.Count == 1 ? AnswerModels : draft.Models;
+    private bool HasValidEditorModels => draft.Models.Count == 1 || (AnswerModels.Count > 1 && DecisionModels.Count == 1);
     private void UpdateSave() => IsPrimaryButtonEnabled = draft.IsValid && HasValidEditorModels && fields.IsValid && providerFields.IsValid && pending == 0 && !saving;
     private async Task WorkAsync(Func<CancellationToken, Task> work)
     {
@@ -130,10 +129,10 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         var name = fields.Text(body, "agent.name", () => draft.Name, v => draft.Definition["name"] = v.Trim()); name.Name = "AgentName"; name.IsEnabled = !editing;
         fields.Text(body, "agent.description", () => draft.Description, v => draft.Definition["description"] = v).Name = "AgentDescription";
         var visibleModels = ProviderPreferences.Filter(models, session.Settings);
-        var modelOptions = visibleModels.Where(model => model.ModelType is null or "" or "language")
-            .Concat(AnswerModels.Select(configuration => new ChatTarget(DesktopAgent.Text(configuration["id"]), DesktopAgent.Text(configuration["id"]))
+        var modelOptions = visibleModels.Where(model => model.ModelType is null or "" or "language" or "decision")
+            .Concat(draft.Models.Select(configuration => new ChatTarget(DesktopAgent.Text(configuration["id"]), DesktopAgent.Text(configuration["id"]))
                 { ModelType = ModelType(DesktopAgent.Text(configuration["id"])) }))
-            .Where(model => model.ModelType is null or "" or "language").DistinctBy(model => model.Id).ToArray();
+            .DistinctBy(model => model.Id).ToArray();
         // Match the workflow decision selector: use decision entries from the complete
         // catalog, not chat-visible rows, and filter by type before deduplicating IDs.
         var decisionOptions = models.Where(DecisionRouting.IsDecisionModel)
@@ -145,7 +144,6 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         var model = new ChatTargetPicker { Name = "AgentModels", PlaceholderText = DesktopResources.Get("SelectModel"),
             AllowEmptySelection = true, HorizontalAlignment = HorizontalAlignment.Stretch, ItemsSource = modelOptions };
         model.Configure(agents: false, multiselect: true, favoriteIds: new HashSet<string>(), canRoute: false, routeLabel: "");
-        model.SetSelection(AnswerModels.Select(configuration => DesktopAgent.Text(configuration["id"])));
         AutomationProperties.SetName(model, DesktopResources.Get("AgentModels"));
         AutomationProperties.SetLabeledBy(model, modelLabel);
         AutomationProperties.SetIsRequiredForForm(model, true);
@@ -161,6 +159,12 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         decisionField.Children.Add(decisionLabel); decisionField.Children.Add(decision); body.Children.Add(decisionField);
         void RefreshDecision()
         {
+            var mainIds = MainModels.Select(configuration => DesktopAgent.Text(configuration["id"])).ToHashSet();
+            var routingIds = draft.ModelIds.Where(id => !mainIds.Contains(id)).ToHashSet();
+            model.ItemsSource = modelOptions.Where(option => !routingIds.Contains(option.Id))
+                .Concat(MainModels.Select(configuration => new ChatTarget(DesktopAgent.Text(configuration["id"]), DesktopAgent.Text(configuration["id"]))
+                    { ModelType = ModelType(DesktopAgent.Text(configuration["id"])) })).DistinctBy(option => option.Id).ToArray();
+            model.SetSelection(MainModels.Select(configuration => DesktopAgent.Text(configuration["id"])));
             var answerIds = AnswerModels.Select(configuration => DesktopAgent.Text(configuration["id"])).ToHashSet();
             decision.ItemsSource = decisionOptions.Where(option => !answerIds.Contains(option.Id)).ToArray();
             decision.SetSelection(DecisionModels.Select(configuration => DesktopAgent.Text(configuration["id"])));
@@ -170,17 +174,29 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         model.SelectionChanged += () =>
         {
             CommitProvider();
-            var answers = model.Selection.Ids.ToArray();
-            var decisions = answers.Length > 1 ? DecisionModels.Select(configuration => DesktopAgent.Text(configuration["id"]))
-                .Where(id => !answers.Contains(id)).Select(id => (id, (string?)"decision")).ToArray() : [];
-            draft.SelectModels(answers.Select(id => (id, modelOptions.FirstOrDefault(option => option.Id == id)?.ModelType ?? "language")).Concat(decisions));
+            // Preserve the hidden routing decision and the order/configuration of retained
+            // models. Crossing the routing threshold must never silently delete a model.
+            var mainIds = MainModels.Select(configuration => DesktopAgent.Text(configuration["id"])).ToHashSet();
+            var selected = model.Selection.Ids.ToArray();
+            var retained = draft.Models.Where(configuration => !mainIds.Contains(DesktopAgent.Text(configuration["id"]))
+                || selected.Contains(DesktopAgent.Text(configuration["id"])));
+            var next = retained.Select(configuration => (DesktopAgent.Text(configuration["id"]),
+                configuration["type"] is null ? null : DesktopAgent.Text(configuration["type"])))
+                .Concat(selected.Where(id => !draft.ModelIds.Contains(id))
+                    .Select(id => (id, modelOptions.FirstOrDefault(option => option.Id == id)?.ModelType ?? "language"))).ToArray();
+            draft.SelectModels(next);
             RefreshDecision(); BuildProvider(); fields.Refresh();
         };
         decision.SelectionChanged += () =>
         {
             CommitProvider();
-            draft.SelectModels(AnswerModels.Select(configuration => DesktopAgent.Text(configuration["id"]))
-                .Select(id => (id, ModelType(id))).Concat(decision.Selection.Ids.Select(id => (id, (string?)"decision"))));
+            var selected = decision.Selection.Ids.ToArray();
+            var decisions = DecisionModels;
+            var next = draft.Models.Where(configuration => !decisions.Contains(configuration) || selected.Contains(DesktopAgent.Text(configuration["id"])))
+                .Select(configuration => (DesktopAgent.Text(configuration["id"]),
+                    configuration["type"] is null ? null : DesktopAgent.Text(configuration["type"])))
+                .Concat(selected.Where(id => !draft.ModelIds.Contains(id)).Select(id => (id, (string?)"decision"))).ToArray();
+            draft.SelectModels(next);
             RefreshDecision(); BuildProvider(); fields.Refresh();
         };
         fields.Text(body, "agent.instructions", () => DesktopAgent.Text(draft.Definition["instructions"]), v => draft.Definition["instructions"] = v, multiline: true).Name = "AgentInstructions";
@@ -248,7 +264,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         args.Cancel = true;
         if (!HasValidEditorModels)
         {
-            Message(DesktopResources.Get(AnswerModels.Count > 1 ? "AgentDecisionModelRequired" : "AgentFieldsRequired"));
+            Message(DesktopResources.Get(draft.Models.Count > 0 ? "AgentModelCombinationInvalid" : "AgentFieldsRequired"));
             tabs.SelectedItem = tabs.MenuItems.OfType<NavigationViewItem>().First(i => i.Tag as string == "general");
             return;
         }
@@ -258,7 +274,6 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         try
         {
             CommitProvider();
-            foreach (var model in DecisionModels) model["type"] = "decision";
             draft.SyncLegacyModel(); draft.Validate(); lifetime.Token.ThrowIfCancellationRequested();
             if (partition != session.AgentPartition) throw new OperationCanceledException();
             if (SaveAsync is not null) await SaveAsync(draft.Clone(), lifetime.Token);

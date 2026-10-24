@@ -20,6 +20,8 @@ public partial class App
         var root = new Grid { RequestedTheme = theme }; window!.Content = root;
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 900)); window.Activate(); await Task.Delay(100);
         var session = new DesktopSession(new AgentUiHost(), new AgentUiRuntime(), new());
+        session.Settings.EnabledProvidersByType["language"] = ["OpenAI", "Other"];
+        session.Settings.EnabledProvidersByType["decision"] = ["Router"];
         using var handler = new AgentUiHandler(); using var http = new HttpClient(handler);
         var catalog = new DesktopCatalogClient(new DesktopChatClient(session, http), http);
         var models = new ChatTarget[] { new("openai/fixture", "OpenAI fixture") { ModelType = "language" }, new("other/fixture", "Other fixture") { ModelType = "language" },
@@ -62,8 +64,8 @@ public partial class App
         var searchModels = Descendants(popup).OfType<TextBox>().Single(b => b.Name == "TargetSearch");
         var options = ((IEnumerable<ChatTarget>)model.ItemsSource).ToArray();
         Check(model.IsSuggestionListOpen && choices.IsMultiSelectCheckBoxEnabled && choices.SelectionMode == ListViewSelectionMode.Multiple
-            && options.Select(t => t.Id).ToHashSet().SetEquals(["openai/fixture", "other/fixture", "retired/fixture"]),
-            context + ": click opens checkboxes for language and imported models, excluding decision and image models");
+            && options.Select(t => t.Id).ToHashSet().SetEquals(["openai/fixture", "other/fixture", "retired/fixture", "router/fixture", "router/alternative"]),
+            context + ": click opens checkboxes for language, decision and imported models, excluding unrelated image models");
         Check(Descendants(popup).OfType<Button>().Where(b => b.Name is "SelectAllFavorites" or "FavoriteAgentRouter").All(b => b.Visibility == Visibility.Collapsed),
             context + ": agent model picker hides chat-only routing actions");
         choices.SelectedItems.Add(options.Single(t => t.Id == "other/fixture")); await Task.Delay(60);
@@ -209,9 +211,13 @@ public partial class App
         Check(create.Draft.ModelIds.SequenceEqual([first.Id, second.Id, "router/alternative"]), context + ": replacing the router retains answers and stores exactly one decision");
         InvokeButton(createModel); await Task.Delay(40);
         createChoices.SelectedItems.Remove(second); await Task.Delay(40);
-        Check(create.IsPrimaryButtonEnabled && createDecisionField.Visibility == Visibility.Collapsed
-            && createDecision.Selection.Ids.Count == 0 && create.Draft.ModelIds.SequenceEqual([first.Id]),
-            context + ": reducing to one answer clears the decision from both UI and saved collection");
+        Check(!create.IsPrimaryButtonEnabled && createDecisionField.Visibility == Visibility.Collapsed
+            && create.Draft.ModelIds.SequenceEqual([first.Id, "router/alternative"])
+            && createModel.Selection.Ids.SequenceEqual([first.Id, "router/alternative"])
+            && !Descendants(create).OfType<TextBlock>().Any(b => b.Name == "AgentModelCombinationFeedback"),
+            context + ": reducing to one answer retains a visible router and requires explicit resolution");
+        createChoices.SelectedItems.Remove(((IEnumerable<ChatTarget>)createModel.ItemsSource).Single(t => t.Id == "router/alternative")); await Task.Delay(40);
+        Check(create.IsPrimaryButtonEnabled && create.Draft.ModelIds.SequenceEqual([first.Id]), context + ": explicitly removing the router resolves the incomplete combination");
         createChoices.SelectedItems.Remove(first); await Task.Delay(40);
         Check(create.Draft.ModelIds.Count == 0 && !create.IsPrimaryButtonEnabled, context + ": clearing the last checkbox empties the draft and disables Save");
         createChoices.SelectedItems.Add(first); await Task.Delay(40);
@@ -220,8 +226,63 @@ public partial class App
         Descendants(create).OfType<AutoSuggestBox>().Single(b => b.Name == "AgentOwnedBy").Text = "Cancelled team";
         InvokeButton(Descendants(create).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
         Check(create.Result is null, context + ": Cancel never commits a draft");
+        await CheckDecisionOnlyAgentsAsync(root, session, catalog, http, models, context);
         File.WriteAllLines(report, results); window.Content = null; await session.DisposeAsync();
         await CheckAgentHeaderAsync(theme);
+    }
+
+    private async Task CheckDecisionOnlyAgentsAsync(Grid root, DesktopSession session, DesktopCatalogClient catalog, HttpClient http,
+        IReadOnlyList<ChatTarget> models, string context)
+    {
+        var decision = JsonNode.Parse("""{"id":"router/fixture","type":"decision","providerMetadata":{"future":7},"providerHeaders":{"x-keep":"yes"},"futureModel":{"keep":true}}""")!.AsObject();
+        foreach (var shape in new[] { "legacy", "collection", "both", "untyped" })
+        foreach (var available in new[] { true, false })
+        {
+            var configuration = new JsonObject { ["name"] = "DecisionAgent", ["description"] = "Description", ["instructions"] = "Instructions", ["future"] = true };
+            var savedModel = (JsonObject)decision.DeepClone();
+            if (shape == "untyped") savedModel.Remove("type");
+            if (shape != "collection") configuration["model"] = savedModel.DeepClone();
+            if (shape is "collection" or "both") configuration["models"] = new JsonArray(savedModel.DeepClone());
+            var original = new DesktopAgent(configuration);
+            var dialog = new AgentEditDialog(original, true, session, catalog, http, available ? models : []) { XamlRoot = root.XamlRoot };
+            DesktopAgent? saved = null; dialog.SaveAsync = (agent, _) => { saved = agent; return Task.CompletedTask; };
+            SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(100);
+            var picker = Descendants(dialog).OfType<ChatTargetPicker>().Single(b => b.Name == "AgentModels");
+            Check(dialog.IsPrimaryButtonEnabled && picker.Selection.Ids.SequenceEqual(["router/fixture"])
+                && Descendants(dialog).OfType<StackPanel>().Single(b => b.Name == "AgentDecisionModelField").Visibility == Visibility.Collapsed
+                && JsonNode.DeepEquals(dialog.Draft.Definition, original.Definition), context + $": {shape}, catalog={available}: standalone decision opens unchanged and saveable");
+            SelectNativeTab(Descendants(dialog).OfType<NavigationView>().Single(), "providers"); await Task.Delay(30);
+            Check(Descendants(dialog).OfType<ComboBox>().Single(b => b.Name == "AgentSettingsModel").SelectedItem as string == "router/fixture",
+                context + ": decision remains selectable for provider settings");
+            InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await shown;
+            Check(saved is not null && JsonNode.DeepEquals(saved.Definition, original.Definition), context + $": {shape}, catalog={available}: Save preserves the exact document and legacy-field presence");
+        }
+
+        var create = new AgentEditDialog(new DesktopAgent(new JsonObject { ["name"] = "NewDecision", ["description"] = "D", ["instructions"] = "I" }),
+            false, session, catalog, http, models) { XamlRoot = root.XamlRoot };
+        SystemAppearance.PrepareDialog(create); var created = create.ShowAsync(); await Task.Delay(100);
+        var main = Descendants(create).OfType<ChatTargetPicker>().Single(b => b.Name == "AgentModels");
+        InvokeButton(main); await Task.Delay(40);
+        var choices = Descendants((StackPanel)((Flyout)main.Flyout).Content).OfType<ListView>().Single();
+        ChatTarget Option(string id) => ((IEnumerable<ChatTarget>)main.ItemsSource).Single(t => t.Id == id);
+        choices.SelectedItems.Add(Option("router/fixture")); await Task.Delay(40);
+        Check(create.IsPrimaryButtonEnabled && DesktopAgent.Text(create.Draft.Models.Single()["type"]) == "decision", context + ": a new standalone decision can be selected in Models");
+        var retained = create.Draft.Models.Single().DeepClone();
+        choices.SelectedItems.Add(Option("openai/fixture")); await Task.Delay(40);
+        Check(!create.IsPrimaryButtonEnabled && JsonNode.DeepEquals(create.Draft.Models[0], retained), context + ": adding one language model retains the decision and requires explicit resolution");
+        choices.SelectedItems.Add(Option("other/fixture")); await Task.Delay(40);
+        Check(create.IsPrimaryButtonEnabled && create.Draft.ModelIds.SequenceEqual(["router/fixture", "openai/fixture", "other/fixture"])
+            && JsonNode.DeepEquals(create.Draft.Models[0], retained), context + ": adding a second answer activates routing without reordering or replacing the decision");
+        choices.SelectedItems.Remove(Option("openai/fixture")); await Task.Delay(40);
+        choices.SelectedItems.Remove(Option("other/fixture")); await Task.Delay(40);
+        Check(create.IsPrimaryButtonEnabled && create.Draft.ModelIds.SequenceEqual(["router/fixture"]), context + ": explicitly removing both answers returns to the standalone decision");
+        choices.SelectedItems.Remove(Option("router/fixture")); await Task.Delay(40);
+        Check(!create.IsPrimaryButtonEnabled && create.Draft.Models.Count == 0, context + ": explicitly clearing the decision empties the collection");
+        choices.SelectedItems.Add(Option("router/fixture")); await Task.Delay(40);
+        main.IsSuggestionListOpen = false;
+        InvokeButton(Descendants(create).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await created;
+        Check(create.Result is not null && create.Result.ModelIds.SequenceEqual(["router/fixture"])
+            && create.Result.Definition["model"] is null, context + ": a new collection-only decision agent saves without a new legacy field");
     }
     private async Task CheckAgentHeaderAsync(ElementTheme theme)
     {

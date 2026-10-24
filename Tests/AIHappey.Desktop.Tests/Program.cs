@@ -19,6 +19,11 @@ void Reject(Action action, string name)
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
 try
 {
+    if (args.Contains("--agents-only"))
+    {
+        await AgentRegressionTests.RunAsync(Check, root);
+        Console.WriteLine($"All {tests} agent checks passed."); return;
+    }
     await PrimitiveRoutingRegressionTests.RunAsync(Check, root);
     if (args.Contains("--primitive-routing-only")) { Console.WriteLine($"All {tests} primitive routing/favorite checks passed."); return; }
     await RealtimeRegressionTests.RunAsync(Check, root);
@@ -111,11 +116,6 @@ try
     {
         await LocalToolRegressionTests.RunAsync(Check, root);
         Console.WriteLine($"All {tests} local tool checks passed."); return;
-    }
-    if (args.Contains("--agents-only"))
-    {
-        await AgentRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} agent checks passed."); return;
     }
     if (args.Contains("--videos-only"))
     {

@@ -1424,6 +1424,7 @@
   <data name="AgentModels" xml:space="preserve"><value>Modellen</value></data>
   <data name="AgentDecisionModel" xml:space="preserve"><value>Beslissing</value></data>
   <data name="AgentDecisionModelRequired" xml:space="preserve"><value>Selecteer één beslissingsmodel om tussen de geselecteerde modellen te kiezen.</value></data>
+  <data name="AgentModelCombinationInvalid" xml:space="preserve"><value>Selecteer één model (taal of beslissing), of meerdere niet-beslissingsmodellen met precies één beslissingsmodel. Verwijder of selecteer zelf modellen om deze combinatie op te lossen; er zijn geen modellen automatisch verwijderd.</value></data>
   <data name="AgentDecisionRouter" xml:space="preserve"><value>Beslissingsrouter</value></data>
   <data name="AgentModelRoutingHint" xml:space="preserve"><value>Selecteer antwoordmodellen en eventueel een beslissingsmodel om ertussen te kiezen. Zonder router wordt het eerste antwoordmodel gebruikt.</value></data>
   <data name="AgentProviderMetadata" xml:space="preserve"><value>Providermetadata</value></data>
