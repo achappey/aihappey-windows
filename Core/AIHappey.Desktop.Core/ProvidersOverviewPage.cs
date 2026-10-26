@@ -14,6 +14,7 @@ internal sealed class ProvidersOverviewPage : UserControl
     internal readonly TextBox SearchBox = new() { Name = "ProviderSearch", PlaceholderText = DesktopResources.Get("SearchPlaceholder"), Height = 40, CornerRadius = new CornerRadius(8) };
     internal readonly OverviewCardsPanel Cards = new() { Name = "ProviderCards" };
     internal readonly ProviderOverviewFilter Filter = new();
+    private readonly OverviewFilterDropdown countryFilter = new("ProviderCountryFilter"), regionFilter = new("ProviderRegionFilter");
     internal readonly NavigationView Tabs = new() { Name = "ProviderTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top, IsSettingsVisible = false,
         IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed, IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly NavigationViewItem all = new() { Name = "ProvidersAll", Tag = false, Content = DesktopResources.Get("All") };
@@ -40,7 +41,8 @@ internal sealed class ProvidersOverviewPage : UserControl
         var title = new TextBlock { Name = "ProvidersTitle", Text = DesktopResources.Get("ArtificialIntelligence"), FontSize = 36,
             FontWeight = Microsoft.UI.Text.FontWeights.Bold, TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap };
         AutomationProperties.SetHeadingLevel(title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
-        body.Children.Add(title); body.Children.Add(description); body.Children.Add(SearchBox); body.Children.Add(discoveryNotice);
+        body.Children.Add(title); body.Children.Add(description);
+        body.Children.Add(new OverviewSearchFiltersRow(SearchBox, countryFilter, regionFilter)); body.Children.Add(discoveryNotice);
         Tabs.MenuItems.Add(all); Tabs.MenuItems.Add(saved); Tabs.SelectedItem = all; body.Children.Add(Tabs);
         body.Children.Add(status); body.Children.Add(Cards); body.Children.Add(more);
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
@@ -88,6 +90,7 @@ internal sealed class ProvidersOverviewPage : UserControl
     public void SetActionsEnabled(bool enabled)
     {
         actionsEnabled = enabled; SearchBox.IsEnabled = Tabs.IsEnabled = more.IsEnabled = enabled;
+        countryFilter.IsEnabled = regionFilter.IsEnabled = enabled;
         foreach (var control in ControlAppearance.Descendants(Cards).OfType<Button>()) control.IsEnabled = enabled;
         foreach (var box in ControlAppearance.Descendants(facets).OfType<CheckBox>()) box.IsEnabled = enabled && (box.IsChecked == true || (int?)box.Tag != 0);
     }
@@ -97,6 +100,7 @@ internal sealed class ProvidersOverviewPage : UserControl
         var focused = XamlRoot is null ? null : FocusManager.GetFocusedElement(XamlRoot) as Control;
         var focusId = focused is null ? null : AutomationProperties.GetAutomationId(focused);
         var result = catalog.Filter(Filter, favorites);
+        UpdateLocationFilters();
         description.Text = DesktopResources.Format("ProvidersDescription", catalog.Providers.Count.ToString("N0"));
         all.Content = $"{DesktopResources.Get("All")} ({catalog.Providers.Count})";
         saved.Content = $"{DesktopResources.Get("Favorites")} ({catalog.Providers.Count(p => favorites.Contains(p.Id))})";
@@ -112,6 +116,20 @@ internal sealed class ProvidersOverviewPage : UserControl
         SetActionsEnabled(actionsEnabled);
         if (focused is not null && !focused.IsLoaded && !string.IsNullOrWhiteSpace(focusId))
             DispatcherQueue.TryEnqueue(() => (ControlAppearance.Descendants(this).OfType<Control>().FirstOrDefault(c => c.IsEnabled && AutomationProperties.GetAutomationId(c) == focusId) ?? SearchBox).Focus(FocusState.Programmatic));
+    }
+    private void UpdateLocationFilters()
+    {
+        void Update(OverviewFilterDropdown dropdown, string key, string label, HashSet<string> selected, Func<CatalogProvider, IEnumerable<string>> values)
+        {
+            var available = catalog.Filter(Filter, favorites, key);
+            var options = catalog.Providers.SelectMany(values).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.Ordinal)
+                .OrderBy(value => FacetLabel(key, value), StringComparer.CurrentCultureIgnoreCase)
+                .Select(value => new OverviewFilterOption(value, FacetLabel(key, value), available.Count(provider => values(provider).Contains(value)))).ToArray();
+            dropdown.Update(DesktopResources.Get(label), options, selected, available.Count, value =>
+            { if (value is null) selected.Clear(); else if (!selected.Remove(value)) selected.Add(value); Changed(); });
+        }
+        Update(countryFilter, "country", "ProviderCountry", Filter.Countries, provider => provider.ProviderCountry is { } value ? [value] : []);
+        Update(regionFilter, "region", "ProviderAiRegion", Filter.Regions, provider => provider.InferenceRegions);
     }
     private void Facet(string key, string label, HashSet<string> selected, Func<CatalogProvider, IEnumerable<string>> values)
     {

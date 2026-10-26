@@ -1064,6 +1064,7 @@
   <data name="RefreshProviders" xml:space="preserve"><value>Refresh providers</value></data>
   <data name="ProviderCategory" xml:space="preserve"><value>Category</value></data>
   <data name="ProviderCountry" xml:space="preserve"><value>Country of origin</value></data>
+  <data name="ProviderAiRegion" xml:space="preserve"><value>AI region</value></data>
   <data name="ProviderInferenceRegions" xml:space="preserve"><value>Inference regions</value></data>
   <data name="ProviderAvailableModelTypes" xml:space="preserve"><value>Available model types</value></data>
   <data name="ProviderNoDiscoveredModels" xml:space="preserve"><value>No models discovered for this provider.</value></data>

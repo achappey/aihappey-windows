@@ -13,6 +13,9 @@ internal sealed class OverviewPage : UserControl
 {
     internal readonly TextBox SearchBox = new() { Name = "CatalogSearch", PlaceholderText = DesktopResources.Get("SearchPlaceholder"), MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Height = 40, CornerRadius = new CornerRadius(8) };
     internal readonly OverviewCardsPanel Cards = new() { Name = "CatalogCards" };
+    private readonly OverviewFilterDropdown tagFilter = new("AgentTagsFilter"), ownerFilter = new("AgentOwnerFilter");
+    private readonly HashSet<string> selectedTags = new(StringComparer.Ordinal), selectedOwners = new(StringComparer.Ordinal);
+    private string[] tagOptions = [], ownerOptions = [];
     private readonly StackPanel body = new() { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(24, 24, 24, 24) };
     private readonly NavigationView filters = new() { Name = "CatalogFilters", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
         IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
@@ -56,9 +59,13 @@ internal sealed class OverviewPage : UserControl
         body.Children.Add(new OverviewPageHeader(title, kind == CatalogKind.Skill ? "https://agentskills.io" : null,
             kind == CatalogKind.Skill ? "https://agentskills.io/specification" : null));
         body.Children.Add(description);
-        var searchRow = new Grid { ColumnSpacing = 8, MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 0, 0, 0) };
         SearchBox.HorizontalAlignment = HorizontalAlignment.Stretch;
-        searchRow.Children.Add(SearchBox); body.Children.Add(searchRow);
+        if (kind == CatalogKind.Agent) body.Children.Add(new OverviewSearchFiltersRow(SearchBox, tagFilter, ownerFilter));
+        else
+        {
+            var searchRow = new Grid { MaxWidth = 360, HorizontalAlignment = HorizontalAlignment.Stretch };
+            searchRow.Children.Add(SearchBox); body.Children.Add(searchRow);
+        }
         // Stock top navigation supplies the animated indicator, keyboard behavior and overflow.
         body.Children.Add(filters);
         body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cancel); body.Children.Add(Cards); body.Children.Add(more);
@@ -92,7 +99,14 @@ internal sealed class OverviewPage : UserControl
     }
 
     public void SetItems(IReadOnlyList<CatalogItem> value, IReadOnlySet<string> savedFavorites, string sourceLabel)
-    { items = value; favorites = savedFavorites; source = sourceLabel; working = false; Render(); }
+    {
+        items = Kind == CatalogKind.Agent ? value.Select(AgentOverviewProjection.Normalize).ToArray() : value;
+        tagOptions = items.SelectMany(item => item.Tags).Distinct(StringComparer.Ordinal).Order(StringComparer.CurrentCultureIgnoreCase).ToArray();
+        ownerOptions = items.Select(item => item.Owner).Where(owner => !string.IsNullOrWhiteSpace(owner)).Cast<string>()
+            .Distinct(StringComparer.Ordinal).Order(StringComparer.CurrentCultureIgnoreCase).ToArray();
+        selectedTags.IntersectWith(tagOptions); selectedOwners.IntersectWith(ownerOptions);
+        favorites = savedFavorites; source = sourceLabel; working = false; visible = 50; Render();
+    }
 
     public void SetFavorites(IReadOnlySet<string> value) { favorites = value; Render(); }
 
@@ -101,6 +115,7 @@ internal sealed class OverviewPage : UserControl
         working = true; Cards.Children.Clear(); status.Text = message ?? DesktopResources.Get("Loading");
         status.Visibility = cancel.Visibility = Visibility.Visible; retry.Visibility = more.Visibility = Visibility.Collapsed;
         SearchBox.IsEnabled = filters.IsEnabled = false;
+        tagFilter.IsEnabled = ownerFilter.IsEnabled = false;
     }
 
     public void Error(string message)
@@ -109,6 +124,7 @@ internal sealed class OverviewPage : UserControl
         failed = true;
         status.Visibility = retry.Visibility = Visibility.Visible; cancel.Visibility = more.Visibility = Visibility.Collapsed;
         SearchBox.IsEnabled = actionsEnabled; filters.IsEnabled = false;
+        tagFilter.IsEnabled = ownerFilter.IsEnabled = false;
     }
 
     public void SetActionsEnabled(bool enabled)
@@ -118,6 +134,8 @@ internal sealed class OverviewPage : UserControl
         retry.IsEnabled = more.IsEnabled = enabled;
         SearchBox.IsEnabled = enabled && !working;
         filters.IsEnabled = enabled && !working && !failed;
+        tagFilter.IsEnabled = enabled && !working && !failed && tagOptions.Length > 0;
+        ownerFilter.IsEnabled = enabled && !working && !failed && ownerOptions.Length > 0;
     }
 
     private void Render()
@@ -127,20 +145,41 @@ internal sealed class OverviewPage : UserControl
         var focused = XamlRoot is null ? null : FocusManager.GetFocusedElement(XamlRoot) as Button;
         var focusId = focused is null ? null : AutomationProperties.GetAutomationId(focused);
         SearchBox.IsEnabled = true; retry.Visibility = cancel.Visibility = Visibility.Collapsed;
-        var searched = CatalogProjection.Search(items, SearchBox.Text);
+        var searched = Kind == CatalogKind.Agent ? AgentOverviewProjection.Search(items, SearchBox.Text) : CatalogProjection.Search(items, SearchBox.Text);
+        if (Kind == CatalogKind.Agent)
+        {
+            UpdateAgentFilters(searched);
+            searched = searched.Where(item => AgentOverviewProjection.Matches(item, selectedTags, selectedOwners)).ToArray();
+        }
         // Keep unchanged items alive so result/count refreshes do not reset focus or the indicator.
         updatingFilters = true;
         AddFilter("all", DesktopResources.Format("AllCount", searched.Count), Icon.List);
         AddFilter("favorites", DesktopResources.Format("FavoritesCount", searched.Count(item => favorites.Contains(item.Key))), Icon.Star);
         AddFilter("backend", $"{source} ({searched.Count(item => item.Origin == CatalogOrigin.Backend)})");
         AddFilter("local", DesktopResources.Format("LocalCount", searched.Count(item => item.Origin == CatalogOrigin.Local)));
+        if (Kind == CatalogKind.Agent)
+        {
+            var metadataTabs = tagOptions.Select(value => (Key: AgentOverviewProjection.TabKey(true, value), Label: value))
+                .Concat(ownerOptions.Select(value => (Key: AgentOverviewProjection.TabKey(false, value), Label: value))).ToArray();
+            var keys = new[] { "all", "favorites", "backend", "local" }.Concat(metadataTabs.Select(tab => tab.Key)).ToArray();
+            foreach (var stale in filterItems.Keys.Except(keys).ToArray()) RemoveFilter(stale);
+            foreach (var tab in metadataTabs)
+                AddFilter(tab.Key, $"{tab.Label} ({searched.Count(item => AgentOverviewProjection.MatchesTab(item, tab.Key))})");
+            // Reorder only when metadata changes, retaining native item identities and selection.
+            for (var index = 0; index < keys.Length; index++)
+            {
+                var tab = filterItems[keys[index]];
+                if (ReferenceEquals(filters.MenuItems[index], tab)) continue;
+                filters.MenuItems.Remove(tab); filters.MenuItems.Insert(index, tab);
+            }
+        }
         filters.SelectedItem = filterItems[activeFilter];
         filters.IsEnabled = true;
         updatingFilters = false;
         var selected = searched.Where(item => activeFilter switch
         {
             "favorites" => favorites.Contains(item.Key), "backend" => item.Origin == CatalogOrigin.Backend,
-            "local" => item.Origin == CatalogOrigin.Local, _ => true
+            "local" => item.Origin == CatalogOrigin.Local, _ => Kind != CatalogKind.Agent || AgentOverviewProjection.MatchesTab(item, activeFilter)
         }).ToArray();
         Cards.Children.Clear();
         foreach (var item in selected.Take(visible)) Cards.Children.Add(BuildCard(item));
@@ -150,7 +189,26 @@ internal sealed class OverviewPage : UserControl
         more.Visibility = selected.Length > visible ? Visibility.Visible : Visibility.Collapsed;
         SetActionsEnabled(actionsEnabled);
         if (!string.IsNullOrEmpty(focusId) && focused is not null && !focused.IsLoaded)
-            DispatcherQueue.TryEnqueue(() => (ControlAppearance.Descendants(Cards).OfType<Button>().FirstOrDefault(button => AutomationProperties.GetAutomationId(button) == focusId) as Control ?? SearchBox).Focus(FocusState.Programmatic));
+            DispatcherQueue.TryEnqueue(() => (ControlAppearance.Descendants(body).OfType<Button>().FirstOrDefault(button => AutomationProperties.GetAutomationId(button) == focusId) as Control ?? SearchBox).Focus(FocusState.Programmatic));
+    }
+
+    private void UpdateAgentFilters(IReadOnlyList<CatalogItem> searched)
+    {
+        void Toggle(HashSet<string> selected, string? value)
+        { if (value is null) selected.Clear(); else if (!selected.Remove(value)) selected.Add(value); visible = 50; Render(); }
+        var tagCandidates = searched.Where(item => selectedOwners.Count == 0 || selectedOwners.Contains(item.Owner ?? "")).ToArray();
+        var ownerCandidates = searched.Where(item => selectedTags.Count == 0 || item.Tags.Any(selectedTags.Contains)).ToArray();
+        tagFilter.Update(DesktopResources.Get("AgentTags"), tagOptions.Select(value => new OverviewFilterOption(value, value,
+            tagCandidates.Count(item => item.Tags.Contains(value)))).ToArray(), selectedTags, tagCandidates.Length, value => Toggle(selectedTags, value));
+        ownerFilter.Update(DesktopResources.Get("AgentOwnedBy"), ownerOptions.Select(value => new OverviewFilterOption(value, value,
+            ownerCandidates.Count(item => item.Owner == value))).ToArray(), selectedOwners, ownerCandidates.Length, value => Toggle(selectedOwners, value));
+    }
+
+    private void RemoveFilter(string key)
+    {
+        if (!filterItems.Remove(key, out var item)) return;
+        if (activeFilter == key) activeFilter = "all";
+        filters.MenuItems.Remove(item);
     }
 
     private void AddFilter(string key, string label, Icon? icon = null)

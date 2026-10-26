@@ -1060,6 +1060,7 @@
   <data name="RefreshProviders" xml:space="preserve"><value>Providers vernieuwen</value></data>
   <data name="ProviderCategory" xml:space="preserve"><value>Categorie</value></data>
   <data name="ProviderCountry" xml:space="preserve"><value>Land van herkomst</value></data>
+  <data name="ProviderAiRegion" xml:space="preserve"><value>AI-regio</value></data>
   <data name="ProviderInferenceRegions" xml:space="preserve"><value>InferentieregioΓÇÖs</value></data>
   <data name="ProviderAvailableModelTypes" xml:space="preserve"><value>Beschikbare modeltypen</value></data>
   <data name="ProviderNoDiscoveredModels" xml:space="preserve"><value>Geen modellen gevonden voor deze provider.</value></data>

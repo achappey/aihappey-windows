@@ -9,6 +9,7 @@ internal static class AgentRegressionTests
 {
     public static async Task RunAsync(Action<bool, string> check, string root)
     {
+        AgentOverviewRegressionTests.Run(check);
         var original = DesktopAgent.Parse("""
             {"name":"PortableAgent","description":"Portable fixture","instructions":"Be concise","argumentHint":"Enter a goal","owned_by":"Team","tags":["support","internal"],
              "model":{"id":"openai/fixture","options":{"temperature":0.4,"future":true},"providerMetadata":{"reasoning":{"effort":"low","future":7},"futureProvider":{"keep":true}},"providerHeaders":{"OpenAI-Beta":"fixture=v1"},"futureModel":9},
