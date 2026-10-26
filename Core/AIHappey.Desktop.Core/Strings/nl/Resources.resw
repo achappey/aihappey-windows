@@ -989,6 +989,14 @@
   <data name="AgentCreate" xml:space="preserve"><value>Nieuwe agent maken</value></data>
   <data name="AgentOwnedBy" xml:space="preserve"><value>Eigenaar</value></data>
   <data name="AgentTags" xml:space="preserve"><value>Tags</value></data>
+  <data name="AgentIcons" xml:space="preserve"><value>Pictogrammen</value></data>
+  <data name="AgentIconUrl" xml:space="preserve"><value>Pictogram-URL</value></data>
+  <data name="AgentIconTheme" xml:space="preserve"><value>Thema</value></data>
+  <data name="AgentIconThemeAny" xml:space="preserve"><value>Elk thema</value></data>
+  <data name="AgentIconThemeLight" xml:space="preserve"><value>Licht</value></data>
+  <data name="AgentIconThemeDark" xml:space="preserve"><value>Donker</value></data>
+  <data name="AgentIconAdd" xml:space="preserve"><value>Pictogram toevoegen</value></data>
+  <data name="AgentIconRemove" xml:space="preserve"><value>Pictogram verwijderen</value></data>
   <data name="AgentImport" xml:space="preserve"><value>Agent importeren</value></data>
   <data name="AgentChecks" xml:space="preserve"><value>Tests</value></data>
   <data name="AgentProvider" xml:space="preserve"><value>Providerinstellingen</value></data>
@@ -1186,7 +1194,7 @@
   <data name="LocalOcrTooLarge" xml:space="preserve"><value>De OCR-afbeelding overschrijdt 20 MiB, 16 megapixels of de maximale afbeeldingsafmeting van Windows OCR.</value></data>
   <data name="LocalOcrTimeout" xml:space="preserve"><value>Lokale Windows OCR duurde te lang. Probeer een kleinere afbeelding.</value></data>
   <data name="LocalPluginFiles" xml:space="preserve"><value>Bestanden</value></data>
-  <data name="LocalPluginImages" xml:space="preserve"><value>Lokale afbeeldingen</value></data>
+  <data name="LocalPluginImages" xml:space="preserve"><value>Afbeeldingen</value></data>
   <data name="SettingsToolOutputContent" xml:space="preserve"><value>Types tooluitvoer</value></data>
   <data name="SettingsToolOutputText.Header" xml:space="preserve"><value>Tekst</value></data>
   <data name="SettingsToolOutputText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Tekst</value></data>

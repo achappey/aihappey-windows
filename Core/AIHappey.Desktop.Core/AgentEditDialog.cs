@@ -274,6 +274,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         try
         {
             CommitProvider();
+            DesktopAgentIcons.PrepareForSave(draft);
             draft.SyncLegacyModel(); draft.Validate(); lifetime.Token.ThrowIfCancellationRequested();
             if (partition != session.AgentPartition) throw new OperationCanceledException();
             if (SaveAsync is not null) await SaveAsync(draft.Clone(), lifetime.Token);

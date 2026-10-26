@@ -73,6 +73,6 @@ public sealed partial class AgentEditDialog
         input.QuerySubmitted += (_, args) => Add(args.ChosenSuggestion as string ?? args.QueryText);
         input.LostFocus += (_, _) => input.IsSuggestionListOpen = false;
         add.Click += (_, _) => Add(input.Text);
-        Render(); return panel;
+        Render(); panel.Children.Add(Icons()); return panel;
     }
 }

@@ -12,11 +12,14 @@ internal sealed class ProviderLogo : Grid
 {
     private readonly CatalogProvider provider;
     private readonly Image image = new() { Stretch = Stretch.Uniform, Visibility = Visibility.Collapsed };
-    private readonly IconElement placeholder = DesktopIcons.Create(Icon.Brain);
+    private readonly IconElement placeholder;
     private CancellationTokenSource? lifetime;
     internal string? DisplayedSource { get; private set; }
     public ProviderLogo(CatalogProvider provider, double size = 48, bool showPlaceholder = true)
+        : this(provider, size, showPlaceholder, Icon.Brain) { }
+    public ProviderLogo(CatalogProvider provider, double size, bool showPlaceholder, Icon placeholderIcon)
     {
+        placeholder = DesktopIcons.Create(placeholderIcon);
         this.provider = provider; Width = Height = size; Name = "ProviderLogo";
         if (showPlaceholder) Children.Add(placeholder);
         Children.Add(image);

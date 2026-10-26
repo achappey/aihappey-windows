@@ -4,7 +4,6 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace AIHappey.Desktop.Core;
 
@@ -282,19 +281,8 @@ internal sealed class OverviewPage : UserControl
             return provider is null || provider.Icons.Count == 0 ? null
                 : new ProviderLogo(provider with { Urls = new() }, 32, showPlaceholder: false) { Name = "SkillProviderLogo", VerticalAlignment = VerticalAlignment.Top };
         }
-        var icon = new Grid { Width = 32, Height = 32, VerticalAlignment = VerticalAlignment.Top };
-        icon.Children.Add(DesktopIcons.Create(Icon.Bot));
-        if (!AppContext.TryGetSwitch("AIHappey.Desktop.DisableRemoteImages", out var disabled) || !disabled)
-        {
-            var theme = ActualTheme == ElementTheme.Dark ? "dark" : "light";
-            var source = item.Icons.FirstOrDefault(value => value.Theme == theme)?.Source ?? item.Icons.FirstOrDefault()?.Source;
-            if (AttachmentDownloads.RemoteUri(source) is { } uri)
-            {
-                var image = new Image { Width = 32, Height = 32, Source = new BitmapImage(uri) };
-                image.ImageFailed += (_, _) => image.Visibility = Visibility.Collapsed; icon.Children.Add(image);
-            }
-        }
-        return icon;
+        return new ProviderLogo(DesktopAgentIcons.Artwork(item), 32, showPlaceholder: true, placeholderIcon: Icon.Bot)
+            { Name = "AgentIcon", VerticalAlignment = VerticalAlignment.Top };
     }
 }
 

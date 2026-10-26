@@ -993,6 +993,14 @@
   <data name="AgentCreate" xml:space="preserve"><value>Create new agent</value></data>
   <data name="AgentOwnedBy" xml:space="preserve"><value>Owner</value></data>
   <data name="AgentTags" xml:space="preserve"><value>Tags</value></data>
+  <data name="AgentIcons" xml:space="preserve"><value>Icons</value></data>
+  <data name="AgentIconUrl" xml:space="preserve"><value>Icon URL</value></data>
+  <data name="AgentIconTheme" xml:space="preserve"><value>Theme</value></data>
+  <data name="AgentIconThemeAny" xml:space="preserve"><value>Any theme</value></data>
+  <data name="AgentIconThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="AgentIconThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="AgentIconAdd" xml:space="preserve"><value>Add icon</value></data>
+  <data name="AgentIconRemove" xml:space="preserve"><value>Remove icon</value></data>
   <data name="AgentImport" xml:space="preserve"><value>Import agent</value></data>
   <data name="AgentChecks" xml:space="preserve"><value>Tests</value></data>
   <data name="AgentProvider" xml:space="preserve"><value>Provider settings</value></data>
@@ -1191,7 +1199,7 @@
   <data name="LocalOcrTooLarge" xml:space="preserve"><value>The OCR image exceeds 20 MiB, 16 megapixels, or the Windows OCR maximum image dimension.</value></data>
   <data name="LocalOcrTimeout" xml:space="preserve"><value>Local Windows OCR timed out. Try a smaller image.</value></data>
   <data name="LocalPluginFiles" xml:space="preserve"><value>Files</value></data>
-  <data name="LocalPluginImages" xml:space="preserve"><value>Local images</value></data>
+  <data name="LocalPluginImages" xml:space="preserve"><value>Images</value></data>
   <data name="SettingsToolOutputContent" xml:space="preserve"><value>Tool output types</value></data>
   <data name="SettingsToolOutputText.Header" xml:space="preserve"><value>Text</value></data>
   <data name="SettingsToolOutputText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text</value></data>

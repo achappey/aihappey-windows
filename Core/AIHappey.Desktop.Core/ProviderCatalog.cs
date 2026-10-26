@@ -78,7 +78,7 @@ public static class ProviderCatalog
     public static IReadOnlyList<string> IconSources(CatalogProvider provider, bool dark)
     {
         var theme = dark ? "dark" : "light";
-        return provider.Icons.OrderBy(i => i.Theme == theme ? 0 : i.Theme is null ? 1 : 2).Select(i => i.Src)
+        return provider.Icons.OrderBy(i => i.Theme == theme ? 0 : string.IsNullOrEmpty(i.Theme) ? 1 : 2).Select(i => i.Src)
             .Concat(FaviconUri(provider.Urls.Homepage) is { } favicon ? [favicon.AbsoluteUri] : [])
             .Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.Ordinal).ToArray();
     }
