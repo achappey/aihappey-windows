@@ -15,7 +15,10 @@ internal sealed class ConversationRow
     private readonly Button more;
     private readonly MenuFlyout menu = new() { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
     private readonly MenuFlyoutItem rename = new() { Text = DesktopResources.Get("Rename"), Icon = DesktopIcons.Create(Icon.Edit) };
+    private readonly MenuFlyoutItem export = new() { Text = DesktopResources.Get("Export"), Icon = DesktopIcons.Create(Icon.ArrowExport) };
+    private readonly MenuFlyoutItem pin = new() { Text = DesktopResources.Get("PinChat"), Icon = DesktopIcons.Create(Icon.Pin) };
     private readonly MenuFlyoutItem delete = new() { Text = DesktopResources.Get("Delete"), Icon = DesktopIcons.Create(Icon.Delete) };
+    private readonly Func<Conversation, bool> isPinned;
     private Conversation? conversation;
     private bool hovered;
 
@@ -40,19 +43,25 @@ internal sealed class ConversationRow
         </DataTemplate>
         """);
 
-    public ConversationRow(ListViewItem container, Grid root, Func<Conversation, Task> renameChat, Func<Conversation, Task> deleteChat)
+    public ConversationRow(ListViewItem container, Grid root, Func<Conversation, Task> renameChat, Func<Conversation, Task> exportChat,
+        Func<Conversation, Task> togglePin, Func<Conversation, Task> deleteChat, Func<Conversation, bool> isPinned)
     {
         this.container = container;
+        this.isPinned = isPinned;
         Root = root;
         more = (Button)root.FindName("ConversationActions");
         ToolbarControls.Subtle(more);
         ToolbarControls.Label(more, DesktopResources.Get("ChatActions"));
-        ControlAppearance.Native(rename);
-        ControlAppearance.Native(delete);
+        foreach (var item in new[] { rename, export, pin, delete }) ControlAppearance.Native(item);
         menu.Items.Add(rename);
+        menu.Items.Add(export);
+        menu.Items.Add(new MenuFlyoutSeparator());
+        menu.Items.Add(pin);
         menu.Items.Add(delete);
         more.Flyout = menu;
         rename.Click += async (_, _) => { if (conversation is { } chat) await renameChat(chat); };
+        export.Click += async (_, _) => { if (conversation is { } chat) await exportChat(chat); };
+        pin.Click += async (_, _) => { if (conversation is { } chat) await togglePin(chat); };
         delete.Click += async (_, _) => { if (conversation is { } chat) await deleteChat(chat); };
         container.PointerEntered += (_, _) => SetHovered(true);
         container.PointerExited += (_, _) => SetHovered(false);
@@ -70,7 +79,10 @@ internal sealed class ConversationRow
         });
         menu.Opening += (_, _) =>
         {
-            rename.IsEnabled = delete.IsEnabled = conversation is not null && container.IsEnabled;
+            foreach (var item in menu.Items.OfType<MenuFlyoutItem>()) item.IsEnabled = conversation is not null && container.IsEnabled;
+            var pinned = conversation is { } chat && isPinned(chat);
+            pin.Text = DesktopResources.Get(pinned ? "UnpinChat" : "PinChat");
+            pin.Icon = DesktopIcons.Create(pinned ? Icon.PinOff : Icon.Pin);
             var palette = ControlAppearance.Palette(container);
             var style = new Style(typeof(MenuFlyoutPresenter));
             style.Setters.Add(new Setter(FrameworkElement.RequestedThemeProperty, container.ActualTheme));
@@ -79,13 +91,12 @@ internal sealed class ConversationRow
             style.Setters.Add(new Setter(Control.BorderBrushProperty, new SolidColorBrush(palette.Stroke)));
             style.Setters.Add(new Setter(Control.CornerRadiusProperty, new CornerRadius(8)));
             menu.MenuFlyoutPresenterStyle = style;
-            rename.RequestedTheme = delete.RequestedTheme = container.ActualTheme;
+            foreach (var item in menu.Items.OfType<MenuFlyoutItem>()) item.RequestedTheme = container.ActualTheme;
             UpdateVisibility();
         };
         menu.Opened += (_, _) =>
         {
-            ControlAppearance.Refresh(rename);
-            ControlAppearance.Refresh(delete);
+            foreach (var item in menu.Items.OfType<MenuFlyoutItem>()) ControlAppearance.Refresh(item);
             UpdateVisibility();
         };
         menu.Closed += (_, _) => UpdateVisibility();
@@ -100,6 +111,7 @@ internal sealed class ConversationRow
         }
         conversation = chat;
         AutomationProperties.SetName(container, chat?.Title ?? "");
+        AutomationProperties.SetItemStatus(container, chat is not null && isPinned(chat) ? DesktopResources.Get("ChatPinned") : "");
         AutomationProperties.SetName(more, chat is null ? DesktopResources.Get("ChatActions") : DesktopResources.Format("ChatActionsFor", chat.Title));
         UpdateVisibility();
     }
@@ -113,8 +125,10 @@ internal sealed class ConversationRow
     private void UpdateVisibility()
     {
         // Opacity, rather than collapsing the button, prevents title reflow and retains tab access.
-        var visible = conversation is not null && (hovered || container.FocusState == FocusState.Keyboard
-            || more.FocusState == FocusState.Keyboard || menu.IsOpen);
+        var interacting = hovered || container.FocusState == FocusState.Keyboard || more.FocusState == FocusState.Keyboard || menu.IsOpen;
+        var pinned = conversation is { } chat && isPinned(chat);
+        var visible = conversation is not null && (pinned || interacting);
+        more.Content = DesktopIcons.Create(pinned && !interacting ? Icon.Pin : Icon.MoreHorizontal);
         more.Opacity = visible ? 1 : 0;
         more.IsHitTestVisible = visible && container.IsEnabled;
     }

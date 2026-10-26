@@ -232,6 +232,40 @@ public sealed class HistoryStore(string root)
         return item?.Id == id ? item : null;
     }
     public void Delete(string partition, string id) => File.Delete(PathFor(partition, id));
+
+    /// <summary>The store-owned portable document, never a caller-supplied path.</summary>
+    public string DocumentPath(string partition, string id) => Path.GetFullPath(PathFor(partition, id));
+
+    /// <summary>Validate before writing, retain the original portable JSON, and never replace an existing ID.</summary>
+    public async Task<Conversation?> ImportAsync(string partition, string json, CancellationToken ct = default)
+    {
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (root.ValueKind != JsonValueKind.Object) throw new JsonException("Invalid conversation document.");
+        var conversation = PortableConversations.Read(json);
+        var path = PathFor(partition, conversation.Id);
+        var messageIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var message in conversation.Messages)
+        {
+            if (!messageIds.Add(message.Message.Id)) throw new JsonException("Duplicate message ID.");
+            foreach (var part in message.Message.Parts)
+                if (string.IsNullOrWhiteSpace(PortableConversations.String(PortableConversations.Element(part), "type")))
+                    throw new JsonException("Missing part type.");
+        }
+        if (File.Exists(path)) return null;
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            await File.WriteAllTextAsync(temporary, json, new UTF8Encoding(false), ct);
+            ct.ThrowIfCancellationRequested();
+            try { File.Move(temporary, path, false); }
+            catch (IOException) when (File.Exists(path)) { return null; }
+            return conversation;
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+    }
+
     private string PathFor(string partition, string id)
     {
         if (string.IsNullOrWhiteSpace(id) || id.Length > 2048 || id.Contains('/') || id.Contains('\\') || id.Any(char.IsControl)) throw new ArgumentException(DesktopResources.Get("InvalidConversationId"));

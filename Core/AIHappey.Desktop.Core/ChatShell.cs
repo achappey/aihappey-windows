@@ -75,6 +75,7 @@ public sealed partial class ChatShell : UserControl
         client = new(session, http);
         appAgentClient = new DesktopAppAgentClient(session, client, http);
         history = new(Path.Combine(session.DataDirectory, "conversations"));
+        conversationPinsStore = new(Path.Combine(session.DataDirectory, "conversation-pins"));
         catalogClient = new(client, http);
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
         agentStore = new(Path.Combine(session.DataDirectory, "agents"));
@@ -117,6 +118,7 @@ public sealed partial class ChatShell : UserControl
         PreparePlugins();
         PrepareFiles();
         PrepareFileDrop();
+        PrepareConversationDrop();
         ControlAppearance.Apply(this, (_, _) => { }, palette =>
         {
             Background = new SolidColorBrush(palette.Surface);
@@ -662,8 +664,7 @@ public sealed partial class ChatShell : UserControl
         if (await Task.Run(() => Mcp.LoadAsync(mcpPartition, ct, connectServices), ct)) Show(DesktopResources.Get("McpInvalidStoredEntries"), InfoBarSeverity.Warning);
         await LoadPluginsAsync(ct, connectServices);
         var partition = session.HistoryPartition;
-        conversations = await Task.Run(() => history.ListAsync(partition, ct), ct);
-        FilterHistory();
+        await LoadConversationHistoryAsync(partition, ct);
     }
 
     private void PrepareConversationRow(ListViewBase sender, ContainerContentChangingEventArgs args)
@@ -695,7 +696,7 @@ public sealed partial class ChatShell : UserControl
         if (container.ContentTemplateRoot is not Grid root) return;
         if (!conversationRows.TryGetValue(container, out var row))
         {
-            row = new ConversationRow(container, root, RenameAsync, DeleteAsync);
+            row = new ConversationRow(container, root, RenameAsync, ExportConversationAsync, ToggleConversationPinAsync, DeleteAsync, IsConversationPinned);
             conversationRows.Add(container, row);
         }
         row.Bind(conversation);
@@ -706,7 +707,7 @@ public sealed partial class ChatShell : UserControl
         suppress = true;
         try
         {
-            chats.ItemsSource = conversations;
+            chats.ItemsSource = ConversationHistory.Order(conversations, conversationPinsPartition == session.HistoryPartition ? conversationPins : new HashSet<string>());
             chats.SelectedItem = conversations.FirstOrDefault(x => x.Id == current.Id);
         }
         finally { suppress = false; }
@@ -741,6 +742,7 @@ public sealed partial class ChatShell : UserControl
             await RunAsync(async ct =>
             {
                 history.Delete(session.HistoryPartition, selected.Id);
+                await RemoveConversationPinAsync(session.HistoryPartition, selected.Id, ct);
                 if (current.Id == selected.Id)
                 {
                     current = new() { Service = Service };
