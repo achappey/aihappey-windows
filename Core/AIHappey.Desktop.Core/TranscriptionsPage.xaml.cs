@@ -13,9 +13,10 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class TranscriptionsPage : UserControl
 {
     private readonly ObservableCollection<FrameworkElement> cards = [];
-    private bool editable = true, hasModel;
+    private bool editable = true, hasModel, recording, recordingChanging;
     public Func<Task>? PickRequested { get; set; }
     public Func<Task>? SettingsRequested { get; set; }
+    public Func<Task>? DictationRequested { get; set; }
     public Action? StopRequested { get; set; }
     public Func<Task>? FolderRequested { get; set; }
     public Func<DataPackageView, Task>? FilesDropped { get; set; }
@@ -30,9 +31,11 @@ public sealed partial class TranscriptionsPage : UserControl
         AutomationProperties.SetHeadingLevel(Title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
         AutomationProperties.SetHeadingLevel(LibraryTitle, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level2);
         ToolbarControls.Label(AddFiles, DesktopResources.Get("TranscriptionAddFiles")); ToolbarControls.Label(Settings, DesktopResources.Get("TranscriptionSettings"));
+        ToolbarControls.Label(Dictate, DesktopResources.Get("TranscriptionRecord")); ToolbarControls.Subtle(Dictate);
         foreach (var control in new Control[] { AddFiles, Settings, Stop, OpenFolder }) ControlAppearance.Stock(control);
         AddFiles.Click += async (_, _) => { if (editable && hasModel && PickRequested is not null) await PickRequested(); };
         Settings.Click += async (_, _) => { if (editable && SettingsRequested is not null) await SettingsRequested(); };
+        Dictate.Click += async (_, _) => { if (Dictate.IsEnabled && DictationRequested is not null) await DictationRequested(); };
         Stop.Click += (_, _) => StopRequested?.Invoke(); OpenFolder.Click += async (_, _) => { if (editable && FolderRequested is not null) await FolderRequested(); };
         LibraryGrid.ItemsSource = cards;
         Root.AddHandler(UIElement.DragEnterEvent, new DragEventHandler(DragOverFiles), true);
@@ -50,12 +53,33 @@ public sealed partial class TranscriptionsPage : UserControl
         }
         foreach (var card in cards) { card.Width = Math.Max(40, width / (width >= 720 ? 2 : 1) - 12); card.Height = 248; }
     }
-    public void SetModelAvailable(bool value) { hasModel = value; NoModels.Visibility = value ? Visibility.Collapsed : Visibility.Visible; AddFiles.IsEnabled = editable && value; }
+    public void SetModelAvailable(bool value) { hasModel = value; NoModels.Visibility = value ? Visibility.Collapsed : Visibility.Visible; UpdateActions(); }
+    public void SetRecording(bool value, bool changing = false, string? elapsed = null)
+    {
+        recording = value; recordingChanging = changing;
+        if (value)
+        {
+            var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            content.Children.Add(DesktopIcons.Create(Icon.Stop)); content.Children.Add(new TextBlock { Text = elapsed ?? "0:00", VerticalAlignment = VerticalAlignment.Center });
+            Dictate.Content = content;
+        }
+        else Dictate.Content = DesktopIcons.Create(Icon.Mic);
+        ToolbarControls.Label(Dictate, DesktopResources.Get(value ? "TranscriptionStopRecording" : "TranscriptionRecord"));
+        if (value) ControlAppearance.Stock(Dictate); else ToolbarControls.Subtle(Dictate);
+        UpdateActions();
+    }
+    private void UpdateActions()
+    {
+        var available = editable && !recording && !recordingChanging;
+        AddFiles.IsEnabled = available && hasModel; Settings.IsEnabled = OpenFolder.IsEnabled = available;
+        Dictate.IsEnabled = editable && !recordingChanging && (recording || hasModel);
+        foreach (var card in cards) card.IsHitTestVisible = available;
+        if (!available) DropOutline.Visibility = Visibility.Collapsed;
+    }
     public void SetBusy(bool value, bool inference)
     {
-        editable = !value; AddFiles.IsEnabled = !value && hasModel; Settings.IsEnabled = OpenFolder.IsEnabled = !value;
+        editable = !value; UpdateActions();
         Stop.Visibility = value && inference ? Visibility.Visible : Visibility.Collapsed; DropOutline.Visibility = Visibility.Collapsed;
-        foreach (var card in cards) card.IsHitTestVisible = !value;
     }
     public void SetItems(IReadOnlyList<LibraryTranscription> items, int pending = 0)
     {
@@ -67,7 +91,7 @@ public sealed partial class TranscriptionsPage : UserControl
             cards.Add(Card(panel));
         }
         foreach (var item in items) cards.Add(ResultCard(item));
-        EmptyLibrary.Visibility = cards.Count == 0 ? Visibility.Visible : Visibility.Collapsed; ResizeGrid();
+        EmptyLibrary.Visibility = cards.Count == 0 ? Visibility.Visible : Visibility.Collapsed; ResizeGrid(); UpdateActions();
     }
     private static Border Card(UIElement content)
     {
@@ -117,13 +141,13 @@ public sealed partial class TranscriptionsPage : UserControl
     }
     private void DragOverFiles(object sender, DragEventArgs args)
     {
-        args.Handled = true; var accepts = editable && hasModel && args.DataView.Contains(StandardDataFormats.StorageItems) && args.AllowedOperations.HasFlag(DataPackageOperation.Copy);
+        args.Handled = true; var accepts = editable && !recording && !recordingChanging && hasModel && args.DataView.Contains(StandardDataFormats.StorageItems) && args.AllowedOperations.HasFlag(DataPackageOperation.Copy);
         args.AcceptedOperation = accepts ? DataPackageOperation.Copy : DataPackageOperation.None; args.DragUIOverride.Caption = accepts ? DesktopResources.Get("TranscriptionAddFiles") : ""; DropOutline.Visibility = accepts ? Visibility.Visible : Visibility.Collapsed;
     }
     private async void DropFiles(object sender, DragEventArgs args)
     {
         args.Handled = true; DropOutline.Visibility = Visibility.Collapsed;
-        if (!editable || !hasModel || !args.DataView.Contains(StandardDataFormats.StorageItems) || !args.AllowedOperations.HasFlag(DataPackageOperation.Copy)) { args.AcceptedOperation = DataPackageOperation.None; return; }
+        if (!editable || recording || recordingChanging || !hasModel || !args.DataView.Contains(StandardDataFormats.StorageItems) || !args.AllowedOperations.HasFlag(DataPackageOperation.Copy)) { args.AcceptedOperation = DataPackageOperation.None; return; }
         var deferral = args.GetDeferral();
         try { args.AcceptedOperation = DataPackageOperation.Copy; if (FilesDropped is not null) await FilesDropped(args.DataView); }
         finally { deferral.Complete(); }

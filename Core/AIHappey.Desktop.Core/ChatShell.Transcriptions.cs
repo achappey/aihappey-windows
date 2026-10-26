@@ -21,10 +21,11 @@ public sealed partial class ChatShell
     private ContentDialog? transcriptionDeleteDialog;
     private int pendingTranscriptions;
     private string TranscriptionRoot => Path.Combine(session.DataDirectory, "transcriptions");
-    private bool CanUseTranscriptions => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && activePage == DesktopPage.Transcriptions;
+    private bool CanUseTranscriptions => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && dictation is null && !dictationChanging && activePage == DesktopPage.Transcriptions;
     private ChatTarget? SelectedTranscriptionModel => transcriptionModels.FirstOrDefault(m => m.Id == transcriptionTarget.Text.Trim());
     private void PrepareTranscriptions()
     {
+        PrepareDictation();
         ToolbarControls.Outline(transcriptionTarget); ToolbarControls.Label(transcriptionTarget, DesktopResources.Get("SelectModel")); transcriptionTarget.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
         transcriptionTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) TranscriptionModelSuggestions(transcriptionTarget.Text); transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null); UpdateModelFavorites(); };
         transcriptionTarget.GotFocus += (_, _) => { TranscriptionModelSuggestions(); transcriptionTarget.IsSuggestionListOpen = true; };
@@ -37,6 +38,7 @@ public sealed partial class ChatShell
     private void TranscriptionModelSuggestions(string query = "") => transcriptionTarget.ItemsSource = PickerModels(transcriptionModels).Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
     private void InvalidateTranscriptions()
     {
+        DiscardDictation();
         transcriptionModels = []; transcriptionTarget.Text = ""; transcriptionTarget.ItemsSource = null; libraryTranscriptions = []; transcriptionLibrary = null; transcriptionPartition = null; pendingTranscriptions = 0;
         transcriptionsPage.ClearNotices(); transcriptionsPage.SetItems([]); transcriptionsPage.SetModelAvailable(false);
     }
@@ -77,22 +79,31 @@ public sealed partial class ChatShell
     private async Task TranscribeStorageFilesAsync(IEnumerable<IStorageItem> items)
     {
         if (!CanUseTranscriptions || SelectedTranscriptionModel is not { } model) return;
-        var snapshot = items.ToArray(); if (snapshot.Length == 0) return;
-        var preferences = session.Settings.Transcriptions.Clone(); var partition = TranscriptionLibraryStore.Partition(session); var store = new TranscriptionLibraryStore(TranscriptionRoot, partition);
+        var sources = items.Select(item => (item.Name, (Func<CancellationToken, Task<ComposerAttachment>>)(async ct =>
+        {
+            if (item is not StorageFile file || TranscriptionFiles.MediaType(file.Name, file.ContentType) is not { } type) throw new InvalidOperationException(DesktopResources.Get("TranscriptionUnsupported"));
+            var properties = await file.GetBasicPropertiesAsync().AsTask(ct); ComposerAttachments.ValidateSize((long)properties.Size);
+            await using var input = await file.OpenStreamForReadAsync(); return await ComposerAttachments.ReadAsync(file.Name, type, input, ct);
+        }))).ToArray();
+        await TranscribeSourcesAsync(sources, model, session.Settings.Transcriptions.Clone(), TranscriptionLibraryStore.Partition(session));
+    }
+    private async Task TranscribeSourcesAsync(IReadOnlyList<(string Name, Func<CancellationToken, Task<ComposerAttachment>> Read)> sources,
+        ChatTarget model, TranscriptionPreferences preferences, string partition)
+    {
+        if (!CanUseTranscriptions || sources.Count == 0 || partition != TranscriptionLibraryStore.Partition(session)) return;
+        var store = new TranscriptionLibraryStore(TranscriptionRoot, partition);
         transcriptionsPage.ClearNotices();
         await RunAsync(async ct =>
         {
-            pendingTranscriptions = snapshot.Length; transcriptionsPage.SetItems(libraryTranscriptions, pendingTranscriptions);
+            pendingTranscriptions = sources.Count; transcriptionsPage.SetItems(libraryTranscriptions, pendingTranscriptions);
             try
             {
-                foreach (var item in snapshot)
+                foreach (var item in sources)
                 {
                     ct.ThrowIfCancellationRequested();
                     try
                     {
-                        if (item is not StorageFile file || TranscriptionFiles.MediaType(file.Name, file.ContentType) is not { } type) throw new InvalidOperationException(DesktopResources.Get("TranscriptionUnsupported"));
-                        var properties = await file.GetBasicPropertiesAsync().AsTask(ct); ComposerAttachments.ValidateSize((long)properties.Size);
-                        await using var input = await file.OpenStreamForReadAsync(); var source = await ComposerAttachments.ReadAsync(file.Name, type, input, ct); TranscriptionFiles.Validate(source);
+                        var source = await item.Read(ct); TranscriptionFiles.Validate(source);
                         var result = await new DesktopTranscriptionClient(client, http).GenerateAsync(model, source, preferences, ct);
                         // Commit completed results even if Stop was pressed just after the response arrived.
                         await store.SaveAsync(result, source); libraryTranscriptions = await store.ListAsync();

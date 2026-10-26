@@ -827,6 +827,7 @@ public sealed partial class ChatShell : UserControl
 
     private void SetBusy(bool value, bool inference)
     {
+        if (value && (dictation is not null || dictationChanging)) DiscardDictation();
         ResetFileDrop();
         input.IsReadOnly = value && inference;
         models.IsEnabled = agents.IsEnabled = target.IsEnabled = refresh.IsEnabled = account.IsEnabled = settingsButton.IsEnabled = manageAccount.IsEnabled = newChat.IsEnabled = searchChats.IsEnabled = chats.IsEnabled = send.IsEnabled = !value;
@@ -882,6 +883,7 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        DiscardDictation(); await dictationCleanup;
         Microsoft.Win32.SystemEvents.PowerModeChanged -= RealtimePowerChanged;
         await StopRealtimeAsync();
         await realtimeCleanup;

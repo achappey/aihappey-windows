@@ -24,8 +24,9 @@
                             </StackPanel>
                         </Border>
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button x:Name="AddFiles"><ic:FluentIcon Icon="Attach" /></Button>
                             <Button x:Name="Settings"><ic:FluentIcon Icon="Settings" /></Button>
+                            <Button x:Name="AddFiles"><ic:FluentIcon Icon="Attach" /></Button>
+                            <Button x:Name="Dictate"><ic:FluentIcon Icon="Mic" /></Button>
                             <Button x:Name="Stop" Visibility="Collapsed" />
                         </StackPanel>
                         <TextBlock x:Name="NoModels" TextWrapping="Wrap" Visibility="Collapsed" />

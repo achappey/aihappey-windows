@@ -136,6 +136,7 @@ public sealed partial class ChatShell
 
     private void ShowPage(DesktopPage page)
     {
+        if (page != DesktopPage.Transcriptions) DiscardDictation();
         if (page != DesktopPage.Realtime && realtime is not null) realtimeCleanup = StopRealtimeAsync();
         if (page == DesktopPage.Realtime && activePage != DesktopPage.Realtime)
         {

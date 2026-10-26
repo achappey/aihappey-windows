@@ -1774,4 +1774,13 @@ Speaker: {1}</value></data>
   <data name="RealtimeSectionTools" xml:space="preserve"><value>Tools</value></data>
   <data name="RealtimeSectionSession" xml:space="preserve"><value>Session</value></data>
   <data name="RealtimeSectionVideo" xml:space="preserve"><value>Video sharing</value></data>
+  <data name="TranscriptionRecord" xml:space="preserve"><value>Record dictation</value></data>
+  <data name="TranscriptionStopRecording" xml:space="preserve"><value>Stop recording and transcribe</value></data>
+  <data name="TranscriptionDictateWarningTitle" xml:space="preserve"><value>Dictate is for short messages</value></data>
+  <data name="TranscriptionDictateWarningMessage" xml:space="preserve"><value>Use dictate for short messages of up to a few minutes. Press Stop to send the recording to your selected AI transcription model. Leaving this page discards an unfinished recording without sending it.</value></data>
+  <data name="TranscriptionDictateWarningDontShowAgain" xml:space="preserve"><value>Do not show again</value></data>
+  <data name="TranscriptionDictateWarningContinue" xml:space="preserve"><value>Continue</value></data>
+  <data name="TranscriptionRecordingFailed" xml:space="preserve"><value>Could not record audio. Check your microphone and Windows microphone privacy settings, then try again.</value></data>
+  <data name="TranscriptionRecordingEmpty" xml:space="preserve"><value>The recording is empty. Please try again.</value></data>
+  <data name="TranscriptionRecordingLimit" xml:space="preserve"><value>The recording reached the 25 MB limit and was discarded. Please record a shorter message.</value></data>
 </root>

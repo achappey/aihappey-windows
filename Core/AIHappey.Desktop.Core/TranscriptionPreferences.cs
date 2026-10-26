@@ -6,13 +6,14 @@ namespace AIHappey.Desktop.Core;
 
 public sealed class TranscriptionPreferences
 {
+    public bool SkipDictateWarning { get; set; }
     private Dictionary<string, JsonObject> providerOptions = new(StringComparer.OrdinalIgnoreCase) { ["openai"] = new() { ["response_format"] = "json" } };
     public Dictionary<string, JsonObject> ProviderOptions
     {
         get => providerOptions;
         set => providerOptions = value is null ? new(StringComparer.OrdinalIgnoreCase) : new(value.Where(p => p.Value is not null).ToDictionary(p => p.Key, p => p.Value), StringComparer.OrdinalIgnoreCase);
     }
-    public TranscriptionPreferences Clone() => new() { ProviderOptions = ProviderOptions.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone(), StringComparer.OrdinalIgnoreCase) };
+    public TranscriptionPreferences Clone() => new() { SkipDictateWarning = SkipDictateWarning, ProviderOptions = ProviderOptions.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone(), StringComparer.OrdinalIgnoreCase) };
     public static JsonObject CleanOpenAI(JsonObject source)
     {
         var result = (JsonObject)source.DeepClone();

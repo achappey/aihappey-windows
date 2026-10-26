@@ -82,7 +82,7 @@ public sealed partial class ChatShell
     }
     private void RealtimePowerChanged(object sender, Microsoft.Win32.PowerModeChangedEventArgs args)
     {
-        if (args.Mode == Microsoft.Win32.PowerModes.Suspend) DispatcherQueue.TryEnqueue(() => realtimeCleanup = StopRealtimeAsync());
+        if (args.Mode == Microsoft.Win32.PowerModes.Suspend) DispatcherQueue.TryEnqueue(() => { DiscardDictation(); realtimeCleanup = StopRealtimeAsync(); });
     }
     private async Task LoadRealtimeAsync(CancellationToken ct, bool useCache = false)
     {

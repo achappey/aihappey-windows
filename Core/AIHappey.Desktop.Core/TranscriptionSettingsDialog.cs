@@ -85,7 +85,7 @@ public sealed class TranscriptionSettingsDialog : ContentDialog, IResponsiveDial
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto }); layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) }); layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         layout.Children.Add(tabs); Grid.SetRow(page, 1); layout.Children.Add(page); Grid.SetRow(validation, 2); layout.Children.Add(validation); Content = layout;
         AutomationProperties.SetLiveSetting(validation, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Assertive);
-        PrimaryButtonClick += (_, args) => { args.Cancel = true; draft = new(); Build(); };
+        PrimaryButtonClick += (_, args) => { args.Cancel = true; draft = new() { SkipDictateWarning = draft.SkipDictateWarning }; Build(); };
         Closing += async (_, args) =>
         {
             if (DiscardOnShutdown) return;

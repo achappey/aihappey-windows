@@ -1769,4 +1769,13 @@ Luidspreker: {1}</value></data>
   <data name="RealtimeSectionTools" xml:space="preserve"><value>Hulpmiddelen</value></data>
   <data name="RealtimeSectionSession" xml:space="preserve"><value>Sessie</value></data>
   <data name="RealtimeSectionVideo" xml:space="preserve"><value>Video delen</value></data>
+  <data name="TranscriptionRecord" xml:space="preserve"><value>Dictaat opnemen</value></data>
+  <data name="TranscriptionStopRecording" xml:space="preserve"><value>Opname stoppen en transcriberen</value></data>
+  <data name="TranscriptionDictateWarningTitle" xml:space="preserve"><value>Dicteren is voor korte berichten</value></data>
+  <data name="TranscriptionDictateWarningMessage" xml:space="preserve"><value>Gebruik dicteren voor korte berichten van maximaal enkele minuten. Druk op Stop om de opname naar je geselecteerde AI-transcriptiemodel te sturen. Als je deze pagina verlaat, wordt een onvoltooide opname verwijderd zonder deze te versturen.</value></data>
+  <data name="TranscriptionDictateWarningDontShowAgain" xml:space="preserve"><value>Niet opnieuw tonen</value></data>
+  <data name="TranscriptionDictateWarningContinue" xml:space="preserve"><value>Doorgaan</value></data>
+  <data name="TranscriptionRecordingFailed" xml:space="preserve"><value>Kon geen audio opnemen. Controleer je microfoon en de microfoonprivacyinstellingen van Windows en probeer het opnieuw.</value></data>
+  <data name="TranscriptionRecordingEmpty" xml:space="preserve"><value>De opname is leeg. Probeer het opnieuw.</value></data>
+  <data name="TranscriptionRecordingLimit" xml:space="preserve"><value>De opname heeft de limiet van 25 MB bereikt en is verwijderd. Neem een korter bericht op.</value></data>
 </root>

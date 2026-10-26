@@ -15,7 +15,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/NavigationPreferences.cs" Link="Core/NavigationPreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/OpenAiRealtimeSession.cs" Link="Core/OpenAiRealtimeSession.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/GoogleRealtimeSession.cs" Link="Core/GoogleRealtimeSession.cs" />
-    <PackageReference Include="SIPSorcery.OpenAI.Realtime" Version="10.0.17" />
-    <PackageReference Include="SIPSorceryMedia.Windows" Version="10.0.17" />
+    <PackageReference Include="SIPSorcery.OpenAI.Realtime" Version="10.0.18-pre" />
+    <PackageReference Include="SIPSorceryMedia.Windows" Version="10.0.18-pre" />
   </ItemGroup>
 </Project>
