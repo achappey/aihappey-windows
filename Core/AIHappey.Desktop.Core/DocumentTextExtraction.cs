@@ -14,19 +14,45 @@ public interface IDocumentTextExtractor
 
 /// <summary>Shared format dispatch for composer conversion, attachment reads, and local file reads.
 /// Register new format handlers here; callers do not need format-specific branches.</summary>
-public sealed class DocumentTextExtraction(IEnumerable<IDocumentTextExtractor>? handlers = null)
+public sealed class DocumentTextExtraction
 {
-    private readonly IDocumentTextExtractor[] handlers = (handlers ?? [new PdfDocumentTextExtractor(), new PlainTextDocumentExtractor()]).ToArray();
-    public bool Supports(string filename, string mediaType) => handlers.Any(h => h.Supports(filename, mediaType));
-    public async Task<string?> ExtractAsync(string filename, string mediaType, ReadOnlyMemory<byte> content, CancellationToken ct)
+    private readonly IDocumentTextExtractor[] handlers;
+    public DocumentTextExtraction(IEnumerable<IDocumentTextExtractor>? handlers = null)
     {
-        ct.ThrowIfCancellationRequested(); ComposerAttachments.ValidateSize(content.Length);
+        this.handlers = handlers?.ToArray() ?? [new PdfDocumentTextExtractor(),
+            new OfficeDocumentTextExtractor(OfficeDocumentFormat.Word),
+            new OfficeDocumentTextExtractor(OfficeDocumentFormat.Excel),
+            new OfficeDocumentTextExtractor(OfficeDocumentFormat.PowerPoint),
+            new LegacyExcelDocumentTextExtractor(), new HtmlDocumentTextExtractor(), new RtfDocumentTextExtractor(),
+            new EpubDocumentTextExtractor(), new EmailDocumentTextExtractor(this), new OutlookDocumentTextExtractor(this),
+            new ZipDocumentTextExtractor(this), new PlainTextDocumentExtractor()];
+    }
+    internal static string NormalizeMediaType(string mediaType) => mediaType.Split(';')[0].Trim().ToLowerInvariant();
+    public bool Supports(string filename, string mediaType) => handlers.Any(h => h.Supports(filename, NormalizeMediaType(mediaType)));
+    public Task<string?> ExtractAsync(string filename, string mediaType, ReadOnlyMemory<byte> content, CancellationToken ct)
+        => Task.Run(() => ExtractCoreAsync(filename, mediaType, content, new DocumentExtractionContext(ct), 0), ct);
+
+    internal async Task<string?> ExtractCoreAsync(string filename, string mediaType, ReadOnlyMemory<byte> content,
+        DocumentExtractionContext context, int depth)
+    {
+        context.Check(depth); ComposerAttachments.ValidateSize(content.Length);
+        mediaType = NormalizeMediaType(mediaType);
         var handler = handlers.FirstOrDefault(h => h.Supports(filename, mediaType));
         if (handler is null) return null;
-        var text = await handler.ExtractAsync(content, ct);
-        ct.ThrowIfCancellationRequested();
+        string? text;
+        try
+        {
+            text = handler is DocumentFormatTextExtractor format
+                ? await format.ExtractAsync(content, context, depth)
+                : await handler.ExtractAsync(content, context.CancellationToken);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (DocumentExtractionLimitException) { throw; }
+        catch (Exception e) when (handler is DocumentFormatTextExtractor && e is not OutOfMemoryException)
+        { throw new InvalidOperationException(DesktopResources.Get("DocumentInvalid"), e); }
+        context.Check(depth);
         if (text?.Length > PdfDocumentTextExtractor.MaximumCharacters)
-            throw new InvalidOperationException(DesktopResources.Get("PdfTextLimit"));
+            throw new DocumentExtractionLimitException();
         return string.IsNullOrWhiteSpace(text) ? null : text;
     }
 }

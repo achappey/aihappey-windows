@@ -112,6 +112,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/ComposerAttachments.cs" Link="Core/ComposerAttachments.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/UrlAttachments.cs" Link="Core/UrlAttachments.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/DocumentTextExtraction.cs" Link="Core/DocumentTextExtraction.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/DocumentExtraction.*.cs" Link="Core/%(Filename)%(Extension)" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SettingsStore.cs" Link="Core/SettingsStore.cs" />
     <Compile Include="../../Samples/AIHappey.Desktop.AzureAuth/EnterpriseConfiguration.cs" Link="Host/EnterpriseConfiguration.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ImagePreferences.cs" Link="Core/ImagePreferences.cs" />
@@ -135,4 +136,5 @@
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="11.0.0-rc.3.26522.148" />
   </ItemGroup>
+  <Import Project="../../Core/AIHappey.Desktop.Core/DocumentExtraction.Packages.props" />
 </Project>

@@ -32,4 +32,5 @@
     <ProjectReference Include="..\..\..\aihappey-ai\Core\AIHappey.Vercel\AIHappey.Vercel.csproj" />
     <ProjectReference Include="..\..\..\aihappey-agents\core\AgentHappey.Common\AgentHappey.Common.csproj" />
   </ItemGroup>
+  <Import Project="DocumentExtraction.Packages.props" />
 </Project>
