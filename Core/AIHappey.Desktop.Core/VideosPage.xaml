@@ -13,10 +13,11 @@
                     <TextBlock x:Name="Title" FontSize="28" FontWeight="SemiBold" />
                     <ScrollViewer x:Name="TagScroll" MaxHeight="128" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel x:Name="Tags" Spacing="4" /></ScrollViewer>
                     <TextBox x:Name="Prompt" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="96" MaxHeight="240" />
-                    <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                         <Button x:Name="AddAttachment" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Add" /></Button>
                         <Button x:Name="Settings" Grid.Column="1" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Settings" /></Button>
-                        <Button x:Name="Send" Grid.Column="3" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Send" /></Button>
+                        <Button x:Name="Dictate" Grid.Column="3" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Mic" /></Button>
+                        <Button x:Name="Send" Grid.Column="4" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Send" /></Button>
                     </Grid>
                     <TextBlock x:Name="NoModels" TextWrapping="Wrap" Visibility="Collapsed" />
                 </StackPanel>

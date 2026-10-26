@@ -12,10 +12,10 @@
                     <StackPanel x:Name="PromptPanel" Spacing="8" MaxWidth="1056" HorizontalAlignment="Center">
                         <TextBlock x:Name="Title" FontSize="28" FontWeight="SemiBold" />
                         <TextBox x:Name="Prompt" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="120" MaxHeight="280" />
-                        <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <Button x:Name="Settings" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Settings"/></Button>
                             <Button x:Name="Import" Grid.Column="1" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Attach"/></Button>
-                            <Button x:Name="Dictate" Grid.Column="2" MinWidth="40" Height="40" Padding="8,0"><ic:FluentIcon Icon="Mic"/></Button>
+                            <Button x:Name="Dictate" Grid.Column="3" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Mic"/></Button>
                             <Button x:Name="Stop" Grid.Column="4" Visibility="Collapsed" />
                             <Button x:Name="Send" Grid.Column="5" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Send"/></Button>
                         </Grid>

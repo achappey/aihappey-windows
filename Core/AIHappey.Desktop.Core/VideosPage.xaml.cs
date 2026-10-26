@@ -27,10 +27,12 @@ public sealed partial class VideosPage : UserControl
     public Func<Task>? LinkRequested { get; set; }
     public Func<Task>? SettingsRequested { get; set; }
     public Func<Task>? FolderRequested { get; set; }
+    public Func<Task>? DictationRequested { get; set; }
     public Func<LibraryVideo, Task>? PreviewRequested { get; set; }
     public Func<DataPackageView, Task>? AttachmentDataRequested { get; set; }
     public string PromptText => Prompt.Text.Trim();
     public IReadOnlyList<ComposerAttachment> Attachments => attachments.ToArray();
+    public bool StartDictation() => WindowsVoiceTyping.TryStart(Prompt);
     public VideosPage()
     {
         InitializeComponent(); Name = "VideosPage";
@@ -41,10 +43,12 @@ public sealed partial class VideosPage : UserControl
         AutomationProperties.SetHeadingLevel(LibraryTitle, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level2);
         ToolbarControls.Label(Prompt, DesktopResources.Get("VideoPromptPlaceholder")); ToolbarControls.Label(Send, DesktopResources.Get("VideoGenerate"));
         ToolbarControls.Label(AddAttachment, DesktopResources.Get("Attachments")); ToolbarControls.Label(Settings, DesktopResources.Get("VideoSettings"));
+        ToolbarControls.Label(Dictate, DesktopResources.Get("SpeechDictate"));
         foreach (var control in new Control[] { Prompt, Send, OpenFolder }) ControlAppearance.Stock(control);
-        ToolbarControls.Subtle(AddAttachment); ToolbarControls.Subtle(Settings);
+        ToolbarControls.Subtle(AddAttachment); ToolbarControls.Subtle(Settings); ToolbarControls.Subtle(Dictate);
         AddAttachment.Flyout = AttachmentMenu();
         Send.Click += async (_, _) => { if (Send.IsEnabled && SendRequested is not null) await SendRequested(); };
+        Dictate.Click += async (_, _) => { if (DictationRequested is not null) await DictationRequested(); };
         Settings.Click += async (_, _) => { if (editable && !submitting && SettingsRequested is not null) await SettingsRequested(); };
         OpenFolder.Click += async (_, _) => { if (editable && FolderRequested is not null) await FolderRequested(); };
         Prompt.TextChanged += (_, _) => UpdateActions();
@@ -136,7 +140,7 @@ public sealed partial class VideosPage : UserControl
     public void SetSubmitting(bool value) { submitting = value; UpdateActions(); }
     private void UpdateActions()
     {
-        Prompt.IsReadOnly = !editable || submitting; AddAttachment.IsEnabled = Settings.IsEnabled = editable && !submitting; OpenFolder.IsEnabled = editable;
+        Prompt.IsReadOnly = !editable || submitting; AddAttachment.IsEnabled = Settings.IsEnabled = Dictate.IsEnabled = editable && !submitting; OpenFolder.IsEnabled = editable;
         Send.IsEnabled = editable && !submitting && hasModel && !string.IsNullOrWhiteSpace(Prompt.Text); RenderTags();
     }
     public void SetItems(IReadOnlyList<LibraryVideo> videos, IReadOnlyList<VideoJob> jobs)

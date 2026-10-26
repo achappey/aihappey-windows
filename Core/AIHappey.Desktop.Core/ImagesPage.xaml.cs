@@ -41,10 +41,12 @@ public sealed partial class ImagesPage : UserControl
     public Func<Task>? LinkRequested { get; set; }
     public Func<Task>? SettingsRequested { get; set; }
     public Func<Task>? FolderRequested { get; set; }
+    public Func<Task>? DictationRequested { get; set; }
     public Func<LibraryImage, Task>? PreviewRequested { get; set; }
     public Func<DataPackageView, Task>? AttachmentDataRequested { get; set; }
     public string PromptText => Prompt.Text.Trim();
     public IReadOnlyList<ComposerAttachment> Attachments => attachments.ToArray();
+    public bool StartDictation() => WindowsVoiceTyping.TryStart(Prompt);
     public ImagesPage()
     {
         InitializeComponent();
@@ -56,10 +58,12 @@ public sealed partial class ImagesPage : UserControl
         ToolbarControls.Label(Prompt, DesktopResources.Get("ImagePromptPlaceholder"));
         ToolbarControls.Label(Send, DesktopResources.Get("ImageGenerate")); ToolbarControls.Label(Settings, DesktopResources.Get("ImageSettings"));
         ToolbarControls.Label(AddAttachment, DesktopResources.Get("Attachments"));
+        ToolbarControls.Label(Dictate, DesktopResources.Get("SpeechDictate"));
         foreach (var control in new Control[] { Prompt, Send, Stop, OpenFolder }) ControlAppearance.Stock(control);
-        ToolbarControls.Subtle(AddAttachment); ToolbarControls.Subtle(Settings);
+        ToolbarControls.Subtle(AddAttachment); ToolbarControls.Subtle(Settings); ToolbarControls.Subtle(Dictate);
         AddAttachment.Flyout = AttachmentMenu(false); Prompt.ContextFlyout = AttachmentMenu(true);
         Send.Click += async (_, _) => { if (editable && hasModel && SendRequested is not null) await SendRequested(); };
+        Dictate.Click += async (_, _) => { if (DictationRequested is not null) await DictationRequested(); };
         Stop.Click += (_, _) => StopRequested?.Invoke();
         Settings.Click += async (_, _) => { if (SettingsRequested is not null) await SettingsRequested(); };
         OpenFolder.Click += async (_, _) => { if (FolderRequested is not null) await FolderRequested(); };
@@ -178,7 +182,7 @@ public sealed partial class ImagesPage : UserControl
     public void SetModelAvailable(bool value) { hasModel = value; NoModels.Visibility = value ? Visibility.Collapsed : Visibility.Visible; UpdateSend(); }
     public void SetBusy(bool value, bool inference)
     {
-        editable = !value; Prompt.IsReadOnly = value; AddAttachment.IsEnabled = Settings.IsEnabled = OpenFolder.IsEnabled = !value;
+        editable = !value; Prompt.IsReadOnly = value; AddAttachment.IsEnabled = Settings.IsEnabled = Dictate.IsEnabled = OpenFolder.IsEnabled = !value;
         Stop.Visibility = value && inference ? Visibility.Visible : Visibility.Collapsed; Send.Visibility = value && inference ? Visibility.Collapsed : Visibility.Visible;
         DropOutline.Visibility = Visibility.Collapsed; RenderTags(); UpdateSend();
     }

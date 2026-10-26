@@ -40,6 +40,12 @@ public sealed partial class ChatShell
         videosPage.SendRequested = () => videoSubmission = SendVideosAsync(); videosPage.PickRequested = PickVideoAttachmentsAsync;
         videosPage.LinkRequested = AddVideoLinkAsync; videosPage.AttachmentDataRequested = AdmitVideoDataAsync;
         videosPage.SettingsRequested = EditVideoSettingsAsync; videosPage.FolderRequested = OpenVideosFolderAsync; videosPage.PreviewRequested = PreviewVideoAsync;
+        videosPage.DictationRequested = () =>
+        {
+            if (CanUseVideos && !videosPage.StartDictation())
+                videosPage.Notice(DesktopResources.Get("VoiceTypingFailed"), InfoBarSeverity.Warning);
+            return Task.CompletedTask;
+        };
     }
     private void VideoModelSuggestions(string query = "") => ConfigurePrimitivePicker(videoTarget, videoModels, "video");
     private void UpdateVideoFavorite() => UpdateModelFavorites();

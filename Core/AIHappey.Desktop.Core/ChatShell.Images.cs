@@ -40,6 +40,12 @@ public sealed partial class ChatShell
         imagesPage.FolderRequested = OpenImagesFolderAsync;
         imagesPage.PreviewRequested = PreviewImageAsync;
         imagesPage.AttachmentDataRequested = AdmitImageDataAsync;
+        imagesPage.DictationRequested = () =>
+        {
+            if (CanUseImages && !imagesPage.StartDictation())
+                imagesPage.Notice(DesktopResources.Get("VoiceTypingFailed"), InfoBarSeverity.Warning);
+            return Task.CompletedTask;
+        };
     }
     private void ImageModelSuggestions(string query = "") => ConfigurePrimitivePicker(imageTarget, imageModels, "image");
     private void InvalidateImages()

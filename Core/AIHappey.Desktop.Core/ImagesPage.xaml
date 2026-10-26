@@ -31,11 +31,13 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Button x:Name="AddAttachment" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Add" /></Button>
                             <Button x:Name="Settings" Grid.Column="1" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Settings" /></Button>
-                            <Button x:Name="Stop" Grid.Column="3" Visibility="Collapsed" />
-                            <Button x:Name="Send" Grid.Column="4" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Send" /></Button>
+                            <Button x:Name="Dictate" Grid.Column="3" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Mic" /></Button>
+                            <Button x:Name="Stop" Grid.Column="4" Visibility="Collapsed" />
+                            <Button x:Name="Send" Grid.Column="5" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Send" /></Button>
                         </Grid>
                         <TextBlock x:Name="NoModels" TextWrapping="Wrap" Visibility="Collapsed" />
                     </StackPanel>
