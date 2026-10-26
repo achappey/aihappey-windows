@@ -58,11 +58,14 @@ public sealed partial class ChatShell
         try
         {
             var selected = target.Selection.Ids.Select(id => targets.FirstOrDefault(t => t.Id == id)).OfType<ChatTarget>().ToArray();
-            var dialog = new AgentWorkflowDialog(session.Settings.AgentWorkflow, selected, aiModelTargets ?? []) { XamlRoot = XamlRoot };
+            var dialog = new AgentWorkflowDialog(session.Settings.AgentWorkflow, selected, aiModelTargets ?? [], session.Settings.Chat) { XamlRoot = XamlRoot };
             dialog.SaveAsync = async (workflow, ids) =>
             {
                 if (closing || partition != session.HistoryPartition) throw new OperationCanceledException();
                 var next = session.Settings.Clone(); next.AgentWorkflow = workflow;
+                // The Tools tab shares model-chat selections, but must not replace
+                // unrelated preferences with the dialog's older draft.
+                next.Chat.ActivePlugins = dialog.ToolPreferences.ActivePlugins.ToList();
                 await SettingsStore.SaveAsync(session.DataDirectory, next);
                 if (closing || partition != session.HistoryPartition) throw new OperationCanceledException();
                 session.Settings = next; target.SetSelection(ids, target.Selection.FavoriteRouter); RememberSelection();

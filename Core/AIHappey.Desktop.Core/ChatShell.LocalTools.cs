@@ -3,9 +3,9 @@ namespace AIHappey.Desktop.Core;
 public sealed partial class ChatShell
 {
     private LocalConversationTools? activeConversationTools;
-    private void RegisterLocalPlugins(McpTurnSnapshot snapshot, ChatPreferences preferences, string partition)
+    private void RegisterLocalPlugins(McpTurnSnapshot snapshot, ChatPreferences preferences, string partition, bool includePluginContext = true)
     {
-        RegisterAgentPluginTools(snapshot, preferences);
+        RegisterAgentPluginTools(snapshot, preferences, includePluginContext);
         RegisterAuthoringPlugins(snapshot, preferences, partition);
         if (preferences.PluginEnabled(DesktopLocalTools.Conversations))
         {

@@ -524,9 +524,10 @@ public sealed partial class ChatShell : UserControl
             }
             var wireTarget = Service == ServiceKind.Agents ? agentTarget.RemoteAgentId ?? selected : selected;
             activeConversationTools = null;
-            if (Service == ServiceKind.Ai && NeedsSkillCatalog(inferencePreferences))
+            if (Service == ServiceKind.Ai ? NeedsSkillCatalog(inferencePreferences)
+                : inferencePreferences.PluginEnabled(DesktopLocalTools.SkillSearch))
                 await LoadRuntimeSkillsAsync(ct);
-            var mcpTurn = Service == ServiceKind.Ai ? CaptureSkillRuntime(inferencePreferences) : McpTurnSnapshot.Empty;
+            var mcpTurn = CaptureSkillRuntime(inferencePreferences, agentToolsOnly: Service == ServiceKind.Agents);
             activeConversationTools = mcpTurn.ConversationTools;
             activeMcpTurn = mcpTurn;
             var systemContext = Service == ServiceKind.Ai ? CaptureSystemContext(inferencePreferences, mcpTurn) : null;

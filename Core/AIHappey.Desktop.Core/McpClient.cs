@@ -487,14 +487,14 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
         }
         catch (OperationCanceledException) { }
     }
-    public McpTurnSnapshot Capture()
+    public McpTurnSnapshot Capture(bool toolsOnly = false)
     {
         lock (sync) return McpTurnSnapshot.Create(entries.Values.Where(e => e.State == McpConnectionState.Connected && e.Server.Enabled && e.Discovery is not null)
             .Select(e => new McpConnectedServer(e.Server.CatalogItem, e.Discovery!,
                 (name, input, id, locale, ct) => CallAsync(e, name, input, id, locale, ct),
                 (uri, cursor, limit, ct) => RequestAsync(e, (connection, token) => connection.ReadAsync(uri, cursor, limit, token), ct),
                 (template, name, value, arguments, ct) => RequestAsync(e,
-                    (connection, token) => connection.CompleteAsync(template, name, value, arguments, token), ct))));
+                    (connection, token) => connection.CompleteAsync(template, name, value, arguments, token), ct))), toolsOnly);
     }
     public IReadOnlyList<DesktopMcpSkill> CaptureSkills()
     {

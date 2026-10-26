@@ -25,7 +25,7 @@ public sealed class McpTurnSnapshot
         Func<string, JsonElement, string, string, CancellationToken, Task<JsonElement>> Call)> connected)
         => Create(connected.Select(s => new McpConnectedServer(s.Server, s.Discovery, s.Call)));
 
-    public static McpTurnSnapshot Create(IEnumerable<McpConnectedServer> connected)
+    public static McpTurnSnapshot Create(IEnumerable<McpConnectedServer> connected, bool toolsOnly = false)
     {
         var result = new McpTurnSnapshot();
         var servers = connected.OrderBy(s => s.Server.Id, StringComparer.Ordinal).ToArray();
@@ -63,6 +63,7 @@ public sealed class McpTurnSnapshot
                 result.routes.Add(name, new(candidate.Name, candidate.Call));
                 serverTools.Add(tool.DeepClone());
             }
+            if (toolsOnly) continue;
             var info = new JsonObject { ["name"] = CatalogProjection.Text(server.Discovery.ServerInfo, "name") ?? server.Server.Name,
                 ["title"] = CatalogProjection.Text(server.Discovery.ServerInfo, "title") ?? server.Server.Name,
                 ["version"] = CatalogProjection.Text(server.Discovery.ServerInfo, "version"), ["mcpServerUrl"] = server.Server.Url };
@@ -83,7 +84,7 @@ public sealed class McpTurnSnapshot
             if (!string.IsNullOrWhiteSpace(server.Discovery.Instructions)) block["instructions"] = server.Discovery.Instructions;
             result.context.Add(JsonSerializer.SerializeToElement(block));
         }
-        if (hasResources)
+        if (hasResources && !toolsOnly)
         {
             result.tools.Add(DesktopMcpResources.Tool);
             result.routes.Add(DesktopMcpResources.ToolName, new(DesktopMcpResources.ToolName,
@@ -120,9 +121,9 @@ public sealed class McpTurnSnapshot
             }).OrderBy(tool => tool.Label, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    // Apply only to a newly captured model-chat snapshot, after local tools are composed.
+    // Apply only to a newly captured turn snapshot, after local tools are composed.
     // Removing the route as well as the declaration prevents a blocked tool being called
-    // through a stale/malformed model response. Other snapshots (including agents) are untouched.
+    // through a stale/malformed response. Agent definitions and other snapshots are untouched.
     public void ApplyPolicy(ChatToolPolicy policy)
     {
         var blocked = tools.Where(tool => !policy.Allows(tool)).Select(tool => CatalogProjection.Text(tool, "name")!)

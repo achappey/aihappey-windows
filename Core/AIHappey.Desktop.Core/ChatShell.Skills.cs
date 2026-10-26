@@ -64,14 +64,14 @@ public sealed partial class ChatShell
         var item = runtimeSkillCatalog.FirstOrDefault(i => i.Id == id);
         if (item is not null) await skillStore.ReadAsync(partition, item, ct);
     }
-    private McpTurnSnapshot CaptureSkillRuntime(ChatPreferences preferences)
+    private McpTurnSnapshot CaptureSkillRuntime(ChatPreferences preferences, bool agentToolsOnly = false)
     {
-        var snapshot = Mcp.Capture(); var partition = session.HistoryPartition;
-        var selected = preferences.EnabledSkillIds.ToHashSet(StringComparer.Ordinal);
+        var snapshot = Mcp.Capture(toolsOnly: agentToolsOnly); var partition = session.HistoryPartition;
+        var selected = (agentToolsOnly ? Enumerable.Empty<string>() : preferences.EnabledSkillIds).ToHashSet(StringComparer.Ordinal);
         var discover = preferences.PluginEnabled(DesktopLocalTools.SkillSearch);
         var readers = new List<(DesktopSkill Skill, Func<CancellationToken, Task<DesktopSkillContent>> Load)>();
         var pluginGeneration = pluginEpoch;
-        foreach (var plugin in EnabledPlugins(preferences).Select(p => p.Clone()))
+        foreach (var plugin in (agentToolsOnly ? Enumerable.Empty<DesktopAgentPlugin>() : EnabledPlugins(preferences)).Select(p => p.Clone()))
             foreach (var skill in plugin.Skills())
             {
                 selected.Add(skill.Descriptor.Id);
@@ -107,7 +107,7 @@ public sealed partial class ChatShell
             && (skill.Origin != "plugin" || pluginGeneration == pluginEpoch)
             && (skill.Origin != "mcp" || session.Settings.ModelContext.EnableSkills && Mcp.CaptureSkills().Any(s => s.Descriptor.Id == skill.Id)))
             .Register(snapshot);
-        RegisterLocalPlugins(snapshot, preferences, partition);
+        RegisterLocalPlugins(snapshot, preferences, partition, includePluginContext: !agentToolsOnly);
         snapshot.ApplyPolicy(preferences.ToolAnnotations);
         return snapshot;
     }

@@ -11,10 +11,13 @@ public sealed class AgentWorkflowDialog : ContentDialog
     private readonly List<ChatTarget> ordered;
     private readonly StackPanel details = new() { Spacing = 12 };
     private readonly TextBlock error = new() { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
+    public ChatPreferences ToolPreferences { get; }
     public Func<AgentWorkflowPreferences, IReadOnlyList<string>, Task>? SaveAsync { get; set; }
-    public AgentWorkflowDialog(AgentWorkflowPreferences preferences, IReadOnlyList<ChatTarget> selected, IReadOnlyList<ChatTarget> models)
+    public AgentWorkflowDialog(AgentWorkflowPreferences preferences, IReadOnlyList<ChatTarget> selected, IReadOnlyList<ChatTarget> models,
+        ChatPreferences? toolPreferences = null)
     {
         draft = preferences.Clone(); ordered = selected.ToList();
+        ToolPreferences = (toolPreferences ?? new()).Clone();
         Name = "AgentWorkflowDialog"; Title = DesktopResources.Get("AgentWorkflow");
         PrimaryButtonText = DesktopResources.Get("Save"); CloseButtonText = DesktopResources.Get("Cancel");
         DefaultButton = ContentDialogButton.Primary;
@@ -25,7 +28,17 @@ public sealed class AgentWorkflowDialog : ContentDialog
         type.SelectedIndex = Math.Max(0, AgentWorkflowPreferences.Types.ToList().IndexOf(draft.Type));
         type.SelectionChanged += (_, _) => { if (type.SelectedItem is WorkflowChoice choice) { draft.Type = choice.Key; Render(models); } };
         ControlAppearance.Stock(type); body.Children.Add(type); body.Children.Add(details); body.Children.Add(error);
-        Content = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        var page = new ScrollViewer { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        var tools = new LocalToolsSettingsView(ToolPreferences);
+        var generalTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "AgentGeneralTab", Content = DesktopResources.Get("General"), IsChecked = true };
+        var toolsTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "AgentToolsTab", Content = DesktopResources.Get("Tools") };
+        ControlAppearance.Stock(generalTab); ControlAppearance.Stock(toolsTab);
+        generalTab.Click += (_, _) => { generalTab.IsChecked = true; toolsTab.IsChecked = false; page.Content = body; page.ChangeView(null, 0, null, true); };
+        toolsTab.Click += (_, _) => { toolsTab.IsChecked = true; generalTab.IsChecked = false; page.Content = tools; page.ChangeView(null, 0, null, true); };
+        var tabs = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 }; tabs.Children.Add(generalTab); tabs.Children.Add(toolsTab);
+        var layout = new Grid { RowSpacing = 16, MinWidth = 280, MaxWidth = 720, MaxHeight = 640 };
+        layout.RowDefinitions.Add(new() { Height = GridLength.Auto }); layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
+        layout.Children.Add(tabs); Grid.SetRow(page, 1); layout.Children.Add(page); Content = layout;
         Render(models);
         PrimaryButtonClick += async (_, args) =>
         {
@@ -39,7 +52,7 @@ public sealed class AgentWorkflowDialog : ContentDialog
                 if (SaveAsync is not null) await SaveAsync(draft.Clone(), ordered.Select(t => t.Id).ToArray());
             }
             catch (Exception exception)
-            { args.Cancel = true; error.Text = exception.Message; error.Visibility = Visibility.Visible; }
+            { args.Cancel = true; error.Text = exception.Message; error.Visibility = Visibility.Visible; generalTab.IsChecked = true; toolsTab.IsChecked = false; page.Content = body; }
             finally { IsPrimaryButtonEnabled = true; deferral.Complete(); }
         };
     }

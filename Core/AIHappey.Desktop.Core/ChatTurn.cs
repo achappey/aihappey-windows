@@ -38,7 +38,7 @@ public static class DesktopChatTurn
                 // Execute captured client routes first. Keep approval-requested with the result so the refreshed
                 // pending part passed to the dialog contains both input and output, just like Agents results.
                 var calls = await DesktopMcpToolExecution.ExecutePendingAsync(output,
-                    mcp, executed, locale, ct, elicit, executeMcp: conversation.Service == ServiceKind.Ai);
+                    mcp, executed, locale, ct, elicit);
                 if (calls > 0)
                 {
                     await changed(true, ct); // Save the executed result before displaying its review.

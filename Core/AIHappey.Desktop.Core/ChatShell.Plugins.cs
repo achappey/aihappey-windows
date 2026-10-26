@@ -176,11 +176,11 @@ public sealed partial class ChatShell
             var badge = new Border { Name = "EnabledAgentPluginBadge", Child = panel, Padding = new Thickness(10, 2, 4, 2), CornerRadius = new CornerRadius(16), Tag = id }; ControlAppearance.TokenBadge(badge); contextTags.Children.Add(badge);
         }
     }
-    private void RegisterAgentPluginTools(McpTurnSnapshot snapshot, ChatPreferences preferences)
+    private void RegisterAgentPluginTools(McpTurnSnapshot snapshot, ChatPreferences preferences, bool includeContext = true)
     {
         var partition = session.PluginPartition; var enabled = EnabledPlugins(preferences).Select(p => p.Clone()).ToArray(); var epoch = pluginEpoch;
         bool Current() => CurrentPluginPartition(partition);
-        if (enabled.Length > 0)
+        if (includeContext && enabled.Length > 0)
         {
             snapshot.AddContext(AgentPluginRuntime.Context(enabled));
             snapshot.AddLocal(AgentPluginTools.ReadDefinition, (input, ct) => Task.FromResult(AgentPluginTools.ReadPackage(enabled, input, () => Current() && epoch == pluginEpoch, ct)));

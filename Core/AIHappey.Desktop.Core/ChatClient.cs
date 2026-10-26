@@ -69,7 +69,22 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
             body["id"] = conversationId;
             body["messages"] = JsonSerializer.SerializeToNode(requestMessages, PortableConversations.Json);
         }
-        if (service != ServiceKind.Ai) snapshot.ToolOutputContentSettings.ApplyToRequest(body);
+        if (service != ServiceKind.Ai)
+        {
+            if (mcp is { Tools.Count: > 0 })
+            {
+                // Agents use the ordinary top-level declaration contract, not
+                // model-chat provider options or the agent's configured tools.
+                body["tools"] = new System.Text.Json.Nodes.JsonArray(mcp.Tools.Select(tool =>
+                {
+                    var declaration = new System.Text.Json.Nodes.JsonObject();
+                    foreach (var field in new[] { "name", "description", "inputSchema", "annotations" })
+                        if (tool.TryGetProperty(field, out var value)) declaration[field] = System.Text.Json.Nodes.JsonNode.Parse(value.GetRawText());
+                    return (System.Text.Json.Nodes.JsonNode)declaration;
+                }).ToArray());
+            }
+            snapshot.ToolOutputContentSettings.ApplyToRequest(body);
+        }
         request.Content = JsonContent.Create(body, options: PortableConversations.Json);
         if (service == ServiceKind.Ai) snapshot.ApplyHeaders(request, providerKey);
         // The Chat preference owns this header, including overriding an injected host value.
