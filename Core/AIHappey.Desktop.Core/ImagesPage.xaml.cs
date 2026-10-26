@@ -34,7 +34,7 @@ public sealed partial class ImagesPage : UserControl
 {
     private readonly ObservableCollection<ImageTile> tiles = [];
     private readonly List<ComposerAttachment> attachments = [];
-    private bool editable = true, hasModel;
+    private bool editable = true, hasModel, dictating;
     public Func<Task>? SendRequested { get; set; }
     public Action? StopRequested { get; set; }
     public Func<Task>? PickRequested { get; set; }
@@ -47,6 +47,9 @@ public sealed partial class ImagesPage : UserControl
     public string PromptText => Prompt.Text.Trim();
     public IReadOnlyList<ComposerAttachment> Attachments => attachments.ToArray();
     public bool StartDictation() => WindowsVoiceTyping.TryStart(Prompt);
+    internal TextBox DictationInput => Prompt;
+    internal Button DictationButton => Dictate;
+    internal void SetDictating(bool value) { dictating = value; Prompt.IsReadOnly = !editable || value; UpdateSend(); }
     public ImagesPage()
     {
         InitializeComponent();
@@ -186,7 +189,7 @@ public sealed partial class ImagesPage : UserControl
         Stop.Visibility = value && inference ? Visibility.Visible : Visibility.Collapsed; Send.Visibility = value && inference ? Visibility.Collapsed : Visibility.Visible;
         DropOutline.Visibility = Visibility.Collapsed; RenderTags(); UpdateSend();
     }
-    private void UpdateSend() => Send.IsEnabled = editable && hasModel && !string.IsNullOrWhiteSpace(Prompt.Text);
+    private void UpdateSend() => Send.IsEnabled = editable && !dictating && hasModel && !string.IsNullOrWhiteSpace(Prompt.Text);
     public void SetItems(IReadOnlyList<LibraryImage> images, int pending = 0)
     {
         tiles.Clear(); for (var i = 0; i < pending; i++) tiles.Add(new(null)); foreach (var image in images) tiles.Add(new(image));

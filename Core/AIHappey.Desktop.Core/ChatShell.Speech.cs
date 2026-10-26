@@ -15,7 +15,7 @@ public sealed partial class ChatShell
     private IReadOnlyList<ChatTarget> speechModels = []; private IReadOnlyList<LibrarySpeech> librarySpeech = []; private string? speechPartition; private SpeechLibraryStore? speechLibrary;
     private SpeechSettingsDialog? speechSettingsDialog; private SpeechDetailsDialog? speechDetailsDialog; private int pendingSpeech;
     private string SpeechRoot => Path.Combine(session.DataDirectory, "speech");
-    private bool CanUseSpeech => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && activePage == DesktopPage.Speech;
+    private bool CanUseSpeech => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && dictation is null && !dictationChanging && activePage == DesktopPage.Speech;
     private ChatTarget? SelectedSpeechModel => speechModels.FirstOrDefault(m => m.Id == speechTarget.Text.Trim());
     private void PrepareSpeech()
     {
@@ -24,12 +24,7 @@ public sealed partial class ChatShell
         speechTarget.SelectionChanged += () => { speechPage.SetModelAvailable(SelectedSpeechModel is not null); UpdateModelFavorites(); };
         speechPage.SendRequested = SendSpeechAsync; speechPage.StopRequested = () => operation?.Cancel(); speechPage.ImportRequested = PickSpeechDocumentsAsync; speechPage.FilesDropped = DropSpeechDocumentsAsync;
         speechPage.SettingsRequested = EditSpeechSettingsAsync; speechPage.FolderRequested = OpenSpeechFolderAsync; speechPage.PlayRequested = ViewSpeechAsync; speechPage.DetailsRequested = ViewSpeechAsync; speechPage.DownloadRequested = DownloadSpeechAsync; speechPage.DeleteRequested = DeleteSpeechAsync;
-        speechPage.DictationRequested = () =>
-        {
-            if (CanUseSpeech && !speechPage.StartDictation())
-                speechPage.Notice(DesktopResources.Get("VoiceTypingFailed"), InfoBarSeverity.Warning);
-            return Task.CompletedTask;
-        };
+        speechPage.DictationRequested = () => ToggleComposerDictationAsync(DesktopPage.Speech);
     }
     private void SpeechModelSuggestions(string query = "") => ConfigurePrimitivePicker(speechTarget, speechModels, "speech");
     private void InvalidateSpeech() { speechModels = []; speechTarget.Text = ""; speechTarget.ItemsSource = null; librarySpeech = []; speechLibrary = null; speechPartition = null; pendingSpeech = 0; speechPage.ClearNotices(); speechPage.SetItems([]); speechPage.SetModelAvailable(false); }

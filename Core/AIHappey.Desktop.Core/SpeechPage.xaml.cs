@@ -26,6 +26,9 @@ public sealed partial class SpeechPage : UserControl
     public Func<LibrarySpeech, Task>? DeleteRequested { get; set; }
     public string PromptText => Prompt.Text.Trim();
     public bool StartDictation() => WindowsVoiceTyping.TryStart(Prompt);
+    internal TextBox DictationInput => Prompt;
+    internal Button DictationButton => Dictate;
+    internal void SetDictating(bool value) { recording = value; Prompt.IsReadOnly = !editable || value; UpdateSend(); }
     public SpeechPage()
     {
         InitializeComponent(); Name = "SpeechPage"; Title.Text = DesktopResources.Get("Speech"); LibraryTitle.Text = DesktopResources.Get("MySpeechFiles");

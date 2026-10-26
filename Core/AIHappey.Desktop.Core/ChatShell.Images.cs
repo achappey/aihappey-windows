@@ -24,7 +24,7 @@ public sealed partial class ChatShell
     private UrlAttachmentDialog? imageLinkDialog;
     private int pendingImages;
     private string ImageMaskDirectory => Path.Combine(session.DataDirectory, "image-masks", ImageLibraryStore.Partition(session));
-    private bool CanUseImages => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && activePage == DesktopPage.Images;
+    private bool CanUseImages => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && dictation is null && !dictationChanging && activePage == DesktopPage.Images;
     private ChatTarget? SelectedImageModel => imageModels.FirstOrDefault(m => m.Id == imageTarget.Text.Trim());
 
     private void PrepareImages()
@@ -40,12 +40,7 @@ public sealed partial class ChatShell
         imagesPage.FolderRequested = OpenImagesFolderAsync;
         imagesPage.PreviewRequested = PreviewImageAsync;
         imagesPage.AttachmentDataRequested = AdmitImageDataAsync;
-        imagesPage.DictationRequested = () =>
-        {
-            if (CanUseImages && !imagesPage.StartDictation())
-                imagesPage.Notice(DesktopResources.Get("VoiceTypingFailed"), InfoBarSeverity.Warning);
-            return Task.CompletedTask;
-        };
+        imagesPage.DictationRequested = () => ToggleComposerDictationAsync(DesktopPage.Images);
     }
     private void ImageModelSuggestions(string query = "") => ConfigurePrimitivePicker(imageTarget, imageModels, "image");
     private void InvalidateImages()

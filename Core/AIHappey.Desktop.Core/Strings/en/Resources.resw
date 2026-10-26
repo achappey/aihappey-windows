@@ -1783,4 +1783,9 @@ Speaker: {1}</value></data>
   <data name="TranscriptionRecordingFailed" xml:space="preserve"><value>Could not record audio. Check your microphone and Windows microphone privacy settings, then try again.</value></data>
   <data name="TranscriptionRecordingEmpty" xml:space="preserve"><value>The recording is empty. Please try again.</value></data>
   <data name="TranscriptionRecordingLimit" xml:space="preserve"><value>The recording reached the 25 MB limit and was discarded. Please record a shorter message.</value></data>
+  <data name="SettingsDictate.Header" xml:space="preserve"><value>Dictate</value></data>
+  <data name="SettingsDictate.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Dictate</value></data>
+  <data name="SettingsDictateNone.Content" xml:space="preserve"><value>None</value></data>
+  <data name="SettingsDictateWindows.Content" xml:space="preserve"><value>Windows</value></data>
+  <data name="SettingsDictateTranscriptions.Content" xml:space="preserve"><value>Transcriptions</value></data>
 </root>

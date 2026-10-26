@@ -1778,4 +1778,9 @@ Luidspreker: {1}</value></data>
   <data name="TranscriptionRecordingFailed" xml:space="preserve"><value>Kon geen audio opnemen. Controleer je microfoon en de microfoonprivacyinstellingen van Windows en probeer het opnieuw.</value></data>
   <data name="TranscriptionRecordingEmpty" xml:space="preserve"><value>De opname is leeg. Probeer het opnieuw.</value></data>
   <data name="TranscriptionRecordingLimit" xml:space="preserve"><value>De opname heeft de limiet van 25 MB bereikt en is verwijderd. Neem een korter bericht op.</value></data>
+  <data name="SettingsDictate.Header" xml:space="preserve"><value>Dicteren</value></data>
+  <data name="SettingsDictate.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Dicteren</value></data>
+  <data name="SettingsDictateNone.Content" xml:space="preserve"><value>Geen</value></data>
+  <data name="SettingsDictateWindows.Content" xml:space="preserve"><value>Windows</value></data>
+  <data name="SettingsDictateTranscriptions.Content" xml:space="preserve"><value>Transcripties</value></data>
 </root>

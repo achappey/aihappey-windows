@@ -33,6 +33,10 @@ public sealed partial class VideosPage : UserControl
     public string PromptText => Prompt.Text.Trim();
     public IReadOnlyList<ComposerAttachment> Attachments => attachments.ToArray();
     public bool StartDictation() => WindowsVoiceTyping.TryStart(Prompt);
+    internal TextBox DictationInput => Prompt;
+    internal Button DictationButton => Dictate;
+    private bool dictating;
+    internal void SetDictating(bool value) { dictating = value; UpdateActions(); }
     public VideosPage()
     {
         InitializeComponent(); Name = "VideosPage";
@@ -140,8 +144,8 @@ public sealed partial class VideosPage : UserControl
     public void SetSubmitting(bool value) { submitting = value; UpdateActions(); }
     private void UpdateActions()
     {
-        Prompt.IsReadOnly = !editable || submitting; AddAttachment.IsEnabled = Settings.IsEnabled = Dictate.IsEnabled = editable && !submitting; OpenFolder.IsEnabled = editable;
-        Send.IsEnabled = editable && !submitting && hasModel && !string.IsNullOrWhiteSpace(Prompt.Text); RenderTags();
+        Prompt.IsReadOnly = !editable || submitting || dictating; AddAttachment.IsEnabled = Settings.IsEnabled = Dictate.IsEnabled = editable && !submitting; OpenFolder.IsEnabled = editable;
+        Send.IsEnabled = editable && !submitting && !dictating && hasModel && !string.IsNullOrWhiteSpace(Prompt.Text); RenderTags();
     }
     public void SetItems(IReadOnlyList<LibraryVideo> videos, IReadOnlyList<VideoJob> jobs)
     {

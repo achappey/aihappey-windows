@@ -80,6 +80,7 @@ public sealed partial class ChatShell
     }
     private void RefreshProviderFiltering()
     {
+        UpdateDictationAvailability();
         UpdateTargetSuggestions(); ImageModelSuggestions(); VideoModelSuggestions(); TranscriptionModelSuggestions(); SpeechModelSuggestions();
         if (aiModelTargets is not null) modelsOverview.SetItems(ProviderPreferences.Filter(aiModelTargets, session.Settings), modelFavorites);
         // Keep valid explicit selections and drafts. Only fill previously empty pickers from enabled providers.

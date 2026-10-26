@@ -177,11 +177,7 @@ public sealed partial class ChatShell : UserControl
         newChat.Click += (_, _) => NewConversation();
         refresh.Click += async (_, _) => await RunAsync(RefreshActivePageAsync);
         send.Click += async (_, _) => await SendAsync();
-        dictate.Click += (_, _) =>
-        {
-            if (!initialized || busy || closing || historyDialogOpen || catalogDialog is not null) return;
-            if (!WindowsVoiceTyping.TryStart(input)) Show(DesktopResources.Get("VoiceTypingFailed"), InfoBarSeverity.Warning);
-        };
+        dictate.Click += async (_, _) => await ToggleComposerDictationAsync(DesktopPage.Chat);
         stop.Click += (_, _) => operation?.Cancel();
         settingsButton.Click += async (_, _) => await EditSettingsAsync();
         manageAccount.Click += async (_, _) => await RunAsync(async ct =>
@@ -421,6 +417,7 @@ public sealed partial class ChatShell : UserControl
 
     private void UpdateMode(ServiceKind selected)
     {
+        if (selected != Service) DiscardDictation();
         target.IsSuggestionListOpen = false;
         service = selected;
         updatingMode = true;
@@ -487,7 +484,7 @@ public sealed partial class ChatShell : UserControl
     private async Task SendAsync(McpSelectedPrompt? selectedPrompt = null)
     {
         if (activePage == DesktopPage.Realtime) { await SendRealtimeAsync(selectedPrompt); return; }
-        if (busy || closing || historyDialogOpen || catalogDialog is not null
+        if (busy || closing || historyDialogOpen || catalogDialog is not null || dictation is not null || dictationChanging || composerDictation is not null
             || selectedPrompt is null && string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
         UpdateTargetSuggestions();
         var selected = TargetId;
@@ -650,6 +647,7 @@ public sealed partial class ChatShell : UserControl
     private void NewConversation()
     {
         if (busy && operation is not null || closing || historyDialogOpen) return;
+        DiscardDictation();
         ShowPage(DesktopPage.Chat);
         current = new() { Service = Service };
         SelectNewChatModel();
@@ -759,6 +757,7 @@ public sealed partial class ChatShell : UserControl
     private async Task EditSettingsAsync()
     {
         if (busy || closing || pendingProviderSettingsWrites > 0 || catalogDialog is not null || historyDialogOpen) return;
+        DiscardDictation();
         historyDialogOpen = true;
         try { await LoadLocalAgentsAsync(downloadLifetime.Token); }
         catch (Exception) { historyDialogOpen = false; Show(DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error); return; }
@@ -849,6 +848,7 @@ public sealed partial class ChatShell : UserControl
         UpdateModelFavorites();
         speechPage.SetBusy(value, inference && activePage == DesktopPage.Speech);
         transcriptionsPage.SetBusy(value, inference && activePage == DesktopPage.Transcriptions);
+        UpdateDictationAvailability();
         progress.IsActive = value;
         progress.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         stop.Visibility = value ? Visibility.Visible : Visibility.Collapsed;

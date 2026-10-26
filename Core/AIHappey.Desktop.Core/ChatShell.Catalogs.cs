@@ -136,7 +136,7 @@ public sealed partial class ChatShell
 
     private void ShowPage(DesktopPage page)
     {
-        if (page != DesktopPage.Transcriptions) DiscardDictation();
+        if (page != activePage) DiscardDictation();
         if (page != DesktopPage.Realtime && realtime is not null) realtimeCleanup = StopRealtimeAsync();
         if (page == DesktopPage.Realtime && activePage != DesktopPage.Realtime)
         {
@@ -150,7 +150,7 @@ public sealed partial class ChatShell
         overviewHost.Visibility = chat ? Visibility.Collapsed : Visibility.Visible;
         chatModes.Visibility = target.Visibility = composer.Visibility = disclaimer.Visibility = chat ? Visibility.Visible : Visibility.Collapsed;
         if (page == DesktopPage.Realtime) chatModes.Visibility = target.Visibility = Visibility.Collapsed;
-        else { dictate.Visibility = Visibility.Visible; input.PlaceholderText = DesktopResources.Get("AskAnything"); ToolbarControls.Label(send, DesktopResources.Get("SendMessage")); }
+        else { input.PlaceholderText = DesktopResources.Get("AskAnything"); ToolbarControls.Label(send, DesktopResources.Get("SendMessage")); }
         target.IsSuggestionListOpen = false;
         chatModelToolbar.Visibility = page == DesktopPage.Chat ? Visibility.Visible : Visibility.Collapsed;
         scroll.Visibility = chat && current.Messages.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -184,6 +184,7 @@ public sealed partial class ChatShell
         RefreshConversationActivity();
         UpdatePageButtons();
         UpdateRealtimeControls();
+        UpdateDictationAvailability();
         if (page == DesktopPage.Realtime) RenderTranscript();
         AutomationProperties.SetHelpText(refresh, chat ? DesktopResources.Get("RefreshTargets") : DesktopResources.Get(page switch
         { DesktopPage.Images => "ImageRefresh", DesktopPage.Videos => "VideoRefresh", DesktopPage.Speech => "SpeechRefresh", DesktopPage.Transcriptions => "TranscriptionRefresh", DesktopPage.Files => "FilesRefresh", DesktopPage.Agents => "RefreshAgents", DesktopPage.Mcp => "McpRefresh", DesktopPage.Models => "RefreshModels", DesktopPage.Providers => "RefreshProviders", DesktopPage.Usage => "UsageRefresh", _ => "RefreshSkills" }));

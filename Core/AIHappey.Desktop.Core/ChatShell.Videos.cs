@@ -30,7 +30,7 @@ public sealed partial class ChatShell
     private UrlAttachmentDialog? videoLinkDialog;
     private ContentDialog? videoDeleteDialog;
     private VideoInputStore VideoInputs => new(Path.Combine(session.DataDirectory, "video-inputs", ImageLibraryStore.Partition(session)));
-    private bool CanUseVideos => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && activePage == DesktopPage.Videos;
+    private bool CanUseVideos => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && dictation is null && !dictationChanging && activePage == DesktopPage.Videos;
     private ChatTarget? SelectedVideoModel => videoModels.FirstOrDefault(m => m.Id == videoTarget.Text.Trim());
     private void PrepareVideos()
     {
@@ -40,12 +40,7 @@ public sealed partial class ChatShell
         videosPage.SendRequested = () => videoSubmission = SendVideosAsync(); videosPage.PickRequested = PickVideoAttachmentsAsync;
         videosPage.LinkRequested = AddVideoLinkAsync; videosPage.AttachmentDataRequested = AdmitVideoDataAsync;
         videosPage.SettingsRequested = EditVideoSettingsAsync; videosPage.FolderRequested = OpenVideosFolderAsync; videosPage.PreviewRequested = PreviewVideoAsync;
-        videosPage.DictationRequested = () =>
-        {
-            if (CanUseVideos && !videosPage.StartDictation())
-                videosPage.Notice(DesktopResources.Get("VoiceTypingFailed"), InfoBarSeverity.Warning);
-            return Task.CompletedTask;
-        };
+        videosPage.DictationRequested = () => ToggleComposerDictationAsync(DesktopPage.Videos);
     }
     private void VideoModelSuggestions(string query = "") => ConfigurePrimitivePicker(videoTarget, videoModels, "video");
     private void UpdateVideoFavorite() => UpdateModelFavorites();

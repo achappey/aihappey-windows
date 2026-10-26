@@ -58,6 +58,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             location.SelectionChanged += (_, _) => ToggleUrl();
         }
         DocumentTextExtraction.IsOn = settings.ConvertAttachmentsToText;
+        DictateChoice.SelectedItem = DictateChoice.Items.OfType<ComboBoxItem>().Single(item => (string)item.Tag == chatPreferences.Dictate);
         ShowTokens.IsOn = chatPreferences.ShowTokens;
         ShowMetrics.IsOn = chatPreferences.ShowMetrics;
         ShowProviderLogo.IsOn = chatPreferences.ShowProviderLogo;
@@ -122,6 +123,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         Result = null;
         if (imageStorage.PickerOpen || videoStorage.PickerOpen) { args.Cancel = true; return; }
         chatPreferences.ShowTokens = ShowTokens.IsOn;
+        chatPreferences.Dictate = (string)((ComboBoxItem)DictateChoice.SelectedItem).Tag;
         chatPreferences.ShowMetrics = ShowMetrics.IsOn;
         chatPreferences.ShowProviderLogo = ShowProviderLogo.IsOn;
         chatPreferences.ApiDebugEnabled = ApiDebugEnabled.IsOn;

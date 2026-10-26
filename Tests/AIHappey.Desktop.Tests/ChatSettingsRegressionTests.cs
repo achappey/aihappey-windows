@@ -17,6 +17,17 @@ internal static class ChatSettingsRegressionTests
               "providerMetadata":{"custom":{"futureOption":true}}}}
             """);
         var loaded = await SettingsStore.LoadAsync(directory, new());
+        check(loaded.Chat.Dictate == "windows" && new ChatPreferences().Dictate == "windows", "dictation: fresh and legacy settings preserve Windows voice typing by default");
+        foreach (var engine in new[] { "none", "windows", "transcriptions" })
+        {
+            loaded.Chat.Dictate = engine;
+            check(loaded.Clone().Chat.Dictate == engine && loaded.Chat.InferenceDefaults().Dictate == engine, "dictation: cloning and inference resets preserve " + engine);
+            await SettingsStore.SaveAsync(directory, loaded);
+            check((await SettingsStore.LoadAsync(directory, new())).Chat.Dictate == engine, "dictation: persisted engine survives restart: " + engine);
+            check(!loaded.Chat.RequestBody("custom/model", "fixture", [], "custom").ContainsKey("dictate"), "dictation: engine is not an inference request field");
+        }
+        loaded.Chat.Dictate = "unknown";
+        check(loaded.Chat.Dictate == "windows", "dictation: invalid values retain the supported Windows default");
         check(!loaded.Chat.ShowTokens && loaded.Chat.ShowProviderLogo,
             "chat display: old settings default to tokens off and provider logos on");
         check(!new ChatPreferences().ShowTokens && new ChatPreferences().ShowProviderLogo,

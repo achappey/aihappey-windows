@@ -57,6 +57,11 @@
                     <ToggleSwitch x:Name="ShowProviderLogo" x:Uid="SettingsShowProviderLogo" />
                     <ToggleSwitch x:Name="ShowMetrics" x:Uid="SettingsShowMetrics" />
                     <ToggleSwitch x:Name="ApiDebugEnabled" x:Uid="SettingsApiDebug" />
+                    <ComboBox x:Name="DictateChoice" x:Uid="SettingsDictate" HorizontalAlignment="Left" MinWidth="160">
+                        <ComboBoxItem x:Uid="SettingsDictateNone" Tag="none" />
+                        <ComboBoxItem x:Uid="SettingsDictateWindows" Tag="windows" />
+                        <ComboBoxItem x:Uid="SettingsDictateTranscriptions" Tag="transcriptions" />
+                    </ComboBox>
                     <StackPanel x:Name="ToolOutputContentPanel" Spacing="12">
                         <ToggleSwitch x:Name="ToolOutputText" x:Uid="SettingsToolOutputText" />
                         <ToggleSwitch x:Name="ToolOutputImages" x:Uid="SettingsToolOutputImages" />
