@@ -24,8 +24,9 @@ internal static class RealtimeRegressionTests
         check(usage.GetProperty("totalTokens").GetInt32() == 13, "realtime transcript: Google usage normalizes to desktop token metadata");
         Event("""{"type":"response.output_text.delta","response_id":"partial","delta":"Unfinished"}"""); transcript.Stop();
         check(conversation.Messages.Last().Status == "interrupted", "realtime transcript: stop retains partial speech as interrupted");
-        var history = new HistoryStore(Path.Combine(root, "realtime")); await history.SaveAsync("partition", conversation);
-        check((await history.ListAsync("partition")).Single().Messages.Count == 3, "realtime transcript: portable history roundtrip retains user and assistant turns");
+        var partition = HistoryStore.Partition("realtime-tests", "account", "endpoint");
+        var history = new HistoryStore(Path.Combine(root, "realtime")); await history.SaveAsync(partition, conversation);
+        check((await history.ListAsync(partition)).Single().Messages.Count == 3, "realtime transcript: portable history roundtrip retains user and assistant turns");
         using var handler = new TokenHandler(); using var http = new HttpClient(handler);
         var host = new TokenHost(); var session = new DesktopSession(host, new TestRuntime(), new());
         var client = new DesktopRealtimeTokenClient(new(session, http), http);
@@ -45,8 +46,9 @@ internal static class RealtimeRegressionTests
         live.Stop();
         check(liveHistory.Messages.Count == 2 && liveHistory.Messages.Last().Text == "Answer final." && liveHistory.Messages.All(message => message.Status == "complete"),
             "Live Stop: final fragments survive and confirmed transcripts are not marked interrupted");
-        await history.SaveAsync("live-partition", liveHistory);
-        var savedLive = (await history.ListAsync("live-partition")).Single();
+        var livePartition = HistoryStore.Partition("live-tests", "account", "endpoint");
+        await history.SaveAsync(livePartition, liveHistory);
+        var savedLive = (await history.ListAsync(livePartition)).Single();
         check(savedLive.Messages.Last().Text == "Answer final." && JsonSerializer.SerializeToElement(savedLive.Metadata["liveFinalUsage"]).GetProperty("seconds").GetDouble() == 12.5,
             "Live Stop: portable UI-part history preserves final transcript and cumulative usage");
         var livePreferences = new RealtimePreferences { LiveClientTarget = "private-client-model", ProviderOptions = JsonNode.Parse("""{"openai":{"session":{"store":true,"type":"realtime","audio":{"input":{"turn_detection":{"type":"semantic_vad"}}},"delegation":{"type":"client"}}}}""")!.AsObject() };

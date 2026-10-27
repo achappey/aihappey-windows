@@ -1,10 +1,10 @@
 // Compare the production C# projection with the actual web aggregator on the same portable fixture.
-// Build the nonvisual test executable first; no network, credentials, or UI required.
+// Always build the current nonvisual test executable; no credentials or UI required.
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
-const { execFileSync } = require('node:child_process');
+const { buildAndRun } = require('./current-source.cjs');
 const root = path.resolve(__dirname, '..');
 const chat = path.resolve(root, '../aihappey-chat');
 const ts = require(require.resolve('typescript', { paths: [chat] }));
@@ -15,7 +15,7 @@ vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.Mo
 process.env.TZ = 'UTC';
 const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'Fixtures/usage-conversations.json'), 'utf8'));
 const web = exportsObject.buildUsageAnalytics({ conversations: fixture, providers: { openai: { name: 'OpenAI' }, custom: { name: 'Custom provider' } } });
-const output = execFileSync('dotnet', ['run', '--no-build', '--project', path.join(__dirname, 'AIHappey.Desktop.Tests/AIHappey.Desktop.Tests.csproj'), '--', '--usage-snapshot'], { encoding: 'utf8', cwd: root });
+const output = buildAndRun(path.join(__dirname, 'AIHappey.Desktop.Tests/AIHappey.Desktop.Tests.csproj'), ['--usage-snapshot']);
 const native = JSON.parse(output.trim());
 const plain = value => JSON.parse(JSON.stringify(value, (_, v) => Object.prototype.toString.call(v) === '[object Map]' ? Object.fromEntries(v) : Object.prototype.toString.call(v) === '[object Set]' ? [...v] : v));
 let checks = 0;

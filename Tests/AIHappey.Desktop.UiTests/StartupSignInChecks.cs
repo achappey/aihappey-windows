@@ -50,8 +50,8 @@ public partial class App
                     }
                     if (scenario == "cancel") dialog.Hide();
                     else Confirm(dialog);
+                    await host.AccountCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
                 }
-                await Task.Delay(80);
                 await HistoryIdleAsync(shell);
                 if (scenario == "sign-in failure")
                 {
@@ -72,7 +72,8 @@ public partial class App
                     Invoke(Field<MenuFlyoutItem>(shell, "manageAccount"));
                     var retry = await OpenDialogAsync(shell);
                     Confirm(retry);
-                    await Task.Delay(80); await HistoryIdleAsync(shell);
+                    await host.AccountCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                    await HistoryIdleAsync(shell);
                     Check(!host.RequiresSignIn && host.AccountActions == 2 && handler.Requests == 1
                         && !Field<InfoBar>(shell, "notice").IsOpen,
                         context + ": later account-button sign-in loads models without restarting");
@@ -82,6 +83,15 @@ public partial class App
                     context + ": authenticated startup loads the model list once");
                 if (scenario == "cached account")
                     Check(host.AccountActions == 0, context + ": cached signed-in startup never opens a modal");
+            }
+            catch
+            {
+                var notice = Field<InfoBar>(shell, "notice");
+                results.Add($"DIAGNOSTIC: {context}: signedIn={host.SignedIn}; busy={Field<bool>(shell, "busy")}; "
+                    + $"accountActions={host.AccountActions}; authenticationAttempts={host.AuthenticationAttempts}; "
+                    + $"requests={string.Join(", ", handler.Paths)}; noticeOpen={notice.IsOpen}; severity={notice.Severity}; "
+                    + $"notice={Field<TextBlock>(shell, "noticeMessage").Text}");
+                throw;
             }
             finally
             {
@@ -104,6 +114,7 @@ public partial class App
         public int AccountActions { get; private set; }
         public int AuthenticationAttempts { get; private set; }
         public TaskCompletionSource Initialized { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource AccountCompleted { get; private set; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task InitializeAsync(CancellationToken ct) { Initialized.TrySetResult(); return Task.CompletedTask; }
         public Task AuthenticateAsync(HttpRequestMessage request, ServiceKind service, CancellationToken ct)
         {
@@ -113,6 +124,7 @@ public partial class App
         }
         public async Task ManageAccountAsync(object xamlRoot, CancellationToken ct)
         {
+            AccountCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
             AccountActions++;
             var dialog = new ContentDialog
             {
@@ -121,11 +133,15 @@ public partial class App
             };
             SystemAppearance.PrepareDialog(dialog);
             using var registration = ct.Register(() => dialog.DispatcherQueue.TryEnqueue(() => dialog.Hide()));
-            var choice = await dialog.ShowAsync();
-            ct.ThrowIfCancellationRequested();
-            if (choice != ContentDialogResult.Primary) return;
-            if (FailSignIn) throw new InvalidOperationException("Sign-in failure fixture");
-            SignedIn = true;
+            try
+            {
+                var choice = await dialog.ShowAsync();
+                ct.ThrowIfCancellationRequested();
+                if (choice != ContentDialogResult.Primary) return;
+                if (FailSignIn) throw new InvalidOperationException("Sign-in failure fixture");
+                SignedIn = true;
+            }
+            finally { AccountCompleted.TrySetResult(); }
         }
     }
 
@@ -140,9 +156,11 @@ public partial class App
     private sealed class StartupSignInHandler : HttpMessageHandler
     {
         public int Requests { get; private set; }
+        public List<string> Paths { get; } = [];
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
             Requests++;
+            Paths.Add(request.RequestUri!.AbsolutePath);
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("""{"data":[{"id":"fixture/model","type":"language","owned_by":"fixture"}]}""",

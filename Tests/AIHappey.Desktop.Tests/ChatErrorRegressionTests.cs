@@ -24,7 +24,8 @@ internal static class ChatErrorRegressionTests
             { type = "error", error = new { message = exact, code = "invalid_request_error" } }))!;
         var nestedEvents = nestedResponseError.ToUnifiedStreamEvent("openai").ToArray();
         check(nestedEvents.Length == 1 && nestedEvents[0].Event.Data is AIErrorEventData { ErrorText: exact },
-            "chat errors: nested OpenAI Responses error survives real stream converter and mapper");
+            "chat errors: nested OpenAI Responses error survives real stream converter and mapper; actual="
+                + JsonSerializer.Serialize(nestedEvents.Select(item => item.Event.Data)));
         var failedResponse = JsonSerializer.Deserialize<ResponseStreamPart>(JsonSerializer.Serialize(new { type = "response.failed",
             response = new { id = "response", status = "failed", model = "gpt-6-luna", output = Array.Empty<object>(), error = new { message = exact, code = "invalid_request_error" } } }))!;
         var failedEvents = failedResponse.ToUnifiedStreamEvent("openai").ToArray();

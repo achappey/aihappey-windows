@@ -25,6 +25,7 @@ const labels = {
   }
 };
 const escape = value => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+const missingReports = [];
 for (const lang of ['en', 'nl']) {
   const regional = JSON.parse(fs.readFileSync(path.join(locales, lang, 'regional.json'), 'utf8'));
   const main = JSON.parse(fs.readFileSync(path.join(locales, lang, lang + '.json'), 'utf8').replace(/^\uFEFF/, ''));
@@ -43,11 +44,16 @@ for (const lang of ['en', 'nl']) {
   const file = path.resolve(__dirname, '../Core/AIHappey.Desktop.Core/Strings', lang, 'Resources.resw');
   const original = fs.readFileSync(file, 'utf8');
   let text = original;
+  const missing = [];
   for (const [name, value] of Object.entries(values)) {
     if (text.includes(`name="${name}"`)) continue;
+    missing.push(name);
     text = text.replace('</root>', `  <data name="${name}" xml:space="preserve"><value>${escape(value)}</value></data>\n</root>`);
   }
-  if (process.argv.includes('--check')) { if (original !== text) throw new Error('Missing provider resources: ' + file); }
+  if (process.argv.includes('--check')) {
+    if (missing.length) missingReports.push(`Missing ${missing.length} provider resource keys in existing file ${file}:\n${missing.join('\n')}`);
+  }
   else if (original !== text) fs.writeFileSync(file, text);
 }
+if (missingReports.length) throw new Error(missingReports.join('\n\n'));
 console.log('Provider resources verified for en/nl.');

@@ -53,8 +53,9 @@ internal static class ProviderSettingsRegressionTests
         var nullSettings = JsonSerializer.Deserialize<DesktopSettings>("""{"enabledProvidersByType":null}""", JsonSerializerOptions.Web)!;
         Check(nullSettings.EnabledProvidersByType.Count == 0, "null settings object is safe");
 
-        var before = new Dictionary<string, string> { ["X-OpenAI-Key"] = "old", ["X-Anthropic-Key"] = "remove", ["X-Other"] = "untouched" };
-        var after = new Dictionary<string, string> { ["x-openai-key"] = "changed", ["X-Google-Key"] = "new", ["X-Other"] = "new custom value" };
+        // Distinct credential sentinels cannot accidentally match legitimate setting names (e.g. "threshold").
+        var before = new Dictionary<string, string> { ["X-OpenAI-Key"] = "fixture-secret-old-61932", ["X-Anthropic-Key"] = "fixture-secret-removed-72184", ["X-Other"] = "fixture-secret-untouched-81293" };
+        var after = new Dictionary<string, string> { ["x-openai-key"] = "fixture-secret-changed-91024", ["X-Google-Key"] = "fixture-secret-new-10635", ["X-Other"] = "fixture-secret-custom-21746" };
         var changes = ProviderPreferences.CredentialChanges(before, after);
         Check(changes.Count == 3 && changes["OpenAI"] && changes["Google"] && !changes["Anthropic"], "key edits enable and removals disable recognized providers, case-insensitively");
         ProviderPreferences.ApplyCredentialChanges(loaded, changes);
@@ -62,7 +63,9 @@ internal static class ProviderSettingsRegressionTests
         Check(ProviderPreferences.CredentialChanges(after, after).Count == 0, "unchanged keys cannot overwrite manual provider selections");
         Check(ProviderPreferences.CredentialChanges(new Dictionary<string, string>(), new Dictionary<string, string> { ["X-OpenAI-Key"] = " " })["OpenAI"] == false, "blank keys never enable providers");
         var serialized = JsonSerializer.Serialize(loaded, JsonSerializerOptions.Web);
-        Check(!serialized.Contains("old") && !serialized.Contains("remove") && !serialized.Contains("changed") && !serialized.Contains("X-OpenAI-Key"), "provider preferences never serialize credential values or headers");
+        Check(before.Values.Concat(after.Values).All(value => !serialized.Contains(value, StringComparison.Ordinal))
+            && before.Keys.Concat(after.Keys).All(key => !serialized.Contains(key, StringComparison.OrdinalIgnoreCase)),
+            "provider preferences never serialize credential values or headers");
         var large = Enumerable.Range(0, 12000).Select(i => new ChatTarget("disabled/" + i, "Hidden") { ModelType = "language" }).Concat(models);
         Check(ProviderPreferences.Filter(large, loaded).Count == 3, "large catalog filtering excludes disabled providers before picker limits");
 

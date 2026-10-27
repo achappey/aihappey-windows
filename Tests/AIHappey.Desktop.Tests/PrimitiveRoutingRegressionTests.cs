@@ -19,7 +19,8 @@ internal static class PrimitiveRoutingRegressionTests
                 && context.GetProperty("parts")[0].GetProperty("text").GetString() == "The submitted prompt",
                 type + " routing uses the submitted text as user evidence");
             var question = (DecisionChoiceQuestion)request.Questions["favorite"];
-            check(question.Criteria.Keys.SequenceEqual(candidates.Select(m => m.Id)) && question.Instructions == "Choose carefully"
+            check(question.Criteria.Keys.SequenceEqual(candidates.Select(m => m.Id))
+                && wire.GetProperty("questions").GetProperty("favorite").GetProperty("instructions").GetString() == "Choose carefully"
                 && !wire.GetRawText().Contains("never-send"), type + " routing sends only offered candidate metadata and router instructions");
             using var response = JsonDocument.Parse("""{"answers":{"favorite":{"type":"choice","choice":"q/second"}}}""");
             check(DecisionRouting.Winner(response.RootElement, candidates.Select(c => c.Id).ToArray()) == "q/second",
@@ -34,8 +35,10 @@ internal static class PrimitiveRoutingRegressionTests
             check(selection.Ids.Count == 1, type + " selection retains its final checkbox");
             var store = new CatalogFavoritesStore(Path.Combine(root, "primitive-favorites-" + type));
             var key = ModelOverviewCatalog.FavoriteKey(candidates[0]);
-            await store.SaveAsync("account-a", new HashSet<string> { key }, CancellationToken.None);
-            check((await store.LoadAsync("account-a")).Contains(key) && !(await store.LoadAsync("account-b")).Contains(key),
+            var accountA = HistoryStore.Partition("primitive-tests", "account-a", type);
+            var accountB = HistoryStore.Partition("primitive-tests", "account-b", type);
+            await store.SaveAsync(accountA, new HashSet<string> { key }, CancellationToken.None);
+            check((await store.LoadAsync(accountA)).Contains(key) && !(await store.LoadAsync(accountB)).Contains(key),
                 type + " favorite persistence is isolated between accounts");
         }
         var agent = new DesktopAgent(new JsonObject { ["name"] = "SelectModelAgent", ["model"] = new JsonObject { ["id"] = "openai/shared" } });

@@ -7,6 +7,7 @@
     <Project Path="Samples/AIHappey.Desktop.HeaderAuth/AIHappey.Desktop.HeaderAuth.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="Tests/AIHappey.Desktop.Realtime.Tests/AIHappey.Desktop.Realtime.Tests.csproj" />
     <Project Path="Tests/AIHappey.Desktop.Tests/AIHappey.Desktop.Tests.csproj" />
     <Project Path="Tests/AIHappey.Desktop.UiTests/AIHappey.Desktop.UiTests.csproj">
       <Platform Project="x64" />

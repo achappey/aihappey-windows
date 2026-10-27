@@ -17,144 +17,19 @@ void Reject(Action action, string name)
     throw new Exception("FAILED: expected rejection: " + name);
 }
 var root = Path.Combine(Path.GetTempPath(), "AIHappey.Desktop.Tests", Guid.NewGuid().ToString("N"));
-try
+if (args.SequenceEqual(["--usage-snapshot"]))
 {
-    CanvasRegressionTests.Run(Check);
-    if (args.Contains("--canvas-only")) { Console.WriteLine($"All {tests} Canvas checks passed."); return; }
-    if (args.Contains("--agents-only"))
-    {
-        await AgentRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} agent checks passed."); return;
-    }
-    await PrimitiveRoutingRegressionTests.RunAsync(Check, root);
-    if (args.Contains("--primitive-routing-only")) { Console.WriteLine($"All {tests} primitive routing/favorite checks passed."); return; }
-    await RealtimeRegressionTests.RunAsync(Check, root);
-    if (args.Contains("--realtime-only")) { Console.WriteLine($"All {tests} realtime history/security checks passed."); return; }
-    if (args.Contains("--elicitation-only"))
-    {
-        await ElicitationRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} elicitation checks passed.");
-        return;
-    }
-    if (args.Contains("--chat-streaming-only"))
-    {
-        await ChatFileRegressionTests.RunAsync(Check, root);
-        await ChatErrorRegressionTests.RunAsync(Check, root);
-        TranscriptRegressionTests.Run(Check);
-        Console.WriteLine($"All {tests} chat streaming/file/error/presentation checks passed."); return;
-    }
-    if (args.Contains("--mcp-auth-only"))
-    {
-        await McpAuthenticationRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} MCP authentication checks passed."); return;
-    }
-    if (args.Contains("--windows-tools-only"))
-    {
-        await WindowsToolRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} Windows tool checks passed."); return;
-    }
-    if (args.Contains("--chat-provider-forms-only"))
-    {
-        await ChatProviderFormRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} native provider form checks passed."); return;
-    }
-    if (args.Contains("--usage-snapshot"))
-    {
-        using var fixture = typeof(UsageRegressionTests).Assembly.GetManifestResourceStream("Desktop.UsageFixture")!;
-        var usageFixture = JsonSerializer.Deserialize<Conversation[]>(fixture, PortableConversations.Json)!;
-        Console.WriteLine(JsonSerializer.Serialize(UsageAnalytics.Build(usageFixture,
-            new Dictionary<string, string> { ["openai"] = "OpenAI", ["custom"] = "Custom provider" }, TimeZoneInfo.Utc), JsonSerializerOptions.Web));
-        return;
-    }
-    await OverviewConsistencyRegressionTests.RunAsync(Check, root);
-    if (args.Contains("--overview-consistency-only")) { Console.WriteLine($"All {tests} overview/metrics checks passed."); return; }
-    await UsageRegressionTests.RunAsync(Check, root);
-    if (args.Contains("--usage-only")) { Console.WriteLine($"All {tests} usage checks passed."); return; }
-    await EnterpriseSettingsRegressionTests.RunAsync(Check, root);
-    await ProviderSettingsRegressionTests.RunAsync(Check, root);
-    if (args.Contains("--provider-settings-only")) { Console.WriteLine($"All {tests} provider settings checks passed."); return; }
-    if (args.Contains("--enterprise-settings-only"))
-    {
-        Console.WriteLine($"All {tests} enterprise settings checks passed."); return;
-    }
-    if (args.Contains("--chat-files-only"))
-    {
-        await ChatFileRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} chat file checks passed."); return;
-    }
-    if (args.Contains("--authoring-tools-only"))
-    {
-        await AuthoringToolRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} authoring tool checks passed."); return;
-    }
-    if (args.Contains("--agent-presentation-only"))
-    {
-        await AgentRegressionTests.RunAsync(Check, root);
-        TranscriptRegressionTests.Run(Check);
-        Console.WriteLine($"All {tests} agent and message presentation checks passed."); return;
-    }
-    await ExplorerRegressionTests.RunAsync(Check, root);
-    if (args.Contains("--explorer-only")) { Console.WriteLine($"All {tests} Explorer checks passed."); return; }
-    if (args.Contains("--plugins-only")) { await PluginRegressionTests.RunAsync(Check, root); Console.WriteLine($"All {tests} plugin checks passed."); return; }
-    await PluginRegressionTests.RunAsync(Check, root);
-    await ChatSettingsRegressionTests.RunAsync(Check, root);
-    await ChatDebugRegressionTests.RunAsync(Check, root);
-    await ChatFileRegressionTests.RunAsync(Check, root);
-    if (args.Contains("--chat-settings-only"))
-    {
-        Console.WriteLine($"All {tests} chat settings checks passed."); return;
-    }
-    if (args.Contains("--skills-only"))
-    {
-        await SkillRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} skill checks passed."); return;
-    }
-    if (args.Contains("--chat-errors-only"))
-    {
-        await ChatErrorRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} chat error checks passed."); return;
-    }
-    if (args.Contains("--local-tools-only"))
-    {
-        await LocalToolRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} local tool checks passed."); return;
-    }
-    if (args.Contains("--videos-only"))
-    {
-        await VideoRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} video checks passed."); return;
-    }
-    if (args.Contains("--images-only"))
-    {
-        await ImageRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} image checks passed."); return;
-    }
-    if (args.Contains("--speech-only"))
-    {
-        await SpeechRegressionTests.RunAsync(Check, root);
-        Console.WriteLine($"All {tests} speech checks passed."); return;
-    }
-    if (args.Contains("--models-overview-only"))
-    {
-        await ModelsOverviewRegressionTests.RunAsync(Check, root);
-        await AiModelRegressionTests.RunAsync(Check, root, new DesktopSession(new TestHost(), new TestRuntime(), new()));
-        Console.WriteLine($"All {tests} model overview and preference checks passed."); return;
-    }
-    await ProviderRegressionTests.RunAsync(Check, root);
-    await LocalToolRegressionTests.RunAsync(Check, root);
-    await ChatErrorRegressionTests.RunAsync(Check, root);
-    if (args.Contains("--providers-only")) { Console.WriteLine($"All {tests} provider checks passed."); return; }
-    await ModelsOverviewRegressionTests.RunAsync(Check, root);
-    await AgentRegressionTests.RunAsync(Check, root);
-    TranscriptRegressionTests.Run(Check);
-    await ToolApprovalRegressionTests.RunAsync(Check, root);
-    await McpPresentationRegressionTests.RunAsync(Check, root);
-    await McpAuthenticationRegressionTests.RunAsync(Check, root);
-    await ElicitationRegressionTests.RunAsync(Check, root);
-    await SkillRegressionTests.RunAsync(Check, root);
-    await ImageRegressionTests.RunAsync(Check, root);
-    await VideoRegressionTests.RunAsync(Check, root);
-    await SpeechRegressionTests.RunAsync(Check, root);
+    using var fixture = typeof(UsageRegressionTests).Assembly.GetManifestResourceStream("Desktop.UsageFixture")!;
+    var conversations = JsonSerializer.Deserialize<Conversation[]>(fixture, PortableConversations.Json)!;
+    Console.WriteLine(JsonSerializer.Serialize(UsageAnalytics.Build(conversations,
+        new Dictionary<string, string> { ["openai"] = "OpenAI", ["custom"] = "Custom provider" }, TimeZoneInfo.Utc), JsonSerializerOptions.Web));
+    return;
+}
+try { await RegressionSuites.RunAsync(args, Check, Reject, root, RunBoundariesAsync); }
+finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+
+async Task RunBoundariesAsync()
+{
     var defaults = new DesktopSettings();
     Check(defaults.Ai.Location == RuntimeLocation.Local && defaults.Agents.Location == RuntimeLocation.Local, "public defaults are local");
     Reject(() => defaults.Validate(false), "enterprise rejects local");
@@ -372,9 +247,6 @@ try
     using var http = new HttpClient(handler);
     var session = new DesktopSession(fakeHost, fakeRuntime, new DesktopSettings());
     var client = new DesktopChatClient(session, http);
-    await ComposerAttachmentRegressionTests.RunAsync(Check, Reject, session);
-    await CatalogRegressionTests.RunAsync(Check, Reject, root, session);
-    await AiModelRegressionTests.RunAsync(Check, root, session);
     Check((await client.ListAsync(ServiceKind.Agents, CancellationToken.None)).Single().Id == "agent", "typed agent catalog");
     var user = new UIMessage { Id = "user", Role = Role.user, Parts = [new TextUIPart { Text = "hello" }] };
     foreach (var service in new[] { ServiceKind.Ai, ServiceKind.Agents })
@@ -396,7 +268,7 @@ try
     try { await missing.ResolveAsync(ServiceKind.Ai, new(), CancellationToken.None); throw new Exception("Expected missing runtime"); }
     catch (InvalidOperationException) { Check(true, "missing managed runtime diagnosis"); }
     await missing.DisposeAsync();
-    if (args.Length == 1)
+    if (args.Length == 1 && !args[0].StartsWith("--", StringComparison.Ordinal))
     {
         var local = new ManagedLocalRuntime(Path.GetFullPath(args[0]), root);
         try
@@ -429,7 +301,6 @@ try
     }
     Console.WriteLine($"{tests} checks passed.");
 }
-finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
 
 sealed class TestHost : IDesktopHost
 {

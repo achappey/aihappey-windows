@@ -14,7 +14,8 @@ internal static class TranscriptRegressionTests
             => ChatMessagePresentation.Resolve(new UIMessage { Role = role, Metadata = new()
                 { ["model"] = model!, ["providerKey"] = providerKey! } }, service, fallback, enabled);
         check(Present("openai/gpt-chat") is { Model: "gpt-chat", Provider.Id: "openai" }, "assistant header: catalog logo replaces matching provider prefix");
-        check(Present("openai/gpt-chat", false) is { Model: "openai/gpt-chat", Provider: null }, "assistant header: disabling logos restores the full label");
+        check(Present("openai/gpt-chat", false) is { Model: "openai/gpt-chat", Provider: null },
+            "assistant header: disabling logos restores the full label; actual=" + Present("openai/gpt-chat", false));
         check(Present("openrouter/anthropic/claude") is { Model: "anthropic/claude", Provider.Id: "openrouter" }, "assistant header: strip only the outer provider, preserve nested model path");
         check(Present("unknown-provider/model") is { Model: "unknown-provider/model", Provider: null }, "assistant header: unknown provider preserves full label");
         check(Present("gpt-chat", providerKey: " OPENAI ") is { Model: "gpt-chat", Provider.Id: "openai" }, "assistant header: explicit provider metadata supports raw model IDs");

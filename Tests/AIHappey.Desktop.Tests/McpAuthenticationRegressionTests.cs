@@ -76,7 +76,7 @@ internal static class McpAuthenticationRegressionTests
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             await manager.InstallAsync(server, timeout.Token);
             check(fixture.Launches == 0 && manager.Servers.Single().State == McpConnectionState.AuthenticationRequired,
-                "MCP startup/install silently reports sign-in required: legacy=" + legacy);
+                $"MCP startup/install silently reports sign-in required: legacy={legacy}; actual state={manager.Servers.Single().State}; error={manager.Servers.Single().Error}; browser launches={fixture.Launches}");
             await manager.SignInAsync(server.Id, timeout.Token);
             check(manager.Servers.Single().State == McpConnectionState.Connected && fixture.Launches == 1,
                 "MCP OAuth PKCE completes and discovers automatically: legacy=" + legacy);
