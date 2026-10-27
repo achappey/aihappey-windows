@@ -84,6 +84,16 @@ internal sealed class ChatSettingsFields
             enabled, true, Valid, trackValidation: true);
     }
 
+    public PasswordBox Password(Panel parent, string key, Func<string> read, Action<string> write, Func<bool>? enabled = null)
+    {
+        var box = new PasswordBox { Header = L(key), Password = read(), PasswordRevealMode = PasswordRevealMode.Peek };
+        ControlAppearance.Stock(box); AutomationProperties.SetName(box, L(key)); parent.Children.Add(box);
+        Enabled(box, enabled);
+        refresh.Add(() => { if (box.FocusState == FocusState.Unfocused && box.Password != read()) box.Password = read(); });
+        box.PasswordChanged += (_, _) => Changed(() => write(box.Password));
+        return box;
+    }
+
     public ComboBox Select(Panel parent, string key, Func<string> read, IEnumerable<string> options, Action<string> write, Func<bool>? enabled = null, bool inherit = false, Func<string, string>? label = null)
     {
         var values = options.ToList();
@@ -191,7 +201,9 @@ internal static class ChatProviderForms
     {
         ["openai"] = preferences => new OpenAIChatSettingsForm(preferences),
         ["anthropic"] = preferences => new AnthropicChatSettingsForm(preferences),
-        ["deepseek"] = preferences => new DeepSeekChatSettingsForm(preferences)
+        ["deepseek"] = preferences => new DeepSeekChatSettingsForm(preferences),
+        ["google"] = preferences => new GoogleChatSettingsForm(preferences),
+        ["mistral"] = preferences => new MistralChatSettingsForm(preferences)
     };
     public static IChatProviderForm? Create(string? provider, ChatPreferences preferences) => provider is not null && factories.TryGetValue(provider, out var factory) ? factory(preferences) : null;
 }

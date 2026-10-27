@@ -16,6 +16,9 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/UsageAnalytics.cs" Link="Core/UsageAnalytics.cs" />
     <EmbeddedResource Include="../Fixtures/usage-conversations.json" LogicalName="Desktop.UsageFixture" />
     <EmbeddedResource Include="../Fixtures/chat-provider-parity.json" LogicalName="Desktop.ChatProviderFixture" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ProviderToolsChatConfig.cs" Link="Core/ProviderToolsChatConfig.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/GoogleChatConfig*.cs" Link="Core/%(Filename)%(Extension)" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/MistralChatConfig.cs" Link="Core/MistralChatConfig.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatMessagePresentation.cs" Link="Core/ChatMessagePresentation.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimePreferences.cs" Link="Core/RealtimePreferences.cs" />

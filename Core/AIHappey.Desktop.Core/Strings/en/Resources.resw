@@ -1804,4 +1804,165 @@ Speaker: {1}</value></data>
   <data name="SettingsDictateNone.Content" xml:space="preserve"><value>None</value></data>
   <data name="SettingsDictateWindows.Content" xml:space="preserve"><value>Windows</value></data>
   <data name="SettingsDictateTranscriptions.Content" xml:space="preserve"><value>Transcriptions</value></data>
+  <data name="ChatForm_minimal" xml:space="preserve"><value>Minimal</value></data>
+  <data name="ChatForm_latitude" xml:space="preserve"><value>Latitude</value></data>
+  <data name="ChatForm_longitude" xml:space="preserve"><value>Longitude</value></data>
+  <data name="ChatForm_seed" xml:space="preserve"><value>Seed</value></data>
+  <data name="ChatForm_presencePenalty" xml:space="preserve"><value>Presence penalty</value></data>
+  <data name="ChatForm_frequencyPenalty" xml:space="preserve"><value>Frequency penalty</value></data>
+  <data name="ChatForm_google_enableEnhancedCivicAnswers" xml:space="preserve"><value>Enhanced civic answers</value></data>
+  <data name="ChatForm_google_unspecified" xml:space="preserve"><value>Unspecified</value></data>
+  <data name="ChatForm_google_mediaResolution" xml:space="preserve"><value>Image quality</value></data>
+  <data name="ChatForm_google_responseModalities" xml:space="preserve"><value>Response modalities</value></data>
+  <data name="ChatForm_google_url_context" xml:space="preserve"><value>URL context</value></data>
+  <data name="ChatForm_google_googleMaps" xml:space="preserve"><value>Google Maps</value></data>
+  <data name="ChatForm_google_web_search" xml:space="preserve"><value>Web search</value></data>
+  <data name="ChatForm_google_image_search" xml:space="preserve"><value>Image search</value></data>
+  <data name="ChatForm_google_enterprise_web_search" xml:space="preserve"><value>Enterprise web search</value></data>
+  <data name="ChatForm_google_modalities_text" xml:space="preserve"><value>Text</value></data>
+  <data name="ChatForm_google_modalities_image" xml:space="preserve"><value>Image</value></data>
+  <data name="ChatForm_google_modalities_audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="ChatForm_google_modalities_video" xml:space="preserve"><value>Video</value></data>
+  <data name="ChatForm_google_modalities_document" xml:space="preserve"><value>Document</value></data>
+  <data name="ChatForm_google_interactions_speech_title" xml:space="preserve"><value>Speech</value></data>
+  <data name="ChatForm_google_interactions_speech_language" xml:space="preserve"><value>Language</value></data>
+  <data name="ChatForm_google_interactions_speech_speaker" xml:space="preserve"><value>Speaker name</value></data>
+  <data name="ChatForm_google_interactions_speech_voice" xml:space="preserve"><value>Voice</value></data>
+  <data name="ChatForm_google_interactions_speech_addSpeaker" xml:space="preserve"><value>Add speaker</value></data>
+  <data name="ChatForm_google_interactions_transcription_title" xml:space="preserve"><value>Transcription</value></data>
+  <data name="ChatForm_google_interactions_transcription_languageCodes" xml:space="preserve"><value>Language hints</value></data>
+  <data name="ChatForm_google_interactions_transcription_customVocabulary" xml:space="preserve"><value>Custom vocabulary</value></data>
+  <data name="ChatForm_google_interactions_transcription_speakerDiarization" xml:space="preserve"><value>Identify speakers</value></data>
+  <data name="ChatForm_google_interactions_transcription_wordTimestamps" xml:space="preserve"><value>Include word timestamps</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_title" xml:space="preserve"><value>Response format</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_mimeType" xml:space="preserve"><value>MIME type</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_sampleRate" xml:space="preserve"><value>Sample rate (Hz)</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_bitRate" xml:space="preserve"><value>Bit rate (bps)</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_aspectRatio" xml:space="preserve"><value>Aspect ratio</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_imageSize" xml:space="preserve"><value>Image size</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_resolution" xml:space="preserve"><value>Resolution</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_duration" xml:space="preserve"><value>Duration</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_types_text" xml:space="preserve"><value>Text</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_types_audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_types_image" xml:space="preserve"><value>Image</value></data>
+  <data name="ChatForm_google_interactions_responseFormat_types_video" xml:space="preserve"><value>Video</value></data>
+  <data name="ChatForm_google_interactions_retrieval_apiKey" xml:space="preserve"><value>API key</value></data>
+  <data name="ChatForm_google_interactions_retrieval_parallel_title" xml:space="preserve"><value>Parallel Search</value></data>
+  <data name="ChatForm_google_interactions_retrieval_exa_title" xml:space="preserve"><value>Exa Search</value></data>
+  <data name="ChatForm_google_interactions_other_seed" xml:space="preserve"><value>Seed</value></data>
+  <data name="ChatForm_google_realtimeTranscription_title" xml:space="preserve"><value>Live transcription</value></data>
+  <data name="ChatForm_google_realtimeTranscription_hint" xml:space="preserve"><value>These options apply only to Gemini Live transcription and remain separate from file transcription settings. Automatic voice activity detection is enabled.</value></data>
+  <data name="ChatForm_google_realtimeTranscription_languageCodes" xml:space="preserve"><value>Language hints (one per line or comma-separated)</value></data>
+  <data name="ChatForm_google_realtimeTranscription_customVocabulary" xml:space="preserve"><value>Custom vocabulary (one term per line or comma-separated)</value></data>
+  <data name="ChatForm_google_realtimeTranscription_mode" xml:space="preserve"><value>Transcription mode</value></data>
+  <data name="ChatForm_google_realtimeTranscription_modes_verbatim" xml:space="preserve"><value>Verbatim</value></data>
+  <data name="ChatForm_google_realtimeTranscription_modes_smart" xml:space="preserve"><value>Smart</value></data>
+  <data name="ChatForm_google_realtimeConversation_title" xml:space="preserve"><value>Gemini Live conversation</value></data>
+  <data name="ChatForm_google_realtimeConversation_hint" xml:space="preserve"><value>Direct browser-to-Gemini Live audio using a backend-issued ephemeral token. Gemini Live is a preview API.</value></data>
+  <data name="ChatForm_google_realtimeConversation_inputTranscription" xml:space="preserve"><value>Transcribe microphone audio</value></data>
+  <data name="ChatForm_google_realtimeConversation_outputTranscription" xml:space="preserve"><value>Transcribe Gemini audio</value></data>
+  <data name="ChatForm_google_realtimeConversation_googleSearch" xml:space="preserve"><value>Google Search grounding</value></data>
+  <data name="ChatForm_google_realtimeConversation_turnDetection" xml:space="preserve"><value>Voice activity detection</value></data>
+  <data name="ChatForm_google_realtimeConversation_automaticVad" xml:space="preserve"><value>Automatic voice activity detection</value></data>
+  <data name="ChatForm_google_realtimeConversation_prefixPaddingMs" xml:space="preserve"><value>Prefix padding (ms)</value></data>
+  <data name="ChatForm_google_realtimeConversation_silenceDurationMs" xml:space="preserve"><value>Silence duration (ms)</value></data>
+  <data name="ChatForm_google_realtimeConversation_sessionManagement" xml:space="preserve"><value>Session management</value></data>
+  <data name="ChatForm_google_realtimeConversation_contextCompression" xml:space="preserve"><value>Context window compression</value></data>
+  <data name="ChatForm_google_realtimeConversation_triggerTokens" xml:space="preserve"><value>Compression trigger tokens</value></data>
+  <data name="ChatForm_google_realtimeConversation_sessionResumption" xml:space="preserve"><value>Resume across WebSocket connections</value></data>
+  <data name="ChatForm_google_realtimeConversation_tokenExpiry" xml:space="preserve"><value>Ephemeral token expiry</value></data>
+  <data name="ChatForm_google_realtimeConversation_camera" xml:space="preserve"><value>Camera input</value></data>
+  <data name="ChatForm_google_realtimeConversation_cameraHint" xml:space="preserve"><value>Camera starts off. When enabled during a session, JPEG frames are sent at no more than 1 FPS. Audio-plus-video sessions have a shorter service session limit.</value></data>
+  <data name="ChatForm_google_realtimeConversation_cameraFps" xml:space="preserve"><value>Camera frames per second</value></data>
+  <data name="ChatForm_google_realtimeConversation_jpegQuality" xml:space="preserve"><value>JPEG quality</value></data>
+  <data name="ChatForm_google_realtimeConversation_startCamera" xml:space="preserve"><value>Start camera</value></data>
+  <data name="ChatForm_google_realtimeConversation_stopCamera" xml:space="preserve"><value>Stop camera</value></data>
+  <data name="ChatForm_google_enable_widget" xml:space="preserve"><value>Enable widget</value></data>
+  <data name="ChatForm_google_includeThoughts" xml:space="preserve"><value>Include thoughts</value></data>
+  <data name="ChatForm_google_dynamicThinking" xml:space="preserve"><value>Dynamic thinking</value></data>
+  <data name="ChatForm_google_intervalStart" xml:space="preserve"><value>Start date</value></data>
+  <data name="ChatForm_google_intervalEnd" xml:space="preserve"><value>End date</value></data>
+  <data name="ChatForm_google_blockingConfidence_label" xml:space="preserve"><value>Blocking confidence</value></data>
+  <data name="ChatForm_google_blockingConfidence_unspecified" xml:space="preserve"><value>Unspecified</value></data>
+  <data name="ChatForm_google_blockingConfidence_lowAndAbove" xml:space="preserve"><value>Block low and above</value></data>
+  <data name="ChatForm_google_blockingConfidence_mediumAndAbove" xml:space="preserve"><value>Block medium and above</value></data>
+  <data name="ChatForm_google_blockingConfidence_highAndAbove" xml:space="preserve"><value>Block high and above</value></data>
+  <data name="ChatForm_google_blockingConfidence_higherAndAbove" xml:space="preserve"><value>Block higher and above</value></data>
+  <data name="ChatForm_google_blockingConfidence_veryHighAndAbove" xml:space="preserve"><value>Block very high and above</value></data>
+  <data name="ChatForm_google_blockingConfidence_onlyExtremelyHigh" xml:space="preserve"><value>Block only extremely high</value></data>
+  <data name="ChatForm_google_speech_title" xml:space="preserve"><value>Speech</value></data>
+  <data name="ChatForm_google_speech_seed" xml:space="preserve"><value>Seed</value></data>
+  <data name="ChatForm_google_speech_multiSpeaker" xml:space="preserve"><value>Multi-speaker</value></data>
+  <data name="ChatForm_google_speech_speakers" xml:space="preserve"><value>Speakers</value></data>
+  <data name="ChatForm_google_speech_addSpeaker" xml:space="preserve"><value>Add speaker</value></data>
+  <data name="ChatForm_google_speech_speakerNamePlaceholder" xml:space="preserve"><value>e.g. Alice</value></data>
+  <data name="ChatForm_google_image_title" xml:space="preserve"><value>Image</value></data>
+  <data name="ChatForm_google_image_aspect_ratio" xml:space="preserve"><value>Aspect ratio</value></data>
+  <data name="ChatForm_google_image_image_size" xml:space="preserve"><value>Image size</value></data>
+  <data name="ChatForm_google_videoConfig_title" xml:space="preserve"><value>Video</value></data>
+  <data name="ChatForm_google_videoConfig_task" xml:space="preserve"><value>Task</value></data>
+  <data name="ChatForm_google_videoConfig_providerDefault" xml:space="preserve"><value>Provider default (infer from prompt)</value></data>
+  <data name="ChatForm_google_videoConfig_tasks_text_to_video" xml:space="preserve"><value>Text to video</value></data>
+  <data name="ChatForm_google_videoConfig_tasks_image_to_video" xml:space="preserve"><value>Image to video</value></data>
+  <data name="ChatForm_google_videoConfig_tasks_reference_to_video" xml:space="preserve"><value>Reference to video</value></data>
+  <data name="ChatForm_google_videoConfig_tasks_edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="ChatForm_google_videoConfig_tasks_extend" xml:space="preserve"><value>Extend</value></data>
+  <data name="ChatForm_google_environment_title" xml:space="preserve"><value>Environment (Agents)</value></data>
+  <data name="ChatForm_google_environment_description" xml:space="preserve"><value>Configure a managed Linux sandbox for Google agents. Without sources or network settings, a fresh remote environment is used.</value></data>
+  <data name="ChatForm_google_environment_environmentId" xml:space="preserve"><value>Environment ID</value></data>
+  <data name="ChatForm_google_environment_environmentIdHelp" xml:space="preserve"><value>When an environment ID is set, sources and network settings are disabled and the existing sandbox is reused.</value></data>
+  <data name="ChatForm_google_environment_sources" xml:space="preserve"><value>Sources</value></data>
+  <data name="ChatForm_google_environment_sourceType" xml:space="preserve"><value>Source type</value></data>
+  <data name="ChatForm_google_environment_source" xml:space="preserve"><value>Source</value></data>
+  <data name="ChatForm_google_environment_target" xml:space="preserve"><value>Target path</value></data>
+  <data name="ChatForm_google_environment_inlineContent" xml:space="preserve"><value>Inline content</value></data>
+  <data name="ChatForm_google_environment_addSource" xml:space="preserve"><value>Add source</value></data>
+  <data name="ChatForm_google_environment_noSources" xml:space="preserve"><value>No sources configured. Add repositories, Cloud Storage paths, or inline files to mount them in a new sandbox.</value></data>
+  <data name="ChatForm_google_environment_network" xml:space="preserve"><value>Network</value></data>
+  <data name="ChatForm_google_environment_networkMode" xml:space="preserve"><value>Network mode</value></data>
+  <data name="ChatForm_google_environment_allowlistHelp" xml:space="preserve"><value>When allowlist is selected, only listed domains are allowed. Add * as a catch-all entry to allow remaining traffic.</value></data>
+  <data name="ChatForm_google_environment_domain" xml:space="preserve"><value>Domain</value></data>
+  <data name="ChatForm_google_environment_transform" xml:space="preserve"><value>Header transform JSON</value></data>
+  <data name="ChatForm_google_environment_addAllowlistRule" xml:space="preserve"><value>Add rule</value></data>
+  <data name="ChatForm_google_environment_sourceTypes_repository" xml:space="preserve"><value>Git repository</value></data>
+  <data name="ChatForm_google_environment_sourceTypes_gcs" xml:space="preserve"><value>Cloud Storage</value></data>
+  <data name="ChatForm_google_environment_sourceTypes_inline" xml:space="preserve"><value>Inline content</value></data>
+  <data name="ChatForm_google_environment_networkModes_default" xml:space="preserve"><value>Default unrestricted access</value></data>
+  <data name="ChatForm_google_environment_networkModes_disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="ChatForm_google_environment_networkModes_allowlist" xml:space="preserve"><value>Allowlist</value></data>
+  <data name="ChatForm_google_service_tier" xml:space="preserve"><value>Service tier</value></data>
+  <data name="ChatForm_google_serviceTiers_providerDefault" xml:space="preserve"><value>Provider default</value></data>
+  <data name="ChatForm_google_serviceTiers_flex" xml:space="preserve"><value>Flex</value></data>
+  <data name="ChatForm_google_serviceTiers_standard" xml:space="preserve"><value>Standard</value></data>
+  <data name="ChatForm_google_serviceTiers_priority" xml:space="preserve"><value>Priority</value></data>
+  <data name="ChatForm_google_safetySettings_title" xml:space="preserve"><value>Safety settings</value></data>
+  <data name="ChatForm_google_safetySettings_add" xml:space="preserve"><value>Add safety setting</value></data>
+  <data name="ChatForm_google_safetySettings_type" xml:space="preserve"><value>Category</value></data>
+  <data name="ChatForm_google_safetySettings_method" xml:space="preserve"><value>Method</value></data>
+  <data name="ChatForm_google_safetySettings_threshold" xml:space="preserve"><value>Threshold</value></data>
+  <data name="ChatForm_google_safetySettings_methods_severity" xml:space="preserve"><value>Probability and severity</value></data>
+  <data name="ChatForm_google_safetySettings_methods_probability" xml:space="preserve"><value>Probability</value></data>
+  <data name="ChatForm_google_safetySettings_thresholds_block_low_and_above" xml:space="preserve"><value>Block low and above</value></data>
+  <data name="ChatForm_google_safetySettings_thresholds_block_medium_and_above" xml:space="preserve"><value>Block medium and above</value></data>
+  <data name="ChatForm_google_safetySettings_thresholds_block_only_high" xml:space="preserve"><value>Block only high</value></data>
+  <data name="ChatForm_google_safetySettings_thresholds_block_none" xml:space="preserve"><value>Block none</value></data>
+  <data name="ChatForm_google_safetySettings_thresholds_off" xml:space="preserve"><value>Turn safety filter off</value></data>
+  <data name="ChatForm_google_safetySettings_categories_hate_speech" xml:space="preserve"><value>Hate speech</value></data>
+  <data name="ChatForm_google_safetySettings_categories_dangerous_content" xml:space="preserve"><value>Dangerous content</value></data>
+  <data name="ChatForm_google_safetySettings_categories_harassment" xml:space="preserve"><value>Harassment</value></data>
+  <data name="ChatForm_google_safetySettings_categories_sexually_explicit" xml:space="preserve"><value>Sexually explicit</value></data>
+  <data name="ChatForm_google_safetySettings_categories_civic_integrity" xml:space="preserve"><value>Civic integrity (deprecated)</value></data>
+  <data name="ChatForm_google_safetySettings_categories_image_hate" xml:space="preserve"><value>Image hate speech</value></data>
+  <data name="ChatForm_google_safetySettings_categories_image_dangerous_content" xml:space="preserve"><value>Image dangerous content</value></data>
+  <data name="ChatForm_google_safetySettings_categories_image_harassment" xml:space="preserve"><value>Image harassment</value></data>
+  <data name="ChatForm_google_safetySettings_categories_image_sexually_explicit" xml:space="preserve"><value>Image sexually explicit</value></data>
+  <data name="ChatForm_google_safetySettings_categories_jailbreak" xml:space="preserve"><value>Jailbreak</value></data>
+  <data name="ChatForm_google_voice" xml:space="preserve"><value>Voice</value></data>
+  <data name="ChatForm_google_language" xml:space="preserve"><value>Language</value></data>
+  <data name="ChatForm_google_speaker" xml:space="preserve"><value>Speaker</value></data>
+  <data name="ChatForm_mistral_webSearchPremium" xml:space="preserve"><value>Premium</value></data>
+  <data name="ChatForm_mistral_transcriptionTimestampsLanguageIncompatibleTitle" xml:space="preserve"><value>Note</value></data>
+  <data name="ChatForm_mistral_transcriptionTimestampsLanguageIncompatible" xml:space="preserve"><value>Mistral: timestamps (timestamp_granularities) are not compatible with language. Use either timestamps OR language.</value></data>
+  <data name="ChatForm_mistral_transcriptionTimestampsEnabledHint" xml:space="preserve"><value>Timestamps are enabled (segment only). Language has been cleared automatically.</value></data>
+  <data name="ChatForm_mistral_transcriptionLanguageEnabledHint" xml:space="preserve"><value>Language is set. If you enable timestamps, language will be cleared automatically.</value></data>
 </root>

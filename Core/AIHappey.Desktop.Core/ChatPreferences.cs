@@ -62,7 +62,9 @@ public sealed class ChatPreferences
     public Dictionary<string, JsonObject> ProviderMetadata { get; set; } = new()
     {
         ["openai"] = OpenAIChatConfig.Defaults(),
-        ["anthropic"] = AnthropicChatConfig.Defaults()
+        ["anthropic"] = AnthropicChatConfig.Defaults(),
+        ["google"] = GoogleChatConfig.Defaults(),
+        ["mistral"] = MistralChatConfig.Defaults()
     };
     public Dictionary<string, Dictionary<string, string>> ProviderHeaders { get; set; } = [];
     private List<string> enabledAgentPluginIds = [];

@@ -38,7 +38,7 @@ for (const lang of ['en', 'nl']) {
   const browser = path.join(root, 'aihappey-chat/packages/aihappey-i18n/src/locales', lang);
   const general = read(path.join(browser, `${lang}.json`));
   const providerLabels = read(path.join(browser, 'providers.json'));
-  const providers = { ...flatten(providerLabels.openai, 'openai'), ...flatten(providerLabels.anthropic, 'anthropic') };
+  const providers = Object.assign({}, ...['openai', 'anthropic', 'google', 'mistral'].map(name => flatten(providerLabels[name], name)));
   const labels = { ...custom[lang] };
   labels.BuiltInLocalTools = general.builtInLocalTools ?? (lang === 'nl' ? 'Ingebouwde lokale tools' : 'Built-in local tools');
   labels.LocalPluginConversations = general.plugins['local-conversations'];
@@ -50,6 +50,15 @@ for (const lang of ['en', 'nl']) {
     labels[`ChatForm_${key}`] = general[key].replace(/\s*\(\{\{reasoningEffort\}\}\)/g, '');
   }
   const generalLabels = flatten(general);
+  for (const name of ['minimal', 'latitude', 'longitude', 'seed', 'presencePenalty', 'frequencyPenalty']) {
+    const fallback = {
+      seed: 'Seed', presencePenalty: lang === 'nl' ? 'Aanwezigheidsboete' : 'Presence penalty',
+      frequencyPenalty: lang === 'nl' ? 'Frequentieboete' : 'Frequency penalty',
+    };
+    const value = generalLabels[name] ?? fallback[name];
+    if (typeof value !== 'string') throw new Error(`Missing browser label: ${lang}/${name}`);
+    labels[`ChatForm_${name}`] = value;
+  }
   for (const key of ['mcpPage.policy', 'annotations.openWorld', 'annotations.destructive', 'annotations.readOnly', 'annotations.idempotent']) {
     if (typeof generalLabels[key] !== 'string') throw new Error(`Missing browser label: ${lang}/${key}`);
     labels[`ChatForm_${key.replace(/\./g, '_')}`] = generalLabels[key];
