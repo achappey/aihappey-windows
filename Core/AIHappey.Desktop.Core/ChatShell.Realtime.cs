@@ -46,6 +46,9 @@ public sealed partial class ChatShell
         public RealtimePreferences Preferences { get; } = preferences;
         public RealtimeTranscript Transcript { get; } = new(conversation, model);
         public CancellationTokenSource Lifetime { get; } = new();
+        public CancellationTokenSource DelegationLifetime { get; } = new();
+        public bool Stopping { get; set; }
+        public bool HistorySaved { get; set; }
         public IRealtimeSession? Connection { get; set; }
         public bool Connected { get; set; }
         public bool Reconnecting { get; set; }
@@ -81,7 +84,7 @@ public sealed partial class ChatShell
             UpdateRealtimeControls();
             if (realtime?.Connection is { } connection) try { await connection.SetMutedAsync(realtimeMute.IsChecked == true); } catch { await RealtimeFailedAsync(); }
         };
-        realtimeStop.Click += async (_, _) => await StopRealtimeAsync();
+        realtimeStop.Click += async (_, _) => await StopRealtimeAndOpenHistoryAsync();
         realtimeCamera.Click += async (_, _) => await ChangeRealtimeVideoAsync(false);
         realtimeScreen.Click += async (_, _) => await ChangeRealtimeVideoAsync(true);
         Unloaded += (_, _) => { if (realtime is not null) realtimeCleanup = StopRealtimeAsync(); };
@@ -247,6 +250,12 @@ public sealed partial class ChatShell
         {
             await foreach (var value in state.Connection!.Events.ReadAllAsync(state.Lifetime.Token))
             {
+                if (state.Stopping)
+                {
+                    // Only final history events are accepted while the transport finalizes.
+                    state.Transcript.Apply(value);
+                    continue;
+                }
                 if (!RealtimeCurrent(state)) break;
                 var type = value["type"]?.ToString();
                 if (state.Live)
@@ -292,7 +301,7 @@ public sealed partial class ChatShell
         }
         catch (OperationCanceledException) when (state.Lifetime.IsCancellationRequested) { }
         catch (Exception error) { if (RealtimeCurrent(state)) Show(RealtimeErrorMessage(error), InfoBarSeverity.Error); }
-        finally { if (ReferenceEquals(realtime, state)) await StopRealtimeAsync(); }
+        finally { if (ReferenceEquals(realtime, state)) _ = StopRealtimeAsync(); }
     }
     private async Task ContinueRealtimeAsync(RealtimeState state, Task previous)
     {
@@ -304,7 +313,7 @@ public sealed partial class ChatShell
         var id = call["call_id"]?.ToString();
         if (string.IsNullOrEmpty(id) || !state.Calls.Add(id)) return;
         if (state.Calls.Count > 1000) { state.Lifetime.Cancel(); return; }
-        var cancellation = CancellationTokenSource.CreateLinkedTokenSource(state.Lifetime.Token);
+        var cancellation = CancellationTokenSource.CreateLinkedTokenSource(state.Lifetime.Token, state.DelegationLifetime.Token);
         state.CallCancellation[id] = cancellation;
         state.ToolQueue = ExecuteRealtimeToolAsync(state, state.ToolQueue, (JsonObject)call.DeepClone(), cancellation.Token);
     }
@@ -344,7 +353,7 @@ public sealed partial class ChatShell
     private Task StopRealtimeAsync()
     {
         var state = realtime; realtime = null;
-        state?.Lifetime.Cancel();
+        if (state is not null) { state.Stopping = true; state.DelegationLifetime.Cancel(); }
         realtimeDevices = "";
         UpdateRealtimeControls();
         // Detach synchronously, and make the next Start wait for all previous device teardown.
@@ -357,8 +366,11 @@ public sealed partial class ChatShell
         if (state?.Connection is { } connection)
         {
             try { await connection.DisposeAsync(); } catch { /* Best effort after device/network loss. */ }
+            // Dispose completes the event stream. Drain final transcript/usage before saving.
+            try { await state.Pump.WaitAsync(TimeSpan.FromSeconds(2)); } catch { /* Bounded shutdown after a failed transport. */ }
+            state.Lifetime.Cancel();
             state.Transcript.Stop();
-            try { if (state.Conversation.Messages.Count > 0) await history.SaveAsync(state.Partition, state.Conversation); }
+            try { if (state.Conversation.Messages.Count > 0) await history.SaveAsync(state.Partition, state.Conversation); state.HistorySaved = true; }
             catch { if (!closing) Show(DesktopResources.Get("HistorySaveFailed"), InfoBarSeverity.Error); }
         }
         if (!closing)
@@ -367,6 +379,13 @@ public sealed partial class ChatShell
             if (activePage == DesktopPage.Realtime) RenderTranscript();
             if (state is not null && state.Partition == session.HistoryPartition) await LoadHistoryAsync(CancellationToken.None);
         }
+    }
+    private async Task StopRealtimeAndOpenHistoryAsync()
+    {
+        var state = realtime;
+        await StopRealtimeAsync();
+        if (state is { HistorySaved: true } && !closing && state.Partition == session.HistoryPartition && ReferenceEquals(current, state.Conversation))
+            await OpenConversationAsync(state.Conversation);
     }
     private static string RealtimeErrorMessage(Exception error)
     {

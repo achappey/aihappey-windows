@@ -43,6 +43,15 @@ public sealed class RealtimeTranscript(Conversation conversation, string model)
         }
         if (type == "session.closed")
         {
+            foreach (var entry in drafts.Where(entry => entry.Key.StartsWith("live:", StringComparison.Ordinal)))
+            {
+                entry.Value.Status = "complete";
+                foreach (var part in entry.Value.Message.Parts.Where(part => part.Type == "text").ToArray())
+                {
+                    var node = PortableConversations.Node(part); node["state"] = "done";
+                    var index = entry.Value.Message.Parts.IndexOf(part); entry.Value.Message.Parts[index] = PortableConversations.Part(node);
+                }
+            }
             conversation.Metadata["liveFinalUsage"] = JsonSerializer.SerializeToElement(value["usage"]);
             conversation.Metadata["liveCloseReason"] = value["reason"]?.ToString() ?? "unknown";
             return true;

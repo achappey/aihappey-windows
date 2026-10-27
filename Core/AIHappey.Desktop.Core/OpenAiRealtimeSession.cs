@@ -53,13 +53,13 @@ public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> 
         };
         peer.onconnectionstatechange += state =>
         {
-            if (state is RTCPeerConnectionState.failed or RTCPeerConnectionState.closed && !Lifetime.IsCancellationRequested)
+            if (state is RTCPeerConnectionState.failed or RTCPeerConnectionState.closed && !Lifetime.IsCancellationRequested && Volatile.Read(ref disposed) == 0 && !finalized.Task.IsCompleted)
             { opened.TrySetException(new InvalidOperationException("OpenAI WebRTC disconnected.")); Fail(new InvalidOperationException("OpenAI WebRTC disconnected.")); }
         };
         data = await peer.createDataChannel("oai-events");
         data.onopen += () => opened.TrySetResult();
-        data.onerror += _ => { opened.TrySetException(new InvalidOperationException("OpenAI data channel failed.")); Fail(new InvalidOperationException("OpenAI data channel failed.")); };
-        data.onclose += () => { if (!Lifetime.IsCancellationRequested) Fail(new InvalidOperationException("OpenAI data channel closed.")); };
+        data.onerror += _ => { if (Volatile.Read(ref disposed) != 0 || finalized.Task.IsCompleted) return; opened.TrySetException(new InvalidOperationException("OpenAI data channel failed.")); Fail(new InvalidOperationException("OpenAI data channel failed.")); };
+        data.onclose += () => { if (!Lifetime.IsCancellationRequested && Volatile.Read(ref disposed) == 0 && !finalized.Task.IsCompleted) Fail(new InvalidOperationException("OpenAI data channel closed.")); };
         data.onmessage += (_, _, bytes) =>
         {
             try

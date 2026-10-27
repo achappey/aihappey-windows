@@ -37,6 +37,22 @@ internal static class RealtimeRegressionTests
         try { await client.GetAsync(new(), preferences, "openai", default); check(false, "expired token"); }
         catch (GatewayException) { check(true, "realtime token: expired credentials are rejected"); }
         check(!PortableConversations.Write(conversation).Contains("fixture-ephemeral"), "realtime credentials never enter transcript history");
+        var liveHistory = new Conversation(); var live = new RealtimeTranscript(liveHistory, "openai/gpt-live-1");
+        live.Apply(JsonNode.Parse("""{"type":"session.input_transcript.delta","delta":"Hello","start_ms":0,"end_ms":10}""")!.AsObject());
+        live.Apply(JsonNode.Parse("""{"type":"session.output_transcript.delta","delta":"Answer","start_ms":10,"end_ms":20}""")!.AsObject());
+        live.Apply(JsonNode.Parse("""{"type":"session.output_transcript.delta","delta":" final.","start_ms":20,"end_ms":30}""")!.AsObject());
+        live.Apply(JsonNode.Parse("""{"type":"session.closed","reason":"close_requested","usage":{"seconds":12.5}}""")!.AsObject());
+        live.Stop();
+        check(liveHistory.Messages.Count == 2 && liveHistory.Messages.Last().Text == "Answer final." && liveHistory.Messages.All(message => message.Status == "complete"),
+            "Live Stop: final fragments survive and confirmed transcripts are not marked interrupted");
+        await history.SaveAsync("live-partition", liveHistory);
+        var savedLive = (await history.ListAsync("live-partition")).Single();
+        check(savedLive.Messages.Last().Text == "Answer final." && JsonSerializer.SerializeToElement(savedLive.Metadata["liveFinalUsage"]).GetProperty("seconds").GetDouble() == 12.5,
+            "Live Stop: portable UI-part history preserves final transcript and cumulative usage");
+        var livePreferences = new RealtimePreferences { LiveClientTarget = "private-client-model", ProviderOptions = JsonNode.Parse("""{"openai":{"session":{"store":true,"type":"realtime","audio":{"input":{"turn_detection":{"type":"semantic_vad"}}},"delegation":{"type":"client"}}}}""")!.AsObject() };
+        var startup = RealtimeConfiguration.LiveSession(livePreferences, "hello").ToJsonString();
+        check(startup.Contains("\"store\":false") && !startup.Contains("private-client-model") && !startup.Contains("semantic_vad"),
+            "Live provisioning: storage remains disabled and client selection/legacy VAD stay off the wire");
     }
     private sealed class TokenHost : IDesktopHost
     {

@@ -64,7 +64,7 @@ public sealed partial class ChatShell
             if (DateTimeOffset.UtcNow - state.LastSave > TimeSpan.FromSeconds(1) || type == "session.closed")
             { state.LastSave = DateTimeOffset.UtcNow; await history.SaveAsync(state.Partition, state.Conversation); }
         }
-        if (type == "session.closed") { await StopRealtimeAsync(); return; }
+        if (type == "session.closed") { _ = StopRealtimeAsync(); return; }
         if (type == "session.delegation.created" && value["delegation"] is JsonObject delegation)
         {
             var id = delegation["id"]?.ToString();
@@ -107,7 +107,7 @@ public sealed partial class ChatShell
     private async Task ReturnLiveMcpApprovalAsync(RealtimeState state, JsonObject item)
     {
         var part = JsonSerializer.SerializeToElement(new JsonObject { ["input"] = item.DeepClone() });
-        var decision = await ApproveToolAsync(new(item["id"]!.ToString(), item["id"]!.ToString(), item["name"]?.ToString() ?? "MCP", item["server_label"]?.ToString() ?? "MCP", part), state.Lifetime.Token);
+        var decision = await ApproveToolAsync(new(item["id"]!.ToString(), item["id"]!.ToString(), item["name"]?.ToString() ?? "MCP", item["server_label"]?.ToString() ?? "MCP", part), state.DelegationLifetime.Token);
         if (RealtimeCurrent(state)) await SendLiveAsync(state, "response.item.create", new() { ["item"] = new JsonObject { ["type"] = "mcp_approval_response", ["approval_request_id"] = item["id"]!.DeepClone(), ["approve"] = decision.Approved } });
     }
     private void QueueLiveClient(RealtimeState state, string? delegation, double offset)
@@ -130,7 +130,7 @@ public sealed partial class ChatShell
             JsonObject? agentRequest = null;
             if (service == ServiceKind.Agents)
             {
-                var available = await AgentTargetsAsync(state.Lifetime.Token);
+                var available = await AgentTargetsAsync(state.DelegationLifetime.Token);
                 if (!available.Any(target => target.Id == selected)) throw new InvalidOperationException("Selected client agent is unavailable.");
                 var workflow = session.Settings.AgentWorkflow.Clone(); workflow.Type = "sequential";
                 agentRequest = DesktopAgentRequests.Build([selected], available, localAgents, workflow);
@@ -144,12 +144,12 @@ public sealed partial class ChatShell
             await DesktopChatTurn.RunAsync(work, output,
                 (messages, token) => client.StreamAsync(service, selected, work.Id, messages, token, chat, mcp: state.Tools, agentRequest: agentRequest),
                 ApproveToolAsync, async (_, token) => { if (RealtimeCurrent(state)) { RenderTranscript(); await history.SaveAsync(state.Partition, state.Conversation); } },
-                state.Tools, session.ActiveLanguage, state.Lifetime.Token, session.ElicitAsync);
+                state.Tools, session.ActiveLanguage, state.DelegationLifetime.Token, session.ElicitAsync);
             if (!RealtimeCurrent(state) || revision != state.LiveRevision) return;
             if (output.Status != "complete") throw new InvalidOperationException("The delegated operation did not complete.");
             await AppendLiveAsync(state, output.Text, delegation);
         }
-        catch (OperationCanceledException) when (state.Lifetime.IsCancellationRequested) { }
+        catch (OperationCanceledException) when (state.Lifetime.IsCancellationRequested || state.DelegationLifetime.IsCancellationRequested) { }
         catch (Exception error)
         {
             if (RealtimeCurrent(state) && revision == state.LiveRevision)
