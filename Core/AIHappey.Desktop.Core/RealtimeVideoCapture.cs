@@ -5,7 +5,6 @@ using Windows.Graphics.Imaging;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
 using Windows.Storage.Streams;
-using Windows.Foundation.Collections;
 
 namespace AIHappey.Desktop.Core;
 

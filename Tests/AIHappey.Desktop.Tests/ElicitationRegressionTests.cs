@@ -6,7 +6,6 @@ using System.Text.Json.Nodes;
 using System.Threading.Channels;
 using System.Xml.Linq;
 using AIHappey.Desktop.Core;
-using AIHappey.Vercel.Models;
 using ModelContextProtocol.Protocol;
 using Role = AIHappey.Vercel.Models.Role;
 

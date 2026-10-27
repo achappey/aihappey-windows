@@ -2,7 +2,6 @@ using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;

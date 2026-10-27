@@ -1,10 +1,8 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using AIHappey.Desktop.Core;
-using ModelContextProtocol.Authentication;
 using ModelContextProtocol.Client;
 
 internal static class McpAuthenticationRegressionTests

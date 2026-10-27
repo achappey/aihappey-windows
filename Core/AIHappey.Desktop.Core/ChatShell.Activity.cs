@@ -1,6 +1,5 @@
 using FluentIcons.Common;
 using System.Text.Json;
-using AIHappey.Vercel.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;

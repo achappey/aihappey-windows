@@ -1,5 +1,3 @@
-using System.IO.Compression;
-using System.Text;
 using System.Text.Json.Nodes;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;

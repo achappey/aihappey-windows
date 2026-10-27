@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIHappey.Desktop.Core;
-using AIHappey.Vercel.Models;
 
 internal static class RealtimeRegressionTests
 {

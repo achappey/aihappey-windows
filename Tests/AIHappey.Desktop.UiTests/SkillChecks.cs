@@ -1,7 +1,5 @@
 using System.Reflection;
-using System.Text.Json;
 using AIHappey.Desktop.Core;
-using AIHappey.Vercel.Models;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;

@@ -1,4 +1,3 @@
-using Microsoft.UI.Xaml.Controls;
 using ModelContextProtocol.Protocol;
 
 namespace AIHappey.Desktop.Core;
