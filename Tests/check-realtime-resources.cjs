@@ -21,6 +21,16 @@ for (const [, section] of form.matchAll(/Section\("([^"]+)"\)/g)) {
   for (const [language, strings] of [['English', en], ['Dutch', nl]])
     assert(strings.has('RealtimeSection' + section), `Missing ${language} realtime section ${section}`);
 }
+// Form helpers resolve their label arguments dynamically. Checking only literal
+// DesktopResources.Get calls misses runtime failures such as RealtimeSectionLive.
+for (const [, key] of form.matchAll(/(?:Choice|Toggle|Number|Input)\(\w+,\s*"([^"]+)"\s*,/g)) {
+  assert(en.has(key), `Missing English realtime control ${key}`);
+  assert(nl.has(key), `Missing Dutch realtime control ${key}`);
+}
+for (const type of ['web_search', 'code_interpreter', 'file_search']) {
+  assert(en.has('LiveTool_' + type), `Missing English Live tool ${type}`);
+  assert(nl.has('LiveTool_' + type), `Missing Dutch Live tool ${type}`);
+}
 const audio = fs.readFileSync(path.join(core, 'RealtimeAudio.cs'), 'utf8');
 assert(audio.includes('.WithCommunicationsMode()') && audio.includes('SetReferenceEndpoint(renderDevice)'), 'Capture must request communications processing with the real playback reference.');
 assert(!audio.includes('WithLoopbackCapture(') && !audio.includes('WithRawMode('), 'Microphone input must not be loopback or bypass voice processing.');

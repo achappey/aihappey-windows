@@ -7,9 +7,12 @@ public sealed class RealtimePreferences
 {
     public string Model { get; set; } = "openai/gpt-realtime-2";
     public JsonObject ProviderOptions { get; set; } = new();
+    // Client application state, never included in a native provisioning payload.
+    public string? LiveClientTarget { get; set; }
+    public bool LiveClientAgent { get; set; }
     public double CameraFrameRate { get; set; } = 1;
     public double JpegQuality { get; set; } = .8;
-    public RealtimePreferences Clone() => new() { Model = Model, ProviderOptions = (JsonObject)ProviderOptions.DeepClone(), CameraFrameRate = CameraFrameRate, JpegQuality = JpegQuality };
+    public RealtimePreferences Clone() => new() { Model = Model, ProviderOptions = (JsonObject)ProviderOptions.DeepClone(), CameraFrameRate = CameraFrameRate, JpegQuality = JpegQuality, LiveClientTarget = LiveClientTarget, LiveClientAgent = LiveClientAgent };
     public void Validate()
     {
         if (!double.IsFinite(CameraFrameRate) || CameraFrameRate < .1 || CameraFrameRate > 1
@@ -23,6 +26,22 @@ public static class RealtimeConfiguration
 {
     public static string Provider(string model) => model.Split('/')[0].ToLowerInvariant();
     public static bool Supported(string model) => Provider(model) is "openai" or "google";
+    public static bool UsesSessions(ChatTarget model) => Provider(model.Id) == "openai" && model.Tags.Contains("realtime-session");
+    public static bool IsLive(ChatTarget model) => UsesSessions(model) && !model.Tags.Contains("realtime-token");
+    public static JsonObject LiveSession(RealtimePreferences preferences, string instructions)
+    {
+        var source = preferences.ProviderOptions["openai"]?["session"] as JsonObject ?? new();
+        var session = new JsonObject();
+        foreach (var field in new[] { "instructions", "client", "delegation", "input", "store", "triggers" })
+            if (source.ContainsKey(field)) session[field] = source[field]?.DeepClone();
+        if (!session.ContainsKey("instructions")) session["instructions"] = instructions;
+        if (source["audio"]?["output"]?["voice"] is { } voice) session["audio"] = new JsonObject { ["output"] = new JsonObject { ["voice"] = voice.DeepClone() } };
+        if (session["delegation"]?["type"]?.ToString() == "responses" && string.IsNullOrWhiteSpace(session["delegation"]?["responses"]?["model"]?.ToString()))
+            throw new ArgumentException("Live Responses delegation requires a backend model.");
+        if (session["delegation"]?["responses"]?["max_output_tokens"] is { } maximum && maximum.GetValue<double>() < 16)
+            throw new ArgumentException("Live Responses maximum output tokens must be at least 16.");
+        return new() { ["providerOptions"] = new JsonObject { ["openai"] = new JsonObject { ["session"] = session } } };
+    }
     public static string ModelName(string model) => model[(model.IndexOf('/') + 1)..];
     public static string GoogleModel(string model)
     {
@@ -50,6 +69,7 @@ public static class RealtimeConfiguration
             defaults["tools"] = new JsonArray(definitions.Select(t => (JsonNode)Merge(new() { ["type"] = "function" }, t)).ToArray());
             defaults["tool_choice"] = toolChoice == "none" ? "none" : "auto";
             var result = Merge(chat ?? new(), defaults, options["session"] as JsonObject ?? new());
+            foreach (var field in new[] { "delegation", "client", "input", "store", "triggers" }) result.Remove(field);
             result["type"] = "realtime"; result["model"] = ModelName(model);
             return result;
         }

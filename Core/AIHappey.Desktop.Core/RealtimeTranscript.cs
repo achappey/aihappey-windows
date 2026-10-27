@@ -9,6 +9,8 @@ public sealed class RealtimeTranscript(Conversation conversation, string model)
 {
     private readonly Dictionary<string, ConversationMessage> drafts = new(StringComparer.Ordinal);
     private readonly HashSet<string> completed = new(StringComparer.Ordinal);
+    private string? liveDraft;
+    private Role? liveSpeaker;
     public ConversationMessage Draft(string id, Role role)
     {
         if (drafts.TryGetValue(id, out var found)) return found;
@@ -29,6 +31,22 @@ public sealed class RealtimeTranscript(Conversation conversation, string model)
     public bool Apply(JsonObject value)
     {
         var type = value["type"]?.ToString() ?? "";
+        if (type is "session.input_transcript.delta" or "session.output_transcript.delta")
+        {
+            var role = type == "session.input_transcript.delta" ? Role.user : Role.assistant;
+            if (liveSpeaker != role) { liveSpeaker = role; liveDraft = "live:" + Guid.NewGuid().ToString("N"); }
+            Text(liveDraft!, role, value["delta"]?.ToString() ?? "", false, true);
+            var draft = drafts[liveDraft!];
+            draft.Message.Metadata!["end_ms"] = value["end_ms"]?.GetValue<double>() ?? 0;
+            draft.Message.Metadata.TryAdd("start_ms", value["start_ms"]?.GetValue<double>() ?? 0);
+            return true;
+        }
+        if (type == "session.closed")
+        {
+            conversation.Metadata["liveFinalUsage"] = JsonSerializer.SerializeToElement(value["usage"]);
+            conversation.Metadata["liveCloseReason"] = value["reason"]?.ToString() ?? "unknown";
+            return true;
+        }
         if (type.StartsWith("conversation.item.input_audio_transcription.", StringComparison.Ordinal))
         {
             var id = "user:" + value["item_id"]?.ToString();

@@ -25,7 +25,7 @@ public sealed partial class ChatShell
             : selected is null ? null : ChatPreferences.ResolveProvider(Service, selected.Id, selected.ProviderKey);
         var dialog = new ChatSettingsDialog(session.Settings.Chat, provider, LoadSkillSelectionAsync, PrefetchSkillAsync, agentPlugins,
             AvailableChatTools, isRealtime ? ServiceKind.Ai : Service,
-            isRealtime ? session.Settings.Realtime : null, realtime is not null) { XamlRoot = XamlRoot };
+            isRealtime ? session.Settings.Realtime : null, realtime is not null, aiModelTargets, AgentTargetsAsync) { XamlRoot = XamlRoot };
         chatSettingsDialog = dialog;
         async Task SaveAsync(ChatPreferences preferences, RealtimePreferences? realtimePreferences)
         {

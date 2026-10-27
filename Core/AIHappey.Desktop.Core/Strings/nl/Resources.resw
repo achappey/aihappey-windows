@@ -1960,4 +1960,17 @@ Luidspreker: {1}</value></data>
   <data name="ChatForm_mistral_transcriptionTimestampsLanguageIncompatible" xml:space="preserve"><value>Mistral: tijdstempels (timestamp_granularities) zijn niet compatibel met taal. Gebruik óf tijdstempels óf taal.</value></data>
   <data name="ChatForm_mistral_transcriptionTimestampsEnabledHint" xml:space="preserve"><value>Tijdstempels staan aan (alleen segment). Taal is automatisch gewist.</value></data>
   <data name="ChatForm_mistral_transcriptionLanguageEnabledHint" xml:space="preserve"><value>Taal is ingesteld. Als je tijdstempels inschakelt, wordt de taal automatisch gewist.</value></data>
+  <data name="RealtimeSectionLive" xml:space="preserve"><value>Live</value></data>
+  <data name="LiveDelegation" xml:space="preserve"><value>Delegatie</value></data>
+  <data name="LiveAcknowledgementDelay" xml:space="preserve"><value>Bevestigingsvertraging (ms)</value></data>
+  <data name="LiveResponsesModel" xml:space="preserve"><value>Responses-model</value></data>
+  <data name="LiveBackendInstructions" xml:space="preserve"><value>Backendinstructies</value></data>
+  <data name="LiveParallelTools" xml:space="preserve"><value>Parallelle backendtoolaanroepen</value></data>
+  <data name="LiveToolChoice" xml:space="preserve"><value>Backendtoolkeuze</value></data>
+  <data name="LiveTool_web_search" xml:space="preserve"><value>Zoeken op internet</value></data>
+  <data name="LiveTool_code_interpreter" xml:space="preserve"><value>Code Interpreter</value></data>
+  <data name="LiveTool_file_search" xml:space="preserve"><value>Bestanden doorzoeken</value></data>
+  <data name="LiveClientKind" xml:space="preserve"><value>Uitvoeringsdoel van de client</value></data>
+  <data name="LiveClientTarget" xml:space="preserve"><value>Clientagent of -model</value></data>
+  <data name="LiveRawProviderOptions" xml:space="preserve"><value>Ruwe providerconfiguratie</value></data>
 </root>

@@ -1965,4 +1965,17 @@ Speaker: {1}</value></data>
   <data name="ChatForm_mistral_transcriptionTimestampsLanguageIncompatible" xml:space="preserve"><value>Mistral: timestamps (timestamp_granularities) are not compatible with language. Use either timestamps OR language.</value></data>
   <data name="ChatForm_mistral_transcriptionTimestampsEnabledHint" xml:space="preserve"><value>Timestamps are enabled (segment only). Language has been cleared automatically.</value></data>
   <data name="ChatForm_mistral_transcriptionLanguageEnabledHint" xml:space="preserve"><value>Language is set. If you enable timestamps, language will be cleared automatically.</value></data>
+  <data name="RealtimeSectionLive" xml:space="preserve"><value>Live</value></data>
+  <data name="LiveDelegation" xml:space="preserve"><value>Delegation</value></data>
+  <data name="LiveAcknowledgementDelay" xml:space="preserve"><value>Acknowledgement delay (ms)</value></data>
+  <data name="LiveResponsesModel" xml:space="preserve"><value>Responses model</value></data>
+  <data name="LiveBackendInstructions" xml:space="preserve"><value>Backend instructions</value></data>
+  <data name="LiveParallelTools" xml:space="preserve"><value>Parallel backend tool calls</value></data>
+  <data name="LiveToolChoice" xml:space="preserve"><value>Backend tool choice</value></data>
+  <data name="LiveTool_web_search" xml:space="preserve"><value>Web search</value></data>
+  <data name="LiveTool_code_interpreter" xml:space="preserve"><value>Code Interpreter</value></data>
+  <data name="LiveTool_file_search" xml:space="preserve"><value>File search</value></data>
+  <data name="LiveClientKind" xml:space="preserve"><value>Client execution target</value></data>
+  <data name="LiveClientTarget" xml:space="preserve"><value>Client agent or model</value></data>
+  <data name="LiveRawProviderOptions" xml:space="preserve"><value>Raw provider configuration</value></data>
 </root>

@@ -44,7 +44,8 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         Func<CancellationToken, Task<DesktopSkillSelection>>? loadSkills = null,
         Func<string, CancellationToken, Task>? prefetchSkill = null, IReadOnlyList<DesktopAgentPlugin>? plugins = null,
         Func<ChatPreferences, IReadOnlyList<ChatToolOption>>? availableTools = null, ServiceKind service = ServiceKind.Ai,
-        RealtimePreferences? realtimePreferences = null, bool realtimeReadOnly = false)
+        RealtimePreferences? realtimePreferences = null, bool realtimeReadOnly = false,
+        IReadOnlyList<ChatTarget>? liveModels = null, Func<CancellationToken, Task<IReadOnlyList<ChatTarget>>>? liveAgents = null)
     {
         this.loadSkills = loadSkills; this.prefetchSkill = prefetchSkill;
         this.plugins = plugins ?? [];
@@ -53,7 +54,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
             draft.EnabledSkillIds.Count > 0, this.plugins.Any(plugin => draft.EnabledAgentPluginIds.Contains(plugin.Id))));
         Name = "ChatSettingsDialog"; this.provider = provider; draft = preferences.Clone();
         if (realtimePreferences is not null && provider is "openai" or "google")
-            realtimeForm = new(realtimePreferences, provider, realtimeReadOnly);
+            realtimeForm = new(realtimePreferences, provider, realtimeReadOnly, liveModels, liveAgents);
         Title = DesktopResources.Get("ChatSettings"); CloseButtonText = DesktopResources.Get("Close");
         PrimaryButtonText = DesktopResources.Get("ChatRestoreDefaults");
         Resources["ContentDialogMaxWidth"] = 920d; Resources["ContentDialogMinWidth"] = 0d;

@@ -8,7 +8,8 @@ using SIPSorceryMedia.Abstractions;
 namespace AIHappey.Desktop.Core;
 
 /// <summary>Native WebRTC. Authentication and JSON protocol remain owned by the application.</summary>
-public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> tokenFactory) : RealtimeSession
+public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> tokenFactory,
+    Func<string, CancellationToken, Task<string>>? sessionFactory = null, bool live = false) : RealtimeSession
 {
     private readonly RTCPeerConnection peer = new();
     private readonly AudioEncoder encoder = new(includeOpus: true);
@@ -20,6 +21,7 @@ public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> 
     private AudioFormat format;
     private int disposed;
     private bool receiving = true;
+    private readonly TaskCompletionSource finalized = new(TaskCreationOptions.RunContinuationsAsynchronously);
     public override async Task StartAsync(CancellationToken ct)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct, Lifetime.Token);
@@ -64,6 +66,7 @@ public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> 
             {
                 var message = Parse(bytes);
                 var type = message["type"]?.ToString();
+                if (type == "session.closed") finalized.TrySetResult();
                 if (type == "input_audio_buffer.speech_started") { lock (mediaGate) { receiving = false; audio?.Interrupt(); } }
                 if (type == "response.created") { lock (mediaGate) receiving = true; }
                 Emit(message);
@@ -72,15 +75,9 @@ public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> 
         };
         var offer = peer.createOffer();
         await peer.setLocalDescription(offer);
-        var credential = await tokenFactory(token).ConfigureAwait(false);
-        // A dedicated, redirect-disabled client prevents backend authentication leakage.
-        using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
-        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/realtime/calls");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", credential);
-        request.Content = new StringContent(peer.localDescription.sdp.ToString(), Encoding.UTF8, "application/sdp");
-        using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
-        if (!response.IsSuccessStatusCode) throw new InvalidOperationException($"OpenAI WebRTC negotiation failed (HTTP {(int)response.StatusCode}).");
-        var answer = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+        var answer = sessionFactory is not null
+            ? await sessionFactory(peer.localDescription.sdp.ToString(), token).ConfigureAwait(false)
+            : await ExchangeLegacyAsync(peer.localDescription.sdp.ToString(), token).ConfigureAwait(false);
         if (answer.Length > 256 * 1024 || peer.setRemoteDescription(new RTCSessionDescriptionInit { type = RTCSdpType.answer, sdp = answer }) != SetDescriptionResultEnum.OK)
             throw new InvalidOperationException("OpenAI returned an invalid SDP answer.");
         await opened.Task.WaitAsync(token).ConfigureAwait(false);
@@ -96,6 +93,18 @@ public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> 
         }, Fail, Emit);
         audio.Start();
     }
+    private async Task<string> ExchangeLegacyAsync(string sdp, CancellationToken token)
+    {
+        var credential = await tokenFactory(token).ConfigureAwait(false);
+        // A dedicated, redirect-disabled client prevents backend authentication leakage.
+        using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/realtime/calls");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", credential);
+        request.Content = new StringContent(sdp, Encoding.UTF8, "application/sdp");
+        using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) throw new InvalidOperationException($"OpenAI WebRTC negotiation failed (HTTP {(int)response.StatusCode}).");
+        return await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+    }
     public override async Task SendAsync(JsonObject message, CancellationToken ct)
     {
         await sendGate.WaitAsync(ct);
@@ -108,14 +117,23 @@ public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> 
         }
         finally { sendGate.Release(); }
     }
-    public override Task SetMutedAsync(bool muted) { if (audio is not null) audio.Muted = muted; return Task.CompletedTask; }
-    public override ValueTask DisposeAsync()
+    public override async Task SetMutedAsync(bool muted)
     {
-        if (Interlocked.Exchange(ref disposed, 1) != 0) return ValueTask.CompletedTask;
+        if (audio is not null) audio.Muted = muted;
+        if (live && data?.readyState == RTCDataChannelState.open) await SendAsync(new() { ["type"] = muted ? "session.input_audio.mute" : "session.input_audio.unmute", ["event_id"] = Guid.NewGuid().ToString("N") }, Lifetime.Token);
+    }
+    public override async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
+        if (live && data?.readyState == RTCDataChannelState.open && !finalized.Task.IsCompleted)
+        {
+            try { await SendAsync(new() { ["type"] = "session.close", ["event_id"] = Guid.NewGuid().ToString("N") }, Lifetime.Token); await finalized.Task.WaitAsync(TimeSpan.FromMilliseconds(1500)); }
+            catch { /* Finalization is unconfirmed, but device teardown must still complete. */ }
+        }
         Lifetime.Cancel();
         var devices = audio; audio = null;
         devices?.Dispose();
         lock (mediaGate) { peer.close(); peer.Dispose(); encoder.Dispose(); decoder.Dispose(); }
-        Complete(); return ValueTask.CompletedTask;
+        Complete();
     }
 }

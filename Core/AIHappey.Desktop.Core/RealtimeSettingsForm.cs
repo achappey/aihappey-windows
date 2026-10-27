@@ -17,11 +17,16 @@ internal sealed class RealtimeSettingsForm : StackPanel
     private TextBox? expiry;
     private readonly string provider;
     private readonly bool readOnly;
+    private readonly IReadOnlyList<ChatTarget> liveModels;
+    private readonly Func<CancellationToken, Task<IReadOnlyList<ChatTarget>>>? liveAgents;
+    private bool rawValid = true;
     public RealtimePreferences Result => (readOnly ? original : preferences).Clone();
-    public RealtimeSettingsForm(RealtimePreferences current, string selectedProvider, bool readOnly)
+    public RealtimeSettingsForm(RealtimePreferences current, string selectedProvider, bool readOnly,
+        IReadOnlyList<ChatTarget>? liveModels = null, Func<CancellationToken, Task<IReadOnlyList<ChatTarget>>>? liveAgents = null)
     {
         Name = "RealtimeSettingsForm"; Spacing = 16;
         original = current.Clone(); this.readOnly = readOnly;
+        this.liveModels = liveModels ?? []; this.liveAgents = liveAgents;
         preferences = current.Clone(); provider = selectedProvider == "google" ? "google" : "openai";
         if (readOnly) Children.Add(new TextBlock { Text = DesktopResources.Get("RealtimeSettingsLocked"), TextWrapping = TextWrapping.Wrap });
         Children.Add(fields);
@@ -35,6 +40,9 @@ internal sealed class RealtimeSettingsForm : StackPanel
             try
             {
                 preferences.Validate();
+                if (!rawValid) return false;
+                var delegation = preferences.ProviderOptions["openai"]?["session"]?["delegation"];
+                if (delegation?["type"]?.ToString() == "responses") _ = RealtimeConfiguration.LiveSession(preferences, "");
                 if (numbers.Any(n => !double.IsFinite(n.Value) || n.Value < n.Minimum || n.Value > n.Maximum)) return false;
                 if (expiry is not null) _ = RealtimeConfiguration.Expiry(expiry.Text, DateTimeOffset.UtcNow, TimeSpan.FromMinutes(30));
                 return true;
@@ -70,7 +78,7 @@ internal sealed class RealtimeSettingsForm : StackPanel
     { if (parent[key] is JsonObject result) return result; var value = new JsonObject(); parent[key] = value; return value; }
     private void Build()
     {
-        fields.Children.Clear(); numbers.Clear(); sections.Clear(); expiry = null;
+        fields.Children.Clear(); numbers.Clear(); sections.Clear(); expiry = null; rawValid = true;
         var audio = Section("Audio");
         if (provider == "openai")
         {
@@ -88,6 +96,7 @@ internal sealed class RealtimeSettingsForm : StackPanel
             var responses = Section("Responses");
             Toggle(responses, "RealtimeAutomaticResponse", detection["create_response"]?.GetValue<bool>() ?? true, v => detection["create_response"] = v);
             Toggle(responses, "RealtimeInterrupt", detection["interrupt_response"]?.GetValue<bool>() ?? true, v => detection["interrupt_response"] = v);
+            BuildLive();
         }
         else
         {
@@ -118,6 +127,72 @@ internal sealed class RealtimeSettingsForm : StackPanel
             Number(video, "RealtimeCameraFps", preferences.CameraFrameRate, .1, 1, .1, v => preferences.CameraFrameRate = v);
             Number(video, "RealtimeJpegQuality", preferences.JpegQuality, .1, 1, .1, v => preferences.JpegQuality = v);
         }
+    }
+    private void BuildLive()
+    {
+        var body = Section("Live");
+        var delegation = Config["delegation"] as JsonObject;
+        var mode = delegation?["type"]?.ToString() ?? "client";
+        Choice(body, "LiveDelegation", ["responses", "client"], mode, value =>
+        {
+            var next = new JsonObject { ["type"] = value };
+            if (delegation?["acknowledgement_delay_ms"] is { } delay) next["acknowledgement_delay_ms"] = delay.DeepClone();
+            if (value == "responses") next["responses"] = delegation?["responses"]?.DeepClone() ?? new JsonObject();
+            Config["delegation"] = next; Build();
+        });
+        Number(body, "LiveAcknowledgementDelay", delegation?["acknowledgement_delay_ms"]?.GetValue<double>() ?? 0, 0, 60000, 100,
+            value => { var current = Object(Config, "delegation"); current["type"] = mode; current["acknowledgement_delay_ms"] = value; });
+        if (mode == "responses")
+        {
+            var responses = Object(Object(Config, "delegation"), "responses");
+            var picker = new ChatTargetPicker { Name = "LiveResponsesModel", AllowEmptySelection = true, IsEnabled = !readOnly,
+                PlaceholderText = DesktopResources.Get("SelectModel"), ItemsSource = liveModels.Where(m => m.ModelType == "language" && m.ProviderKey == "openai").ToArray() };
+            picker.Configure(false, false, new HashSet<string>(), false, "");
+            picker.SetSelection(liveModels.Where(m => m.ProviderKey == "openai" && RealtimeConfiguration.ModelName(m.Id) == responses["model"]?.ToString()).Select(m => m.Id));
+            picker.SelectionChanged += () => { if (picker.Selection.Ids.FirstOrDefault() is { } id) responses["model"] = RealtimeConfiguration.ModelName(id); };
+            body.Children.Add(new TextBlock { Text = DesktopResources.Get("LiveResponsesModel") }); body.Children.Add(picker);
+            Input(body, "LiveBackendInstructions", responses["instructions"]?.ToString() ?? "", value => responses["instructions"] = value);
+            Toggle(body, "LiveParallelTools", responses["parallel_tool_calls"]?.GetValue<bool>() ?? true, value => responses["parallel_tool_calls"] = value);
+            Choice(body, "LiveToolChoice", ["auto", "none", "required"], responses["tool_choice"] is JsonValue choice ? choice.ToString() : "auto", value => responses["tool_choice"] = value);
+            foreach (var type in new[] { "web_search", "code_interpreter", "file_search" })
+                Toggle(body, "LiveTool_" + type, (responses["tools"] as JsonArray ?? new()).Any(tool => tool?["type"]?.ToString() == type), enabled =>
+                {
+                    var tools = new JsonArray((responses["tools"] as JsonArray ?? new()).Where(tool => tool?["type"]?.ToString() != type).Select(tool => tool?.DeepClone()).ToArray());
+                    if (enabled) tools.Add(new JsonObject { ["type"] = type }); responses["tools"] = tools;
+                });
+        }
+        else
+        {
+            Choice(body, "LiveClientKind", ["model", "agent"], preferences.LiveClientAgent ? "agent" : "model", value => { preferences.LiveClientAgent = value == "agent"; preferences.LiveClientTarget = null; Build(); });
+            var picker = new ChatTargetPicker { Name = "LiveClientTarget", AllowEmptySelection = true, IsEnabled = !readOnly, PlaceholderText = DesktopResources.Get("SelectTarget") };
+            picker.Configure(preferences.LiveClientAgent, false, new HashSet<string>(), false, "");
+            picker.ItemsSource = liveModels.Where(m => m.ModelType == "language").ToArray();
+            picker.SetSelection(preferences.LiveClientTarget is { } id ? [id] : []);
+            picker.SelectionChanged += () => preferences.LiveClientTarget = picker.Selection.Ids.FirstOrDefault();
+            if (preferences.LiveClientAgent && liveAgents is not null)
+                picker.Loaded += async (_, _) =>
+                {
+                    try { var items = await liveAgents(CancellationToken.None); if (picker.IsLoaded) picker.ItemsSource = items; }
+                    catch { if (picker.IsLoaded) body.Children.Add(new TextBlock { Text = DesktopResources.Get("AgentBackendUnavailable"), TextWrapping = TextWrapping.Wrap }); }
+                };
+            body.Children.Add(picker);
+        }
+        // Same native options object as the controls; client-only selection is outside this editor.
+        var raw = new TextBox { Name = "LiveRawProviderOptions", Header = DesktopResources.Get("LiveRawProviderOptions"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap,
+            Text = Metadata.ToJsonString(new() { WriteIndented = true }), IsReadOnly = readOnly, MaxHeight = 240 };
+        raw.TextChanged += (_, _) =>
+        {
+            if (readOnly) return;
+            try { var value = JsonNode.Parse(raw.Text) as JsonObject ?? throw new ArgumentException(); preferences.ProviderOptions["openai"] = value; rawValid = true; }
+            catch { rawValid = false; }
+        };
+        raw.LostFocus += (_, _) => { if (rawValid && raw.IsLoaded) Build(); };
+        ControlAppearance.Stock(raw); body.Children.Add(raw);
+    }
+    private void Input(Panel parent, string key, string value, Action<string> changed)
+    {
+        var box = new TextBox { Name = key, Header = DesktopResources.Get(key), Text = value, IsEnabled = !readOnly };
+        box.TextChanged += (_, _) => changed(box.Text); ControlAppearance.Stock(box); parent.Children.Add(box);
     }
     private StackPanel Section(string name)
     {

@@ -35,6 +35,13 @@ public sealed partial class ChatShell
         public string Partition { get; } = partition;
         public string Model { get; } = model;
         public bool Google => RealtimeConfiguration.Provider(Model) == "google";
+        public bool Live { get; init; }
+        public bool LiveResponses => Preferences.ProviderOptions["openai"]?["session"]?["delegation"]?["type"]?.ToString() == "responses";
+        public int LiveRevision { get; set; }
+        public Task ClientQueue { get; set; } = Task.CompletedTask;
+        public HashSet<string> LiveEvents { get; } = new(StringComparer.Ordinal);
+        public Dictionary<string, string> LiveResponseIds { get; } = new(StringComparer.Ordinal);
+        public Dictionary<string, LiveResponseBatch> LiveBatches { get; } = new(StringComparer.Ordinal);
         public McpTurnSnapshot Tools { get; } = tools;
         public RealtimePreferences Preferences { get; } = preferences;
         public RealtimeTranscript Transcript { get; } = new(conversation, model);
@@ -180,11 +187,14 @@ public sealed partial class ChatShell
                     var config = RealtimeConfiguration.Session(model.Id, preferences, instructions, definitions, chat.ToolChoice, chatDefaults);
                     if (chat.MaxOutputTokens is { } maximum) config[provider == "openai" ? "max_output_tokens" : "maxOutputTokens"] = maximum;
                     var tokenClient = new DesktopRealtimeTokenClient(client, http);
-                    var state = new RealtimeState(current, partition, model.Id, snapshot, preferences);
+                    var state = new RealtimeState(current, partition, model.Id, snapshot, preferences) { Live = RealtimeConfiguration.IsLive(model) };
                     realtime = state; UpdateRealtimeControls();
                     using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, state.Lifetime.Token);
                     state.Connection = provider == "openai"
-                        ? new OpenAiRealtimeSession(token => tokenClient.GetAsync(RealtimeConfiguration.TokenRequest(model.Id, preferences, config, DateTimeOffset.UtcNow), chat, provider, token))
+                        ? new OpenAiRealtimeSession(token => tokenClient.GetAsync(RealtimeConfiguration.TokenRequest(model.Id, preferences, config, DateTimeOffset.UtcNow), chat, provider, token),
+                            RealtimeConfiguration.UsesSessions(model) ? (sdp, token) => tokenClient.CreateSessionAsync(model.Id, sdp,
+                                state.Live ? RealtimeConfiguration.LiveSession(preferences, instructions)
+                                    : new JsonObject { ["providerOptions"] = new JsonObject { ["openai"] = new JsonObject { ["session"] = config.DeepClone() } } }, chat, token) : null, state.Live)
                         : new GoogleRealtimeSession(RealtimeConfiguration.GoogleSetup(model.Id, config), (handle, token) =>
                         {
                             var resumed = (JsonObject)config.DeepClone();
@@ -209,6 +219,12 @@ public sealed partial class ChatShell
             }
             if (realtime is { Connected: true } active && RealtimeCurrent(active) && message is not null)
             {
+                if (active.Live)
+                {
+                    await SendLiveMessageAsync(active, message);
+                    if (selectedPrompt is null) input.Text = ""; ResetContext(); RenderTranscript();
+                    return;
+                }
                 var content = RealtimeTranscript.InputContent(message, active.Google);
                 await active.Connection!.SendAsync(active.Google
                     ? new JsonObject { ["clientContent"] = new JsonObject { ["turns"] = new JsonArray(new JsonObject { ["role"] = "user", ["parts"] = content }), ["turnComplete"] = true } }
@@ -233,6 +249,11 @@ public sealed partial class ChatShell
             {
                 if (!RealtimeCurrent(state)) break;
                 var type = value["type"]?.ToString();
+                if (state.Live)
+                {
+                    await HandleLiveEventAsync(state, value);
+                    continue;
+                }
                 if (type == "error") throw new RealtimeFailureException("provider-event", "The provider reported a realtime session error.");
                 if (type == "audio.processing")
                 {
@@ -312,7 +333,8 @@ public sealed partial class ChatShell
             output.Status = "complete";
             await state.Connection!.SendAsync(state.Google
                 ? new JsonObject { ["toolResponse"] = new JsonObject { ["functionResponses"] = new JsonArray(new JsonObject { ["id"] = id, ["name"] = name, ["response"] = new JsonObject { ["result"] = result } }) } }
-                : new JsonObject { ["type"] = "conversation.item.create", ["item"] = new JsonObject { ["type"] = "function_call_output", ["call_id"] = id, ["output"] = result.ToJsonString() } }, ct);
+                : new JsonObject { ["type"] = state.Live ? "response.item.create" : "conversation.item.create", ["item"] = new JsonObject { ["type"] = "function_call_output", ["call_id"] = id, ["output"] = result.ToJsonString(),
+                    ["caller"] = call["caller"]?.DeepClone() } }, ct);
             await history.SaveAsync(state.Partition, state.Conversation); if (RealtimeCurrent(state)) RenderTranscript();
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
