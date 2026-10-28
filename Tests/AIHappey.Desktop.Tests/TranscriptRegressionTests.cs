@@ -99,6 +99,40 @@ internal static class TranscriptRegressionTests
             "conversation activity projects tools and data newest-first");
         check(PortableConversations.Write(new Conversation { Messages = activityConversation }) == beforeActivityProjection,
             "conversation activity projection does not mutate portable history");
+        JsonElement Part(string json) => JsonSerializer.Deserialize<JsonElement>(json);
+        var toolStates = new Dictionary<string, string>
+        {
+            ["input-streaming"] = "ToolStateInputStreaming", ["input-available"] = "ToolStateInputAvailable",
+            ["approval-requested"] = "ToolStateApprovalRequested", ["approval-responded"] = "ToolStateApprovalResponded",
+            ["output-available"] = "ToolStateOutputAvailable", ["output-error"] = "ToolStateError", ["output-denied"] = "ToolStateOutputDenied"
+        };
+        foreach (var (state, key) in toolStates)
+            check(ConversationActivityProjection.ToolStateResourceKey(JsonSerializer.SerializeToElement(new { state })) == key,
+                "activity state maps to a localized resource: " + state);
+        check(ConversationActivityProjection.ToolStateResourceKey(Part("{}")) == "ToolStateUnknown"
+            && ConversationActivityProjection.ToolStateResourceKey(Part("""{"state":"future-state"}""")) == "ToolStateUnknown",
+            "missing and future activity states use a translated fallback, not raw protocol values");
+        check(ConversationActivityProjection.ToolStateResourceKey(Part("""{"state":"approval-responded","approval":{"approved":true}}""")) == "ToolStateOutputReviewed"
+            && ConversationActivityProjection.ToolStateResourceKey(Part("""{"state":"approval-responded","approval":{"approved":false}}""")) == "ToolStateOutputDenied"
+            && ConversationActivityProjection.ToolStateResourceKey(Part("""{"state":"output-available","output":{"isError":true}}""")) == "ToolStateError",
+            "activity states distinguish reviewed/denied responses and MCP error outputs");
+        foreach (var (bytes, label) in new (long, string)[] { (0, "0 B"), (1023, "1023 B"), (1024, "1.0 KB"), (1536, "1.5 KB"),
+            (1024 * 1024, "1.0 MB"), (1536 * 1024, "1.5 MB"), (1024L * 1024 * 1024, "1.0 GB") })
+            check(ConversationActivityProjection.FormatOutputSize(bytes) == label, "activity output size matches browser units: " + label);
+        foreach (var state in toolStates.Keys)
+        {
+            var size = ConversationActivityProjection.ToolOutputSize(JsonSerializer.SerializeToElement(new { state, output = new { value = 2 } }));
+            check(size == (state is "output-available" or "approval-responded" ? "11 B" : null), "activity size visibility matches browser for " + state);
+        }
+        check(ConversationActivityProjection.ToolOutputSize(Part("""{"state":"output-available"}""")) is null
+            && ConversationActivityProjection.ToolOutputSize(Part("""{"state":"output-available","output":{"isError":true}}""")) is null
+            && ConversationActivityProjection.ToolOutputSize(Part("""{"state":"output-available","output":null}""")) == "4 B",
+            "activity sizes safely omit missing/error results while preserving explicit JSON null output");
+        check(ConversationActivityProjection.ToolOutputSize(Part("""{"state":"output-available","output": { "text" : "é😀中" }}""")) == "20 B"
+            && ConversationActivityProjection.ToolOutputSize(Part("""{"state":"output-available","output":{"text":"\u00e9\ud83d\ude00\u4e2d"}}""")) == "20 B",
+            "activity size counts compact UTF-8 output identically for literal/escaped Unicode and emoji");
+        check(ConversationActivityProjection.ToolOutputSize(Part("""{"state":"output-available","output":["\n\t\u0001\"\\",true,false,null,12]}""")) == "37 B",
+            "activity size includes required JSON escapes, array punctuation, and primitive values");
         foreach (var gateway in new[] { "null", "[]", "\"invalid\"", "{}", "{\"cost\":null}", "{\"cost\":\"0.12\"}", "{\"cost\":{}}", "{\"cost\":1e999}" })
             check(MessageUsage.Read(Metadata("{\"usage\":{\"totalTokens\":17},\"providerMetadata\":{\"gateway\":" + gateway + "}}"), "test/model", timestamp) == ("17", null), "invalid/missing cost preserves positive tokens: " + gateway);
         check(MessageUsage.Read(Metadata("""{"usage":"invalid"}"""), "test/model", timestamp) == (null, null), "malformed optional usage does not break rendering");
@@ -142,6 +176,13 @@ internal static class TranscriptRegressionTests
                 : "Indicatief. Werkelijke kosten kunnen afwijken."), language + ": pricing warning matches browser");
             foreach (var key in new[] { "Activities", "ToggleActivities", "ToolsCount", "DataCount", "NoToolActivities", "NoDataActivities", "ExplainToolCall", "ToolExplanationFallback", "ToolOutputTitle" })
                 check(values.TryGetValue(key, out var translated) && translated.Length > 0, language + ": conversation activity resource present: " + key);
+            foreach (var key in toolStates.Values.Concat(["ToolStateUnknown", "ToolStateOutputReviewed", "ToolOutputSize"]).Distinct())
+                check(values.TryGetValue(key, out var label) && label.Length > 0 && label != key,
+                    language + ": tool-card status/size resource is translated: " + key);
+            check(values["ToolStateInputAvailable"] == (language == "en" ? "Processing input" : "Invoer verwerken")
+                && values["ToolStateOutputReviewed"] == (language == "en" ? "Output reviewed" : "Uitvoer beoordeeld")
+                && values["ToolStateOutputDenied"] == (language == "en" ? "Output denied" : "Uitvoer afgewezen"),
+                language + ": tool-card states use concise browser-consistent translations");
         }
     }
 }

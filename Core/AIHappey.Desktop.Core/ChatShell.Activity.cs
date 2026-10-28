@@ -123,9 +123,18 @@ public sealed partial class ChatShell
         header.Children.Add(ToolActivityArtwork(item, snapshot));
         var labels = new StackPanel { Spacing = 2 };
         labels.Children.Add(new TextBlock { Text = name, TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-        var state = PortableConversations.String(raw, "state") ?? DesktopResources.Get("ToolStateUnknown");
-        var stateText = new TextBlock { Text = state, TextWrapping = TextWrapping.Wrap };
-        NativeCardSurface.Secondary(stateText, metadata: true); labels.Children.Add(stateText);
+        var metadata = new NativeWrapPanel { Spacing = 6 };
+        var stateText = new TextBlock { Name = "ConversationToolState", Text = DesktopResources.Get(ConversationActivityProjection.ToolStateResourceKey(raw)),
+            TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+        NativeCardSurface.Secondary(stateText, metadata: true); metadata.Children.Add(stateText);
+        if (ConversationActivityProjection.ToolOutputSize(raw) is { } size)
+        {
+            var sizeText = new TextBlock { Text = size }; NativeCardSurface.Secondary(sizeText, metadata: true);
+            var badge = new Border { Name = "ConversationToolSize", Child = sizeText, Padding = new Thickness(6, 1, 6, 1), VerticalAlignment = VerticalAlignment.Center };
+            NativeCardSurface.Badge(badge); ToolbarControls.Label(badge, DesktopResources.Format("ToolOutputSize", size));
+            metadata.Children.Add(badge);
+        }
+        labels.Children.Add(metadata);
         Grid.SetColumn(labels, 1); header.Children.Add(labels); body.Children.Add(header);
         if (toolExplanations.TryGetValue(key, out var explanation))
             body.Children.Add(new ChatMarkdown { Name = "ToolExplanation", Text = explanation });

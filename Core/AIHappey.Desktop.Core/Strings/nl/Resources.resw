@@ -89,6 +89,15 @@
   <data name="NoToolActivities" xml:space="preserve"><value>Geen toolactiviteit in dit gesprek.</value></data>
   <data name="NoDataActivities" xml:space="preserve"><value>Geen gegevensactiviteit in dit gesprek.</value></data>
   <data name="ToolStateUnknown" xml:space="preserve"><value>Onbekende status</value></data>
+  <data name="ToolStateInputStreaming" xml:space="preserve"><value>Invoer ontvangen</value></data>
+  <data name="ToolStateInputAvailable" xml:space="preserve"><value>Invoer verwerken</value></data>
+  <data name="ToolStateApprovalRequested" xml:space="preserve"><value>Wacht op beoordeling</value></data>
+  <data name="ToolStateApprovalResponded" xml:space="preserve"><value>Beoordeeld</value></data>
+  <data name="ToolStateOutputAvailable" xml:space="preserve"><value>Uitvoer beschikbaar</value></data>
+  <data name="ToolStateOutputReviewed" xml:space="preserve"><value>Uitvoer beoordeeld</value></data>
+  <data name="ToolStateOutputDenied" xml:space="preserve"><value>Uitvoer afgewezen</value></data>
+  <data name="ToolStateError" xml:space="preserve"><value>Fout</value></data>
+  <data name="ToolOutputSize" xml:space="preserve"><value>Uitvoergrootte: {0}</value></data>
   <data name="ShowToolOutput" xml:space="preserve"><value>Uitvoer van {0} tonen</value></data>
   <data name="ExplainToolCall" xml:space="preserve"><value>Toolaanroep {0} uitleggen</value></data>
   <data name="ToolExplanationFallback" xml:space="preserve"><value>De toolaanroep kon niet worden uitgelegd.</value></data>

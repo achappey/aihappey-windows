@@ -89,6 +89,15 @@
   <data name="NoToolActivities" xml:space="preserve"><value>No tool activity in this conversation.</value></data>
   <data name="NoDataActivities" xml:space="preserve"><value>No data activity in this conversation.</value></data>
   <data name="ToolStateUnknown" xml:space="preserve"><value>Unknown state</value></data>
+  <data name="ToolStateInputStreaming" xml:space="preserve"><value>Receiving input</value></data>
+  <data name="ToolStateInputAvailable" xml:space="preserve"><value>Processing input</value></data>
+  <data name="ToolStateApprovalRequested" xml:space="preserve"><value>Review requested</value></data>
+  <data name="ToolStateApprovalResponded" xml:space="preserve"><value>Reviewed</value></data>
+  <data name="ToolStateOutputAvailable" xml:space="preserve"><value>Output available</value></data>
+  <data name="ToolStateOutputReviewed" xml:space="preserve"><value>Output reviewed</value></data>
+  <data name="ToolStateOutputDenied" xml:space="preserve"><value>Output denied</value></data>
+  <data name="ToolStateError" xml:space="preserve"><value>Error</value></data>
+  <data name="ToolOutputSize" xml:space="preserve"><value>Output size: {0}</value></data>
   <data name="ShowToolOutput" xml:space="preserve"><value>Show output for {0}</value></data>
   <data name="ExplainToolCall" xml:space="preserve"><value>Explain tool call {0}</value></data>
   <data name="ToolExplanationFallback" xml:space="preserve"><value>The tool call could not be explained.</value></data>

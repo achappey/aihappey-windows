@@ -57,6 +57,16 @@ public partial class App
             Check(!Descendants(provider).OfType<Button>().Single(b => b.Name == "ConversationToolOutput").IsEnabled
                 && Descendants(unknown).OfType<Button>().Single(b => b.Name == "ConversationToolOutput").IsEnabled,
                 context + ": output actions preserve input-only disabled and error-output enabled states");
+            Check(Descendants(local).OfType<TextBlock>().Single(t => t.Name == "ConversationToolState").Text == DesktopResources.Get("ToolStateOutputAvailable")
+                && Descendants(provider).OfType<TextBlock>().Single(t => t.Name == "ConversationToolState").Text == DesktopResources.Get("ToolStateInputAvailable")
+                && Descendants(unknown).OfType<TextBlock>().Single(t => t.Name == "ConversationToolState").Text == DesktopResources.Get("ToolStateError"),
+                context + ": activity cards render localized status labels rather than raw protocol states");
+            var sizeBadge = Descendants(local).OfType<Border>().Single(b => b.Name == "ConversationToolSize");
+            Check(sizeBadge.Child is TextBlock { Text: "53 B", FontSize: 12 } && sizeBadge.Background is SolidColorBrush
+                && AutomationProperties.GetName(sizeBadge) == DesktopResources.Format("ToolOutputSize", "53 B")
+                && ToolTipService.GetToolTip(sizeBadge) is ToolTip
+                && new[] { provider, unknown, client }.All(c => !Descendants(c).OfType<Border>().Any(b => b.Name == "ConversationToolSize")),
+                context + ": compact neutral size badge measures only completed output and has a localized accessible description");
             foreach (var width in new[] { 440d, 300d })
             {
                 content.Width = width; shell.UpdateLayout();
@@ -67,6 +77,8 @@ public partial class App
                     && footer.Child is StackPanel { Spacing: 8 }
                     && Math.Abs(footer.ActualWidth - local.ActualWidth + 2) < 2,
                     context + $": tool cards keep inset content and a full-width divided action footer at {width}px");
+                Check(sizeBadge.ActualWidth > 0 && sizeBadge.TransformToVisual(local).TransformBounds(new(0, 0, sizeBadge.ActualWidth, sizeBadge.ActualHeight)).Right <= local.ActualWidth,
+                    context + $": tool size badge stays within the wrapping metadata row at {width}px");
             }
             var originalTheme = shell.RequestedTheme;
             shell.RequestedTheme = shell.ActualTheme == ElementTheme.Light ? ElementTheme.Dark : ElementTheme.Light;
