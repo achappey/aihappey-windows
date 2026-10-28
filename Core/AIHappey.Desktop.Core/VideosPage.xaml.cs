@@ -1,7 +1,6 @@
 using FluentIcons.WinUI;
 using FluentIcons.Common;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -176,7 +175,7 @@ public sealed partial class VideosPage : UserControl
         grid.Children.Add(new FluentIcon { Icon = Icon.Play, FontSize = 36, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center });
         var labels = new StackPanel { Spacing = 2, Margin = new Thickness(12) };
         labels.Children.Add(new TextBlock { Text = item.Model, TextTrimming = TextTrimming.CharacterEllipsis });
-        if (item.Cost is { } cost) labels.Children.Add(new TextBlock { Text = cost.ToString("C4", CultureInfo.GetCultureInfo("en-US")), FontSize = 12 });
+        if (item.Cost is { } cost) labels.Children.Add(MediaCostPresentation.Create(cost, "VideoGenerationCost"));
         var metadata = new Border { Child = labels, VerticalAlignment = VerticalAlignment.Bottom }; ControlAppearance.TokenBadge(metadata); grid.Children.Add(metadata);
         var card = Card(grid); card.Tag = item; AutomationProperties.SetName(card, item.Generation.Prompt + " · " + item.Model); ToolTipService.SetToolTip(card, item.Generation.Prompt);
         card.Loaded += async (_, _) =>

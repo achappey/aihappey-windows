@@ -988,8 +988,9 @@
   <data name="VideoCount" xml:space="preserve"><value>Aantal videoΓÇÖs</value></data>
   <data name="VideoBatchLimit" xml:space="preserve"><value>Maximaal aantal videoΓÇÖs per verzoek</value></data>
   <data name="VideoProperties" xml:space="preserve"><value>Eigenschappen</value></data>
-  <data name="VideoDuration" xml:space="preserve"><value>Duur in seconden (standaard van provider indien leeg)</value></data>
-  <data name="VideoFps" xml:space="preserve"><value>Frames per seconde (standaard van provider indien leeg)</value></data>
+  <data name="VideoDuration" xml:space="preserve"><value>Duur in seconden</value></data>
+  <data name="VideoFps" xml:space="preserve"><value>Frames per seconde</value></data>
+  <data name="GenerationCost" xml:space="preserve"><value>Kosten: {0}</value></data>
   <data name="VideoGenerateAudio" xml:space="preserve"><value>Audio genereren</value></data>
   <data name="VideoCountValue" xml:space="preserve"><value>Aantal video's: {0}</value></data>
   <data name="VideoFrames" xml:space="preserve"><value>Frames</value></data>

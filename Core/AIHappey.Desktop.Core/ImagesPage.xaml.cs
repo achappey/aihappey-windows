@@ -1,6 +1,5 @@
 using FluentIcons.Common;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -19,7 +18,9 @@ public sealed class ImageTile
     public Visibility PendingVisibility => Pending ? Visibility.Visible : Visibility.Collapsed;
     public Visibility MetadataVisibility => Pending ? Visibility.Collapsed : Visibility.Visible;
     public string Model => Item?.Model ?? "";
-    public string Cost => Item?.Cost is { } cost ? cost.ToString("C4", CultureInfo.GetCultureInfo("en-US")) : "";
+    public string Cost => MediaCostPresentation.Format(Item?.Cost);
+    public string CostDescription => MediaCostPresentation.Label(Item?.Cost);
+    public Visibility CostVisibility => Item?.Cost is not null ? Visibility.Visible : Visibility.Collapsed;
     public string Description => Item is null ? DesktopResources.Get("Working") : Item.Generation.Prompt + " · " + Model;
     public ImageTile(LibraryImage? item)
     {

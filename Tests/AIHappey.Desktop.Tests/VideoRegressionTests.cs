@@ -112,9 +112,12 @@ internal static class VideoRegressionTests
         {
             using var resource = typeof(VideoRegressionTests).Assembly.GetManifestResourceStream("Desktop.Resources." + language)!;
             var values = System.Xml.Linq.XDocument.Load(resource).Root!.Elements("data").ToDictionary(e => e.Attribute("name")!.Value, e => e.Element("value")!.Value);
-            foreach (var key in new[] { "Videos", "VideoSettings", "VideoStartUncertain", "VideoProcessing", "VideoStorage", "VideoFirstFrame", "VideoLastFrame", "VideoFrames", "VideoChooseFrame", "VideoCountValue", "ImageWidth", "ImageHeight" })
+            foreach (var key in new[] { "Videos", "VideoSettings", "VideoStartUncertain", "VideoProcessing", "VideoStorage", "VideoFirstFrame", "VideoLastFrame", "VideoFrames", "VideoChooseFrame", "VideoCountValue", "ImageWidth", "ImageHeight", "GenerationCost" })
                 check(values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value), language + " video resource: " + key);
             check(string.Format(System.Globalization.CultureInfo.InvariantCulture, values["VideoCountValue"], 3).Contains('3'), language + " video count label includes current value");
+            check(values["VideoDuration"] == (language == "en" ? "Duration in seconds" : "Duur in seconden")
+                && values["VideoFps"] == (language == "en" ? "Frames per second" : "Frames per seconde"), language + " concise video property labels retain units");
+            check(string.Format(System.Globalization.CultureInfo.InvariantCulture, values["GenerationCost"], "0.0400") == (language == "en" ? "Cost: 0.0400" : "Kosten: 0.0400"), language + " currency-neutral accessible generation cost label");
         }
     }
     private static async Task RejectAsync(Func<Task> action, Action<bool, string> check, string label)

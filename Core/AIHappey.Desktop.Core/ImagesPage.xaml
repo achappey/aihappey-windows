@@ -61,7 +61,11 @@
                         <Border VerticalAlignment="Bottom" Style="{StaticResource NativeCardImageMetadataStyle}" Visibility="{Binding MetadataVisibility}">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="{Binding Model}" TextTrimming="CharacterEllipsis" Style="{StaticResource NativeCardMetadataStyle}" />
-                                <TextBlock Text="{Binding Cost}" Style="{StaticResource NativeCardMetadataStyle}" />
+                                <StackPanel x:Name="ImageGenerationCost" Orientation="Horizontal" Spacing="6" Visibility="{Binding CostVisibility}"
+                                            AutomationProperties.Name="{Binding CostDescription}" ToolTipService.ToolTip="{Binding CostDescription}">
+                                    <ic:FluentIcon Icon="Money" IconSize="Resizable" FontSize="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Cost}" VerticalAlignment="Center" Style="{StaticResource NativeCardMetadataStyle}" />
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource NativeCardStyle}" Background="{x:Null}" IsHitTestVisible="False" />

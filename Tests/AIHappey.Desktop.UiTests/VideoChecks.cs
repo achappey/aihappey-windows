@@ -54,6 +54,15 @@ public partial class App
             var path = Path.Combine(directory, "video.mp4"); await File.WriteAllBytesAsync(path, new byte[] { 1, 2, 3 });
             var video = new LibraryVideo(new() { Id = Guid.NewGuid().ToString("N"), Prompt = "A lighthouse", Model = "p/video" }, new("video.mp4", "video/mp4", .25), path);
             page.SetItems([video], []); await Task.Delay(80); Check(grid.Items.Count == 1 && ((Border)grid.Items[0]).Tag is LibraryVideo && !Descendants(page).OfType<VideoShimmer>().Any(), context + ": completed output replaces placeholders without inline autoplay");
+            CheckMediaCost(grid, "VideoGenerationCost", .25, context + " gallery");
+            foreach (var cost in new double?[] { 0, null })
+            {
+                var fixture = video with { Output = new("cost-" + (cost.HasValue ? "zero" : "missing") + ".mp4", "video/mp4", cost) };
+                page.SetItems([fixture], []); await Task.Delay(80); page.UpdateLayout();
+                CheckMediaCost(grid, "VideoGenerationCost", cost, context + " gallery");
+                Check(fixture.Cost == cost, context + ": cost display leaves stored amount unchanged");
+            }
+            page.SetItems([video], []);
             page.Notice("Fixture warning", InfoBarSeverity.Warning); Check(Descendants(page).OfType<InfoBar>().Single().IsClosable, context + ": warnings use dismissible native InfoBar");
             window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); await Task.Delay(50);
             var inputStore = new VideoInputStore(Path.Combine(directory, "inputs")); var input = await inputStore.AddAsync(image);
@@ -69,6 +78,8 @@ public partial class App
                 && !Descendants(dialog).OfType<FrameworkElement>().Any(e => e.Name is "VideoFirstFrameCard" or "VideoLastFrameCard"), context + ": raw provider editor removed and both frames share one card");
             foreach (var section in sections) section.IsExpanded = true;
             await Task.Delay(80); dialog.UpdateLayout();
+            Check(VideoSettingFields(dialog).OfType<TextBox>().Single(t => t.Name == "VideoDuration").Header.ToString() == "Duration in seconds"
+                && VideoSettingFields(dialog).OfType<TextBox>().Single(t => t.Name == "VideoFps").Header.ToString() == "Frames per second", context + ": concise duration and frame-rate labels without provider-default suffixes");
             Check(!Descendants(dialog).OfType<FrameworkElement>().Any(e => e.Name == "VideoStorageCard")
                 && Descendants(dialog).OfType<Button>().Any(b => b.Name == "VideoRemove_references")
                 && Descendants(dialog).OfType<Button>().Any(b => b.Name == "VideoRemove_first_frame") && Descendants(dialog).OfType<Button>().Any(b => b.Name == "VideoRemove_last_frame"),

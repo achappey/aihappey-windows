@@ -2,7 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const core = path.join(__dirname, '../Core/AIHappey.Desktop.Core');
-const sources = fs.readdirSync(core).filter(file => file.includes('Video') && file.endsWith('.cs'));
+const sources = fs.readdirSync(core).filter(file => (file.includes('Video') || file === 'MediaCostPresentation.cs') && file.endsWith('.cs'));
 let failures = 0;
 for (const language of ['en', 'nl']) {
   const text = fs.readFileSync(path.join(core, 'Strings', language, 'Resources.resw'), 'utf8');

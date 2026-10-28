@@ -17,8 +17,10 @@ public sealed class ImagePreviewDialog : ContentDialog, IResponsiveDialog
         layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) }); layout.RowDefinitions.Add(new() { Height = GridLength.Auto }); layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var image = new Image { Name = "FullGeneratedImage", Stretch = Stretch.Uniform, Source = new BitmapImage(new Uri(item.Path)) };
         layout.Children.Add(image);
-        var description = new TextBlock { Text = item.Generation.Prompt + "\n" + item.Model + (item.Cost is { } cost ? $" · ${cost:F4}" : ""), TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, MaxHeight = 100 };
-        Grid.SetRow(description, 1); layout.Children.Add(description);
+        var details = new StackPanel { Spacing = 6 };
+        details.Children.Add(new TextBlock { Text = item.Generation.Prompt + "\n" + item.Model, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, MaxHeight = 100 });
+        if (item.Cost is { } cost) details.Children.Add(MediaCostPresentation.Create(cost, "ImagePreviewGenerationCost"));
+        Grid.SetRow(details, 1); layout.Children.Add(details);
         var actions = new MessageFooterPanel();
         foreach (var (action, label) in new[] { (ImagePreviewAction.Save, "ImageSaveCopy"), (ImagePreviewAction.AddToPrompt, "ImageAddToPrompt"), (ImagePreviewAction.Delete, "Delete") })
         {

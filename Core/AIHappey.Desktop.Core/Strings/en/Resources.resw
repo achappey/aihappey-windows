@@ -995,8 +995,9 @@
   <data name="VideoChooseFrame" xml:space="preserve"><value>Choose image</value></data>
   <data name="VideoBatchLimit" xml:space="preserve"><value>Maximum videos per request</value></data>
   <data name="VideoProperties" xml:space="preserve"><value>Properties</value></data>
-  <data name="VideoDuration" xml:space="preserve"><value>Duration in seconds (provider default if empty)</value></data>
-  <data name="VideoFps" xml:space="preserve"><value>Frames per second (provider default if empty)</value></data>
+  <data name="VideoDuration" xml:space="preserve"><value>Duration in seconds</value></data>
+  <data name="VideoFps" xml:space="preserve"><value>Frames per second</value></data>
+  <data name="GenerationCost" xml:space="preserve"><value>Cost: {0}</value></data>
   <data name="VideoGenerateAudio" xml:space="preserve"><value>Generate audio</value></data>
   <data name="VideoInputReferences" xml:space="preserve"><value>Reference images</value></data>
   <data name="VideoAddReferences" xml:space="preserve"><value>Add reference images</value></data>

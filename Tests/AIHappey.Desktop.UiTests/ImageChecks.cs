@@ -60,6 +60,20 @@ public partial class App
             Check(page.ActualTheme != theme, context + ": runtime native theme switch");
             page.Notice("Test warning", InfoBarSeverity.Warning); Check(Descendants(page).OfType<InfoBar>().Single().IsClosable, context + ": dismissible warning");
             window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); await Task.Delay(80);
+            foreach (var cost in new double?[] { .04, 0, null })
+            {
+                var fixture = image with { Output = new() { File = "image.png", MediaType = "image/png", Cost = cost } };
+                page.SetItems([fixture], 0); await Task.Delay(100); page.UpdateLayout();
+                var tile = (ImageTile)grid.Items[0];
+                Check(tile.Cost == (cost?.ToString("F4", System.Globalization.CultureInfo.CurrentCulture) ?? "")
+                    && tile.CostVisibility == (cost.HasValue ? Visibility.Visible : Visibility.Collapsed) && fixture.Cost == cost, context + ": cost presentation retains amount and distinguishes zero from missing");
+                CheckMediaCost(grid, "ImageGenerationCost", cost, context + " gallery");
+                var costPreview = new ImagePreviewDialog(fixture) { XamlRoot = page.XamlRoot, RequestedTheme = theme };
+                var costShown = costPreview.ShowAsync(); await Task.Delay(80);
+                CheckMediaCost(costPreview, "ImagePreviewGenerationCost", cost, context + " preview");
+                costPreview.Hide(); await costShown;
+            }
+            page.SetItems([image], 0);
 
             ImagePreferences? saved = null;
             var preferences = new ImagePreferences { StorageRoot = directory }; preferences.ProviderOptions["openai"]["future"] = new JsonObject { ["keep"] = true };
@@ -98,6 +112,7 @@ public partial class App
             shown = failure.ShowAsync(); await Task.Delay(90); InvokeButton(Descendants(failure).OfType<Button>().Single(b => b.Name == "CloseButton")); await Task.Delay(90);
             Check(shown.Status == Windows.Foundation.AsyncStatus.Started, context + ": storage failure leaves settings dialog open"); failure.DiscardOnShutdown = true; failure.Hide(); await shown;
             var preview = new ImagePreviewDialog(image) { XamlRoot = page.XamlRoot }; var previewShown = preview.ShowAsync(); await Task.Delay(100);
+            CheckMediaCost(preview, "ImagePreviewGenerationCost", .04, context + " full preview");
             Check(Descendants(preview).OfType<Image>().Any(i => i.Name == "FullGeneratedImage")
                 && Descendants(preview).OfType<Button>().Count(b => b.Name.StartsWith("ImagePreview")) == 3, context + ": full-resolution native preview and Save/Delete/Add to prompt"); preview.Hide(); await previewShown;
             page.ClearDraft(); Check(page.Attachments.Count == 0 && page.PromptText == "", context + ": partition changes can clear image draft without chat mutation");
