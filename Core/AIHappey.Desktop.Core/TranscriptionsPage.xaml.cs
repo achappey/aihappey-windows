@@ -103,8 +103,9 @@ public sealed partial class TranscriptionsPage : UserControl
         var layout = new Grid(); layout.RowDefinitions.Add(new() { Height = GridLength.Auto }); layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) }); layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var header = new Grid { Margin = new Thickness(16, 16, 16, 0), ColumnSpacing = 12 };
         header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        var icon = new Grid { Width = 32, Height = 32, VerticalAlignment = VerticalAlignment.Top };
-        icon.Children.Add(DesktopIcons.Create(Icon.Mic, 24)); header.Children.Add(icon);
+        var model = OpenAIChatConfig.Text(response["response"]?["modelId"]) ?? data.Model;
+        var modelLabel = new TextBlock { FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 320 };
+        header.Children.Add(MediaCardIdentity.Artwork(response, model, data.Model, modelLabel, Icon.Mic));
         var labels = new StackPanel { Spacing = 6 };
         var title = new TextBlock { Text = data.Filename, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, MaxLines = 2, TextTrimming = TextTrimming.CharacterEllipsis }; ToolTipService.SetToolTip(title, data.Filename); labels.Children.Add(title);
         Grid.SetColumn(labels, 1); header.Children.Add(labels);
@@ -113,7 +114,8 @@ public sealed partial class TranscriptionsPage : UserControl
         delete.Click += async (_, _) => { if (editable && DeleteRequested is not null) await DeleteRequested(item); }; menu.Items.Add(delete); more.Flyout = menu; Grid.SetColumn(more, 2); header.Children.Add(more); layout.Children.Add(header);
         var badges = new MessageFooterPanel();
         void Badge(string text) { if (string.IsNullOrWhiteSpace(text)) return; var badge = new Border { HorizontalAlignment = HorizontalAlignment.Left, Child = new TextBlock { Text = text, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 320 } }; NativeCardSurface.Badge(badge); ToolTipService.SetToolTip(badge, text); badges.Children.Add(badge); }
-        Badge(OpenAIChatConfig.Text(response["response"]?["modelId"]) ?? data.Model);
+        var modelBadge = new Border { HorizontalAlignment = HorizontalAlignment.Left, Child = modelLabel };
+        NativeCardSurface.Badge(modelBadge); ToolTipService.SetToolTip(modelBadge, model); badges.Children.Add(modelBadge);
         Badge(OpenAIChatConfig.Text(response["language"]) ?? "");
         if (response["providerMetadata"] is JsonObject metadata)
             foreach (var provider in metadata.Where(p => p.Key != "gateway"))

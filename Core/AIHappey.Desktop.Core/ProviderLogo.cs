@@ -15,6 +15,7 @@ internal sealed class ProviderLogo : Grid
     private readonly IconElement placeholder;
     private CancellationTokenSource? lifetime;
     internal string? DisplayedSource { get; private set; }
+    internal event Action? DisplayChanged;
     public ProviderLogo(CatalogProvider provider, double size = 48, bool showPlaceholder = true)
         : this(provider, size, showPlaceholder, Icon.Brain) { }
     public ProviderLogo(CatalogProvider provider, double size, bool showPlaceholder, Icon placeholderIcon)
@@ -25,12 +26,12 @@ internal sealed class ProviderLogo : Grid
         Children.Add(image);
         ToolbarControls.Label(this, DesktopResources.Format("ProviderLogoLabel", provider.Name));
         Loaded += (_, _) => Reload(); ActualThemeChanged += (_, _) => { if (IsLoaded) Reload(); };
-        Unloaded += (_, _) => { lifetime?.Cancel(); image.Source = null; };
+        Unloaded += (_, _) => { lifetime?.Cancel(); image.Source = null; SetDisplayedSource(null); };
     }
     private async void Reload()
     {
         lifetime?.Cancel(); lifetime?.Dispose(); lifetime = new(); var ct = lifetime.Token;
-        image.Visibility = Visibility.Collapsed; placeholder.Visibility = Visibility.Visible; DisplayedSource = null;
+        image.Visibility = Visibility.Collapsed; placeholder.Visibility = Visibility.Visible; SetDisplayedSource(null);
         foreach (var source in ProviderCatalog.IconSources(provider, ActualTheme == ElementTheme.Dark))
         {
             if (ct.IsCancellationRequested) return;
@@ -65,12 +66,17 @@ internal sealed class ProviderLogo : Grid
                 }
                 else image.Source = new BitmapImage(new Uri(source)) { DecodePixelWidth = (int)(Width * 2) };
                 if (await ready.Task.WaitAsync(TimeSpan.FromSeconds(12), ct) && !ct.IsCancellationRequested)
-                { DisplayedSource = source; image.Visibility = Visibility.Visible; placeholder.Visibility = Visibility.Collapsed; return; }
+                { image.Visibility = Visibility.Visible; placeholder.Visibility = Visibility.Collapsed; SetDisplayedSource(source); return; }
             }
             catch (OperationCanceledException) { return; }
             catch (Exception) { /* Network, decode or timeout failure: try the next bounded candidate. */ }
             finally { image.ImageOpened -= opened; image.ImageFailed -= failed; }
         }
         if (!ct.IsCancellationRequested) image.Source = null;
+    }
+    private void SetDisplayedSource(string? source)
+    {
+        if (DisplayedSource == source) return;
+        DisplayedSource = source; DisplayChanged?.Invoke();
     }
 }

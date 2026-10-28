@@ -840,6 +840,7 @@
   <data name="ImageAttachmentTotalLimit" xml:space="preserve"><value>Gebruik maximaal 20 afbeeldingsbijlagen en 100 MB aan bronafbeeldingen en masker per aanvraag.</value></data>
   <data name="Text" xml:space="preserve"><value>Tekst</value></data>
   <data name="Speech" xml:space="preserve"><value>Spraak</value></data>
+  <data name="SpeechActions" xml:space="preserve"><value>Spraakacties</value></data>
   <data name="MySpeechFiles" xml:space="preserve"><value>Mijn spraakbestanden</value></data>
   <data name="SpeechPromptPlaceholder" xml:space="preserve"><value>Voer tekst in om naar spraak om te zetten</value></data>
   <data name="SpeechNoModels" xml:space="preserve"><value>Er zijn geen spraakmodellen beschikbaar. Controleer je providersleutels of vernieuw de modellenlijst.</value></data>

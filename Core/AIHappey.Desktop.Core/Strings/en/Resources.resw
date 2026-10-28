@@ -857,6 +857,7 @@
   <data name="SpeechOpenFolder" xml:space="preserve"><value>Open folder</value></data>
   <data name="SpeechPlay" xml:space="preserve"><value>Play speech</value></data>
   <data name="SpeechDetails" xml:space="preserve"><value>Speech details</value></data>
+  <data name="SpeechActions" xml:space="preserve"><value>Speech actions</value></data>
   <data name="SpeechInput" xml:space="preserve"><value>Input</value></data>
   <data name="SpeechProviderInput" xml:space="preserve"><value>Provider input</value></data>
   <data name="SpeechProviderResult" xml:space="preserve"><value>Provider result</value></data>

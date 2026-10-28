@@ -22,7 +22,7 @@ public sealed partial class ChatShell
         speechTarget.Opening = () => SpeechModelSuggestions();
         speechTarget.SelectionChanged += () => { speechPage.SetModelAvailable(SelectedSpeechModel is not null); UpdateModelFavorites(); };
         speechPage.SendRequested = SendSpeechAsync; speechPage.StopRequested = () => operation?.Cancel(); speechPage.ImportRequested = PickSpeechDocumentsAsync; speechPage.FilesDropped = DropSpeechDocumentsAsync;
-        speechPage.SettingsRequested = EditSpeechSettingsAsync; speechPage.FolderRequested = OpenSpeechFolderAsync; speechPage.PlayRequested = ViewSpeechAsync; speechPage.DetailsRequested = ViewSpeechAsync; speechPage.DownloadRequested = DownloadSpeechAsync; speechPage.DeleteRequested = DeleteSpeechAsync;
+        speechPage.SettingsRequested = EditSpeechSettingsAsync; speechPage.FolderRequested = OpenSpeechFolderAsync; speechPage.DetailsRequested = ViewSpeechAsync; speechPage.DownloadRequested = DownloadSpeechAsync; speechPage.DeleteRequested = DeleteSpeechAsync;
         speechPage.DictationRequested = () => ToggleComposerDictationAsync(DesktopPage.Speech);
     }
     private void SpeechModelSuggestions(string query = "") => ConfigurePrimitivePicker(speechTarget, speechModels, "speech");

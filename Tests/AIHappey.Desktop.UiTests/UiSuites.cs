@@ -33,6 +33,7 @@ public partial class App
             ["skills"] = CheckSkillsAsync,
             ["local-tools"] = CheckLocalToolsAsync,
             ["images"] = CheckImagesAsync,
+            ["media-libraries"] = CheckMediaLibrariesAsync,
             ["videos"] = CheckVideosAsync,
             // Previously these were reachable only through focused flags, not the full run.
             ["realtime"] = CheckRealtimeAsync,
