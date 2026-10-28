@@ -320,6 +320,7 @@ public sealed partial class ChatShell : UserControl
         ModelHeader(speechModelToolbar, speechTarget, () => speechTarget.Selection.Ids.Count == 1 ? SelectedSpeechModel : null, () => CanUseSpeech);
         ModelHeader(transcriptionModelToolbar, transcriptionTarget, () => SelectedTranscriptionModel, () => CanUseTranscriptions);
         ModelHeader(realtimeHeader, realtimeTarget, () => realtimeModels.FirstOrDefault(m => m.Id == realtimeTarget.Text), () => activePage == DesktopPage.Realtime && realtime is null, realtimeFavorite);
+        PrepareAgentRealtimeHeader();
         Grid.SetColumn(chatModelToolbar, 1); top.Children.Add(chatModelToolbar);
         Grid.SetColumn(imageModelToolbar, 1); top.Children.Add(imageModelToolbar);
         Grid.SetColumn(videoModelToolbar, 1); top.Children.Add(videoModelToolbar);
@@ -484,6 +485,7 @@ public sealed partial class ChatShell : UserControl
     private async Task SendAsync(McpSelectedPrompt? selectedPrompt = null)
     {
         if (activePage == DesktopPage.Realtime) { await SendRealtimeAsync(selectedPrompt); return; }
+        await realtimeCleanup;
         if (busy || closing || historyDialogOpen || catalogDialog is not null || dictation is not null || dictationChanging || composerDictation is not null
             || selectedPrompt is null && string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
         UpdateTargetSuggestions();
@@ -586,14 +588,15 @@ public sealed partial class ChatShell : UserControl
 
     private void RenderTranscript()
     {
-        var empty = current.Messages.Count == 0;
+        var draft = realtime?.AgentVoice?.Draft;
+        var empty = current.Messages.Count == 0 && draft is null;
         RefreshWelcome();
         welcome.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
         scroll.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         Grid.SetRow(composer, empty ? 1 : 2);
         composer.VerticalAlignment = empty ? VerticalAlignment.Center : VerticalAlignment.Bottom;
         SizeTranscript();
-        RenderTranscriptRows(MessageDetails.Project(current.Messages));
+        RenderTranscriptRows(MessageDetails.Project(draft is null ? current.Messages : current.Messages.Append(draft).ToList()));
         RefreshDetails();
         RefreshConversationActivity();
         if (followBottom && !empty)

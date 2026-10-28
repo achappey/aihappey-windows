@@ -2004,4 +2004,7 @@ Speaker: {1}</value></data>
   <data name="LiveClientKind" xml:space="preserve"><value>Client execution target</value></data>
   <data name="LiveClientTarget" xml:space="preserve"><value>Client agent or model</value></data>
   <data name="LiveRawProviderOptions" xml:space="preserve"><value>Raw provider configuration</value></data>
+  <data name="AgentRealtimeUnsupported" xml:space="preserve"><value>This agent requires a supported real-time transcription model. Windows supports OpenAI, Google, and Gladia. Saved settings are preserved.</value></data>
+  <data name="AgentRealtimeSelect" xml:space="preserve"><value>Select an agent with a real-time transcription model.</value></data>
+  <data name="AgentRealtimeSpeechFailed" xml:space="preserve"><value>The reply could not be played. The text response is still available.</value></data>
 </root>

@@ -51,6 +51,7 @@ public sealed partial class ChatShell
         public bool HistorySaved { get; set; }
         public IRealtimeSession? Connection { get; set; }
         public bool Connected { get; set; }
+        public AgentRealtimeState? AgentVoice { get; init; }
         public bool Reconnecting { get; set; }
         public HashSet<string> Calls { get; } = new(StringComparer.Ordinal);
         public HashSet<string> Executed { get; } = new(StringComparer.Ordinal);
@@ -82,6 +83,11 @@ public sealed partial class ChatShell
         realtimeMute.Click += async (_, _) =>
         {
             UpdateRealtimeControls();
+            if (realtime?.AgentVoice is { } voice)
+            {
+                voice.Turns?.Reset(); voice.Draft = null;
+                await voice.Connection!.SetMutedAsync(realtimeMute.IsChecked == true); RenderTranscript(); return;
+            }
             if (realtime?.Connection is { } connection) try { await connection.SetMutedAsync(realtimeMute.IsChecked == true); } catch { await RealtimeFailedAsync(); }
         };
         realtimeStop.Click += async (_, _) => await StopRealtimeAndOpenHistoryAsync();
@@ -101,6 +107,7 @@ public sealed partial class ChatShell
         if (closing || partition != session.HistoryPartition) return;
         aiModelTargets = available;
         await LoadModelFavoritesAsync(ct);
+        await LoadRealtimeAgentsAsync(ct);
         realtimeModels = ProviderPreferences.Filter(AiModelCatalog.OfType(available, "audio"), session.Settings).Where(m => RealtimeConfiguration.Supported(m.Id)).ToArray();
         if (!realtimeModels.Any(m => m.Id == realtimeTarget.Text))
             realtimeTarget.Text = new[] { session.Settings.AiModels.AudioModel, session.Settings.Realtime.Model, "openai/gpt-realtime-2" }.FirstOrDefault(id => realtimeModels.Any(m => m.Id == id)) ?? realtimeModels.FirstOrDefault()?.Id ?? "";
@@ -120,9 +127,10 @@ public sealed partial class ChatShell
         }
         var connected = realtime?.Connected == true;
         realtimeTarget.IsEnabled = realtime is null && !busy;
+        UpdateAgentRealtimeControls();
         UpdateModelFavorites();
         realtimeMute.IsEnabled = connected;
-        var google = RealtimeConfiguration.Provider(realtime?.Model ?? realtimeTarget.Text) == "google";
+        var google = !realtimeAgentMode && RealtimeConfiguration.Provider(realtime?.Model ?? realtimeTarget.Text) == "google";
         realtimeCamera.Visibility = realtimeScreen.Visibility = google ? Visibility.Visible : Visibility.Collapsed;
         realtimeCamera.IsEnabled = realtimeScreen.IsEnabled = connected && !realtimeVideoChanging;
         realtimeStop.IsEnabled = realtime is not null;
@@ -149,11 +157,13 @@ public sealed partial class ChatShell
         input.PlaceholderText = DesktopResources.Get(connected ? "AskAnything" : "RealtimeStartHint");
         ((FluentIcons.WinUI.FluentIcon)send.Content).Icon = connected ? Icon.Send : Icon.Live;
         ToolbarControls.Label(send, DesktopResources.Get(connected ? "SendMessage" : "RealtimeStart"));
-        send.IsEnabled = initialized && !busy && !realtimeSending && (realtime is null || connected) && realtimeModels.Any(m => m.Id == realtimeTarget.Text);
+        send.IsEnabled = initialized && !busy && !realtimeSending && (realtime is null || connected)
+            && (realtimeAgentMode ? SelectedRealtimeAgent is { } selected && RealtimeAgentSupported(selected) : realtimeModels.Any(m => m.Id == realtimeTarget.Text));
         dictate.Visibility = Visibility.Collapsed;
     }
     private async Task SendRealtimeAsync(McpSelectedPrompt? selectedPrompt = null)
     {
+        if (realtimeAgentMode) { await SendAgentRealtimeAsync(selectedPrompt); return; }
         await StopRealtimeTranscriptionAsync();
         if (realtimeSending || busy || closing || historyDialogOpen || !initialized) return;
         realtimeSending = true; UpdateRealtimeControls();
@@ -363,6 +373,7 @@ public sealed partial class ChatShell
     }
     private async Task FinishRealtimeStopAsync(RealtimeState? state)
     {
+        if (state?.AgentVoice is not null) { await FinishAgentRealtimeStopAsync(state); return; }
         await StopRealtimeVideoAsync();
         if (state?.Connection is { } connection)
         {

@@ -26,6 +26,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTokenClient.cs" Link="Core/RealtimeTokenClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTranscript.cs" Link="Core/RealtimeTranscript.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Agents.cs" Link="Core/Agents.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/AgentRealtimeTurns.cs" Link="Core/AgentRealtimeTurns.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AgentOverviewProjection.cs" Link="Core/AgentOverviewProjection.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AgentIcons.cs" Link="Core/AgentIcons.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AgentPlugins.cs" Link="Core/AgentPlugins.cs" />

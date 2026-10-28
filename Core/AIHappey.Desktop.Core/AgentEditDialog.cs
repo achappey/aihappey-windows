@@ -63,6 +63,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         AutomationProperties.SetLiveSetting(feedback, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         AddTab("general", DesktopResources.Get("General"), General(isEditing, models));
         AddTab("details", DesktopResources.Get("Details"), Details());
+        AddTab("realtime", DesktopResources.Get("TranscriptionRealtime"), AudioModels(models));
         AddTab("modelContext", DesktopResources.Get("McpTitle"), ModelContext(connected ?? McpTurnSnapshot.Empty));
         AddTab("skills", DesktopResources.Get("Skills"), Skills());
         AddTab("plugins", DesktopResources.Get("PluginsTitle"), Plugins(plugins ?? []));
@@ -274,6 +275,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         try
         {
             CommitProvider();
+            CommitAudioProviders();
             DesktopAgentIcons.PrepareForSave(draft);
             draft.SyncLegacyModel(); draft.Validate(); lifetime.Token.ThrowIfCancellationRequested();
             if (partition != session.AgentPartition) throw new OperationCanceledException();

@@ -30,6 +30,20 @@ public sealed class DesktopAgent
     public string ModelId => Text((Models.FirstOrDefault(model => Text(model["type"]) != "decision") ?? Models.FirstOrDefault())?["id"]);
     public IReadOnlyList<string> ModelIds => Models.Select(model => Text(model["id"])).ToArray();
     public string SelectionKey => "local:" + Name;
+    public JsonObject? TranscriptionModel => Definition["transcriptionModel"] as JsonObject;
+    public JsonObject? SpeechModel => Definition["speechModel"] as JsonObject;
+    public void SelectAudioModel(string type, string id)
+    {
+        var field = type == "transcription" ? "transcriptionModel" : "speechModel";
+        var previous = Definition[field] as JsonObject;
+        if (string.IsNullOrWhiteSpace(id)) { Definition.Remove(field); return; }
+        if (Text(previous?["id"]) == id) return;
+        var next = new JsonObject { ["id"] = id, ["type"] = type };
+        if (Provider(Text(previous?["id"])) == Provider(id))
+            foreach (var key in new[] { "providerMetadata", "providerHeaders" })
+                if (previous?[key] is { } value) next[key] = value.DeepClone();
+        Definition[field] = next;
+    }
     public DesktopAgent(JsonObject definition) => Definition = (JsonObject)definition.DeepClone();
     public DesktopAgent Clone() => new(Definition);
     public static string Text(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out var text) ? text : "";

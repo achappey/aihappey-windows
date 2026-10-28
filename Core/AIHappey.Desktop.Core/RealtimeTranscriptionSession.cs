@@ -10,6 +10,7 @@ public interface IRealtimeTranscriptionSession : IAsyncDisposable
     RealtimeTranscriptionSnapshot Snapshot { get; }
     Task StartAsync(CancellationToken ct);
     Task StopAsync();
+    Task SetMutedAsync(bool muted) => Task.CompletedTask;
 }
 
 /// <summary>Reusable transcription service. It knows neither WinUI nor a library/history store.</summary>
@@ -26,23 +27,28 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
     private readonly Stopwatch clock = new();
     private Task? pump, start, stop;
     private bool connected;
+    private volatile bool muted;
+    private readonly Action<JsonObject>? onEvent;
     public ChannelReader<RealtimeTranscriptionSnapshot> Updates => updates.Reader;
     public RealtimeTranscriptionSnapshot Snapshot { get; private set; } = new("", "", []);
 
     public RealtimeTranscriptionSession(string model, RealtimeTranscriptionPreferences preferences,
-        Func<JsonObject, CancellationToken, Task<string>> getToken, ITranscriptionAudioInput? audioInput = null)
+        Func<JsonObject, CancellationToken, Task<string>> getToken, ITranscriptionAudioInput? audioInput = null,
+        Action<JsonObject>? onEvent = null)
     {
         preferences = preferences.Clone(); preferences.Validate();
         var provider = RealtimeConfiguration.Provider(model); transcript = new(provider);
         input = audioInput ?? new TranscriptionAudioInput(provider == "openai" ? 48000 : 16000); ownsInput = audioInput is null;
+        this.onEvent = onEvent;
+        var gatedInput = new MutedInput(input, () => muted);
         Task<string> Token(CancellationToken ct) => getToken(RealtimeTranscriptionConfiguration.TokenRequest(model, preferences, DateTimeOffset.UtcNow), ct);
         if (provider == "openai")
         {
-            var openai = new OpenAiRealtimeSession(Token, transcriptionInput: input); transport = openai; finish = openai.FinishTranscriptionAsync;
+            var openai = new OpenAiRealtimeSession(Token, transcriptionInput: gatedInput); transport = openai; finish = openai.FinishTranscriptionAsync;
         }
         else if (provider is "google" or "gladia")
         {
-            var ws = new TranscriptionWebSocketSession(provider, provider == "google" ? RealtimeTranscriptionConfiguration.GoogleSetup(model, preferences) : null, Token, input);
+            var ws = new TranscriptionWebSocketSession(provider, provider == "google" ? RealtimeTranscriptionConfiguration.GoogleSetup(model, preferences) : null, Token, gatedInput);
             transport = ws; finish = ws.FinishInputAsync;
         }
         else throw new NotSupportedException("Unsupported transcription provider.");
@@ -66,6 +72,7 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
             {
                 if (message["type"]?.ToString() is "error" or "conversation.item.input_audio_transcription.failed")
                     throw new RealtimeFailureException("transcription-provider", "The provider reported a transcription error.");
+                if (!muted) onEvent?.Invoke((JsonObject)message.DeepClone());
                 if (!transcript.Apply(message, clock.Elapsed.TotalSeconds)) continue;
                 Snapshot = transcript.Snapshot(); updates.Writer.TryWrite(Snapshot);
             }
@@ -88,4 +95,12 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
         }
     }
     public async ValueTask DisposeAsync() => await StopAsync().ConfigureAwait(false);
+    public Task SetMutedAsync(bool value) { muted = value; return Task.CompletedTask; }
+    private sealed class MutedInput(ITranscriptionAudioInput source, Func<bool> muted) : ITranscriptionAudioInput
+    {
+        public int SampleRate => source.SampleRate;
+        public IDisposable Subscribe(Action<byte[]> audio, Action<Exception> failed) => source.Subscribe(
+            bytes => audio(muted() ? new byte[bytes.Length] : bytes), failed);
+        public void Dispose() { } // Capture ownership remains with the session/caller.
+    }
 }
