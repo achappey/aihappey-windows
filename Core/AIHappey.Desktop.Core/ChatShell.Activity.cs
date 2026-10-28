@@ -106,20 +106,21 @@ public sealed partial class ChatShell
             });
             return panel;
         }
-        foreach (var item in items) panel.Children.Add(tools ? ToolActivityCard(item) : DataActivityCard(item));
+        var snapshot = tools ? activeMcpTurn ?? Mcp.Capture(toolsOnly: true) : null;
+        foreach (var item in items) panel.Children.Add(tools ? ToolActivityCard(item, snapshot!) : DataActivityCard(item));
         return panel;
     }
 
-    private Border ToolActivityCard(ConversationActivityItem item)
+    private Border ToolActivityCard(ConversationActivityItem item, McpTurnSnapshot snapshot)
     {
         var raw = PortableConversations.Element(item.Part);
         var name = PortableConversations.ToolName(item.Part);
         var key = ToolActivityKey(item);
-        var body = new StackPanel { Spacing = 10 };
+        var body = new StackPanel { Name = "ConversationToolContent", Spacing = 10, Padding = new Thickness(16) };
         var header = new Grid { ColumnSpacing = 8 };
         header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        header.Children.Add(DesktopIcons.Create(Icon.Wrench, 18));
+        header.Children.Add(ToolActivityArtwork(item, snapshot));
         var labels = new StackPanel { Spacing = 2 };
         labels.Children.Add(new TextBlock { Text = name, TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
         var state = PortableConversations.String(raw, "state") ?? DesktopResources.Get("ToolStateUnknown");
@@ -135,7 +136,8 @@ public sealed partial class ChatShell
         else body.Children.Add(ToolOutputView.Text(DesktopResources.Get("NoToolInput")));
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        var output = new Button { Name = "ConversationToolOutput", Content = DesktopResources.Get("Output"), MinHeight = 32 };
+        var output = new Button { Name = "ConversationToolOutput", Content = DesktopIcons.Create(Icon.Info, 16),
+            Width = 32, Height = 32, Padding = new Thickness(0) };
         NativeCardSurface.Action(output); ToolbarControls.Label(output, DesktopResources.Format("ShowToolOutput", name));
         output.IsEnabled = DesktopToolApprovals.HasOutput(raw) || !string.IsNullOrWhiteSpace(PortableConversations.String(raw, "errorText"));
         output.Click += async (_, _) => await ShowToolOutputAsync(name, raw);
@@ -145,9 +147,25 @@ public sealed partial class ChatShell
         explain.IsEnabled = !explainingTools.Contains(key);
         explain.Click += async (_, _) => await ExplainToolAsync(item, key);
         if (AssignedAppAgent(AppAgentRole.ExplainToolCall) is not null) actions.Children.Add(explain);
-        body.Children.Add(actions);
-        var card = new Border { Name = "ConversationToolCard", Child = body };
+        var footer = new Border { Name = "ConversationToolFooter", Child = actions,
+            Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
+        NativeCardSurface.Divider(footer);
+        var layout = new StackPanel(); layout.Children.Add(body); layout.Children.Add(footer);
+        var card = new Border { Name = "ConversationToolCard", Child = layout };
         NativeCardSurface.Card(card); AutomationProperties.SetName(card, name); return card;
+    }
+
+    private static FrameworkElement ToolActivityArtwork(ConversationActivityItem item, McpTurnSnapshot snapshot)
+    {
+        var raw = PortableConversations.Element(item.Part);
+        var providerExecuted = raw.TryGetProperty("providerExecuted", out var executed) && executed.ValueKind == JsonValueKind.True;
+        var icons = McpIcons.Read(raw);
+        if (icons.Count == 0 && !providerExecuted) icons = snapshot.IconsForTool(DesktopToolApprovals.CanonicalName(item.Part));
+        if (icons.Count > 0) return new McpServerIcon(icons, 24, Icon.Wrench);
+        if (providerExecuted && PortableConversations.String(raw, "providerId") is { } providerId
+            && ProviderCatalog.All.TryGetValue(providerId.Trim().ToLowerInvariant().Split('/')[0], out var provider))
+            return new ProviderLogo(provider, 24, true, Icon.Wrench) { VerticalAlignment = VerticalAlignment.Center };
+        return DesktopIcons.Create(Icon.Wrench, 18);
     }
 
     private static Border DataActivityCard(ConversationActivityItem item)

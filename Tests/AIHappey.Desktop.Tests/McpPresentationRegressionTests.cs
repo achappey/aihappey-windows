@@ -48,6 +48,32 @@ internal static class McpPresentationRegressionTests
         check(McpIcons.ForServer(connected).Single().Source.EndsWith("live.png")
             && McpIcons.ForServer(connected with { Discovery = null }).SequenceEqual(server.Icons), "MCP live discovery takes precedence with installed-icon fallback");
 
+        var calls = 0;
+        Task<JsonElement> Call(string name, JsonElement input, string id, string locale, CancellationToken ct)
+        { calls++; return Task.FromResult(Json("{}")); }
+        var tool = Json("""{"name":"shared","title":"Display title","inputSchema":{"type":"object"},"icons":[{"src":"https://icons.example/tool.png"}]}""");
+        var fallbackTool = Json("""{"name":"shared","title":"Other title","inputSchema":{"type":"object"},"icons":[{"src":"file:///C:/unsafe.png"}]}""");
+        var snapshot = McpTurnSnapshot.Create([
+            (server.CatalogItem with { Id = "first" }, new McpDiscovery(connected.Discovery!.ServerInfo, Json("{}"), null, [tool]), Call),
+            (server.CatalogItem with { Id = "second" }, new McpDiscovery(connected.Discovery.ServerInfo, Json("{}"), null, [fallbackTool]), Call),
+            (server.CatalogItem with { Id = "third" }, new McpDiscovery(Json("{}"), Json("{}"), null,
+                [Json("""{"name":"installed","inputSchema":{"type":"object"}}""")]), Call)
+        ]);
+        var firstName = CatalogProjection.Text(snapshot.Tools.Single(t => CatalogProjection.Text(t, "title") == "Display title"), "name")!;
+        var secondName = CatalogProjection.Text(snapshot.Tools.Single(t => CatalogProjection.Text(t, "title") == "Other title"), "name")!;
+        check(firstName != secondName && firstName != "shared" && snapshot.OriginalToolName(firstName) == "shared"
+            && snapshot.IconsForTool(firstName).Single().Source.EndsWith("tool.png")
+            && snapshot.IconsForTool(secondName).Single().Source.EndsWith("live.png"),
+            "MCP activity artwork follows canonical aliases, preferring tool icons then owning server discovery");
+        check(snapshot.IconsForTool("installed").SequenceEqual(server.Icons)
+            && snapshot.IconsForTool("missing").Count == 0 && snapshot.IconsForTool("Display title").Count == 0,
+            "MCP activity artwork falls back to installed server icons, never display titles or unrelated tools");
+        check(calls == 0 && snapshot.Tools.All(t => !t.TryGetProperty("icons", out _))
+            && snapshot.Context.All(c => !c.GetRawText().Contains("icons.example")),
+            "MCP activity artwork is presentation-only: no execution or changes to model declarations/context");
+        await snapshot.CallAsync(firstName, Json("{}"), "icon-fixture", "en", CancellationToken.None);
+        check(calls == 1, "MCP activity metadata preserves aliased execution routes");
+
         var resource = new McpResourceEntry("server", "Server", "https://mcp.example/", Json("""
             {"name":"wire-name","title":"Display title","uri":"resource://item","description":"Description","mimeType":"text/plain"}
             """), false, (_, _, _, _) => Task.FromResult(Json("{\"contents\":[]}")), null);

@@ -10,6 +10,8 @@ public sealed class McpTurnSnapshot
 {
     private sealed record Route(string OriginalName, Func<string, JsonElement, string, string, CancellationToken, Task<JsonElement>> Call);
     private readonly Dictionary<string, Route> routes = new(StringComparer.Ordinal);
+    // Presentation metadata follows the same aliases as execution, but stays off the wire.
+    private readonly Dictionary<string, IReadOnlyList<McpIcon>> toolIcons = new(StringComparer.Ordinal);
     private readonly List<JsonElement> tools = [];
     private readonly List<JsonElement> context = [];
     private readonly List<McpResourceEntry> resources = [];
@@ -60,6 +62,9 @@ public sealed class McpTurnSnapshot
                 if (server.Server.PluginSettings is { } settings) tool["requestOptions"] = JsonNode.Parse(settings.GetRawText());
                 result.tools.Add(JsonSerializer.SerializeToElement(tool));
                 result.routes.Add(name, new(candidate.Name, candidate.Call));
+                var icons = McpIcons.Read(candidate.Tool);
+                if (icons.Count == 0) icons = McpIcons.Read(server.Discovery.ServerInfo);
+                result.toolIcons.Add(name, icons.Count > 0 ? icons : server.Server.Icons);
                 serverTools.Add(tool.DeepClone());
             }
             if (toolsOnly) continue;
@@ -102,6 +107,8 @@ public sealed class McpTurnSnapshot
 
     public bool Contains(string name) => routes.ContainsKey(name);
     public string OriginalToolName(string name) => routes.TryGetValue(name, out var route) ? route.OriginalName : name;
+    public IReadOnlyList<McpIcon> IconsForTool(string name) => toolIcons.TryGetValue(name, out var icons) ? icons
+        : McpIcons.Read(tools.FirstOrDefault(tool => CatalogProjection.Text(tool, "name") == name));
 
     /// <summary>Declaration-only settings preview: never constructs live local tool handlers,
     /// reads skill files, or changes the active inference snapshot.</summary>
@@ -128,7 +135,7 @@ public sealed class McpTurnSnapshot
         var blocked = tools.Where(tool => !policy.Allows(tool)).Select(tool => CatalogProjection.Text(tool, "name")!)
             .ToHashSet(StringComparer.Ordinal);
         tools.RemoveAll(tool => blocked.Contains(CatalogProjection.Text(tool, "name")!));
-        foreach (var name in blocked) routes.Remove(name);
+        foreach (var name in blocked) { routes.Remove(name); toolIcons.Remove(name); }
         for (var index = 0; index < context.Count; index++)
         {
             if (JsonNode.Parse(context[index].GetRawText()) is not JsonObject block || block["tools"] is not JsonArray declarations) continue;
