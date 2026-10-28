@@ -1,8 +1,9 @@
 using System.Globalization;
-using System.Text.Json.Nodes;
+using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -23,7 +24,8 @@ public sealed class VideoSettingsDialog : ContentDialog, IResponsiveDialog
         HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock validation = new() { Name = "VideoSettingsValidation", TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private readonly Dictionary<string, TextBox> numbers = [];
-    private TextBox resolution = null!, aspect = null!, providerOptions = null!;
+    private readonly List<(SettingsExpander Expander, StackPanel Body)> sections = [];
+    private DimensionFields resolution = null!, aspect = null!;
     private Slider count = null!;
     private ToggleSwitch audio = null!;
     private StackPanel references = null!, first = null!, last = null!;
@@ -55,39 +57,102 @@ public sealed class VideoSettingsDialog : ContentDialog, IResponsiveDialog
                 try { File.Delete(inputs.PathFor(file)); } catch (Exception) { }
         };
     }
-    private static StackPanel Card(StackPanel parent, string name, string key)
-    { NativeSettingsSurface.Card(parent, name, DesktopResources.Get(key), out var content); return content; }
+    private StackPanel Section(StackPanel parent, string name, string key)
+    {
+        var expander = NativeSettingsSurface.Expander(parent, name, DesktopResources.Get(key), null, out var body);
+        sections.Add((expander, body)); return body;
+    }
     private TextBox Field(StackPanel parent, string name, string key, string? text)
     {
         var field = new TextBox { Name = name, Header = DesktopResources.Get(key), Text = text ?? "" }; ControlAppearance.Stock(field); ToolbarControls.Label(field, DesktopResources.Get(key)); parent.Children.Add(field); return field;
     }
-    private TextBox Dimension(StackPanel parent, string name, string key, string? current, string[] presets)
+    // Kept local to video settings: match the image selectors without changing their implementation.
+    private sealed class DimensionFields
     {
-        var select = new ComboBox { Name = name + "Preset", Header = DesktopResources.Get(key), HorizontalAlignment = HorizontalAlignment.Stretch };
-        foreach (var value in new[] { "", "custom" }.Concat(presets)) select.Items.Add(new ComboBoxItem { Tag = value, Content = value == "" ? DesktopResources.Get("ImageProviderDefault") : value == "custom" ? DesktopResources.Get("Custom") : value });
-        var mode = string.IsNullOrWhiteSpace(current) ? "" : presets.Contains(current) ? current : "custom";
-        select.SelectedItem = select.Items.Cast<ComboBoxItem>().Single(i => (string)i.Tag == mode); ControlAppearance.Stock(select); parent.Children.Add(select);
-        var field = Field(parent, name, key, current); field.IsEnabled = mode == "custom";
-        select.SelectionChanged += (_, _) => { var value = (string)((ComboBoxItem)select.SelectedItem).Tag; field.IsEnabled = value == "custom"; if (value != "custom") field.Text = value; };
-        return field;
+        private readonly ComboBox select;
+        private readonly TextBox width, height;
+        private readonly char separator;
+        private bool updating;
+        public string? Value => select.SelectedIndex == 0 ? null : width.Text.Trim() + separator + height.Text.Trim();
+        public Control? InvalidField => ImagePreferences.ValidDimensions(Value, separator) ? null
+            : ImagePreferences.ValidDimensions(width.Text.Trim() + separator + "1", separator) ? height : width;
+
+        public DimensionFields(StackPanel panel, string name, string key, string? value, string[] presets, char separator)
+        {
+            this.separator = separator;
+            select = new() { Name = name + "Preset", Header = DesktopResources.Get(key), HorizontalAlignment = HorizontalAlignment.Stretch };
+            select.Items.Add(new ComboBoxItem { Content = DesktopResources.Get("ImageProviderDefault"), Tag = "" });
+            foreach (var preset in presets) select.Items.Add(new ComboBoxItem { Content = preset, Tag = preset });
+            select.Items.Add(new ComboBoxItem { Content = DesktopResources.Get("Custom"), Tag = "custom" });
+            select.SelectedIndex = string.IsNullOrWhiteSpace(value) ? 0 : presets.Contains(value) ? Array.IndexOf(presets, value) + 1 : select.Items.Count - 1;
+            width = new() { Name = name + "Width", Header = DesktopResources.Get("ImageWidth"), HorizontalAlignment = HorizontalAlignment.Stretch };
+            height = new() { Name = name + "Height", Header = DesktopResources.Get("ImageHeight"), HorizontalAlignment = HorizontalAlignment.Stretch };
+            foreach (var field in new[] { width, height })
+            {
+                field.InputScope = new InputScope { Names = { new InputScopeName { NameValue = InputScopeNameValue.Number } } };
+                ToolbarControls.Label(field, DesktopResources.Get(key) + ": " + field.Header); ControlAppearance.Stock(field);
+            }
+            ToolbarControls.Label(select, DesktopResources.Get(key)); ControlAppearance.Stock(select);
+            SetParts(select.SelectedIndex == 0 ? null : value);
+            select.SelectionChanged += (_, _) =>
+            {
+                if (updating) return;
+                var choice = (string)((ComboBoxItem)select.SelectedItem).Tag;
+                SetParts(choice == "custom" ? string.IsNullOrEmpty(width.Text) || string.IsNullOrEmpty(height.Text) ? presets[0] : Value : choice);
+            };
+            width.TextChanged += (_, _) => SelectFromParts(); height.TextChanged += (_, _) => SelectFromParts();
+            var row = new Grid { Name = name + "Fields", ColumnSpacing = 12, RowSpacing = 12 };
+            for (var column = 0; column < 2; column++) row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+            row.RowDefinitions.Add(new() { Height = GridLength.Auto }); row.RowDefinitions.Add(new() { Height = GridLength.Auto });
+            row.Children.Add(select); row.Children.Add(width); row.Children.Add(height);
+            Grid.SetColumnSpan(select, 2); Grid.SetRow(width, 1); Grid.SetRow(height, 1); Grid.SetColumn(height, 1);
+            panel.Children.Add(row);
+        }
+        private void SetParts(string? value)
+        {
+            updating = true;
+            var parts = value?.Split(separator, 2);
+            width.Text = parts?[0] ?? ""; height.Text = parts is { Length: 2 } ? parts[1] : "";
+            width.IsEnabled = height.IsEnabled = select.SelectedIndex != 0;
+            updating = false;
+        }
+        private void SelectFromParts()
+        {
+            if (updating) return;
+            updating = true;
+            var value = width.Text.Trim() + separator + height.Text.Trim();
+            select.SelectedItem = select.Items.Cast<ComboBoxItem>().FirstOrDefault(item => (string)item.Tag == value) ?? select.Items[^1];
+            updating = false;
+        }
     }
     private void Build()
     {
-        numbers.Clear(); var general = new StackPanel { Spacing = 16, Padding = new Thickness(4, 0, 4, 8) }; scroll.Content = general;
-        resolution = Dimension(Card(general, "VideoSizeCard", "VideoSize"), "VideoResolution", "VideoResolution", draft.Resolution, VideoPreferences.ResolutionPresets);
-        aspect = Dimension(Card(general, "VideoAspectCard", "ImageAspectRatio"), "VideoAspectRatio", "ImageAspectRatio", draft.AspectRatio, VideoPreferences.AspectPresets);
-        var output = Card(general, "VideoOutputCard", "ImageOutput");
-        count = new Slider { Name = "VideoCount", Header = DesktopResources.Get("VideoCount"), Minimum = 1, Maximum = 10, StepFrequency = 1, Value = draft.N }; ControlAppearance.Stock(count); output.Children.Add(count);
+        numbers.Clear(); sections.Clear(); validation.Visibility = Visibility.Collapsed;
+        var general = new StackPanel { Spacing = 16, Padding = new Thickness(4, 0, 4, 8) }; scroll.Content = general;
+        resolution = new(Section(general, "VideoSizeCard", "VideoSize"), "VideoResolution", "VideoResolution", draft.Resolution, VideoPreferences.ResolutionPresets, 'x');
+        aspect = new(Section(general, "VideoAspectCard", "ImageAspectRatio"), "VideoAspectRatio", "ImageAspectRatio", draft.AspectRatio, VideoPreferences.AspectPresets, ':');
+        var output = Section(general, "VideoOutputCard", "ImageOutput");
+        var countPanel = new StackPanel { Name = "VideoCountPanel", Spacing = 8 };
+        var countLabel = new TextBlock { Name = "VideoCountLabel", Text = DesktopResources.Format("VideoCountValue", draft.N), TextWrapping = TextWrapping.Wrap }; countPanel.Children.Add(countLabel);
+        count = new Slider { Name = "VideoCount", Minimum = 1, Maximum = 10, StepFrequency = 1, Value = draft.N };
+        ToolbarControls.Label(count, DesktopResources.Get("VideoCount")); ControlAppearance.Stock(count);
+        count.ValueChanged += (_, _) => countLabel.Text = DesktopResources.Format("VideoCountValue", (int)count.Value);
+        countPanel.Children.Add(count); output.Children.Add(countPanel);
         numbers["batch"] = Field(output, "VideoBatchLimit", "VideoBatchLimit", draft.MaxVideosPerCall?.ToString(CultureInfo.InvariantCulture));
-        var properties = Card(general, "VideoPropertiesCard", "VideoProperties");
+        var properties = Section(general, "VideoPropertiesCard", "VideoProperties");
         numbers["duration"] = Field(properties, "VideoDuration", "VideoDuration", draft.Duration?.ToString(CultureInfo.InvariantCulture));
         numbers["fps"] = Field(properties, "VideoFps", "VideoFps", draft.Fps?.ToString(CultureInfo.InvariantCulture));
-        audio = new ToggleSwitch { Name = "VideoGenerateAudio", Header = DesktopResources.Get("VideoGenerateAudio"), IsOn = draft.GenerateAudio }; ControlAppearance.Stock(audio); properties.Children.Add(audio);
-        references = Card(general, "VideoReferencesCard", "VideoInputReferences");
-        first = Card(general, "VideoFirstFrameCard", "VideoFirstFrame"); last = Card(general, "VideoLastFrameCard", "VideoLastFrame"); RenderInputs();
-        numbers["seed"] = Field(Card(general, "VideoOtherCard", "ImageOther"), "VideoSeed", "ImageSeed", draft.Seed?.ToString(CultureInfo.InvariantCulture));
-        providerOptions = Field(Card(general, "VideoProviderOptionsCard", "VideoProviderOptions"), "VideoProviderOptions", "VideoProviderOptions", new JsonObject(draft.ProviderOptions.Select(p => KeyValuePair.Create<string, JsonNode?>(p.Key, p.Value.DeepClone()))).ToJsonString(VideoDisk.Json));
-        providerOptions.AcceptsReturn = true; providerOptions.TextWrapping = TextWrapping.Wrap; providerOptions.MinHeight = 96; providerOptions.MaxHeight = 240;
+        // Keep the label outside ToggleSwitch's header template so it cannot overlap On/Off.
+        var audioPanel = new StackPanel { Name = "VideoAudioFields", Spacing = 8 };
+        audioPanel.Children.Add(new TextBlock { Name = "VideoGenerateAudioLabel", Text = DesktopResources.Get("VideoGenerateAudio"), TextWrapping = TextWrapping.Wrap });
+        audio = new ToggleSwitch { Name = "VideoGenerateAudio", IsOn = draft.GenerateAudio, HorizontalAlignment = HorizontalAlignment.Left };
+        ToolbarControls.Label(audio, DesktopResources.Get("VideoGenerateAudio")); ControlAppearance.Stock(audio); audioPanel.Children.Add(audio); properties.Children.Add(audioPanel);
+        references = Section(general, "VideoReferencesCard", "VideoInputReferences");
+        var frames = Section(general, "VideoFramesCard", "VideoFrames");
+        first = new StackPanel { Name = "VideoFirstFramePanel", Spacing = 12 }; last = new StackPanel { Name = "VideoLastFramePanel", Spacing = 12 };
+        frames.Children.Add(first); frames.Children.Add(last); RenderInputs();
+        numbers["seed"] = Field(Section(general, "VideoOtherCard", "ImageOther"), "VideoSeed", "ImageSeed", draft.Seed?.ToString(CultureInfo.InvariantCulture));
+        scroll.ChangeView(null, 0, null);
     }
     private void RenderInputs()
     {
@@ -98,7 +163,9 @@ public sealed class VideoSettingsDialog : ContentDialog, IResponsiveDialog
     private void InputPanel(StackPanel panel, string kind, IReadOnlyList<VideoInputFile> files, string key)
     {
         panel.Children.Clear(); panel.AllowDrop = true;
-        var add = new Button { Name = "VideoAdd_" + kind, Content = DesktopResources.Get(key) }; ControlAppearance.Stock(add); add.Click += async (_, _) => await PickAsync(kind); panel.Children.Add(add);
+        if (kind != "references") panel.Children.Add(new TextBlock { Text = DesktopResources.Get(key), TextWrapping = TextWrapping.Wrap, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+        var add = new Button { Name = "VideoAdd_" + kind, Content = kind == "references" ? DesktopResources.Get(key) : DesktopResources.Get("VideoChooseFrame") };
+        ToolbarControls.Label(add, DesktopResources.Get(key)); ControlAppearance.Stock(add); add.Click += async (_, _) => await PickAsync(kind); panel.Children.Add(add);
         panel.Children.Add(new TextBlock { Text = DesktopResources.Get("VideoImageDropHint"), TextWrapping = TextWrapping.Wrap });
         panel.DragOver -= DragOverImage; panel.DragOver += DragOverImage;
         panel.Tag = kind; panel.Drop -= DropImages; panel.Drop += DropImages;
@@ -164,15 +231,27 @@ public sealed class VideoSettingsDialog : ContentDialog, IResponsiveDialog
         var deferral = args.GetDeferral(); working = true;
         try
         {
+            var invalid = resolution.InvalidField ?? aspect.InvalidField;
+            foreach (var (key, field) in numbers)
+                if (invalid is null && !string.IsNullOrWhiteSpace(field.Text)
+                    && (!int.TryParse(field.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) || key != "seed" && value < 1)) invalid = field;
+            if (invalid is not null)
+            {
+                RevealInvalidField(invalid);
+                throw new InvalidOperationException(DesktopResources.Get("VideoSettingsInvalid"));
+            }
             int? Number(string key) => string.IsNullOrWhiteSpace(numbers[key].Text) ? null : int.Parse(numbers[key].Text, CultureInfo.InvariantCulture);
-            draft.Resolution = string.IsNullOrWhiteSpace(resolution.Text) ? null : resolution.Text.Trim(); draft.AspectRatio = string.IsNullOrWhiteSpace(aspect.Text) ? null : aspect.Text.Trim();
+            draft.Resolution = resolution.Value; draft.AspectRatio = aspect.Value;
             draft.N = (int)count.Value; draft.MaxVideosPerCall = Number("batch"); draft.Duration = Number("duration"); draft.Fps = Number("fps"); draft.Seed = Number("seed"); draft.GenerateAudio = audio.IsOn;
-            var options = JsonNode.Parse(providerOptions.Text) as JsonObject ?? throw new InvalidOperationException(DesktopResources.Get("VideoSettingsInvalid"));
-            draft.ProviderOptions = options.ToDictionary(p => p.Key, p => p.Value as JsonObject ?? throw new InvalidOperationException(DesktopResources.Get("VideoSettingsInvalid")));
             draft.Validate(); if (SaveAsync is not null) await SaveAsync(draft.Clone()); committed = true;
         }
         catch (Exception error) { args.Cancel = true; ShowError(error is InvalidOperationException ? error.Message : DesktopResources.Get("VideoSettingsInvalid")); }
         finally { working = false; deferral.Complete(); }
+    }
+    private void RevealInvalidField(Control field)
+    {
+        foreach (var (expander, body) in sections) if (NativeSettingsSurface.Contains(body, field)) expander.IsExpanded = true;
+        DispatcherQueue.TryEnqueue(() => { layout.UpdateLayout(); field.Focus(FocusState.Programmatic); field.StartBringIntoView(); });
     }
     private void ShowError(string message) { validation.Text = message; validation.Visibility = Visibility.Visible; }
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => SizeToRoot();

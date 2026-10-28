@@ -990,6 +990,9 @@
   <data name="VideoSize" xml:space="preserve"><value>Video size</value></data>
   <data name="VideoResolution" xml:space="preserve"><value>Resolution</value></data>
   <data name="VideoCount" xml:space="preserve"><value>Number of videos</value></data>
+  <data name="VideoCountValue" xml:space="preserve"><value>Number of videos: {0}</value></data>
+  <data name="VideoFrames" xml:space="preserve"><value>Frames</value></data>
+  <data name="VideoChooseFrame" xml:space="preserve"><value>Choose image</value></data>
   <data name="VideoBatchLimit" xml:space="preserve"><value>Maximum videos per request</value></data>
   <data name="VideoProperties" xml:space="preserve"><value>Properties</value></data>
   <data name="VideoDuration" xml:space="preserve"><value>Duration in seconds (provider default if empty)</value></data>

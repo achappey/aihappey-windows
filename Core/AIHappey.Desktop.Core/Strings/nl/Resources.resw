@@ -991,6 +991,9 @@
   <data name="VideoDuration" xml:space="preserve"><value>Duur in seconden (standaard van provider indien leeg)</value></data>
   <data name="VideoFps" xml:space="preserve"><value>Frames per seconde (standaard van provider indien leeg)</value></data>
   <data name="VideoGenerateAudio" xml:space="preserve"><value>Audio genereren</value></data>
+  <data name="VideoCountValue" xml:space="preserve"><value>Aantal video's: {0}</value></data>
+  <data name="VideoFrames" xml:space="preserve"><value>Frames</value></data>
+  <data name="VideoChooseFrame" xml:space="preserve"><value>Afbeelding kiezen</value></data>
   <data name="VideoInputReferences" xml:space="preserve"><value>Referentieafbeeldingen</value></data>
   <data name="VideoAddReferences" xml:space="preserve"><value>Referentieafbeeldingen toevoegen</value></data>
   <data name="VideoFirstFrame" xml:space="preserve"><value>Eerste frame</value></data>

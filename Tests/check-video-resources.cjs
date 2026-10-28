@@ -12,8 +12,10 @@ for (const language of ['en', 'nl']) {
     const source = fs.readFileSync(path.join(core, file), 'utf8');
     for (const call of source.matchAll(/DesktopResources\.Get\(([^)]+)\)/g))
       for (const literal of call[1].matchAll(/"([^"]+)"/g)) required.add(literal[1]);
+    // Only the first argument to Format is a resource key, not literals in formatting arguments.
+    for (const call of source.matchAll(/DesktopResources\.Format\("([^"]+)"/g)) required.add(call[1]);
     // Label keys passed through the settings field/card helpers.
-    for (const call of source.matchAll(/(?:Field|Card|Dimension)\([^;\n]+/g))
+    for (const call of source.matchAll(/(?:Field|Card|Section|Dimension)\([^;\n]+/g))
       for (const literal of call[0].matchAll(/"((?:Video|Image|General)[^"]*)"/g))
         if (!/(?:Card|Preset)$/.test(literal[1])) required.add(literal[1]);
   }
