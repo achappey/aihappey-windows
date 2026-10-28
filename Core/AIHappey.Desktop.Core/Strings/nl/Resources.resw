@@ -2000,6 +2000,6 @@ Luidspreker: {1}</value></data>
   <data name="LiveClientTarget" xml:space="preserve"><value>Clientagent of -model</value></data>
   <data name="LiveRawProviderOptions" xml:space="preserve"><value>Ruwe providerconfiguratie</value></data>
   <data name="AgentRealtimeUnsupported" xml:space="preserve"><value>Deze agent vereist een ondersteund realtime transcriptiemodel. Windows ondersteunt OpenAI, Google en Gladia. Opgeslagen instellingen blijven behouden.</value></data>
-  <data name="AgentRealtimeSelect" xml:space="preserve"><value>Selecteer een agent met een realtime transcriptiemodel.</value></data>
+  <data name="AgentRealtimeSelect" xml:space="preserve"><value>Selecteer agent</value></data>
   <data name="AgentRealtimeSpeechFailed" xml:space="preserve"><value>Het antwoord kon niet worden afgespeeld. Het tekstantwoord blijft beschikbaar.</value></data>
 </root>

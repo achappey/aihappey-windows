@@ -16,8 +16,7 @@ public sealed partial class ChatShell
     private readonly ToggleButton realtimeModelMode = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Brain), DesktopResources.Get("Models"));
     private readonly ToggleButton realtimeAgentsMode = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Bot), DesktopResources.Get("Agents"));
     private readonly ChatTargetPicker realtimeAgent = new() { Name = "RealtimeAgentPicker", AllowEmptySelection = true, Height = 40,
-        PlaceholderText = DesktopResources.Get("SelectTarget"), HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly TextBlock realtimeAgentNotice = new() { Name = "RealtimeAgentNotice", TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
+        PlaceholderText = DesktopResources.Get("AgentRealtimeSelect"), HorizontalAlignment = HorizontalAlignment.Stretch };
     private IReadOnlyList<ChatTarget> realtimeAgents = [];
     private bool realtimeAgentMode;
     private sealed class AgentRealtimeState(ChatTarget target, DesktopAgent agent, JsonObject request, ChatPreferences preferences)
@@ -53,8 +52,7 @@ public sealed partial class ChatShell
         Grid.SetColumn(realtimeTarget, 2); Grid.SetColumn(realtimeFavorite, 3);
         Grid.SetColumn(realtimeAgentsMode, 1); Grid.SetColumn(realtimeAgent, 2); Grid.SetColumnSpan(realtimeAgent, 2);
         realtimeHeader.Children.Add(realtimeModelMode); realtimeHeader.Children.Add(realtimeAgentsMode); realtimeHeader.Children.Add(realtimeAgent);
-        realtimeHeader.RowDefinitions.Add(new() { Height = GridLength.Auto }); realtimeHeader.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        Grid.SetRow(realtimeAgentNotice, 1); Grid.SetColumnSpan(realtimeAgentNotice, 4); realtimeHeader.Children.Add(realtimeAgentNotice);
+        ToolbarControls.Label(realtimeAgent, DesktopResources.Get("AgentRealtimeSelect"));
         realtimeModelMode.Click += (_, _) => SetAgentRealtimeMode(false);
         realtimeAgentsMode.Click += (_, _) => SetAgentRealtimeMode(true);
         realtimeAgent.SelectionChanged += UpdateRealtimeControls;
@@ -70,8 +68,6 @@ public sealed partial class ChatShell
         realtimeModelMode.IsEnabled = realtimeAgentsMode.IsEnabled = realtimeAgent.IsEnabled = realtime is null && !busy;
         realtimeTarget.Visibility = realtimeFavorite.Visibility = realtimeAgentMode ? Visibility.Collapsed : Visibility.Visible;
         realtimeAgent.Visibility = realtimeAgentMode ? Visibility.Visible : Visibility.Collapsed;
-        realtimeAgentNotice.Text = DesktopResources.Get(SelectedRealtimeAgent is null ? "AgentRealtimeSelect" : "AgentRealtimeUnsupported");
-        realtimeAgentNotice.Visibility = realtimeAgentMode && (SelectedRealtimeAgent is not { } selected || !RealtimeAgentSupported(selected)) ? Visibility.Visible : Visibility.Collapsed;
     }
     private async Task LoadRealtimeAgentsAsync(CancellationToken ct)
     {
