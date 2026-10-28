@@ -13,6 +13,8 @@ public sealed partial class TranscriptionsPage : UserControl
 {
     private readonly ObservableCollection<FrameworkElement> cards = [];
     private bool editable = true, hasModel, recording, recordingChanging;
+    private bool realtimeAvailable, realtimeActive, realtimeStopping;
+    public Func<Task>? RealtimeRequested { get; set; }
     public Func<Task>? PickRequested { get; set; }
     public Func<Task>? SettingsRequested { get; set; }
     public Func<Task>? DictationRequested { get; set; }
@@ -31,12 +33,19 @@ public sealed partial class TranscriptionsPage : UserControl
         AutomationProperties.SetHeadingLevel(LibraryTitle, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level2);
         ToolbarControls.Label(AddFiles, DesktopResources.Get("TranscriptionAddFiles")); ToolbarControls.Label(Settings, DesktopResources.Get("TranscriptionSettings"));
         ToolbarControls.Label(Dictate, DesktopResources.Get("TranscriptionRecord")); ToolbarControls.Subtle(Dictate);
+        ToolbarControls.Label(Realtime, DesktopResources.Get("TranscriptionRealtime")); ControlAppearance.Stock(Realtime);
+        RecordedTab.Text = DesktopResources.Get("MyTranscriptions"); RealtimeTab.Text = DesktopResources.Get("TranscriptionRealtime");
+        AutomationProperties.SetName(TranscriptionTabs, DesktopResources.Get("MyTranscriptions"));
+        AutomationProperties.SetName(RealtimeText, DesktopResources.Get("TranscriptionRealtime"));
+        AutomationProperties.SetLiveSetting(Realtime, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
+        TranscriptionTabs.SelectionChanged += (_, _) => UpdateTabs();
+        Realtime.Click += async (_, _) => { if (Realtime.IsEnabled && RealtimeRequested is not null) await RealtimeRequested(); };
         foreach (var control in new Control[] { AddFiles, Settings, Stop, OpenFolder }) ControlAppearance.Stock(control);
         AddFiles.Click += async (_, _) => { if (editable && hasModel && PickRequested is not null) await PickRequested(); };
         Settings.Click += async (_, _) => { if (editable && SettingsRequested is not null) await SettingsRequested(); };
         Dictate.Click += async (_, _) => { if (Dictate.IsEnabled && DictationRequested is not null) await DictationRequested(); };
         Stop.Click += (_, _) => StopRequested?.Invoke(); OpenFolder.Click += async (_, _) => { if (editable && FolderRequested is not null) await FolderRequested(); };
-        LibraryGrid.ItemsSource = cards;
+        UpdateTabs();
         Root.AddHandler(UIElement.DragEnterEvent, new DragEventHandler(DragOverFiles), true);
         Root.AddHandler(UIElement.DragOverEvent, new DragEventHandler(DragOverFiles), true);
         Root.AddHandler(UIElement.DropEvent, new DragEventHandler(DropFiles), true);
@@ -53,6 +62,33 @@ public sealed partial class TranscriptionsPage : UserControl
         foreach (var card in cards) { card.Width = Math.Max(40, width / (width >= 720 ? 2 : 1) - 12); card.Height = 248; }
     }
     public void SetModelAvailable(bool value) { hasModel = value; NoModels.Visibility = value ? Visibility.Collapsed : Visibility.Visible; UpdateActions(); }
+    public void SetRealtimeAvailable(bool value) { realtimeAvailable = value; UpdateActions(); }
+    public void SetRealtime(string status, string text = "")
+    {
+        var wasActive = realtimeActive;
+        realtimeActive = status is "starting" or "connected" or "stopping"; realtimeStopping = status == "stopping";
+        var statusText = status == "idle" ? "" : DesktopResources.Get(status switch { "starting" => "TranscriptionRealtimeConnecting", "connected" => "TranscriptionRealtimeListening",
+            "stopping" => "TranscriptionRealtimeStopping", "error" => "TranscriptionRealtimeFailed", _ => "TranscriptionRealtimeSaved" });
+        var statusChanged = AutomationProperties.GetItemStatus(Realtime) != statusText;
+        AutomationProperties.SetItemStatus(Realtime, statusText);
+        if (statusChanged) Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.FromElement(Realtime)
+            ?.RaiseAutomationEvent(Microsoft.UI.Xaml.Automation.Peers.AutomationEvents.LiveRegionChanged);
+        RealtimeText.Text = text;
+        if (realtimeActive && !wasActive) TranscriptionTabs.SelectedItem = RealtimeTab;
+        else if (status == "idle") TranscriptionTabs.SelectedItem = RecordedTab;
+        Realtime.Content = DesktopIcons.Create(realtimeActive ? Icon.Stop : Icon.Live);
+        ToolbarControls.Label(Realtime, DesktopResources.Get(realtimeActive ? "Stop" : "TranscriptionRealtime"));
+        UpdateTabs(); UpdateActions();
+    }
+    private void UpdateTabs()
+    {
+        var live = TranscriptionTabs.SelectedItem == RealtimeTab;
+        // Keep the header/tabs on screen, but detach cards entirely from the live tab.
+        LibraryGrid.ItemsSource = live ? null : cards;
+        RealtimePanel.Visibility = live ? Visibility.Visible : Visibility.Collapsed;
+        EmptyLibrary.Visibility = !live && cards.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        OpenFolder.Visibility = live ? Visibility.Collapsed : Visibility.Visible;
+    }
     public void SetRecording(bool value, bool changing = false, string? elapsed = null)
     {
         recording = value; recordingChanging = changing;
@@ -69,9 +105,10 @@ public sealed partial class TranscriptionsPage : UserControl
     }
     private void UpdateActions()
     {
-        var available = editable && !recording && !recordingChanging;
+        var available = editable && !recording && !recordingChanging && !realtimeActive;
         AddFiles.IsEnabled = available && hasModel; Settings.IsEnabled = OpenFolder.IsEnabled = available;
-        Dictate.IsEnabled = editable && !recordingChanging && (recording || hasModel);
+        Dictate.IsEnabled = editable && !realtimeActive && !recordingChanging && (recording || hasModel);
+        Realtime.IsEnabled = realtimeActive ? !realtimeStopping : available && realtimeAvailable;
         foreach (var card in cards) card.IsHitTestVisible = available;
         if (!available) DropOutline.Visibility = Visibility.Collapsed;
     }
@@ -90,7 +127,7 @@ public sealed partial class TranscriptionsPage : UserControl
             cards.Add(Card(panel));
         }
         foreach (var item in items) cards.Add(ResultCard(item));
-        EmptyLibrary.Visibility = cards.Count == 0 ? Visibility.Visible : Visibility.Collapsed; ResizeGrid(); UpdateActions();
+        UpdateTabs(); ResizeGrid(); UpdateActions();
     }
     private static Border Card(UIElement content)
     {
@@ -117,6 +154,11 @@ public sealed partial class TranscriptionsPage : UserControl
         var modelBadge = new Border { HorizontalAlignment = HorizontalAlignment.Left, Child = modelLabel };
         NativeCardSurface.Badge(modelBadge); ToolTipService.SetToolTip(modelBadge, model); badges.Children.Add(modelBadge);
         Badge(OpenAIChatConfig.Text(response["language"]) ?? "");
+        if (data.Kind == "realtime")
+        {
+            Badge(DesktopResources.Get("TranscriptionRealtime"));
+            if (response["response"]?["body"]?["status"]?.ToString() == "error") Badge(DesktopResources.Get("TranscriptionRealtimeFailed"));
+        }
         if (response["providerMetadata"] is JsonObject metadata)
             foreach (var provider in metadata.Where(p => p.Key != "gateway"))
                 if (provider.Value is JsonObject options && options["languages"] is JsonArray languages)
@@ -142,13 +184,13 @@ public sealed partial class TranscriptionsPage : UserControl
     }
     private void DragOverFiles(object sender, DragEventArgs args)
     {
-        args.Handled = true; var accepts = editable && !recording && !recordingChanging && hasModel && args.DataView.Contains(StandardDataFormats.StorageItems) && args.AllowedOperations.HasFlag(DataPackageOperation.Copy);
+        args.Handled = true; var accepts = editable && !realtimeActive && !recording && !recordingChanging && hasModel && args.DataView.Contains(StandardDataFormats.StorageItems) && args.AllowedOperations.HasFlag(DataPackageOperation.Copy);
         args.AcceptedOperation = accepts ? DataPackageOperation.Copy : DataPackageOperation.None; args.DragUIOverride.Caption = accepts ? DesktopResources.Get("TranscriptionAddFiles") : ""; DropOutline.Visibility = accepts ? Visibility.Visible : Visibility.Collapsed;
     }
     private async void DropFiles(object sender, DragEventArgs args)
     {
         args.Handled = true; DropOutline.Visibility = Visibility.Collapsed;
-        if (!editable || recording || recordingChanging || !hasModel || !args.DataView.Contains(StandardDataFormats.StorageItems) || !args.AllowedOperations.HasFlag(DataPackageOperation.Copy)) { args.AcceptedOperation = DataPackageOperation.None; return; }
+        if (!editable || realtimeActive || recording || recordingChanging || !hasModel || !args.DataView.Contains(StandardDataFormats.StorageItems) || !args.AllowedOperations.HasFlag(DataPackageOperation.Copy)) { args.AcceptedOperation = DataPackageOperation.None; return; }
         var deferral = args.GetDeferral();
         try { args.AcceptedOperation = DataPackageOperation.Copy; if (FilesDropped is not null) await FilesDropped(args.DataView); }
         finally { deferral.Complete(); }

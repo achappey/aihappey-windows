@@ -121,6 +121,8 @@ public sealed partial class ChatShell
 
     private async Task StartDictationAsync(ChatTarget model, ComposerDictationTarget? target)
     {
+        await StopRealtimeTranscriptionAsync();
+        if (closing) return;
         var epoch = ++dictationEpoch;
         var partition = TranscriptionLibraryStore.Partition(session);
         var preferences = session.Settings.Transcriptions.Clone();

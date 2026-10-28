@@ -34,6 +34,7 @@ public partial class App
             ["local-tools"] = CheckLocalToolsAsync,
             ["images"] = CheckImagesAsync,
             ["media-libraries"] = CheckMediaLibrariesAsync,
+            ["transcription-tabs"] = CheckTranscriptionTabsAsync,
             ["videos"] = CheckVideosAsync,
             // Previously these were reachable only through focused flags, not the full run.
             ["realtime"] = CheckRealtimeAsync,

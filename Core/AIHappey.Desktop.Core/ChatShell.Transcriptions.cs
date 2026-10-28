@@ -21,23 +21,26 @@ public sealed partial class ChatShell
     private ContentDialog? transcriptionDeleteDialog;
     private int pendingTranscriptions;
     private string TranscriptionRoot => Path.Combine(session.DataDirectory, "transcriptions");
-    private bool CanUseTranscriptions => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && dictation is null && !dictationChanging && activePage == DesktopPage.Transcriptions;
+    private bool CanUseTranscriptions => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && dictation is null && !dictationChanging && transcriptionRealtime is null && activePage == DesktopPage.Transcriptions;
     private ChatTarget? SelectedTranscriptionModel => transcriptionModels.FirstOrDefault(m => m.Id == transcriptionTarget.Text.Trim());
     private void PrepareTranscriptions()
     {
         PrepareDictation();
         ToolbarControls.Outline(transcriptionTarget); ToolbarControls.Label(transcriptionTarget, DesktopResources.Get("SelectModel")); transcriptionTarget.QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12);
-        transcriptionTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) TranscriptionModelSuggestions(transcriptionTarget.Text); transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null); UpdateModelFavorites(); };
+        transcriptionTarget.TextChanged += (_, args) => { if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput) TranscriptionModelSuggestions(transcriptionTarget.Text); transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null); UpdateTranscriptionRealtimeAvailability(); UpdateModelFavorites(); };
         transcriptionTarget.GotFocus += (_, _) => { TranscriptionModelSuggestions(); transcriptionTarget.IsSuggestionListOpen = true; };
         transcriptionTarget.SuggestionChosen += (_, args) => transcriptionTarget.Text = ((ChatTarget)args.SelectedItem).Id;
         transcriptionTarget.QuerySubmitted += (_, args) => { if (args.ChosenSuggestion is ChatTarget model) transcriptionTarget.Text = model.Id; else { TranscriptionModelSuggestions(transcriptionTarget.Text); transcriptionTarget.IsSuggestionListOpen = true; } };
         transcriptionsPage.PickRequested = PickTranscriptionFilesAsync; transcriptionsPage.SettingsRequested = EditTranscriptionSettingsAsync;
+        transcriptionsPage.RealtimeRequested = ToggleRealtimeTranscriptionAsync;
+        Unloaded += (_, _) => { transcriptionRealtimeCleanup = StopRealtimeTranscriptionAsync(); };
         transcriptionsPage.StopRequested = () => operation?.Cancel(); transcriptionsPage.FilesDropped = DropTranscriptionFilesAsync;
         transcriptionsPage.FolderRequested = OpenTranscriptionsFolderAsync; transcriptionsPage.ViewRequested = ViewTranscriptionAsync; transcriptionsPage.DeleteRequested = DeleteTranscriptionAsync;
     }
     private void TranscriptionModelSuggestions(string query = "") => transcriptionTarget.ItemsSource = PickerModels(transcriptionModels).Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
     private void InvalidateTranscriptions()
     {
+        transcriptionRealtimeCleanup = StopRealtimeTranscriptionAsync(); transcriptionsPage.SetRealtime("idle");
         DiscardDictation();
         transcriptionModels = []; transcriptionTarget.Text = ""; transcriptionTarget.ItemsSource = null; libraryTranscriptions = []; transcriptionLibrary = null; transcriptionPartition = null; pendingTranscriptions = 0;
         transcriptionsPage.ClearNotices(); transcriptionsPage.SetItems([]); transcriptionsPage.SetModelAvailable(false);
@@ -56,6 +59,7 @@ public sealed partial class ChatShell
         await LoadModelFavoritesAsync(ct);
         if (SelectedTranscriptionModel is null) transcriptionTarget.Text = InitialModel(transcriptionModels, "transcription", "openai/gpt-transcribe");
         TranscriptionModelSuggestions(); transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null);
+        UpdateTranscriptionRealtimeAvailability();
         UpdateModelFavorites();
     }
     private async Task PickTranscriptionFilesAsync()
@@ -165,6 +169,7 @@ public sealed partial class ChatShell
         SystemAppearance.PrepareDialog(dialog); transcriptionDetailsDialog = dialog; historyDialogOpen = true;
         try { await dialog.ShowAsync(); } finally { transcriptionDetailsDialog = null; historyDialogOpen = false; }
         if (closing || partition != TranscriptionLibraryStore.Partition(session) || dialog.Action == TranscriptionDetailAction.None) return;
+        if (dialog.Action == TranscriptionDetailAction.ExportMedia && item.Item.Kind == "realtime") return;
         await RunAsync(async ct =>
         {
             var text = dialog.Action == TranscriptionDetailAction.ExportText;

@@ -844,7 +844,7 @@ public sealed partial class ChatShell : UserControl
         imageTarget.IsEnabled = !value;
         imagesPage.SetBusy(value, inference && activePage == DesktopPage.Images);
         videoTarget.IsEnabled = !value; videosPage.SetBusy(value); UpdateVideoFavorite();
-        transcriptionTarget.IsEnabled = !value;
+        transcriptionTarget.IsEnabled = !value && transcriptionRealtime is null;
         speechTarget.IsEnabled = !value;
         UpdateModelFavorites();
         speechPage.SetBusy(value, inference && activePage == DesktopPage.Speech);
@@ -856,6 +856,7 @@ public sealed partial class ChatShell : UserControl
         send.Visibility = inference ? Visibility.Collapsed : Visibility.Visible;
         if (!value) ControlAppearance.RefreshItems(chats);
         UpdateRealtimeControls();
+        UpdateTranscriptionRealtimeAvailability();
     }
 
     private void Show(string message, InfoBarSeverity severity)
@@ -884,6 +885,7 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        await StopRealtimeTranscriptionAsync();
         DiscardDictation(); await dictationCleanup;
         Microsoft.Win32.SystemEvents.PowerModeChanged -= RealtimePowerChanged;
         await StopRealtimeAsync();

@@ -100,11 +100,16 @@ public sealed class TranscriptionSettingsDialog : ContentDialog, IResponsiveDial
     private void Build()
     {
         forms.Clear(); tabs.Children.Clear(); validation.Visibility = Visibility.Collapsed;
-        foreach (var provider in providers)
+        void Add(ITranscriptionProviderForm form)
         {
-            var form = TranscriptionProviderForms.Create(provider, draft); if (form is null) continue; forms.Add(form);
+            forms.Add(form);
             var tab = new ToggleButton { Content = form.Title, IsChecked = forms.Count == 1 }; ControlAppearance.Stock(tab); tabs.Children.Add(tab);
             tab.Click += (_, _) => { foreach (var other in tabs.Children.OfType<ToggleButton>()) other.IsChecked = other == tab; page.Content = form.View; page.ChangeView(null, 0, null); };
+        }
+        foreach (var provider in providers)
+        {
+            if (TranscriptionProviderForms.Create(provider, draft) is { } form) Add(form);
+            if (provider is "openai" or "google" or "gladia") Add(new RealtimeTranscriptionSettingsForm(provider, draft.Realtime));
         }
         page.Content = forms.FirstOrDefault()?.View ?? (object)new TextBlock { Text = DesktopResources.Get("TranscriptionNoProviderSettings"), TextWrapping = TextWrapping.Wrap };
     }

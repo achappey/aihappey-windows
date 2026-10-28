@@ -92,7 +92,7 @@ public sealed partial class ChatShell
     }
     private void RealtimePowerChanged(object sender, Microsoft.Win32.PowerModeChangedEventArgs args)
     {
-        if (args.Mode == Microsoft.Win32.PowerModes.Suspend) DispatcherQueue.TryEnqueue(() => { DiscardDictation(); realtimeCleanup = StopRealtimeAsync(); });
+        if (args.Mode == Microsoft.Win32.PowerModes.Suspend) DispatcherQueue.TryEnqueue(() => { DiscardDictation(); transcriptionRealtimeCleanup = StopRealtimeTranscriptionAsync(); realtimeCleanup = StopRealtimeAsync(); });
     }
     private async Task LoadRealtimeAsync(CancellationToken ct, bool useCache = false)
     {
@@ -154,6 +154,7 @@ public sealed partial class ChatShell
     }
     private async Task SendRealtimeAsync(McpSelectedPrompt? selectedPrompt = null)
     {
+        await StopRealtimeTranscriptionAsync();
         if (realtimeSending || busy || closing || historyDialogOpen || !initialized) return;
         realtimeSending = true; UpdateRealtimeControls();
         try

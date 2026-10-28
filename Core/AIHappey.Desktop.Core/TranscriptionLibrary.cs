@@ -12,6 +12,7 @@ public sealed class StoredTranscription
     public string MediaType { get; set; } = "";
     public string Model { get; set; } = "";
     public string File { get; set; } = "";
+    public string Kind { get; set; } = "file";
     public JsonObject Options { get; set; } = new();
     public JsonObject Response { get; set; } = new();
 }
@@ -20,6 +21,7 @@ public sealed record LibraryTranscription(StoredTranscription Item, string Path)
 public sealed class TranscriptionLibraryStore(string root, string partition)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerOptions.Web) { WriteIndented = true };
+    private readonly SemaphoreSlim writes = new(1);
     public string Folder { get; } = Path.Combine(Path.GetFullPath(root), HistoryStore.Partition(partition));
     public static string Partition(DesktopSession session) => ImageLibraryStore.Partition(session);
     private static bool SafeId(string id) => id.Length == 32 && id.All(char.IsAsciiHexDigit);
@@ -37,7 +39,9 @@ public sealed class TranscriptionLibraryStore(string root, string partition)
                 var manifest = Path.Combine(directory, "transcription.json");
                 if (!File.Exists(manifest) || new FileInfo(manifest).Length > 32 * 1024 * 1024 || (File.GetAttributes(manifest) & FileAttributes.ReparsePoint) != 0) continue;
                 var item = JsonSerializer.Deserialize<StoredTranscription>(await File.ReadAllTextAsync(manifest, ct), Json);
-                if (item is null || item.Version != 1 || item.Id != id || item.File is null || !SafeLeaf(item.File) || item.Response is null || item.Options is null) continue;
+                if (item is null || item.Version != 1 || item.Id != id || item.File is null || item.Response is null || item.Options is null) continue;
+                if (item.Kind == "realtime" && item.File.Length == 0) { result.Add(new(item, "")); continue; }
+                if (item.Kind != "file" || !SafeLeaf(item.File)) continue;
                 var path = Path.Combine(directory, item.File);
                 if (File.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) == 0) result.Add(new(item, path));
             }
@@ -65,8 +69,26 @@ public sealed class TranscriptionLibraryStore(string root, string partition)
     public Task DeleteAsync(LibraryTranscription value)
     {
         var directory = ItemFolder(value.Item.Id);
-        if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0 || !SafeLeaf(value.Item.File)
-            || !string.Equals(Path.GetFullPath(value.Path), Path.GetFullPath(Path.Combine(directory, value.Item.File)), StringComparison.OrdinalIgnoreCase)) throw new IOException("Invalid transcription path.");
+        var realtime = value.Item.Kind == "realtime" && value.Item.File.Length == 0 && value.Path.Length == 0;
+        if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0 || !realtime && (!SafeLeaf(value.Item.File)
+            || !string.Equals(Path.GetFullPath(value.Path), Path.GetFullPath(Path.Combine(directory, value.Item.File)), StringComparison.OrdinalIgnoreCase))) throw new IOException("Invalid transcription path.");
         Directory.Delete(directory, true); return Task.CompletedTask;
+    }
+    /// <summary>Serial, atomic manifest replacement. Never writes microphone bytes or raw provider events.</summary>
+    public async Task SaveRealtimeAsync(StoredTranscription item, RealtimeTranscriptionSnapshot snapshot, string status)
+    {
+        if (!snapshot.HasConfirmedText) return;
+        if (item.Kind != "realtime" || item.File.Length != 0 || !SafeId(item.Id)) throw new IOException("Invalid real-time transcription.");
+        await writes.WaitAsync();
+        try
+        {
+            var directory = ItemFolder(item.Id); Directory.CreateDirectory(directory);
+            if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0) throw new IOException("Invalid transcription path.");
+            var manifest = Path.Combine(directory, "transcription.json"); var temporary = Path.Combine(directory, ".transcription-" + Guid.NewGuid().ToString("N") + ".tmp");
+            item.Response = snapshot.Response(item.Model, status);
+            try { await File.WriteAllTextAsync(temporary, JsonSerializer.Serialize(item, Json)); File.Move(temporary, manifest, true); }
+            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+        }
+        finally { writes.Release(); }
     }
 }

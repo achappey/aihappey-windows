@@ -10,6 +10,7 @@
          including ChatTarget. Do not maintain a second test-only model contract. -->
     <ProjectReference Include="../AIHappey.Desktop.Tests/AIHappey.Desktop.Tests.csproj" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeAudio.cs" Link="Core/RealtimeAudio.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionAudioInput.cs" Link="Core/TranscriptionAudioInput.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimePcmInput.cs" Link="Core/RealtimePcmInput.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimePcmPlayback.cs" Link="Core/RealtimePcmPlayback.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeFailureException.cs" Link="Core/RealtimeFailureException.cs" />

@@ -33,6 +33,7 @@ public sealed class TranscriptionDetailsDialog : ContentDialog, IResponsiveDialo
         var actions = new MessageFooterPanel();
         foreach (var (action, key) in new[] { (TranscriptionDetailAction.ExportText, "TranscriptionExportText"), (TranscriptionDetailAction.ExportMedia, "TranscriptionExportMedia") })
         {
+            if (action == TranscriptionDetailAction.ExportMedia && item.Item.Kind == "realtime") continue;
             var button = new Button { Name = "Transcription" + action, Content = DesktopResources.Get(key) }; ControlAppearance.Stock(button); button.Click += (_, _) => { Action = action; Hide(); }; actions.Children.Add(button);
         }
         Grid.SetRow(actions, 1); layout.Children.Add(actions); Content = layout;

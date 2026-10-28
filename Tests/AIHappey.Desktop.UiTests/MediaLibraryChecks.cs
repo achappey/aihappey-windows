@@ -123,6 +123,60 @@ public partial class App
             context + ": " + page.Name + " attachments precede settings visually and in keyboard order");
     }
 
+    private async Task CheckTranscriptionTabsAsync(ElementTheme theme)
+    {
+        var root = new Grid { RequestedTheme = theme }; window!.Content = root;
+        window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); window.Activate();
+        var page = new TranscriptionsPage { RequestedTheme = theme }; root.Children.Add(page);
+        var saved = new LibraryTranscription(new StoredTranscription { Id = "transcription-tab-fixture", Filename = "sample.wav", Model = "echo/transcribe",
+            Response = new JsonObject { ["text"] = "Saved transcript", ["response"] = new JsonObject { ["modelId"] = "echo/transcribe" } } }, "");
+        try
+        {
+            page.SetModelAvailable(true); page.SetItems([saved]); await Task.Delay(250); page.UpdateLayout();
+            await CheckTranscriptionRealtimeTabsAsync(page, saved, "Transcription tabs / " + theme);
+            await CheckMediaPageWidthsAsync(page, "Transcription tabs / " + theme);
+        }
+        finally { root.Children.Clear(); window.Content = null; }
+    }
+
+    private async Task CheckTranscriptionRealtimeTabsAsync(TranscriptionsPage page, LibraryTranscription saved, string context)
+    {
+        var tabs = (SelectorBar)page.FindName("TranscriptionTabs");
+        var recorded = (SelectorBarItem)page.FindName("RecordedTab"); var live = (SelectorBarItem)page.FindName("RealtimeTab");
+        var grid = (GridView)page.FindName("LibraryGrid"); var panel = (ScrollViewer)page.FindName("RealtimePanel");
+        var text = (TextBlock)page.FindName("RealtimeText"); var empty = (TextBlock)page.FindName("EmptyLibrary");
+        var folder = (HyperlinkButton)page.FindName("OpenFolder"); var action = (Button)page.FindName("Realtime");
+        Check(tabs.Items.Count == 2 && tabs.Items[0] == recorded && tabs.Items[1] == live && tabs.SelectedItem == recorded
+            && grid.Items.Count == 1 && panel.Visibility == Visibility.Collapsed, context + ": native transcription tabs default to recorded cards");
+        Check(((TextBlock)page.FindName("LibraryTitle")).TransformToVisual(page).TransformPoint(new()).Y
+            < tabs.TransformToVisual(page).TransformPoint(new()).Y, context + ": transcription tabs appear beneath My Transcriptions");
+        Check(panel.Content == text && text.IsTextSelectionEnabled && page.FindName("RealtimeHint") is null
+            && page.FindName("RealtimeStatus") is null && page.FindName("RealtimeProgress") is null,
+            context + ": live tab contains selectable text without a description, status row or progress card");
+        page.SetRealtimeAvailable(true); page.SetRealtime("starting"); await Task.Delay(60);
+        Check(tabs.SelectedItem == live && grid.Items.Count == 0 && grid.ItemsSource is null && panel.Visibility == Visibility.Visible
+            && folder.Visibility == Visibility.Collapsed && empty.Visibility == Visibility.Collapsed,
+            context + ": starting transcription selects Real-time and removes cards and library-only actions from sight");
+        page.SetRealtime("connected", "Live words"); page.SetItems([saved]); await Task.Delay(60);
+        Check(text.Text == "Live words" && grid.Items.Count == 0 && tabs.SelectedItem == live
+            && !AutomationProperties.GetItemStatus(action).Contains('\u2014'), context + ": live updates and library refresh preserve the minimal Real-time view");
+        page.SetRealtime("stopping", "Live words"); page.SetRealtime("completed", "Confirmed words"); page.SetItems([saved]);
+        Check(tabs.SelectedItem == live && text.Text == "Confirmed words" && grid.Items.Count == 0,
+            context + ": Stop retains Real-time selection and final text instead of switching back to cards");
+        tabs.SelectedItem = recorded; await Task.Delay(60);
+        Check(grid.Items.Count == 1 && panel.Visibility == Visibility.Collapsed && folder.Visibility == Visibility.Visible,
+            context + ": selecting the recorded tab restores existing cards without losing live text");
+        tabs.SelectedItem = live; Check(text.Text == "Confirmed words", context + ": returning to Real-time retains the final transcript");
+        page.SetRealtime("starting"); page.SetRealtime("error", "Retained after error");
+        Check(tabs.SelectedItem == live && text.Text == "Retained after error" && grid.Items.Count == 0,
+            context + ": failed session keeps its confirmed text in Real-time");
+        page.SetItems([]); tabs.SelectedItem = recorded;
+        Check(empty.Visibility == Visibility.Visible, context + ": empty-library message belongs only to the recorded tab");
+        tabs.SelectedItem = live; Check(empty.Visibility == Visibility.Collapsed, context + ": empty-library message does not clutter Real-time");
+        page.SetRealtime("idle"); page.SetItems([saved]); await Task.Delay(40);
+        Check(tabs.SelectedItem == recorded && text.Text.Length == 0, context + ": account/page reset clears live text and restores the recorded view");
+    }
+
     private async Task CheckMediaPageWidthsAsync(UserControl page, string context)
     {
         foreach (var width in new[] { 480, 720, 1280 })

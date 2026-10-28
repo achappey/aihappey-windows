@@ -907,7 +907,23 @@
   <data name="TranscriptionPromptHint" xml:space="preserve"><value>Optional instructions in the audio language to guide style or continue an earlier segment</value></data>
   <data name="TranscriptionResponseFormat" xml:space="preserve"><value>Response format</value></data>
   <data name="TranscriptionFormatHint" xml:space="preserve"><value>JSON is the default. Supported response formats depend on the selected provider model.</value></data>
-  <data name="TranscriptionSettingsSaveFailed" xml:space="preserve"><value>Could not save transcription settings. Try again.</value></data>
+  <data name="TranscriptionSettingsSaveFailed" xml:space="preserve"><value>Could not save transcription settings. Check the values and try again.</value></data>
+  <data name="TranscriptionRealtime" xml:space="preserve"><value>Real-time</value></data>
+  <data name="TranscriptionRealtimeHint" xml:space="preserve"><value>Speech is sent directly to the selected provider. Confirmed text is saved automatically; microphone audio is not saved.</value></data>
+  <data name="TranscriptionRealtimeConnecting" xml:space="preserve"><value>Connecting to transcription…</value></data>
+  <data name="TranscriptionRealtimeListening" xml:space="preserve"><value>Transcribing live</value></data>
+  <data name="TranscriptionRealtimeStopping" xml:space="preserve"><value>Waiting for final text…</value></data>
+  <data name="TranscriptionRealtimeSaved" xml:space="preserve"><value>Transcription stopped</value></data>
+  <data name="TranscriptionRealtimeFailed" xml:space="preserve"><value>Real-time transcription ended with an error. Any confirmed text has been retained.</value></data>
+  <data name="TranscriptionRealtimeSaveFailed" xml:space="preserve"><value>Could not save the live transcript. The confirmed text is still shown here; copy it before leaving this page.</value></data>
+  <data name="TranscriptionRealtimeNoise" xml:space="preserve"><value>Microphone noise reduction</value></data>
+  <data name="TranscriptionRealtimeTokenSeconds" xml:space="preserve"><value>Credential lifetime (seconds)</value></data>
+  <data name="TranscriptionRealtimeMode" xml:space="preserve"><value>Transcription mode</value></data>
+  <data name="TranscriptionRealtimeNewSessionExpiry" xml:space="preserve"><value>New session expiry</value></data>
+  <data name="TranscriptionRealtimeCodeSwitching" xml:space="preserve"><value>Allow language switching</value></data>
+  <data name="TranscriptionRealtimeEnhancer" xml:space="preserve"><value>Enhance input audio</value></data>
+  <data name="TranscriptionRealtimeEndpointing" xml:space="preserve"><value>Endpointing delay (seconds)</value></data>
+  <data name="TranscriptionRealtimeMaxDuration" xml:space="preserve"><value>Maximum utterance duration (seconds)</value></data>
   <data name="TranscriptionNoProviderSettings" xml:space="preserve"><value>No additional settings are available for these providers yet.</value></data>
   <data name="TranscriptionActions" xml:space="preserve"><value>Transcription actions</value></data>
   <data name="TranscriptionView" xml:space="preserve"><value>View transcription</value></data>

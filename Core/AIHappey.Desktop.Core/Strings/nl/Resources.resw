@@ -903,7 +903,23 @@
   <data name="TranscriptionPromptHint" xml:space="preserve"><value>Optionele instructies in de audiotaal om de stijl te sturen of een eerder fragment voort te zetten</value></data>
   <data name="TranscriptionResponseFormat" xml:space="preserve"><value>Antwoordformaat</value></data>
   <data name="TranscriptionFormatHint" xml:space="preserve"><value>JSON is de standaard. Ondersteunde antwoordformaten hangen af van het geselecteerde providermodel.</value></data>
-  <data name="TranscriptionSettingsSaveFailed" xml:space="preserve"><value>De transcriptie-instellingen konden niet worden opgeslagen. Probeer het opnieuw.</value></data>
+  <data name="TranscriptionSettingsSaveFailed" xml:space="preserve"><value>De transcriptie-instellingen konden niet worden opgeslagen. Controleer de waarden en probeer het opnieuw.</value></data>
+  <data name="TranscriptionRealtime" xml:space="preserve"><value>Realtime</value></data>
+  <data name="TranscriptionRealtimeHint" xml:space="preserve"><value>Spraak wordt rechtstreeks naar de geselecteerde provider gestuurd. Bevestigde tekst wordt automatisch opgeslagen; microfoonaudio wordt niet opgeslagen.</value></data>
+  <data name="TranscriptionRealtimeConnecting" xml:space="preserve"><value>Verbinden met transcriptie…</value></data>
+  <data name="TranscriptionRealtimeListening" xml:space="preserve"><value>Live transcriberen</value></data>
+  <data name="TranscriptionRealtimeStopping" xml:space="preserve"><value>Wachten op de laatste tekst…</value></data>
+  <data name="TranscriptionRealtimeSaved" xml:space="preserve"><value>Transcriptie gestopt</value></data>
+  <data name="TranscriptionRealtimeFailed" xml:space="preserve"><value>Realtime transcriptie is gestopt door een fout. Bevestigde tekst is behouden.</value></data>
+  <data name="TranscriptionRealtimeSaveFailed" xml:space="preserve"><value>Het live transcript kon niet worden opgeslagen. De bevestigde tekst staat hier nog; kopieer deze voordat u deze pagina verlaat.</value></data>
+  <data name="TranscriptionRealtimeNoise" xml:space="preserve"><value>Ruisonderdrukking microfoon</value></data>
+  <data name="TranscriptionRealtimeTokenSeconds" xml:space="preserve"><value>Geldigheidsduur toegangstoken (seconden)</value></data>
+  <data name="TranscriptionRealtimeMode" xml:space="preserve"><value>Transcriptiemodus</value></data>
+  <data name="TranscriptionRealtimeNewSessionExpiry" xml:space="preserve"><value>Verlooptijd nieuwe sessie</value></data>
+  <data name="TranscriptionRealtimeCodeSwitching" xml:space="preserve"><value>Wisselen van taal toestaan</value></data>
+  <data name="TranscriptionRealtimeEnhancer" xml:space="preserve"><value>Invoeraudio verbeteren</value></data>
+  <data name="TranscriptionRealtimeEndpointing" xml:space="preserve"><value>Vertraging spraakeinde (seconden)</value></data>
+  <data name="TranscriptionRealtimeMaxDuration" xml:space="preserve"><value>Maximale uitingsduur (seconden)</value></data>
   <data name="TranscriptionNoProviderSettings" xml:space="preserve"><value>Voor deze providers zijn nog geen extra instellingen beschikbaar.</value></data>
   <data name="TranscriptionActions" xml:space="preserve"><value>Transcriptie-acties</value></data>
   <data name="TranscriptionView" xml:space="preserve"><value>Transcriptie bekijken</value></data>
