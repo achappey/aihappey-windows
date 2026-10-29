@@ -30,21 +30,36 @@ public sealed class DesktopAgent
     public string ModelId => Text((Models.FirstOrDefault(model => Text(model["type"]) != "decision") ?? Models.FirstOrDefault())?["id"]);
     public IReadOnlyList<string> ModelIds => Models.Select(model => Text(model["id"])).ToArray();
     public string SelectionKey => "local:" + Name;
-    public JsonObject? TranscriptionModel => Definition["transcriptionModel"] as JsonObject;
-    public JsonObject? SpeechModel => Definition["speechModel"] as JsonObject;
+    public JsonObject? Transcription => Definition["transcription"] as JsonObject;
+    public JsonObject? Speech => Definition["speech"] as JsonObject;
+    public JsonObject? SpeechModel => Speech?["model"] as JsonObject;
     public void SelectAudioModel(string type, string id)
     {
-        var field = type == "transcription" ? "transcriptionModel" : "speechModel";
-        var previous = Definition[field] as JsonObject;
-        if (string.IsNullOrWhiteSpace(id)) { Definition.Remove(field); return; }
+        var previous = type == "transcription" ? Transcription : SpeechModel;
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            if (type == "transcription") Definition.Remove("transcription");
+            else if (Speech is { } speech) { speech.Remove("model"); if (speech.Count == 0) Definition.Remove("speech"); }
+            return;
+        }
         if (Text(previous?["id"]) == id) return;
         var next = new JsonObject { ["id"] = id, ["type"] = type };
         if (Provider(Text(previous?["id"])) == Provider(id))
             foreach (var key in new[] { "providerMetadata", "providerHeaders" })
                 if (previous?[key] is { } value) next[key] = value.DeepClone();
-        Definition[field] = next;
+        if (type == "transcription") Definition["transcription"] = next;
+        else Object(Definition, "speech")["model"] = next;
     }
-    public DesktopAgent(JsonObject definition) => Definition = (JsonObject)definition.DeepClone();
+    public DesktopAgent(JsonObject definition)
+    {
+        Definition = (JsonObject)definition.DeepClone();
+        // Migrate at construction too: remote catalog agents do not pass through the local store.
+        if (!Definition.ContainsKey("transcription") && Definition["transcriptionModel"] is { } transcription)
+            Definition["transcription"] = transcription.DeepClone();
+        if (!Definition.ContainsKey("speech") && Definition["speechModel"] is { } speech)
+            Definition["speech"] = new JsonObject { ["model"] = speech.DeepClone() };
+        Definition.Remove("transcriptionModel"); Definition.Remove("speechModel");
+    }
     public DesktopAgent Clone() => new(Definition);
     public static string Text(JsonNode? node) => node is JsonValue value && value.TryGetValue<string>(out var text) ? text : "";
     public static bool Boolean(JsonNode? node) => node is JsonValue value && value.TryGetValue<bool>(out var boolean) && boolean;
@@ -83,7 +98,7 @@ public sealed class DesktopAgent
             Definition["models"] = new JsonArray(collection.OfType<JsonObject>()
                 .Where(model => !string.IsNullOrWhiteSpace(Text(model["id"])))
                 .DistinctBy(model => Text(model["id"]), StringComparer.Ordinal).Select(model => model.DeepClone()).ToArray());
-        foreach (var model in Models.Concat(Definition["model"] is JsonObject legacyModel ? new[] { legacyModel } : []).Distinct())
+        foreach (var model in Models.Concat(new[] { Definition["model"] as JsonObject, Transcription, SpeechModel }.OfType<JsonObject>()).Distinct())
         {
             if (model["providerHeaders"] is not JsonObject headers) continue;
             var provider = Provider(Text(model["id"])).ToLowerInvariant();

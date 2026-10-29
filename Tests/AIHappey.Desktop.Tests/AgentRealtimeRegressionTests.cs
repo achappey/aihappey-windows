@@ -11,18 +11,56 @@ internal static class AgentRealtimeRegressionTests
             "speechModel":{"id":"openai/tts","type":"speech","providerMetadata":{"openai":{"voice":"coral"}}}}
             """);
         var original = agent.Definition.ToJsonString();
+        check(!agent.Definition.ContainsKey("transcriptionModel") && !agent.Definition.ContainsKey("speechModel")
+            && DesktopAgent.Text(agent.SpeechModel?["id"]) == "openai/tts", "legacy audio migrates to canonical fields and nested speech model");
+        var mixed = new DesktopAgent(new() { ["transcription"] = null, ["speech"] = null,
+            ["transcriptionModel"] = new JsonObject { ["id"] = "old/stt" }, ["speechModel"] = new JsonObject { ["id"] = "old/tts" } });
+        check(mixed.Transcription is null && mixed.Speech is null && !mixed.Definition.ContainsKey("speechModel"), "explicit null new audio fields win over legacy fields");
+        check(new DesktopAgent(agent.Definition).Definition.ToJsonString() == original, "audio migration is idempotent");
         var draft = agent.Clone(); draft.SelectAudioModel("transcription", "unsupported/stt");
         check(draft.Definition.ToJsonString() == original, "reselecting unsupported audio preserves every field");
         draft.SelectAudioModel("transcription", "unsupported/other");
-        check(draft.TranscriptionModel!["providerHeaders"]!["X-Test"]!.ToString() == "keep", "same-provider audio changes preserve metadata and headers");
+        check(draft.Transcription!["providerHeaders"]!["X-Test"]!.ToString() == "keep", "same-provider audio changes preserve metadata and headers");
         draft.SelectAudioModel("transcription", "openai/stt");
-        check(draft.TranscriptionModel!["providerMetadata"] is null && draft.TranscriptionModel["providerHeaders"] is null,
+        check(draft.Transcription!["providerMetadata"] is null && draft.Transcription["providerHeaders"] is null,
             "cross-provider audio changes never leak another provider's configuration");
         draft.SelectAudioModel("speech", "");
         check(draft.SpeechModel is null && agent.Definition.ToJsonString() == original, "clearing optional speech edits only the isolated draft");
         var store = new DesktopAgentStore(directory); await store.SaveAsync("partition", agent, null, CancellationToken.None);
         var restored = (await store.ListAsync("partition", [], CancellationToken.None)).Single();
         check(restored.Definition.ToJsonString() == original, "unsupported transcription and optional speech survive native storage round trips");
+        var configured = agent.Clone();
+        configured.Speech!["voice"] = "custom"; configured.Speech["speed"] = 1.2; configured.Speech["instructions"] = "Warmly"; configured.Speech["language"] = "nl";
+        configured.Speech["outputFormat"] = new JsonObject { ["type"] = "audio/pcm", ["rate"] = 16000 };
+        configured.SpeechModel!["providerMetadata"] = new JsonObject { ["openai"] = new JsonObject
+            { ["voice"] = "old", ["speed"] = .8, ["response_format"] = "mp3", ["opaque"] = new JsonArray(1, 2) } };
+        var configuredJson = configured.Definition.ToJsonString();
+        var request = AgentSpeechConfiguration.Request(configured.Speech, " Hello ");
+        check(request.Model == "openai/tts" && request.Voice == "custom" && request.Instructions == "Warmly" && request.Language == "nl"
+            && Math.Abs(request.Speed!.Value - 1.2) < .0001 && request.OutputFormat == "pcm" && request.Text == " Hello ", "generic agent speech fields map to HTTP without changing text");
+        check(request.ProviderOptions!["openai"].GetProperty("voice").GetString() == "custom"
+            && request.ProviderOptions["openai"].GetProperty("response_format").GetString() == "pcm"
+            && request.ProviderOptions["openai"].GetProperty("opaque").GetArrayLength() == 2
+            && configured.Definition.ToJsonString() == configuredJson, "generic settings override request-local metadata and retain opaque stored options");
+        check(DesktopAgent.Parse(configuredJson).Definition.ToJsonString() == configuredJson, "new speech settings survive portable agent round trips");
+        configured.SelectAudioModel("speech", "smallestai/lightning_v3.1");
+        check(DesktopAgent.Text(configured.Speech!["voice"]) == "custom" && configured.SpeechModel!["providerMetadata"] is null,
+            "cross-provider speech model changes retain generic options but not incompatible metadata");
+        var socketOptions = AgentSpeechConfiguration.SocketOptions(configured.Speech);
+        var socket = StreamingSpeechProtocol.Create("smallestai/lightning_v3.1", socketOptions).Append("Hello");
+        check(DesktopAgent.Text(socket["voice_id"]) == "custom" && socket["sample_rate"]!.GetValue<int>() == 16000
+            && DesktopAgent.Text(socket["language"]) == "nl" && DesktopAgent.Text(socket["output_format"]) == "pcm", "generic voice, rate and language reach direct WebSocket speech with raw PCM");
+        configured.SelectAudioModel("speech", "");
+        check(configured.SpeechModel is null && DesktopAgent.Text(configured.Speech!["voice"]) == "custom", "clearing a speech model retains model-independent speech preferences");
+        var defaults = AgentSpeechConfiguration.Request(new() { ["model"] = new JsonObject { ["id"] = "openai/tts" } }, "Hello");
+        check(defaults.Speed is null && defaults.Voice is null && defaults.OutputFormat is null && defaults.ProviderOptions is null, "unset agent settings do not inherit standalone defaults");
+        foreach (var speed in new[] { 0d, -1d, double.PositiveInfinity })
+            check(!AgentSpeechConfiguration.IsValid(new() { ["speed"] = speed }), "invalid agent speech speed is rejected");
+        check(!AgentSpeechConfiguration.IsValid(new() { ["outputFormat"] = new JsonObject { ["type"] = "audio/pcm", ["rate"] = 1.5 } }), "fractional sample rates are rejected");
+        var openaiConfig = OpenAiRealtimeSpeech.Session("openai/gpt-realtime-2.1-mini", new() { ["voice"] = "cedar", ["instructions"] = "ignored metadata" }, "Speak warmly");
+        check(DesktopAgent.Text(openaiConfig["instructions"]).Contains("Speak warmly")
+            && DesktopAgent.Text(openaiConfig["instructions"]).EndsWith(OpenAiRealtimeSpeech.Instructions)
+            && !DesktopAgent.Text(openaiConfig["instructions"]).Contains("ignored metadata"), "generic OpenAI speech guidance retains verbatim-reading safeguards");
         var starts = 0; var turns = new List<string>(); var previews = new List<string>();
         using (var openai = new AgentRealtimeTurns("openai", () => starts++, previews.Add, turns.Add))
         {

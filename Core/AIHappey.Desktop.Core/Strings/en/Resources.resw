@@ -2015,4 +2015,6 @@ Speaker: {1}</value></data>
   <data name="AgentRealtimeUnsupported" xml:space="preserve"><value>This agent requires a supported real-time transcription model. Windows supports OpenAI, Google, and Gladia. Saved settings are preserved.</value></data>
   <data name="AgentRealtimeSelect" xml:space="preserve"><value>Select agent</value></data>
   <data name="AgentRealtimeSpeechFailed" xml:space="preserve"><value>The reply could not be played. The text response is still available.</value></data>
+  <data name="AgentSpeechSampleRate" xml:space="preserve"><value>Sample rate (Hz)</value></data>
+  <data name="AgentSpeechOptionsHint" xml:space="preserve"><value>Voice accepts a custom voice ID. Blank settings use provider defaults or advanced options; explicit settings override equivalent provider options. Support varies by model: voice-bound models retain their voice, and some providers do not support instructions or language. Enter the audio format as a MIME type, for example audio/mpeg. Direct WebSocket playback uses raw PCM (OpenAI: 24,000 Hz); the requested encoding applies to HTTP speech. Sample rate applies to streaming where supported; non-streaming HTTP speech may use the provider's rate.</value></data>
 </root>

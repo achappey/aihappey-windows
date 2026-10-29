@@ -133,7 +133,7 @@ public sealed class OpenAiRealtimeSpeechSession : IStreamingSpeechSession
         {
             ["type"] = "response.create", ["response"] = new JsonObject
             {
-                ["conversation"] = "none", ["output_modalities"] = new JsonArray("audio"), ["instructions"] = OpenAiRealtimeSpeech.Instructions,
+                ["conversation"] = "none", ["output_modalities"] = new JsonArray("audio"), ["instructions"] = config["instructions"]?.DeepClone(),
                 ["tools"] = new JsonArray(), ["tool_choice"] = "none", ["metadata"] = new JsonObject { ["speech_request"] = requestId },
                 ["input"] = new JsonArray(new JsonObject { ["type"] = "message", ["role"] = "user",
                     ["content"] = new JsonArray(new JsonObject { ["type"] = "input_text", ["text"] = text }) })

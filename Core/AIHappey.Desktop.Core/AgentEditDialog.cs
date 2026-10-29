@@ -102,7 +102,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
     private IReadOnlyList<JsonObject> DecisionModels => draft.Models.Where(model => ModelType(DesktopAgent.Text(model["id"])) == "decision").ToArray();
     private IReadOnlyList<JsonObject> MainModels => AnswerModels.Count > 1 && DecisionModels.Count == 1 ? AnswerModels : draft.Models;
     private bool HasValidEditorModels => draft.Models.Count == 1 || (AnswerModels.Count > 1 && DecisionModels.Count == 1);
-    private void UpdateSave() => IsPrimaryButtonEnabled = draft.IsValid && HasValidEditorModels && fields.IsValid && providerEditors.All(editor => editor.IsValid) && pending == 0 && !saving;
+    private void UpdateSave() => IsPrimaryButtonEnabled = draft.IsValid && HasValidEditorModels && AgentSpeechConfiguration.IsValid(draft.Speech) && fields.IsValid && providerEditors.All(editor => editor.IsValid) && pending == 0 && !saving;
     private async Task WorkAsync(Func<CancellationToken, Task> work)
     {
         pending++; UpdateSave();
@@ -219,6 +219,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         try
         {
             CommitAudioProviders();
+            AgentSpeechConfiguration.Validate(draft.Speech);
             DesktopAgentIcons.PrepareForSave(draft);
             draft.SyncLegacyModel(); draft.Validate(); lifetime.Token.ThrowIfCancellationRequested();
             if (partition != session.AgentPartition) throw new OperationCanceledException();

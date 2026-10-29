@@ -42,7 +42,7 @@ public sealed partial class ChatShell
     }
     private bool RealtimeAgentSupported(ChatTarget target)
     {
-        var id = DesktopAgent.Text(RealtimeAgentDefinition(target)?.TranscriptionModel?["id"]);
+        var id = DesktopAgent.Text(RealtimeAgentDefinition(target)?.Transcription?["id"]);
         return (aiModelTargets ?? []).Any(model => model.Id == id && model.ModelType == "transcription" && RealtimeTranscriptionConfiguration.Supports(model));
     }
     private void PrepareAgentRealtimeHeader()
@@ -80,7 +80,7 @@ public sealed partial class ChatShell
         ct.ThrowIfCancellationRequested(); if (closing || partition != session.HistoryPartition) return;
         var local = DesktopAgentTargets.Project(localAgents.Select(agent => agent.CatalogItem()));
         realtimeAgents = local.Concat(remote.Select(model => model with { Id = "remote:" + model.Id, RemoteAgentId = model.Id }))
-            .Where(target => RealtimeAgentDefinition(target)?.TranscriptionModel is { } transcription
+            .Where(target => RealtimeAgentDefinition(target)?.Transcription is { } transcription
                 && !string.IsNullOrWhiteSpace(DesktopAgent.Text(transcription["id"]))).ToArray();
         realtimeAgent.Configure(true, false, new HashSet<string>(realtimeAgents.Where(item => favorites.Contains(
             $"Agent:{(item.LocalAgentName is null ? "Backend" : "Local")}:{item.LocalAgentName ?? item.RemoteAgentId}")).Select(item => item.Id)), false, "");
@@ -119,11 +119,11 @@ public sealed partial class ChatShell
                     var state = new RealtimeState(current, partition, agent.ModelId, snapshot, session.Settings.Realtime.Clone()) { AgentVoice = voice };
                     realtime = state; UpdateRealtimeControls();
                     void Dispatch(Action action) => DispatcherQueue.TryEnqueue(() => { if (RealtimeCurrent(state) && realtimeMute.IsChecked != true) action(); });
-                    voice.Turns = new(DesktopAgent.Provider(DesktopAgent.Text(agent.TranscriptionModel!["id"])),
+                    voice.Turns = new(DesktopAgent.Provider(DesktopAgent.Text(agent.Transcription!["id"])),
                         () => Dispatch(() => CancelAgentRealtimeRun(state)),
                         text => Dispatch(() => PreviewAgentRealtime(state, text)),
                         text => Dispatch(() => QueueAgentRealtimeTurn(state, NewAgentRealtimeUser(voice, text))));
-                    var transcription = agent.TranscriptionModel!;
+                    var transcription = agent.Transcription!;
                     voice.Connection = new RealtimeTranscriptionSession(DesktopAgent.Text(transcription["id"]),
                         new() { ProviderOptions = (JsonObject)(transcription["providerMetadata"] as JsonObject ?? new()).DeepClone() },
                         (payload, token) => new DesktopRealtimeTokenClient(client, http).GetAsync(payload, AgentAudioHeaders(transcription),
@@ -204,8 +204,8 @@ public sealed partial class ChatShell
             if (voice.Agent.SpeechModel is { } selectedSpeech && (aiModelTargets ?? []).FirstOrDefault(target => target.Id == DesktopAgent.Text(selectedSpeech["id"])) is { } speechTarget
                 && (StreamingSpeechProtocol.Supports(speechTarget) || OpenAiRealtimeSpeech.Supports(speechTarget)))
             {
-                streamedSpeech = new((started, token) => OpenAgentStreamingSpeechAsync(selectedSpeech, started, token),
-                    (text, token) => PlayAgentRealtimeSpeechAsync(state, selectedSpeech, text, token),
+                streamedSpeech = new((started, token) => OpenAgentStreamingSpeechAsync(voice.Agent.Speech!, started, token),
+                    (text, token) => PlayAgentRealtimeSpeechAsync(state, voice.Agent.Speech!, text, token),
                     _ => DispatcherQueue.TryEnqueue(() => { if (RealtimeCurrent(state) && !ct.IsCancellationRequested) Show(DesktopResources.Get("AgentRealtimeSpeechFailed"), InfoBarSeverity.Warning); }), ct,
                     allowLegacyFallback: !OpenAiRealtimeSpeech.IsModel(DesktopAgent.Text(selectedSpeech["id"])));
             }
@@ -234,7 +234,7 @@ public sealed partial class ChatShell
             else if (output.Status == "complete" && RealtimeCurrent(state) && voice.Agent.SpeechModel is { } speech)
             {
                 var text = AgentRealtimeResponse.FinalText(output.Message.Parts);
-                if (!string.IsNullOrWhiteSpace(text)) await PlayAgentRealtimeSpeechAsync(state, speech, text, ct);
+                if (!string.IsNullOrWhiteSpace(text)) await PlayAgentRealtimeSpeechAsync(state, voice.Agent.Speech!, text, ct);
             }
         }
         catch (OperationCanceledException) { }
@@ -253,12 +253,13 @@ public sealed partial class ChatShell
             if (RealtimeCurrent(state)) RenderTranscript(); run.Dispose();
         }
     }
-    private async Task<IStreamingSpeechSession> OpenAgentStreamingSpeechAsync(JsonObject model, Action started, CancellationToken ct)
+    private async Task<IStreamingSpeechSession> OpenAgentStreamingSpeechAsync(JsonObject speech, Action started, CancellationToken ct)
     {
+        var model = speech["model"]!.AsObject();
         var id = DesktopAgent.Text(model["id"]); var provider = DesktopAgent.Provider(id);
-        var options = model["providerMetadata"]?[provider] as JsonObject ?? new();
+        var options = AgentSpeechConfiguration.SocketOptions(speech);
         var openai = OpenAiRealtimeSpeech.IsModel(id);
-        var config = openai ? OpenAiRealtimeSpeech.Session(id, options) : null;
+        var config = openai ? OpenAiRealtimeSpeech.Session(id, options, DesktopAgent.Text(speech["instructions"])) : null;
         var protocol = openai ? null : StreamingSpeechProtocol.Create(id, options);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(15));
         var token = await new DesktopRealtimeTokenClient(client, http).GetAsync(new() { ["model"] = id,
@@ -274,16 +275,15 @@ public sealed partial class ChatShell
         }
         catch { output.Dispose(); throw; }
     }
-    private async Task PlayAgentRealtimeSpeechAsync(RealtimeState state, JsonObject model, string text, CancellationToken ct)
+    private async Task PlayAgentRealtimeSpeechAsync(RealtimeState state, JsonObject speech, string text, CancellationToken ct)
     {
         var voice = state.AgentVoice!;
         try
         {
-            var preferences = new SpeechPreferences { ProviderOptions = (model["providerMetadata"] as JsonObject ?? new()).Where(pair => pair.Value is JsonObject)
-                .ToDictionary(pair => pair.Key, pair => (JsonObject)pair.Value!.DeepClone(), StringComparer.OrdinalIgnoreCase) };
+            var model = speech["model"]!.AsObject();
             var id = DesktopAgent.Text(model["id"]);
             if (OpenAiRealtimeSpeech.IsModel(id)) throw new InvalidOperationException("OpenAI Realtime speech is unavailable; refresh the model catalog.");
-            var result = await new DesktopSpeechClient(client, http).GenerateAsync(new(id, id) { ModelType = "speech" }, text, preferences, ct, AgentAudioHeaders(model));
+            var result = await new DesktopSpeechClient(client, http).GenerateAsync(AgentSpeechConfiguration.Request(speech, text), ct, AgentAudioHeaders(model));
             ct.ThrowIfCancellationRequested(); if (!RealtimeCurrent(state)) return;
             using var stream = new InMemoryRandomAccessStream();
             using (var writer = new DataWriter(stream.GetOutputStreamAt(0))) { writer.WriteBytes(result.Audio); await writer.StoreAsync(); }

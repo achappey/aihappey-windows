@@ -19,12 +19,14 @@ public sealed class DesktopSpeechClient(DesktopChatClient gateway, HttpClient ht
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    public async Task<SpeechResult> GenerateAsync(ChatTarget model, string text, SpeechPreferences preferences, CancellationToken ct,
+    public Task<SpeechResult> GenerateAsync(ChatTarget model, string text, SpeechPreferences preferences, CancellationToken ct,
         ChatPreferences? requestPreferences = null)
+        => GenerateAsync(preferences.Clone().Request(model, text), ct, requestPreferences);
+
+    public async Task<SpeechResult> GenerateAsync(SpeechRequest body, CancellationToken ct, ChatPreferences? requestPreferences = null)
     {
-        var body = preferences.Clone().Request(model, text);
         using var request = await gateway.RequestAsync(ServiceKind.Ai, HttpMethod.Post, "api/speech", ct);
-        requestPreferences?.ApplyHeaders(request, DesktopAgent.Provider(model.Id));
+        requestPreferences?.ApplyHeaders(request, DesktopAgent.Provider(body.Model));
         request.Content = JsonContent.Create(body, options: RequestJson);
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         await GatewayErrors.CheckResponseAsync(response, ct);

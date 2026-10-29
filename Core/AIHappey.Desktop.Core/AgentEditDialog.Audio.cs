@@ -16,7 +16,7 @@ public sealed partial class AgentEditDialog
         {
             var title = DesktopResources.Get(type == "transcription" ? "Transcriptions" : "Speech");
             NativeSettingsSurface.Expander(panel, "AgentAudio_" + type, title, null, out var body);
-            var configuration = type == "transcription" ? draft.TranscriptionModel : draft.SpeechModel;
+            var configuration = type == "transcription" ? draft.Transcription : draft.SpeechModel;
             var id = DesktopAgent.Text(configuration?["id"]);
             var options = ProviderPreferences.Filter(models, session.Settings).Where(m => (m.ModelType == type || type == "speech" && OpenAiRealtimeSpeech.Supports(m))
                 && (type != "transcription" || m.Tags.Contains("real-time")))
@@ -38,6 +38,7 @@ public sealed partial class AgentEditDialog
                 catch (Exception error) { Message(error is InvalidOperationException ? error.Message : DesktopResources.Get("ChatSettingsInvalid")); }
             };
             BuildAudioProvider(type);
+            if (type == "speech") SpeechOptions(body);
         }
         return panel;
     }
@@ -48,7 +49,7 @@ public sealed partial class AgentEditDialog
         var old = tabs.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(item => item.Tag as string == key);
         if (old is not null) tabs.MenuItems.Remove(old);
         pages.Remove(key); audioCommits.Remove(type);
-        var model = type == "transcription" ? draft.TranscriptionModel : draft.SpeechModel;
+        var model = type == "transcription" ? draft.Transcription : draft.SpeechModel;
         if (model is null) return;
         var provider = DesktopAgent.Provider(DesktopAgent.Text(model["id"]));
         var metadata = (JsonObject)(model["providerMetadata"] as JsonObject ?? new()).DeepClone();
@@ -85,6 +86,56 @@ public sealed partial class AgentEditDialog
             var target = model["providerMetadata"] as JsonObject ?? new();
             DesktopAgent.ApplyChanges(target, before, after);
             if (target.Count > 0 || model.ContainsKey("providerMetadata")) model["providerMetadata"] = target;
+        }
+    }
+
+    private void SpeechOptions(StackPanel body)
+    {
+        Text("voice", "SpeechVoice", "SpeechVoiceHint");
+        Text("instructions", "SpeechInstructions", "SpeechInstructionsHint", true);
+        Text("language", "SpeechLanguage", "SpeechLanguageHint");
+        var speed = new NumberBox { Name = "AgentSpeechSpeed", Header = DesktopResources.Get("SpeechSpeed"),
+            Minimum = .01, SmallChange = .1, Value = AgentSpeechConfiguration.Number(draft.Speech?["speed"]) ?? double.NaN,
+            PlaceholderText = DesktopResources.Get("ProviderDefault") };
+        ControlAppearance.Stock(speed); AutomationProperties.SetName(speed, DesktopResources.Get("SpeechSpeed")); body.Children.Add(speed);
+        speed.ValueChanged += (_, _) => Set("speed", double.IsNaN(speed.Value) ? null : JsonValue.Create(speed.Value));
+        var format = new TextBox { Name = "AgentSpeechOutputFormat", Header = DesktopResources.Get("SpeechOutputFormat"),
+            PlaceholderText = "audio/mpeg", Text = DesktopAgent.Text(draft.Speech?["outputFormat"]?["type"]) };
+        var rate = new NumberBox { Name = "AgentSpeechSampleRate", Header = DesktopResources.Get("AgentSpeechSampleRate"), Minimum = 1, SmallChange = 1,
+            Value = AgentSpeechConfiguration.Number(draft.Speech?["outputFormat"]?["rate"]) ?? double.NaN,
+            IsEnabled = !string.IsNullOrWhiteSpace(format.Text), PlaceholderText = DesktopResources.Get("ProviderDefault") };
+        ControlAppearance.Stock(format); ControlAppearance.Stock(rate);
+        AutomationProperties.SetName(format, DesktopResources.Get("SpeechOutputFormat")); AutomationProperties.SetName(rate, DesktopResources.Get("AgentSpeechSampleRate"));
+        body.Children.Add(format); body.Children.Add(rate);
+        format.TextChanged += (_, _) =>
+        {
+            rate.IsEnabled = !string.IsNullOrWhiteSpace(format.Text);
+            if (!rate.IsEnabled) { rate.Value = double.NaN; Set("outputFormat", null); }
+            else { var value = (JsonObject)(draft.Speech?["outputFormat"] as JsonObject ?? new()).DeepClone(); value["type"] = format.Text.Trim(); Set("outputFormat", value); }
+        };
+        rate.ValueChanged += (_, _) =>
+        {
+            if (string.IsNullOrWhiteSpace(format.Text)) return;
+            var value = (JsonObject)(draft.Speech?["outputFormat"] as JsonObject ?? new()).DeepClone(); value["type"] = format.Text.Trim();
+            if (double.IsNaN(rate.Value)) value.Remove("rate"); else value["rate"] = rate.Value;
+            Set("outputFormat", value);
+        };
+        body.Children.Add(new TextBlock { Text = DesktopResources.Get("AgentSpeechOptionsHint"), TextWrapping = TextWrapping.Wrap });
+
+        void Set(string key, JsonNode? value)
+        {
+            var speech = DesktopAgent.Object(draft.Definition, "speech");
+            if (value is null) speech.Remove(key); else speech[key] = value;
+            if (speech.Count == 0) draft.Definition.Remove("speech");
+            UpdateSave();
+        }
+        void Text(string key, string label, string hint, bool multiline = false)
+        {
+            var box = new TextBox { Name = "AgentSpeech_" + key, Header = DesktopResources.Get(label), PlaceholderText = DesktopResources.Get(hint),
+                Text = DesktopAgent.Text(draft.Speech?[key]), AcceptsReturn = multiline, MinHeight = multiline ? 96 : 0,
+                TextWrapping = multiline ? TextWrapping.Wrap : TextWrapping.NoWrap };
+            ControlAppearance.Stock(box); AutomationProperties.SetName(box, DesktopResources.Get(label)); body.Children.Add(box);
+            box.TextChanged += (_, _) => Set(key, string.IsNullOrWhiteSpace(box.Text) ? null : JsonValue.Create(box.Text));
         }
     }
 }

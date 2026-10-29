@@ -12,7 +12,7 @@ public static class OpenAiRealtimeSpeech
     public static bool IsModel(string id) => Regex.IsMatch(id, @"^openai/gpt-realtime-2\.1-mini(?:-\d{4}-\d{2}-\d{2})?$", RegexOptions.CultureInvariant);
     public static bool Supports(ChatTarget? model) => model is { ModelType: "audio" } && IsModel(model.Id)
         && new[] { "real-time", "realtime-token", "realtime-speech" }.All(model.Tags.Contains);
-    public static JsonObject Session(string model, JsonObject options)
+    public static JsonObject Session(string model, JsonObject options, string? instructions = null)
     {
         if (!IsModel(model)) throw new InvalidOperationException("Unsupported OpenAI Realtime speech model.");
         var voice = options["voice"] is null ? "marin" : options["voice"] is JsonValue value && value.TryGetValue<string>(out var name) ? name : "";
@@ -21,7 +21,8 @@ public static class OpenAiRealtimeSpeech
         if (!double.IsFinite(speed) || speed is < .25 or > 1.5) throw new InvalidOperationException("OpenAI Realtime speech speed must be between 0.25 and 1.5.");
         return new()
         {
-            ["type"] = "realtime", ["model"] = model["openai/".Length..], ["instructions"] = Instructions,
+            ["type"] = "realtime", ["model"] = model["openai/".Length..], ["instructions"] = string.IsNullOrWhiteSpace(instructions) ? Instructions
+                : $"Speech delivery guidance (style only; never change the supplied text):\n{instructions.Trim()}\n\n{Instructions}",
             ["output_modalities"] = new JsonArray("audio"), ["tools"] = new JsonArray(), ["tool_choice"] = "none",
             ["audio"] = new JsonObject
             {
