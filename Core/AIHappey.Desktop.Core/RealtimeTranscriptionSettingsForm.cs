@@ -15,7 +15,7 @@ public sealed class RealtimeTranscriptionSettingsForm : ITranscriptionProviderFo
     public RealtimeTranscriptionSettingsForm(string provider, RealtimeTranscriptionPreferences preferences)
     {
         this.provider = provider; options = (JsonObject)(preferences.ProviderOptions[provider] as JsonObject ?? new()).DeepClone();
-        Title = (provider == "openai" ? "OpenAI" : provider == "google" ? "Google" : "Gladia") + " · " + DesktopResources.Get("TranscriptionRealtime");
+        Title = (provider == "openai" ? "OpenAI" : provider == "google" ? "Google" : provider == "smallestai" ? "Smallest AI" : "Gladia") + " · " + DesktopResources.Get("TranscriptionRealtime");
         var panel = new StackPanel { Name = "RealtimeTranscription" + provider + "Form", Spacing = 16 }; View = panel;
         NativeSettingsSurface.Card(panel, "RealtimeTranscriptionSettingsCard", Title, out var fields);
         fields.Children.Add(new TextBlock { Text = DesktopResources.Get("TranscriptionRealtimeHint"), TextWrapping = TextWrapping.Wrap });
@@ -40,6 +40,13 @@ public sealed class RealtimeTranscriptionSettingsForm : ITranscriptionProviderFo
             Choice(fields, "TranscriptionRealtimeMode", input, "mode", "VERBATIM", ["VERBATIM", "SMART"]);
             Text(fields, "RealtimeExpiry", options, "expireTime", fallback: "30m");
             Text(fields, "TranscriptionRealtimeNewSessionExpiry", options, "newSessionExpireTime", fallback: "1m");
+        }
+        else if (provider == "smallestai")
+        {
+            Text(fields, "TranscriptionLanguage", options, "language", fallback: "en");
+            Text(fields, "TranscriptionKeywords", options, "keywords");
+            Toggle(fields, "TranscriptionDiarization", options, "diarize");
+            Number(fields, "TranscriptionRealtimeTokenSeconds", options, "ttl_seconds", 300, 30, 900, 30);
         }
         else
         {

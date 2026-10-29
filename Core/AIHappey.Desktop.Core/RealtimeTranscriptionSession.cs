@@ -46,9 +46,12 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
         {
             var openai = new OpenAiRealtimeSession(Token, transcriptionInput: gatedInput); transport = openai; finish = openai.FinishTranscriptionAsync;
         }
-        else if (provider is "google" or "gladia")
+        else if (provider is "google" or "gladia" or "smallestai")
         {
-            var ws = new TranscriptionWebSocketSession(provider, provider == "google" ? RealtimeTranscriptionConfiguration.GoogleSetup(model, preferences) : null, Token, gatedInput);
+            var setup = provider == "google" ? RealtimeTranscriptionConfiguration.GoogleSetup(model, preferences)
+                : provider == "smallestai" ? RealtimeConfiguration.Merge(preferences.ProviderOptions[provider] as JsonObject ?? new(), new() { ["model"] = model }) : null;
+            if (provider == "smallestai") _ = RealtimeTranscriptionConfiguration.SmallestConnection(model, setup!);
+            var ws = new TranscriptionWebSocketSession(provider, setup, Token, gatedInput);
             transport = ws; finish = ws.FinishInputAsync;
         }
         else throw new NotSupportedException("Unsupported transcription provider.");

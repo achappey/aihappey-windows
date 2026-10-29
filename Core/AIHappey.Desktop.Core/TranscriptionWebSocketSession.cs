@@ -13,7 +13,7 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
     private readonly ClientWebSocket socket = new();
     private readonly SemaphoreSlim sendGate = new(1);
     private readonly TaskCompletionSource finalized = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private Task? receiveTask, sendTask;
+    private Task? receiveTask, sendTask, keepAliveTask;
     private IDisposable? subscription;
     private int disposed;
     private volatile bool stopping;
@@ -32,7 +32,15 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
         try
         {
             var credential = await tokenFactory(timeout.Token).ConfigureAwait(false);
-            await socket.ConnectAsync(ConnectionUri(provider, credential), timeout.Token).ConfigureAwait(false);
+            Uri endpoint;
+            if (provider == "smallestai")
+            {
+                if (!credential.StartsWith("wat_", StringComparison.Ordinal)) throw new RealtimeFailureException("transcription-token", "Smallest AI requires a short-lived Waves token.");
+                endpoint = RealtimeTranscriptionConfiguration.SmallestConnection(setup?["model"]?.ToString() ?? "", setup ?? new());
+                socket.Options.SetRequestHeader("Authorization", "Bearer " + credential);
+            }
+            else endpoint = ConnectionUri(provider, credential);
+            await socket.ConnectAsync(endpoint, timeout.Token).ConfigureAwait(false);
             if (provider == "google")
             {
                 await SendAsync(new() { ["setup"] = setup?.DeepClone() }, timeout.Token).ConfigureAwait(false);
@@ -46,6 +54,7 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
             }
             timeout.Token.ThrowIfCancellationRequested();
             receiveTask = ReceiveAsync(); sendTask = SendAudioAsync();
+            if (provider == "smallestai") keepAliveTask = KeepAliveAsync();
             subscription = input.Subscribe(bytes =>
             {
                 if (!stopping && !Lifetime.IsCancellationRequested && !audio.Writer.TryWrite(bytes.ToArray()))
@@ -70,16 +79,31 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
                 var message = await GoogleRealtimeSession.ReceiveAsync(socket, Lifetime.Token).ConfigureAwait(false);
                 if (message is null)
                 {
-                    if (stopping) { finalized.TrySetResult(); return; }
+                    if (stopping && provider != "smallestai") { finalized.TrySetResult(); return; }
+                    if (stopping && finalized.Task.IsCompletedSuccessfully) return;
                     throw new RealtimeFailureException("transcription-disconnected", "The transcription provider disconnected unexpectedly.");
                 }
                 CheckError(message); Emit(message);
+                if (provider == "smallestai" && message["is_last"]?.GetValue<bool>() == true) { finalized.TrySetResult(); return; }
                 if (stopping && (provider == "google" && message["serverContent"]?["inputTranscription"] is not null
                     || provider == "gladia" && message["type"]?.ToString() is "end_session" or "post_final_transcript")) finalized.TrySetResult();
             }
         }
         catch (OperationCanceledException) when (Lifetime.IsCancellationRequested) { }
-        catch (Exception error) { finalized.TrySetResult(); Fail(RealtimeFailureException.Safe(error, "transcription-receive", "The transcription connection failed.")); }
+        catch (Exception error) { finalized.TrySetException(RealtimeFailureException.Safe(error, "transcription-receive", "The transcription connection failed.")); Fail(RealtimeFailureException.Safe(error, "transcription-receive", "The transcription connection failed.")); }
+    }
+    private async Task KeepAliveAsync()
+    {
+        try
+        {
+            while (!Lifetime.IsCancellationRequested && !stopping)
+            {
+                await Task.Delay(10000, Lifetime.Token).ConfigureAwait(false);
+                if (!stopping) await SendAsync(new() { ["type"] = "ping" }, Lifetime.Token).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (Lifetime.IsCancellationRequested) { }
+        catch { Fail(new RealtimeFailureException("transcription-keepalive", "The transcription connection failed.")); }
     }
     private async Task SendAudioAsync()
     {
@@ -110,8 +134,8 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Lifetime.Token); timeout.CancelAfter(TimeSpan.FromSeconds(3));
         if (sendTask is not null) await sendTask.WaitAsync(timeout.Token).ConfigureAwait(false);
         await SendAsync(provider == "google" ? new() { ["realtimeInput"] = new JsonObject { ["audioStreamEnd"] = true } }
-            : new() { ["type"] = "stop_recording" }, timeout.Token).ConfigureAwait(false);
-        try { await finalized.Task.WaitAsync(TimeSpan.FromMilliseconds(1500), timeout.Token).ConfigureAwait(false); } catch (TimeoutException) { }
+            : new() { ["type"] = provider == "smallestai" ? "close_stream" : "stop_recording" }, timeout.Token).ConfigureAwait(false);
+        try { await finalized.Task.WaitAsync(TimeSpan.FromMilliseconds(1500), timeout.Token).ConfigureAwait(false); } catch (TimeoutException) when (provider != "smallestai") { }
     }
     public override async ValueTask DisposeAsync()
     {
@@ -119,6 +143,7 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
         stopping = true; Lifetime.Cancel(); Interlocked.Exchange(ref subscription, null)?.Dispose(); audio.Writer.TryComplete(); socket.Abort();
         if (receiveTask is not null) await receiveTask.ConfigureAwait(false);
         if (sendTask is not null) await sendTask.ConfigureAwait(false);
+        if (keepAliveTask is not null) await keepAliveTask.ConfigureAwait(false);
         socket.Dispose(); Complete();
     }
 }

@@ -41,6 +41,12 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
                 var text = utterance?["text"]?.ToString() ?? "";
                 if (data?["is_final"]?.GetValue<bool>() == true) Complete(text, id); else Preview(text);
             }
+            else if (provider == "smallestai" && type == "transcription")
+            {
+                var text = (message["transcript"] ?? message["transcription"])?.ToString() ?? "";
+                // Repeated words are valid successive turns; only keyed duplicates are deduplicated.
+                if (message["is_final"]?.GetValue<bool>() == true) { unkeyedFinal = null; Complete(text, null); } else Preview(text);
+            }
             else if (provider == "google" && message["serverContent"] is JsonObject content)
             {
                 if (content["interimInputTranscription"]?["text"] is { } interim) Preview(interim.ToString());

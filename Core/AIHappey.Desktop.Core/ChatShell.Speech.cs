@@ -40,7 +40,21 @@ public sealed partial class ChatShell
     private async Task SendSpeechAsync()
     {
         if (!CanUseSpeech || SelectedSpeechModel is null || string.IsNullOrWhiteSpace(speechPage.PromptText)) return; var text = speechPage.PromptText; var preferences = session.Settings.Speech.Clone(); var partition = SpeechLibraryStore.Partition(session); var store = new SpeechLibraryStore(SpeechRoot, partition); speechPage.ClearNotices();
-        await RunAsync(async ct => { pendingSpeech = 1; speechPage.SetItems(librarySpeech, 1); try { var model = await ResolvePrimitiveModelAsync(speechTarget, speechModels, "speech", text, ct); var result = await new DesktopSpeechClient(client, http).GenerateAsync(model, text, preferences, ct); await store.SaveAsync(result); librarySpeech = await store.ListAsync(); if (!closing && partition == SpeechLibraryStore.Partition(session)) { foreach (var warning in result.Warnings) speechPage.Notice(warning, InfoBarSeverity.Warning); } } finally { pendingSpeech = 0; if (!closing && partition == SpeechLibraryStore.Partition(session)) speechPage.SetItems(librarySpeech); } }, inference: true);
+        await RunAsync(async ct =>
+        {
+            pendingSpeech = 1; speechPage.SetItems(librarySpeech, 1);
+            try
+            {
+                var model = await ResolvePrimitiveModelAsync(speechTarget, speechModels, "speech", text, ct);
+                var result = SmallestStreamingSpeech.Supports(model, preferences)
+                    ? await SmallestStreamingSpeech.GenerateAsync(model, text, preferences, new(client, http), session.Settings.Chat.Clone(), ct)
+                    : await new DesktopSpeechClient(client, http).GenerateAsync(model, text, preferences, ct);
+                ct.ThrowIfCancellationRequested(); await store.SaveAsync(result); librarySpeech = await store.ListAsync();
+                if (!closing && partition == SpeechLibraryStore.Partition(session))
+                    foreach (var warning in result.Warnings) speechPage.Notice(warning, InfoBarSeverity.Warning);
+            }
+            finally { pendingSpeech = 0; if (!closing && partition == SpeechLibraryStore.Partition(session)) speechPage.SetItems(librarySpeech); }
+        }, inference: true);
     }
     private async Task PickSpeechDocumentsAsync()
     {

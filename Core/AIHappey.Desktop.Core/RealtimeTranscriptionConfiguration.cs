@@ -18,7 +18,25 @@ public sealed class RealtimeTranscriptionPreferences
 public static class RealtimeTranscriptionConfiguration
 {
     public static bool Supports(ChatTarget? model) => model is not null && model.Tags.Contains("real-time")
-        && RealtimeConfiguration.Provider(model.Id) is "openai" or "google" or "gladia";
+        && (RealtimeConfiguration.Provider(model.Id) is "openai" or "google" or "gladia"
+            || model.Id is "smallestai/pulse" or "smallestai/pulse-2");
+
+    public static Uri SmallestConnection(string model, JsonObject options)
+    {
+        var name = RealtimeConfiguration.ModelName(model);
+        if (name is not ("pulse" or "pulse-2")) throw new ArgumentException("Smallest AI streaming supports Pulse and Pulse 2, not Pulse Pro.");
+        var language = options["language"]?.ToString() ?? "en";
+        if (name == "pulse-2" && language != "en") throw new ArgumentException("Smallest AI Pulse 2 supports English only.");
+        var query = new Dictionary<string, string> { ["model"] = name, ["language"] = language, ["sample_rate"] = "16000", ["encoding"] = "linear16", ["word_timestamps"] = "true" };
+        string[] fields = ["word_timestamps", "diarize", "vad_events", "vad", "endpointing", "format", "punctuate", "capitalize", "itn_normalize", "no_format_delay", "redact_pii", "redact_pci", "sentence_timestamps", "keywords", "emotion_detection", "gender_detection"];
+        foreach (var key in fields.Concat(name == "pulse" ? new[] { "eou_timeout_ms", "finalize_on_words", "max_words" } : []))
+        {
+            if (options[key] is not { } value || value.ToString().Length == 0) continue;
+            if (value is not JsonValue) throw new ArgumentException("Invalid Smallest AI transcription setting.");
+            query[key] = value is JsonValue flag && flag.TryGetValue<bool>(out var enabled) ? enabled.ToString().ToLowerInvariant() : value.ToString();
+        }
+        return new("wss://api.smallest.ai/waves/v1/stt/live?" + string.Join('&', query.Select(pair => Uri.EscapeDataString(pair.Key) + "=" + Uri.EscapeDataString(pair.Value))));
+    }
 
     public static JsonObject GoogleConfig(RealtimeTranscriptionPreferences preferences)
     {
@@ -57,6 +75,12 @@ public static class RealtimeTranscriptionConfiguration
         {
             // The provisioned session and the bytes uploaded to it must agree. Native capture is mono PCM16.
             metadata = RealtimeConfiguration.Merge(options, new() { ["encoding"] = "wav/pcm", ["sample_rate"] = 16000, ["bit_depth"] = 16, ["channels"] = 1 });
+        }
+        else if (provider == "smallestai")
+        {
+            _ = SmallestConnection(model, options);
+            metadata = new();
+            if (options["ttl_seconds"] is { } ttl) metadata["ttl_seconds"] = ttl.DeepClone();
         }
         else throw new NotSupportedException("Unsupported real-time transcription provider.");
         return new() { ["model"] = model, ["providerOptions"] = new JsonObject { [provider] = metadata } };

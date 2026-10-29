@@ -97,6 +97,16 @@ public static class OpenAISpeechOptions
 
 public static class SpeechAudio
 {
+    public static byte[] PcmWave(byte[] pcm, int sampleRate)
+    {
+        if (pcm.Length == 0 || pcm.Length % 2 != 0 || sampleRate is not (8000 or 16000 or 24000 or 44100)) throw new InvalidDataException("Invalid speech PCM audio.");
+        using var stream = new MemoryStream(44 + pcm.Length);
+        using var writer = new BinaryWriter(stream, System.Text.Encoding.ASCII, true);
+        writer.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); writer.Write(36 + pcm.Length); writer.Write(System.Text.Encoding.ASCII.GetBytes("WAVEfmt "));
+        writer.Write(16); writer.Write((short)1); writer.Write((short)1); writer.Write(sampleRate); writer.Write(sampleRate * 2);
+        writer.Write((short)2); writer.Write((short)16); writer.Write(System.Text.Encoding.ASCII.GetBytes("data")); writer.Write(pcm.Length); writer.Write(pcm);
+        return stream.ToArray();
+    }
     public static readonly string[] OutputFormats = ["mp3", "wav", "opus", "aac", "flac", "pcm"];
     private const int MaximumBytes = 100 * 1024 * 1024;
 

@@ -26,6 +26,9 @@ public sealed class StreamingSpeechSession : IStreamingSpeechSession
     private volatile bool dirty, finishing, finalInputSent;
     private bool disposed;
     private int sent, acknowledged;
+    private long lastActivity = Environment.TickCount64, lastPing = Environment.TickCount64;
+    private volatile bool segmentCompleted, hasInput;
+    private int pendingCount;
     public StreamingSpeechSession(WebSocket socket, StreamingSpeechProtocol protocol, Action<byte[]> audio, CancellationToken ct)
     {
         this.socket = socket; this.protocol = protocol; this.audio = audio; lifetime = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -37,6 +40,11 @@ public sealed class StreamingSpeechSession : IStreamingSpeechSession
         var socket = new ClientWebSocket();
         var endpoint = protocol.Endpoint;
         if (protocol.Provider == "deepgram") { socket.Options.AddSubProtocol("bearer"); socket.Options.AddSubProtocol(token); }
+        else if (protocol.Provider == "smallestai")
+        {
+            if (!token.StartsWith("wat_", StringComparison.Ordinal)) { socket.Dispose(); throw new InvalidOperationException("Smallest AI speech requires a short-lived Waves token."); }
+            socket.Options.SetRequestHeader("Authorization", "Bearer " + token);
+        }
         else endpoint = new(endpoint + "&access_token=" + Uri.EscapeDataString(token));
         try
         {
@@ -62,7 +70,7 @@ public sealed class StreamingSpeechSession : IStreamingSpeechSession
             {
                 var count = Math.Min(1000, text.Length - offset);
                 if (offset + count < text.Length && char.IsHighSurrogate(text[offset + count - 1])) count--;
-                await SendAsync(protocol.Append(text.Substring(offset, count)), ct); offset += count; dirty = true;
+                await SendAsync(protocol.Append(text.Substring(offset, count)), ct); offset += count; dirty = true; hasInput = true;
             }
         }
         finally { sending.Release(); }
@@ -84,7 +92,26 @@ public sealed class StreamingSpeechSession : IStreamingSpeechSession
     }
     private async Task FlushLoopAsync()
     {
-        try { while (!lifetime.IsCancellationRequested) { await Task.Delay(200, lifetime.Token); if (!finishing) await FlushAsync(lifetime.Token); } }
+        try
+        {
+            while (!lifetime.IsCancellationRequested)
+            {
+                await Task.Delay(200, lifetime.Token);
+                if (!finishing) await FlushAsync(lifetime.Token);
+                if (protocol.QuietPeriodMilliseconds == 0) continue;
+                var now = Environment.TickCount64;
+                if (now - lastPing >= 10000)
+                {
+                    await sending.WaitAsync(lifetime.Token);
+                    try { await SendAsync(new() { ["type"] = "ping" }, lifetime.Token); lastPing = now; }
+                    finally { sending.Release(); }
+                }
+                // Smallest emits no final-context acknowledgement. Drain segment frames until quiet,
+                // including the case where an empty closing frame emits nothing at all.
+                if (finalInputSent && segmentCompleted && Volatile.Read(ref pendingCount) == 0
+                    && now - Interlocked.Read(ref lastActivity) >= protocol.QuietPeriodMilliseconds) done.TrySetResult();
+            }
+        }
         catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
         catch { done.TrySetException(new InvalidOperationException("Streaming speech send failed.")); }
     }
@@ -98,12 +125,13 @@ public sealed class StreamingSpeechSession : IStreamingSpeechSession
             finalInputSent = true;
             if (Volatile.Read(ref acknowledged) >= Volatile.Read(ref sent)) done.TrySetResult();
         }
-        else { await sending.WaitAsync(timeout.Token); try { finalInputSent = true; await SendAsync(protocol.Finish(), timeout.Token); } finally { sending.Release(); } }
+        else { await sending.WaitAsync(timeout.Token); try { Interlocked.Exchange(ref lastActivity, Environment.TickCount64); finalInputSent = true; await SendAsync(protocol.Finish(), timeout.Token); if (protocol.QuietPeriodMilliseconds > 0 && !hasInput) done.TrySetResult(); } finally { sending.Release(); } }
         await done.Task.WaitAsync(timeout.Token);
     }
     private async Task ReceiveAsync()
     {
         var buffer = new byte[16384];
+        var pending = new HashSet<string>(StringComparer.Ordinal);
         try
         {
             while (!lifetime.IsCancellationRequested)
@@ -119,7 +147,15 @@ public sealed class StreamingSpeechSession : IStreamingSpeechSession
                 if (lifetime.IsCancellationRequested) return;
                 if (part.MessageType == WebSocketMessageType.Binary) { audio(message.ToArray()); continue; }
                 var value = JsonNode.Parse(message.ToArray())!.AsObject();
-                if (value["type"]?.ToString() is "error" or "Error" or "Warning") throw new InvalidOperationException();
+                if (value["type"]?.ToString() is "error" or "Error" or "Warning" || value["status"]?.ToString() == "error") throw new InvalidOperationException();
+                if (protocol.QuietPeriodMilliseconds > 0 && value["status"]?.ToString() is "chunk" or "complete" or "word_timestamp")
+                {
+                    Interlocked.Exchange(ref lastActivity, Environment.TickCount64);
+                    var id = value["request_id"]?.ToString() ?? "segment";
+                    if (value["status"]?.ToString() == "chunk") pending.Add(id);
+                    if (value["status"]?.ToString() == "complete") { pending.Remove(id); segmentCompleted = true; }
+                    Volatile.Write(ref pendingCount, pending.Count);
+                }
                 if (protocol.Audio(value) is { } encoded) audio(Convert.FromBase64String(encoded));
                 if (protocol.Done(value))
                 {
@@ -128,7 +164,7 @@ public sealed class StreamingSpeechSession : IStreamingSpeechSession
                         var sequence = value["sequence_id"]?.GetValue<int>() ?? throw new InvalidOperationException();
                         Interlocked.Exchange(ref acknowledged, Math.Max(Volatile.Read(ref acknowledged), sequence + 1));
                     }
-                    if (finalInputSent && (!protocol.CanFlush || Volatile.Read(ref acknowledged) >= Volatile.Read(ref sent))) done.TrySetResult();
+                    if (protocol.QuietPeriodMilliseconds == 0 && finalInputSent && (!protocol.CanFlush || Volatile.Read(ref acknowledged) >= Volatile.Read(ref sent))) done.TrySetResult();
                 }
             }
         }

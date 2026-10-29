@@ -25,7 +25,7 @@ public sealed class RealtimePreferences
 public static class RealtimeConfiguration
 {
     public static string Provider(string model) => model.Split('/')[0].ToLowerInvariant();
-    public static bool Supported(string model) => Provider(model) is "openai" or "google";
+    public static bool Supported(string model) => Provider(model) is "openai" or "google" or "smallestai";
     public static bool UsesSessions(ChatTarget model) => Provider(model.Id) == "openai" && model.Tags.Contains("realtime-session");
     public static bool IsLive(ChatTarget model) => UsesSessions(model) && !model.Tags.Contains("realtime-token");
     public static JsonObject LiveSession(RealtimePreferences preferences, string instructions)
@@ -62,6 +62,7 @@ public static class RealtimeConfiguration
         var provider = Provider(model);
         var options = preferences.ProviderOptions[provider] as JsonObject ?? new();
         var definitions = tools.ToArray();
+        if (provider == "smallestai") return new(); // Hosted Atoms configuration lives at the provider.
         if (provider == "openai")
         {
             var defaults = JsonNode.Parse("""{"type":"realtime","output_modalities":["audio"],"audio":{"input":{"turn_detection":{"type":"semantic_vad","eagerness":"auto","create_response":true,"interrupt_response":true}},"output":{"voice":"marin"}}}""")!.AsObject();
@@ -109,6 +110,11 @@ public static class RealtimeConfiguration
                 ["newSessionExpireTime"] = Expiry(metadata["newSessionExpireTime"]?.ToString(), now, TimeSpan.FromMinutes(1)),
                 ["bidiGenerateContentSetup"] = GoogleSetup(model, config) };
             if (metadata["lockAdditionalFields"] is { } mask) payload["fieldMask"] = mask.DeepClone();
+        }
+        else if (provider == "smallestai")
+        {
+            payload = new();
+            if (metadata["variables"] is { } variables) payload["variables"] = variables.DeepClone();
         }
         else throw new NotSupportedException();
         return new() { ["model"] = model, ["providerOptions"] = new JsonObject { [provider] = payload } };

@@ -53,7 +53,7 @@ public sealed partial class AgentEditDialog
         var provider = DesktopAgent.Provider(DesktopAgent.Text(model["id"]));
         var metadata = (JsonObject)(model["providerMetadata"] as JsonObject ?? new()).DeepClone();
         var panel = Panel(); Action? commit = null;
-        if (type == "transcription" && provider is "openai" or "google" or "gladia")
+        if (type == "transcription" && provider is "openai" or "google" or "gladia" or "smallestai")
         {
             var preferences = new TranscriptionPreferences { Realtime = new() { ProviderOptions = metadata } };
             var form = new RealtimeTranscriptionSettingsForm(provider, preferences.Realtime);
@@ -72,7 +72,7 @@ public sealed partial class AgentEditDialog
             }
             JsonObject Options() => new(preferences.ProviderOptions.Select(pair => new KeyValuePair<string, JsonNode?>(pair.Key, pair.Value.DeepClone())));
         }
-        if (type == "transcription" && provider is not ("openai" or "google" or "gladia"))
+        if (type == "transcription" && provider is not ("openai" or "google" or "gladia" or "smallestai"))
             panel.Children.Add(new TextBlock { Text = DesktopResources.Get("AgentRealtimeUnsupported"), TextWrapping = TextWrapping.Wrap });
         if (commit is null && panel.Children.Count == 0) return;
         if (commit is not null) audioCommits[type] = commit;

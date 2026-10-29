@@ -9,6 +9,7 @@ public abstract class StreamingSpeechProtocol
     public abstract Uri Endpoint { get; }
     public int SampleRate { get; protected init; }
     public virtual bool CanFlush => false;
+    public virtual int QuietPeriodMilliseconds => 0;
     public abstract JsonObject Append(string text);
     public abstract JsonObject Finish();
     public abstract JsonObject Cancel();
@@ -18,7 +19,8 @@ public abstract class StreamingSpeechProtocol
         new Dictionary<string, Func<string, JsonObject, StreamingSpeechProtocol>>(StringComparer.Ordinal)
         {
             ["deepgram"] = (id, options) => new DeepgramSpeech(id, options),
-            ["cartesia"] = (id, options) => new CartesiaSpeech(id, options)
+            ["cartesia"] = (id, options) => new CartesiaSpeech(id, options),
+            ["smallestai"] = (id, options) => new SmallestSpeech(id, options)
         };
     public static bool Supports(ChatTarget? target) => target?.ModelType == "speech"
         && target.Tags.Contains("real-time") && target.Tags.Contains("realtime-token")
@@ -42,6 +44,41 @@ public abstract class StreamingSpeechProtocol
         var result = value.GetValue<double>();
         if (!double.IsFinite(result) || result < min || result > max) throw new InvalidOperationException("Invalid streaming speech setting.");
         return result;
+    }
+    private sealed class SmallestSpeech : StreamingSpeechProtocol
+    {
+        public override string Provider => "smallestai";
+        public override Uri Endpoint => new("wss://api.smallest.ai/waves/v1/tts/live");
+        public override int QuietPeriodMilliseconds => 5000;
+        private readonly string context = Guid.NewGuid().ToString();
+        private readonly string voice;
+        private readonly JsonObject payload;
+        public SmallestSpeech(string id, JsonObject options)
+        {
+            var parts = id.Split('/');
+            var model = parts[0].Replace('-', '_');
+            voice = (parts.Length == 2 ? parts[1] : (options["voice"] ?? options["voiceId"] ?? options["voice_id"])?.ToString())?.Trim() ?? "";
+            if (parts.Length > 2 || model is not ("lightning_v3.1" or "lightning_v3.1_pro") || voice.Length == 0)
+                throw new InvalidOperationException("Smallest AI streaming speech requires a supported model and voice.");
+            SampleRate = Rate(options, [8000, 16000, 24000, 44100]);
+            payload = new() { ["model"] = model, ["voice_id"] = voice, ["sample_rate"] = SampleRate, ["output_format"] = "pcm",
+                ["speed"] = Bounded(options["speed"], .5, 2) ?? 1, ["context_id"] = context, ["max_buffer_delay_ms"] = 200, ["complete_backoff_ms"] = 0 };
+            string[] languages = ["auto", "en", "hi", "mr", "kn", "ta", "bn", "gu", "te", "ml", "pa", "or", "es", "de", "fr", "it", "nl", "sv", "pt", "ru", "el", "fi", "no", "pl", "ar", "zh", "id", "ja", "ko", "ms", "tr", "vi"];
+            foreach (var (source, target) in new[] { ("language", "language"), ("numberPronunciationLanguage", "number_pronunciation_language"), ("dateFormat", "date_format") })
+            {
+                var value = options[source] ?? options[target];
+                if (value is null || value.ToString().Length == 0) continue;
+                if (!(target == "date_format" ? new[] { "EU", "US" } : languages).Contains(value.ToString())) throw new InvalidOperationException("Unsupported Smallest AI speech language or date format.");
+                payload[target] = value.DeepClone();
+            }
+            foreach (var (source, target) in new[] { ("wordTimestamps", "word_timestamps"), ("mathNotation", "math_notation") })
+                if ((options[source] ?? options[target]) is { } value) payload[target] = value.GetValue<bool>();
+        }
+        public override JsonObject Append(string text) { var result = (JsonObject)payload.DeepClone(); result["text"] = text; result["continue"] = true; return result; }
+        public override JsonObject Finish() => new() { ["context_id"] = context, ["voice_id"] = voice, ["continue"] = false };
+        public override JsonObject Cancel() => new() { ["context_id"] = context, ["cancel_request"] = true };
+        public override string? Audio(JsonObject message) => message["status"]?.ToString() == "chunk" ? message["data"]?["audio"]?.GetValue<string>() : null;
+        public override bool Done(JsonObject message) => message["status"]?.ToString() == "complete";
     }
     private sealed class DeepgramSpeech : StreamingSpeechProtocol
     {

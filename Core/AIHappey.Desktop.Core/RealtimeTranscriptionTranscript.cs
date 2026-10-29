@@ -63,6 +63,21 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     }
     public bool Apply(JsonObject message, double elapsed)
     {
+        if (provider == "smallestai")
+        {
+            if (message["type"]?.ToString() != "transcription") return false;
+            var text = (message["transcript"] ?? message["transcription"])?.ToString() ?? "";
+            if (message["is_final"]?.GetValue<bool>() != true) { preview = text; return true; }
+            preview = "";
+            if (string.IsNullOrWhiteSpace(text)) return true;
+            var item = Get("smallestai-" + sequence); item.Text = text; item.Final = true;
+            var words = (message["words"] as JsonArray ?? new()).Where(word => Number(word?["start"]) is not null && Number(word?["end"]) is not null).ToArray();
+            item.Start = words.Length > 0 ? words.Min(word => Number(word?["start"])!.Value) : null;
+            item.End = words.Length > 0 ? words.Max(word => Number(word?["end"])!.Value) : null;
+            // Keep elapsed fallback separate from verified provider timing.
+            if (item.Start is not null) lastEnd = item.End ?? item.Start.Value;
+            return true;
+        }
         if (provider == "google")
         {
             var content = message["serverContent"];

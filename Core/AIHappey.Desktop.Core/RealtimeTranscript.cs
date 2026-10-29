@@ -11,6 +11,7 @@ public sealed class RealtimeTranscript(Conversation conversation, string model)
     private readonly HashSet<string> completed = new(StringComparer.Ordinal);
     private string? liveDraft;
     private Role? liveSpeaker;
+    private readonly Dictionary<string, string> smallestTurns = new(StringComparer.Ordinal);
     public ConversationMessage Draft(string id, Role role)
     {
         if (drafts.TryGetValue(id, out var found)) return found;
@@ -31,6 +32,15 @@ public sealed class RealtimeTranscript(Conversation conversation, string model)
     public bool Apply(JsonObject value)
     {
         var type = value["type"]?.ToString() ?? "";
+        if (RealtimeConfiguration.Provider(model) == "smallestai" && type is "transcript" or "transcript.delta")
+        {
+            var role = value["role"]?.ToString();
+            if (role is not ("user" or "assistant") || value["text"] is not JsonValue transcriptText || !transcriptText.TryGetValue<string>(out var content)) throw new InvalidDataException("Invalid Smallest AI transcript.");
+            if (!smallestTurns.TryGetValue(role, out var id)) smallestTurns[role] = id = "smallest:" + Guid.NewGuid().ToString("N");
+            Text(id, role == "user" ? Role.user : Role.assistant, content, type == "transcript", false);
+            if (type == "transcript") smallestTurns.Remove(role);
+            return true;
+        }
         if (type is "session.input_transcript.delta" or "session.output_transcript.delta")
         {
             var role = type == "session.input_transcript.delta" ? Role.user : Role.assistant;

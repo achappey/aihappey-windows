@@ -179,6 +179,8 @@ public sealed partial class ChatShell
                     session.Settings.ConvertAttachmentsToText, documentExtractor, CancellationToken.None, selectedResources.ToArray(), selectedPrompt?.Parts);
                 RealtimeTranscript.InputContent(prepared.Message, RealtimeConfiguration.Provider(model.Id) == "google");
                 message = prepared.Message;
+                if (RealtimeConfiguration.Provider(model.Id) == "smallestai" && message.Parts.Any(part => part.Type != "text"))
+                    throw new NotSupportedException("Smallest AI agents accept text input only.");
                 if (prepared.Warnings.Count > 0) Show(string.Join("\n", prepared.Warnings), InfoBarSeverity.Warning);
             }
             if (partition != session.HistoryPartition || closing || activePage != DesktopPage.Realtime) return;
@@ -199,7 +201,7 @@ public sealed partial class ChatShell
                     if (provider == "openai" && chat.ProviderMetadata.TryGetValue(provider, out var openai))
                         foreach (var field in new[] { "truncation", "parallel_tool_calls" }) if (openai[field] is { } value) chatDefaults[field] = value.DeepClone();
                     var config = RealtimeConfiguration.Session(model.Id, preferences, instructions, definitions, chat.ToolChoice, chatDefaults);
-                    if (chat.MaxOutputTokens is { } maximum) config[provider == "openai" ? "max_output_tokens" : "maxOutputTokens"] = maximum;
+                    if (provider != "smallestai" && chat.MaxOutputTokens is { } maximum) config[provider == "openai" ? "max_output_tokens" : "maxOutputTokens"] = maximum;
                     var tokenClient = new DesktopRealtimeTokenClient(client, http);
                     var state = new RealtimeState(current, partition, model.Id, snapshot, preferences) { Live = RealtimeConfiguration.IsLive(model) };
                     realtime = state; UpdateRealtimeControls();
@@ -209,6 +211,7 @@ public sealed partial class ChatShell
                             RealtimeConfiguration.UsesSessions(model) ? (sdp, token) => tokenClient.CreateSessionAsync(model.Id, sdp,
                                 state.Live ? RealtimeConfiguration.LiveSession(preferences, instructions)
                                     : new JsonObject { ["providerOptions"] = new JsonObject { ["openai"] = new JsonObject { ["session"] = config.DeepClone() } } }, chat, token) : null, state.Live)
+                        : provider == "smallestai" ? new SmallestRealtimeSession(token => tokenClient.GetAsync(RealtimeConfiguration.TokenRequest(model.Id, preferences, config, DateTimeOffset.UtcNow), chat, provider, token))
                         : new GoogleRealtimeSession(RealtimeConfiguration.GoogleSetup(model.Id, config), (handle, token) =>
                         {
                             var resumed = (JsonObject)config.DeepClone();
@@ -245,7 +248,8 @@ public sealed partial class ChatShell
                     : new JsonObject { ["type"] = "conversation.item.create", ["item"] = new JsonObject { ["type"] = "message", ["role"] = "user", ["content"] = content } }, active.Lifetime.Token);
                 message = new UIMessage { Id = message.Id, Role = message.Role, Parts = message.Parts, Metadata = message.Metadata is null ? new() : new(message.Metadata) };
                 message.Metadata!["realtime"] = true; message.Metadata["model"] = active.Model;
-                active.Conversation.Messages.Add(new() { Message = message });
+                // Atoms emits authoritative transcripts for text input too; don't persist a duplicate.
+                if (RealtimeConfiguration.Provider(active.Model) != "smallestai") active.Conversation.Messages.Add(new() { Message = message });
                 if (selectedPrompt is null) input.Text = ""; ResetContext(); RenderTranscript();
                 await history.SaveAsync(active.Partition, active.Conversation);
                 if (!active.Google) await active.Connection.SendAsync(new() { ["type"] = "response.create" }, active.Lifetime.Token);
