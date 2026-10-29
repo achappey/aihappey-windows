@@ -34,6 +34,7 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     private int sequence;
     private double lastEnd;
     private string preview = "";
+    private bool mistralDone;
     private Item Get(string id)
     {
         if (!items.TryGetValue(id, out var item))
@@ -45,6 +46,12 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     }
     public RealtimeTranscriptionSnapshot Snapshot()
     {
+        if (provider == "mistral")
+        {
+            var exactText = items.GetValueOrDefault("mistral-session")?.Text ?? "";
+            if (exactText.Length > 2_000_000) throw new InvalidDataException("Transcription text limit exceeded.");
+            return new(exactText, "", []); // Deltas are already final; no provider timestamps are supplied.
+        }
         var ordered = items.Values.OrderBy(i => i.Start ?? double.MaxValue).ThenBy(i => i.Order).ToList();
         // OpenAI commit events explicitly identify predecessor order, even when completion events arrive out of order.
         if (provider == "openai" && previous.Count > 0)
@@ -63,6 +70,16 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     }
     public bool Apply(JsonObject message, double elapsed)
     {
+        if (provider == "mistral")
+        {
+            var eventType = message["type"]?.ToString();
+            if (eventType is not ("transcription.text.delta" or "transcription.done") || mistralDone) return false;
+            if (message["text"] is not JsonValue value || !value.TryGetValue<string>(out var text)) throw new InvalidDataException("Invalid Mistral transcript.");
+            var item = Get("mistral-session");
+            if (eventType == "transcription.done") { item.Text = text; mistralDone = true; }
+            else item.Text += text;
+            item.Final = true; return true;
+        }
         if (provider == "smallestai")
         {
             if (message["type"]?.ToString() != "transcription") return false;

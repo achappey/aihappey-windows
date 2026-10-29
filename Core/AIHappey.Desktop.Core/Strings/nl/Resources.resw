@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="TranscriptionMistralStreamingDelay" xml:space="preserve"><value>Streamingvertraging (ms): 80–1200 of 2400; standaard 480</value></data>
   <data name="Chart" xml:space="preserve"><value>Grafiek</value></data>
   <data name="Code" xml:space="preserve"><value>Code</value></data>
   <data name="CopyCode" xml:space="preserve"><value>Code kopiëren</value></data>

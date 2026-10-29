@@ -46,9 +46,10 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
         {
             var openai = new OpenAiRealtimeSession(Token, transcriptionInput: gatedInput); transport = openai; finish = openai.FinishTranscriptionAsync;
         }
-        else if (provider is "google" or "gladia" or "smallestai")
+        else if (provider is "google" or "gladia" or "smallestai" or "mistral")
         {
             var setup = provider == "google" ? RealtimeTranscriptionConfiguration.GoogleSetup(model, preferences)
+                : provider == "mistral" ? new JsonObject { ["model"] = model, ["session"] = RealtimeTranscriptionConfiguration.MistralSession(preferences.ProviderOptions[provider] as JsonObject ?? new()) }
                 : provider == "smallestai" ? RealtimeConfiguration.Merge(preferences.ProviderOptions[provider] as JsonObject ?? new(), new() { ["model"] = model }) : null;
             if (provider == "smallestai") _ = RealtimeTranscriptionConfiguration.SmallestConnection(model, setup!);
             var ws = new TranscriptionWebSocketSession(provider, setup, Token, gatedInput);

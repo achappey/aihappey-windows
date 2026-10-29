@@ -16,6 +16,9 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeFailureException.cs" Link="Core/RealtimeFailureException.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/OpenAiRealtimeSession.cs" Link="Core/OpenAiRealtimeSession.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/GoogleRealtimeSession.cs" Link="Core/GoogleRealtimeSession.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionWebSocketSession.cs" Link="Core/TranscriptionWebSocketSession.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTranscriptionTranscript.cs" Link="Core/RealtimeTranscriptionTranscript.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTranscriptionSession.cs" Link="Core/RealtimeTranscriptionSession.cs" />
     <PackageReference Include="SIPSorcery.OpenAI.Realtime" Version="10.0.18-pre" />
     <PackageReference Include="SIPSorceryMedia.Windows" Version="10.0.18-pre" />
   </ItemGroup>

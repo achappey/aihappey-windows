@@ -109,7 +109,7 @@ public sealed class TranscriptionSettingsDialog : ContentDialog, IResponsiveDial
         foreach (var provider in providers)
         {
             if (TranscriptionProviderForms.Create(provider, draft) is { } form) Add(form);
-            if (provider is "openai" or "google" or "gladia" or "smallestai") Add(new RealtimeTranscriptionSettingsForm(provider, draft.Realtime));
+            if (provider is "openai" or "google" or "gladia" or "smallestai" or "mistral") Add(new RealtimeTranscriptionSettingsForm(provider, draft.Realtime));
         }
         page.Content = forms.FirstOrDefault()?.View ?? (object)new TextBlock { Text = DesktopResources.Get("TranscriptionNoProviderSettings"), TextWrapping = TextWrapping.Wrap };
     }

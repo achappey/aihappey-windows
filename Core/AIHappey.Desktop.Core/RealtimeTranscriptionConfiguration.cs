@@ -12,6 +12,7 @@ public sealed class RealtimeTranscriptionPreferences
         if (ProviderOptions.ToJsonString().Length > 64_000) throw new ArgumentException("Transcription settings are too large.");
         _ = RealtimeTranscriptionConfiguration.TokenRequest("openai/validation", this, DateTimeOffset.UtcNow);
         _ = RealtimeTranscriptionConfiguration.TokenRequest("google/validation", this, DateTimeOffset.UtcNow);
+        _ = RealtimeTranscriptionConfiguration.MistralSession(ProviderOptions["mistral"] as JsonObject ?? new());
     }
 }
 
@@ -19,7 +20,37 @@ public static class RealtimeTranscriptionConfiguration
 {
     public static bool Supports(ChatTarget? model) => model is not null && model.Tags.Contains("real-time")
         && (RealtimeConfiguration.Provider(model.Id) is "openai" or "google" or "gladia"
-            || model.Id is "smallestai/pulse" or "smallestai/pulse-2");
+            || model.Id is "smallestai/pulse" or "smallestai/pulse-2"
+            || RealtimeConfiguration.Provider(model.Id) == "mistral" && IsMistralModel(model.Id));
+
+    public static bool IsMistralModel(string model) => RealtimeConfiguration.ModelName(model) is
+        "voxtral-mini-transcribe-realtime-2602" or "voxtral-mini-transcribe-realtime-3" or "voxtral-mini-transcribe-realtime-3-0";
+
+    public static Uri MistralConnection(string model)
+    {
+        if (!IsMistralModel(model)) throw new ArgumentException("Select a supported Mistral realtime transcription model.");
+        return new("wss://api.mistral.ai/v1/audio/transcriptions/realtime?model=" + Uri.EscapeDataString(RealtimeConfiguration.ModelName(model)));
+    }
+
+    public static JsonObject MistralSession(JsonObject options)
+    {
+        var delay = options["target_streaming_delay_ms"]?.GetValue<double>() ?? 480;
+        if (!double.IsFinite(delay) || delay != Math.Truncate(delay) || !((delay >= 80 && delay <= 1200) || delay == 2400))
+            throw new ArgumentException("Mistral streaming delay must be an integer from 80 to 1200, or 2400 ms.");
+        var session = new JsonObject { ["audio_format"] = new JsonObject { ["encoding"] = "pcm_s16le", ["sample_rate"] = 16000 }, ["target_streaming_delay_ms"] = (int)delay };
+        if (options["language"]?.ToString() is { Length: > 0 } language)
+        {
+            if (language.Length != 2 || language.Any(c => c is < 'a' or > 'z')) throw new ArgumentException("Mistral language must be a two-letter ISO 639-1 code.");
+            session["language"] = language;
+        }
+        if (options["context_bias"] is { } bias)
+        {
+            if (bias is not JsonArray terms || terms.Any(term => term is not JsonValue text || !text.TryGetValue<string>(out _)))
+                throw new ArgumentException("Mistral vocabulary hints must be a list of strings.");
+            session["context_bias"] = bias.DeepClone();
+        }
+        return session;
+    }
 
     public static Uri SmallestConnection(string model, JsonObject options)
     {
@@ -79,6 +110,12 @@ public static class RealtimeTranscriptionConfiguration
         else if (provider == "smallestai")
         {
             _ = SmallestConnection(model, options);
+            metadata = new();
+            if (options["ttl_seconds"] is { } ttl) metadata["ttl_seconds"] = ttl.DeepClone();
+        }
+        else if (provider == "mistral")
+        {
+            _ = MistralConnection(model); _ = MistralSession(options);
             metadata = new();
             if (options["ttl_seconds"] is { } ttl) metadata["ttl_seconds"] = ttl.DeepClone();
         }
