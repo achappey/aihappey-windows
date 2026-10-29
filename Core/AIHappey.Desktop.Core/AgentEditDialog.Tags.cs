@@ -11,6 +11,7 @@ public sealed partial class AgentEditDialog
     private StackPanel Details()
     {
         var panel = Panel();
+        fields.Text(panel, "agent.argumentHint", () => DesktopAgent.Text(draft.Definition["argumentHint"]), v => draft.Definition["argumentHint"] = v).Name = "AgentArgumentHint";
         var owners = availableAgents.Select(agent => agent.OwnedBy?.Trim()).Append(DesktopAgent.Text(draft.Definition["owned_by"]).Trim())
             .Where(owner => !string.IsNullOrEmpty(owner)).Cast<string>().Distinct(StringComparer.Ordinal).Order(StringComparer.CurrentCultureIgnoreCase).ToArray();
         var owner = new AutoSuggestBox { Name = "AgentOwnedBy", Header = DesktopResources.Get("AgentOwnedBy"), Text = DesktopAgent.Text(draft.Definition["owned_by"]),
@@ -30,13 +31,14 @@ public sealed partial class AgentEditDialog
             else { OwnerSuggestions(); owner.IsSuggestionListOpen = true; }
         };
         owner.LostFocus += (_, _) => { owner.IsSuggestionListOpen = false; owner.Text = owner.Text.Trim(); };
+        NativeSettingsSurface.Expander(panel, "AgentTags", DesktopResources.Get("AgentTags"), null, out var tags);
         var input = new AutoSuggestBox { Name = "AgentTagInput", Header = DesktopResources.Get("AgentTags"),
             QueryIcon = DesktopIcons.Create(Icon.ChevronDown, 12), HorizontalAlignment = HorizontalAlignment.Stretch };
         ControlAppearance.Stock(input); AutomationProperties.SetName(input, DesktopResources.Get("AgentTags"));
-        panel.Children.Add(input);
+        tags.Children.Add(input);
         var add = new Button { Name = "AgentTagAdd", Content = DesktopResources.Get("Add"), IsEnabled = false };
-        panel.Children.Add(add);
-        var selected = Panel(); panel.Children.Add(selected);
+        tags.Children.Add(add);
+        var selected = Panel(); tags.Children.Add(selected);
         var options = DesktopAgentMetadata.NormalizeTags(availableAgents.SelectMany(agent => agent.Tags).Concat(Current()))
             .Order(StringComparer.CurrentCultureIgnoreCase).ToArray();
 

@@ -44,6 +44,7 @@ internal sealed partial class AnthropicChatSettingsForm
                 }));
                 if (editing != index || draft is null) continue;
                 var editor = Column(row); var local = new ChatSettingsFields(); childFields["context_management"] = local;
+                local.Watch(() => changed?.Invoke());
                 local.Select(editor, A("contextManagement.type"), () => draft.String("type"), AnthropicChatConfig.ContextTypes,
                     value => { draft = new(AnthropicChatConfig.ContextDefault(value)); Render(); }, label: value => L(A("contextManagement.types." + value)));
                 ContextEditor(editor, local, draft);

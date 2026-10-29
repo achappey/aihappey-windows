@@ -20,7 +20,7 @@ internal static class AgentRealtimeRegressionTests
             "cross-provider audio changes never leak another provider's configuration");
         draft.SelectAudioModel("speech", "");
         check(draft.SpeechModel is null && agent.Definition.ToJsonString() == original, "clearing optional speech edits only the isolated draft");
-        var store = new DesktopAgentStore(directory); await store.SaveAsync("partition", agent, false, CancellationToken.None);
+        var store = new DesktopAgentStore(directory); await store.SaveAsync("partition", agent, null, CancellationToken.None);
         var restored = (await store.ListAsync("partition", [], CancellationToken.None)).Single();
         check(restored.Definition.ToJsonString() == original, "unsupported transcription and optional speech survive native storage round trips");
         var starts = 0; var turns = new List<string>(); var previews = new List<string>();

@@ -9,6 +9,13 @@ internal static class AgentRegressionTests
     public static async Task RunAsync(Action<bool, string> check, string root)
     {
         AgentOverviewRegressionTests.Run(check);
+        CheckSharedProviders(check);
+        var optionalSelection = new ChatSelection(); optionalSelection.Replace(["provider/model"]);
+        optionalSelection.Toggle("provider/model", multiple: false, allowEmpty: true);
+        check(optionalSelection.Ids.Count == 0, "optional single-select agent model pickers can clear their current model");
+        optionalSelection.Toggle("provider/model", multiple: false, allowEmpty: false);
+        optionalSelection.Toggle("provider/model", multiple: false, allowEmpty: false);
+        check(optionalSelection.Ids.SequenceEqual(["provider/model"]), "ordinary single-select chat model pickers retain their required selection");
         var original = DesktopAgent.Parse("""
             {"name":"PortableAgent","description":"Portable fixture","instructions":"Be concise","argumentHint":"Enter a goal","owned_by":"Team","tags":["support","internal"],
              "model":{"id":"openai/fixture","options":{"temperature":0.4,"future":true},"providerMetadata":{"reasoning":{"effort":"low","future":7},"futureProvider":{"keep":true}},"providerHeaders":{"OpenAI-Beta":"fixture=v1"},"futureModel":9},
@@ -184,6 +191,50 @@ internal static class AgentRegressionTests
             "backend agent execution retains its existing model-based request");
         await session.DisposeAsync();
     }
+    private static void CheckSharedProviders(Action<bool, string> check)
+    {
+        var agent = DesktopAgent.Parse("""
+            {"name":"Shared","description":"D","instructions":"I","models":[
+              {"id":"openai/one","type":"language","providerMetadata":{"reasoning":{"effort":"low","opaque":1},"one":true},"providerHeaders":{"X-Shared":"old","X-One":"keep"}},
+              {"id":"OPENAI/two","type":"language","providerMetadata":{"reasoning":{"effort":"medium","opaque":2},"two":true},"providerHeaders":{"X-Shared":"different","X-Two":"keep"},"options":{"keep":7}},
+              {"id":"anthropic/one","type":"language","providerMetadata":{"thinking":{"type":"adaptive"}},"future":true},
+              {"id":"router/one","type":"decision","providerMetadata":{"opaque":7},"providerHeaders":{"X-Router":"keep"}}]}
+            """);
+        var original = agent.Definition.DeepClone();
+        var groups = AgentProviderSettings.Groups(agent);
+        check(groups.Select(group => group.Provider).SequenceEqual(["openai", "anthropic", "router"]) && groups[0].Models.Count == 2,
+            "agent settings have one ordered group per provider, independent of model count and provider casing");
+        var shared = groups[0];
+        // A native form may project aliases/defaults differently from the stored document.
+        var canonical = OpenAIChatConfig.Canonical(shared.Metadata);
+        shared.Baseline(canonical, shared.Headers); shared.Commit(canonical, shared.Headers);
+        check(JsonNode.DeepEquals(agent.Definition, original), "opening and committing an unedited shared form preserves differing imported model settings exactly");
+        var edited = (JsonObject)canonical.DeepClone(); edited["reasoning"]!["effort"] = "high";
+        var headers = (JsonObject)shared.Headers.DeepClone(); headers["X-Shared"] = "new";
+        shared.Commit(edited, headers);
+        check(agent.Models.Take(2).All(model => DesktopAgent.Text(model["providerMetadata"]?["reasoning"]?["effort"]) == "high"
+            && DesktopAgent.Text(model["providerHeaders"]?["X-Shared"]) == "new"), "shared provider edits reach every matching model");
+        check(agent.Models[0]["providerMetadata"]?["reasoning"]?["opaque"]?.ToJsonString() == "1"
+            && agent.Models[1]["providerMetadata"]?["reasoning"]?["opaque"]?.ToJsonString() == "2"
+            && agent.Models[0]["providerMetadata"]?["one"] is not null && agent.Models[1]["providerMetadata"]?["two"] is not null
+            && agent.Models[0]["providerHeaders"]?["X-One"] is not null && agent.Models[1]["providerHeaders"]?["X-Two"] is not null
+            && agent.Models[1]["options"]?["keep"]?.ToJsonString() == "7", "shared edits preserve each model's unedited metadata, headers and options");
+        check(JsonNode.DeepEquals(agent.Models[2], original["models"]?[2]) && JsonNode.DeepEquals(agent.Models[3], original["models"]?[3]),
+            "shared edits never affect a different provider or its routing decision");
+        var once = agent.Definition.DeepClone(); shared.Commit(edited, headers);
+        check(JsonNode.DeepEquals(agent.Definition, once), "repeated provider commits are idempotent");
+        headers.Remove("X-Shared"); shared.Commit(edited, headers);
+        check(agent.Models.Take(2).All(model => model["providerHeaders"]?["X-Shared"] is null)
+            && agent.Models[0]["providerHeaders"]?["X-One"] is not null && agent.Models[1]["providerHeaders"]?["X-Two"] is not null,
+            "removing a shared header retains unrelated per-model headers");
+        agent.SelectModels(agent.Models.Select(model => (DesktopAgent.Text(model["id"]), (string?)DesktopAgent.Text(model["type"]))).Append(("openai/new", "language")));
+        foreach (var group in groups) group.InitializeNewModels(agent.Models);
+        check(JsonNode.DeepEquals(agent.Models.Last()["providerMetadata"], agent.Models[0]["providerMetadata"])
+            && JsonNode.DeepEquals(agent.Models.Last()["providerHeaders"], agent.Models[0]["providerHeaders"]), "new same-provider models inherit the shared configuration");
+        check(JsonNode.DeepEquals(DesktopAgent.Parse(agent.Definition.ToJsonString()).Definition, agent.Definition), "shared provider configuration survives export/import");
+        check(AgentProviderSettings.Groups(DesktopAgent.Empty()).Count == 0, "an empty model selection creates no spurious provider tab");
+    }
+
     private sealed class AgentRequestHandler : HttpMessageHandler
     {
         public JsonElement Body;

@@ -1047,6 +1047,10 @@
   <data name="AgentImportedCount" xml:space="preserve"><value>Imported {0} agents.</value></data>
   <data name="AgentDeleteConfirm" xml:space="preserve"><value>Delete the locally stored agent ΓÇ£{0}ΓÇ¥? Export it first if you want to keep a copy.</value></data>
   <data name="ChatForm_agent_general" xml:space="preserve"><value>General</value></data>
+  <data name="AgentIdentity" xml:space="preserve"><value>Identity</value></data>
+  <data name="SpeechPlaybackFailed" xml:space="preserve"><value>Windows could not play the speech audio. The text response is still available.</value></data>
+  <data name="ChatForm_providerMetadata" xml:space="preserve"><value>Provider metadata</value></data>
+  <data name="ChatForm_providerHeaders" xml:space="preserve"><value>Provider headers</value></data>
   <data name="ChatForm_agent_name" xml:space="preserve"><value>Name</value></data>
   <data name="ChatForm_agent_description" xml:space="preserve"><value>Description</value></data>
   <data name="ChatForm_agent_instructions" xml:space="preserve"><value>Instructions</value></data>

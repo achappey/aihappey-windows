@@ -58,7 +58,7 @@ internal sealed class ChatSettingsFields
             var valid = validate?.Invoke(box.Text) ?? true;
             if (valid) invalid.Remove(box); else invalid.Add(box);
             error.Visibility = valid ? Visibility.Collapsed : Visibility.Visible;
-            if (valid) Changed(() => write(box.Text));
+            if (valid) Changed(() => write(box.Text)); else Refresh();
         };
         return box;
     }
@@ -191,6 +191,7 @@ internal interface IChatProviderForm
     FrameworkElement View { get; }
     bool IsValid { get; }
     void FocusInvalid();
+    void Watch(Action update);
     void Commit(ChatPreferences preferences);
 }
 

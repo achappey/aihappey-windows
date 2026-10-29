@@ -33,7 +33,9 @@ public sealed partial class AgentEditDialog
         var panel = Panel(); panel.Name = "AgentSkillsView";
         var search = new TextBox { Name = "AgentSkillSearch", PlaceholderText = DesktopResources.Get("SearchSkills") };
         ControlAppearance.Stock(search); ToolbarControls.Label(search, DesktopResources.Get("SearchSkills")); panel.Children.Add(search);
-        var status = new TextBlock { TextWrapping = TextWrapping.Wrap }; panel.Children.Add(status);
+        var loading = new ProgressBar { Name = "AgentSkillsProgress", Height = 4, Visibility = Visibility.Collapsed };
+        AutomationProperties.SetName(loading, DesktopResources.Get("Loading")); panel.Children.Add(loading);
+        var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed }; panel.Children.Add(status);
         AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 }; panel.Children.Add(actions);
         var retry = new Button { Content = DesktopResources.Get("Retry"), Visibility = Visibility.Collapsed };
@@ -42,6 +44,8 @@ public sealed partial class AgentEditDialog
         var rows = Panel(); panel.Children.Add(rows); var more = new Button { Content = DesktopResources.Get("ShowMore"), Visibility = Visibility.Collapsed };
         ControlAppearance.Stock(more); panel.Children.Add(more); var visible = 50;
         var started = false;
+        var loadingNow = false;
+        Closed += (_, _) => { loading.IsIndeterminate = false; loading.Visibility = Visibility.Collapsed; };
         var renderQueued = false;
         void RequestRender()
         {
@@ -92,7 +96,10 @@ public sealed partial class AgentEditDialog
         }
         async Task Load()
         {
-            status.Text = DesktopResources.Get("Loading"); retry.Visibility = Visibility.Collapsed;
+            if (loadingNow || lifetime.IsCancellationRequested) return;
+            loadingNow = true;
+            status.Text = ""; status.Visibility = Visibility.Collapsed; retry.Visibility = Visibility.Collapsed;
+            loading.IsIndeterminate = true; loading.Visibility = Visibility.Visible;
             try
             {
                 var catalogItems = await catalog.ListAsync(CatalogKind.Skill, lifetime.Token); lifetime.Token.ThrowIfCancellationRequested();
@@ -107,7 +114,8 @@ public sealed partial class AgentEditDialog
                 Hydrate(catalogItems); status.Text = ""; RequestRender();
             }
             catch (OperationCanceledException) { }
-            catch { if (!lifetime.IsCancellationRequested) { status.Text = DesktopResources.Get("SkillsCatalogFailed"); retry.Visibility = Visibility.Visible; RequestRender(); } }
+            catch { if (!lifetime.IsCancellationRequested) { status.Text = DesktopResources.Get("SkillsCatalogFailed"); status.Visibility = Visibility.Visible; retry.Visibility = Visibility.Visible; RequestRender(); } }
+            finally { loadingNow = false; loading.IsIndeterminate = false; loading.Visibility = Visibility.Collapsed; }
         }
         Hydrate(localSkills.Select(s => new CatalogItem(CatalogKind.Skill, s.Id, s.Name, s.Description)
             { Origin = CatalogOrigin.Local, Version = s.Version, LatestVersion = s.Version }));

@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 
 namespace AIHappey.Desktop.Core;
@@ -14,7 +15,7 @@ public sealed partial class AgentEditDialog
         foreach (var type in new[] { "transcription", "speech" })
         {
             var title = DesktopResources.Get(type == "transcription" ? "Transcriptions" : "Speech");
-            NativeSettingsSurface.Card(panel, "AgentAudio_" + type, title, out var body);
+            NativeSettingsSurface.Expander(panel, "AgentAudio_" + type, title, null, out var body);
             var configuration = type == "transcription" ? draft.TranscriptionModel : draft.SpeechModel;
             var id = DesktopAgent.Text(configuration?["id"]);
             var options = ProviderPreferences.Filter(models, session.Settings).Where(m => m.ModelType == type
@@ -23,7 +24,9 @@ public sealed partial class AgentEditDialog
             var picker = new ChatTargetPicker { Name = "AgentAudioModel_" + type, AllowEmptySelection = true,
                 PlaceholderText = DesktopResources.Get("SelectModel"), HorizontalAlignment = HorizontalAlignment.Stretch, ItemsSource = options };
             picker.Configure(false, false, new HashSet<string>(), false, ""); picker.SetSelection(id.Length > 0 ? [id] : []);
-            ToolbarControls.Label(picker, title); body.Children.Add(picker);
+            var label = new TextBlock { Text = ChatSettingsFields.L("model") };
+            body.Children.Add(label);
+            ToolbarControls.Label(picker, label.Text); AutomationProperties.SetLabeledBy(picker, label); body.Children.Add(picker);
             picker.SelectionChanged += () =>
             {
                 try

@@ -18,6 +18,8 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
     private readonly List<(SettingsExpander Expander, StackPanel Body)> sections = [];
     public FrameworkElement View => cards;
     public bool IsValid => fields.IsValid && childFields.Values.All(f => f.IsValid);
+    private Action? changed;
+    public void Watch(Action update) { changed += update; fields.Watch(update); }
     public OpenAIChatSettingsForm(ChatPreferences preferences)
     {
         model = new(preferences.ProviderMetadata.GetValueOrDefault("openai") ?? new JsonObject(), preferences.ProviderHeaders.GetValueOrDefault("openai"));
@@ -237,6 +239,7 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
             var signature = values.Count + ":" + Active() + ":" + model.String(path + "/network_policy/type");
             if (signature == rendered) return; rendered = signature; secrets.Children.Clear();
             var local = new ChatSettingsFields(); childFields[path] = local;
+            local.Watch(() => changed?.Invoke());
             for (var i = 0; i < values.Count; i++)
             {
                 var index = i; var row = new StackPanel { Spacing = 8 }; secrets.Children.Add(row);
@@ -289,6 +292,7 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
                     Render(); var currentRow = (StackPanel)entries.Children[index];
                     var editor = new StackPanel { Spacing = 8 }; currentRow.Children.Add(editor);
                     var local = new ChatSettingsFields(); childFields["context_management"] = local;
+                    local.Watch(() => changed?.Invoke());
                     var type = OpenAIChatConfig.Text(values[index]?["type"]) ?? "compaction";
                     int threshold = values[index]?["compact_threshold"]?.GetValue<int>() ?? 1000;
                     local.Select(editor, "openai.contextManagement.type", () => type, ["compaction"], value => type = value);

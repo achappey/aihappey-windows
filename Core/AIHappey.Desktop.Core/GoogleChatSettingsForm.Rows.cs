@@ -19,6 +19,7 @@ internal sealed partial class GoogleChatSettingsForm
         {
             host.Children.Clear();
             var local = new ChatSettingsFields(); childFields[name] = local;
+            local.Watch(() => changed?.Invoke());
             var values = read();
             for (var i = 0; i < values.Count; i++)
             {
@@ -60,6 +61,7 @@ internal sealed partial class GoogleChatSettingsForm
     private void StringListEditor(Panel parent, string name, string label, string path, Func<bool> enabled)
     {
         var local = new ChatSettingsFields(); childFields[name] = local;
+        local.Watch(() => changed?.Invoke());
         var host = Column(parent);
         var draft = new TextBox { Name = "Google_" + name + "_Draft", Header = L(label), TextWrapping = TextWrapping.Wrap };
         ControlAppearance.Stock(draft); AutomationProperties.SetName(draft, L(label)); host.Children.Add(draft);

@@ -197,6 +197,55 @@ public sealed class DesktopAgent
             { ["readOnlyHint"] = false, ["openWorldHint"] = true, ["idempotentHint"] = false, ["destructiveHint"] = true } } });
 }
 
+/// <summary>One provider-scoped editor draft. Canonical form baselines are separate from the
+/// stored payload, so merely opening a form never normalizes imported model configurations.</summary>
+internal sealed class AgentProviderSettings(string provider, IReadOnlyList<JsonObject> models)
+{
+    public string Provider { get; } = provider;
+    public IReadOnlyList<JsonObject> Models { get; } = models;
+    public JsonObject Metadata { get; set; } = (JsonObject)(models[0]["providerMetadata"] as JsonObject ?? new()).DeepClone();
+    public JsonObject Headers { get; set; } = (JsonObject)(models[0]["providerHeaders"] as JsonObject ?? new()).DeepClone();
+    private JsonObject metadataBaseline = new();
+    private JsonObject headersBaseline = new();
+
+    public static IReadOnlyList<AgentProviderSettings> Groups(DesktopAgent agent) => agent.Models
+        .GroupBy(model => DesktopAgent.Provider(DesktopAgent.Text(model["id"])).ToLowerInvariant(), StringComparer.OrdinalIgnoreCase)
+        .Select(group => new AgentProviderSettings(group.Key, group.ToArray())).ToArray();
+
+    public void Baseline(JsonObject metadata, JsonObject headers)
+    {
+        metadataBaseline = (JsonObject)metadata.DeepClone(); headersBaseline = (JsonObject)headers.DeepClone();
+    }
+
+    public void Commit(JsonObject metadata, JsonObject headers)
+    {
+        foreach (var model in Models)
+        {
+            Apply(model, "providerMetadata", metadataBaseline, metadata);
+            Apply(model, "providerHeaders", headersBaseline, headers);
+        }
+        Baseline(metadata, headers);
+    }
+
+    private static void Apply(JsonObject model, string key, JsonObject before, JsonObject after)
+    {
+        if (JsonNode.DeepEquals(before, after)) return;
+        var target = model[key] as JsonObject ?? new();
+        DesktopAgent.ApplyChanges(target, before, after);
+        if (key == "providerHeaders" && target.Count == 0) model.Remove(key);
+        else model[key] = target;
+    }
+
+    public void InitializeNewModels(IReadOnlyList<JsonObject> selected)
+    {
+        var existing = Models.Select(model => DesktopAgent.Text(model["id"])).ToHashSet(StringComparer.Ordinal);
+        foreach (var model in selected.Where(model => !existing.Contains(DesktopAgent.Text(model["id"]))
+            && DesktopAgent.Provider(DesktopAgent.Text(model["id"])).Equals(Provider, StringComparison.OrdinalIgnoreCase)))
+            foreach (var key in new[] { "providerMetadata", "providerHeaders" })
+                if (Models[0].ContainsKey(key)) model[key] = Models[0][key]?.DeepClone(); else model.Remove(key);
+    }
+}
+
 public static class DesktopAgentMetadata
 {
     public static IReadOnlyList<string> NormalizeTags(IEnumerable<string> values) => values.Select(value => value.Trim())

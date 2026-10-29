@@ -1043,6 +1043,10 @@
   <data name="AgentImportedCount" xml:space="preserve"><value>{0} agents ge├»mporteerd.</value></data>
   <data name="AgentDeleteConfirm" xml:space="preserve"><value>De lokaal opgeslagen agent ΓÇ£{0}ΓÇ¥ verwijderen? Exporteer de agent eerst als je een kopie wilt bewaren.</value></data>
   <data name="ChatForm_agent_general" xml:space="preserve"><value>Algemeen</value></data>
+  <data name="AgentIdentity" xml:space="preserve"><value>Identiteit</value></data>
+  <data name="SpeechPlaybackFailed" xml:space="preserve"><value>Windows kon de spraakaudio niet afspelen. Het tekstantwoord blijft beschikbaar.</value></data>
+  <data name="ChatForm_providerMetadata" xml:space="preserve"><value>Providermetagegevens</value></data>
+  <data name="ChatForm_providerHeaders" xml:space="preserve"><value>Providerheaders</value></data>
   <data name="ChatForm_agent_name" xml:space="preserve"><value>Naam</value></data>
   <data name="ChatForm_agent_description" xml:space="preserve"><value>Beschrijving</value></data>
   <data name="ChatForm_agent_instructions" xml:space="preserve"><value>Instructies</value></data>

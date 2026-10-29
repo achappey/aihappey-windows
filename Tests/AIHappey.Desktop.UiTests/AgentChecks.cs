@@ -40,13 +40,20 @@ public partial class App
         DesktopAgent? saved = null; dialog.SaveAsync = (agent, _) => { saved = agent; return Task.CompletedTask; };
         SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(120); dialog.UpdateLayout();
         var tabs = Descendants(dialog).OfType<NavigationView>().Single();
-        Check(tabs.MenuItems.Count == 8 && !dialog.IsPrimaryButtonEnabled, context + ": eight native tabs; existing multi-answer agent requires a decision model");
+        Check(tabs.MenuItems.Count == 10 && !dialog.IsPrimaryButtonEnabled, context + ": eight standard tabs and two provider tabs; existing multi-answer agent requires a decision model");
         Check(tabs.MenuItems.OfType<NavigationViewItem>().Take(2).Select(t => t.Tag as string).SequenceEqual(["general", "details"])
             && ((NavigationViewItem)tabs.MenuItems[1]).Content.ToString() == "Details"
             && tabs.MenuItems.OfType<NavigationViewItem>().Single(t => t.Tag as string == "checks").Content.ToString() == "Tests",
             context + ": second tab is Details and evaluations are labeled Tests");
         Check(!Descendants(dialog).OfType<TextBox>().Single(b => b.Name == "AgentName").IsEnabled, context + ": immutable name while editing");
         Check(JsonNode.DeepEquals(dialog.Draft.Definition, original.Definition), context + ": opening leaves full JSON unchanged");
+        var identity = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "AgentIdentity");
+        var instructionsSection = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "AgentInstructionsSection");
+        Check(identity.IsExpanded && instructionsSection.IsExpanded && !Descendants(identity).OfType<ToggleSwitch>().Any()
+            && !Descendants(instructionsSection).OfType<ToggleSwitch>().Any(), context + ": Identity and Instructions open without on/off switches");
+        Check(Descendants(identity).OfType<TextBox>().Any(b => b.Name == "AgentDescription")
+            && Descendants(instructionsSection).OfType<TextBox>().Single(b => b.Name == "AgentInstructions").MinHeight >= 240
+            && !Descendants(dialog).OfType<TextBox>().Any(b => b.Name == "AgentArgumentHint"), context + ": General separates identity from a taller instructions editor and omits Argument hint");
         Check(!Descendants(dialog).OfType<AutoSuggestBox>().Any(b => b.Name is "AgentOwnedBy" or "AgentTagInput"), context + ": General has no owner or tags fields");
         var model = Descendants(dialog).OfType<ChatTargetPicker>().Single(b => b.Name == "AgentModels");
         var decision = Descendants(dialog).OfType<ChatTargetPicker>().Single(b => b.Name == "AgentDecisionModel");
@@ -58,7 +65,7 @@ public partial class App
             context + ": Models is a compact dropdown without an inline list or routing help text");
         model.Focus(FocusState.Programmatic); await Task.Delay(80);
         Check(!model.IsSuggestionListOpen, context + ": keyboard focus alone does not expand the model picker");
-        InvokeButton(model); await Task.Delay(80);
+        await OpenAgentPickerAsync(model); await Task.Delay(80);
         var popup = (StackPanel)((Flyout)model.Flyout).Content;
         var choices = Descendants(popup).OfType<ListView>().Single();
         var searchModels = Descendants(popup).OfType<TextBox>().Single(b => b.Name == "TargetSearch");
@@ -69,16 +76,18 @@ public partial class App
         Check(Descendants(popup).OfType<Button>().Where(b => b.Name is "SelectAllFavorites" or "FavoriteAgentRouter").All(b => b.Visibility == Visibility.Collapsed),
             context + ": agent model picker hides chat-only routing actions");
         choices.SelectedItems.Add(options.Single(t => t.Id == "other/fixture")); await Task.Delay(60);
-        model.IsSuggestionListOpen = false; InvokeButton(decision); await Task.Delay(60);
+        model.IsSuggestionListOpen = false; await OpenAgentPickerAsync(decision); await Task.Delay(60);
         var decisionChoices = Descendants((StackPanel)((Flyout)decision.Flyout).Content).OfType<ListView>().Single();
         var decisionOptions = ((IEnumerable<ChatTarget>)decision.ItemsSource).ToArray();
         Check(decisionChoices.SelectionMode == ListViewSelectionMode.Single && decisionOptions.All(t => t.ModelType == "decision"),
             context + ": decision picker offers only decision models with single selection");
         decisionChoices.SelectedItem = decisionOptions.Single(t => t.Id == "router/fixture"); await Task.Delay(60);
-        InvokeButton(model); await Task.Delay(60);
+        await OpenAgentPickerAsync(model); await Task.Delay(60);
         Check(dialog.Draft.ModelIds.SequenceEqual(["openai/fixture", "retired/fixture", "other/fixture", "router/fixture"])
             && DesktopAgent.Text(dialog.Draft.Models.Last()["type"]) == "decision" && model.IsSuggestionListOpen,
-            context + ": separate answer and decision selections commit into the same ordered collection");
+            context + ": separate answer and decision selections commit into the same ordered collection; ids=" + string.Join(",", dialog.Draft.ModelIds)
+            + "; decision=" + string.Join(",", decision.Selection.Ids) + "; flyout=" + model.IsSuggestionListOpen
+            + "; feedback=" + string.Join(" | ", Descendants(dialog).OfType<TextBlock>().Where(block => block.Visibility == Visibility.Visible && block.Text == DesktopResources.Get("ChatSettingsInvalid")).Select(block => block.Text)));
         Check(dialog.IsPrimaryButtonEnabled, context + ": selecting a decision enables Save");
         searchModels.Text = "Other"; await Task.Delay(60);
         Check(choices.Items.OfType<ChatTarget>().Select(t => t.Id).SequenceEqual(["other/fixture"])
@@ -87,34 +96,41 @@ public partial class App
         searchModels.Text = ""; await Task.Delay(60);
         Check(choices.SelectedItems.OfType<ChatTarget>().Select(t => t.Id).ToHashSet().SetEquals(["openai/fixture", "retired/fixture"]),
             context + ": filtered uncheck changes only that model and restores the other checkmarks");
-        model.IsSuggestionListOpen = false; InvokeButton(decision); await Task.Delay(40);
+        model.IsSuggestionListOpen = false; await OpenAgentPickerAsync(decision); await Task.Delay(40);
         decisionChoices.SelectedItem = null; await Task.Delay(40);
-        Check(!dialog.IsPrimaryButtonEnabled, context + ": clearing the required decision disables Save");
-        InvokeButton(model); await Task.Delay(40);
+        Check(!dialog.IsPrimaryButtonEnabled, context + ": clearing the required decision disables Save; ids=" + string.Join(",", dialog.Draft.ModelIds)
+            + "; decision=" + string.Join(",", decision.Selection.Ids) + "; selected row=" + decisionChoices.SelectedItem);
+        await OpenAgentPickerAsync(model); await Task.Delay(40);
         choices.SelectedItems.Add(options.Single(t => t.Id == "other/fixture")); await Task.Delay(60);
-        SelectNativeTab(tabs, "providers"); await Task.Delay(60);
+        SelectNativeTab(tabs, "provider-other"); await Task.Delay(60);
         Check(!model.IsSuggestionListOpen, context + ": changing tabs closes the model flyout");
-        var settingsModel = Descendants(dialog).OfType<ComboBox>().Single(b => b.Name == "AgentSettingsModel");
-        settingsModel.SelectedItem = "other/fixture"; await Task.Delay(60);
-        Check(((NavigationViewItem)tabs.SelectedItem).Content.ToString() == "other", context + ": provider tab follows the selected settings model");
-        Descendants(dialog).OfType<ComboBox>().Single(b => b.Name == "AgentSettingsModel").SelectedItem = "openai/fixture"; await Task.Delay(60);
-        Check(((NavigationViewItem)tabs.SelectedItem).Content.ToString() == "OpenAI", context + ": provider settings can return to the first model");
+        Check(((NavigationViewItem)tabs.SelectedItem).Content.ToString() == "other" && !Descendants(dialog).OfType<ComboBox>().Any(b => b.Name == "AgentSettingsModel"),
+            context + ": unsupported provider has its own tab and no model selector");
+        SelectNativeTab(tabs, "provider-openai"); await Task.Delay(60);
+        Check(((NavigationViewItem)tabs.SelectedItem).Content.ToString() == "OpenAI" && Descendants(dialog).OfType<SettingsExpander>().Any(e => e.Name == "OpenAI_reasoning")
+            && !Descendants(dialog).OfType<ComboBox>().Any(b => b.Name == "AgentSettingsModel"), context + ": OpenAI has its own native form without a model selector");
         SelectNativeTab(tabs, "general"); await Task.Delay(60);
-        InvokeButton(model); await Task.Delay(60);
+        await OpenAgentPickerAsync(model); await Task.Delay(60);
         choices.SelectedItems.Remove(options.Single(t => t.Id == "other/fixture"));
         Check(dialog.Draft.ModelIds.SequenceEqual(["openai/fixture", "retired/fixture"])
             && JsonNode.DeepEquals(dialog.Draft.Models[0]["providerMetadata"], original.Models[0]["providerMetadata"])
             && JsonNode.DeepEquals(dialog.Draft.Models[0]["providerHeaders"], original.Models[0]["providerHeaders"])
             && JsonNode.DeepEquals(dialog.Draft.Models[1]["providerMetadata"], original.Models[1]["providerMetadata"]),
             context + ": selection and provider-tab changes preserve existing and imported model configuration");
-        model.IsSuggestionListOpen = false; InvokeButton(decision); await Task.Delay(40);
+        model.IsSuggestionListOpen = false; await OpenAgentPickerAsync(decision); await Task.Delay(40);
         decisionChoices.SelectedItem = decisionOptions.Single(t => t.Id == "router/fixture"); await Task.Delay(40);
         SelectNativeTab(tabs, "details"); await Task.Delay(60); dialog.UpdateLayout();
+        var tagsSection = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "AgentTags");
+        var iconsSection = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "AgentIcons");
+        Check(!tagsSection.IsExpanded && !iconsSection.IsExpanded, context + ": Details tags and icons start collapsed");
+        var hint = Descendants(dialog).OfType<TextBox>().Single(b => b.Name == "AgentArgumentHint");
+        hint.Text = "New argument hint";
+        tagsSection.IsExpanded = true; await Task.Delay(60); dialog.UpdateLayout();
         var owner = Descendants(dialog).OfType<AutoSuggestBox>().Single(b => b.Name == "AgentOwnedBy");
         var tagInput = Descendants(dialog).OfType<AutoSuggestBox>().Single(b => b.Name == "AgentTagInput");
-        Check(owner.Header.ToString() == "Owner" && owner.Text == "Imported team"
+        Check(owner.Header.ToString() == "Owner" && owner.Text == "Imported team" && hint.TransformToVisual(dialog).TransformPoint(new()).Y < owner.TransformToVisual(dialog).TransformPoint(new()).Y
             && owner.TransformToVisual(dialog).TransformPoint(new()).Y < tagInput.TransformToVisual(dialog).TransformPoint(new()).Y,
-            context + ": Details shows Owner above Tags and retains imported values");
+            context + ": Details shows Argument hint first, then Owner above Tags, and retains imported values");
         owner.Text = ""; await Task.Delay(40);
         Check(dialog.Draft.Definition["owned_by"] is null, context + ": clearing Owner removes only the stored ownership value");
         owner.Text = "New team"; tagInput.Text = "new tag"; await Task.Delay(40);
@@ -127,7 +143,25 @@ public partial class App
             context + ": Details edits persist across tab switches");
         InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "AgentTagRemove" && b.Tag as string == "new tag"));
         Check((dialog.Draft.Definition["tags"] as JsonArray)!.Select(DesktopAgent.Text).SequenceEqual(["saved"]), context + ": Details can remove a tag independently");
+        iconsSection.IsExpanded = true; await Task.Delay(60);
+        Check(Descendants(iconsSection).OfType<TextBox>().Any(b => b.Name == "AgentIconNewUrl")
+            && Descendants(iconsSection).OfType<ComboBox>().Any(b => b.Name == "AgentIconNewTheme")
+            && Descendants(iconsSection).OfType<Button>().Any(b => b.Name == "AgentIconAdd"), context + ": all icon entry controls are inside the native Icons expander");
+        Descendants(iconsSection).OfType<TextBox>().Single(b => b.Name == "AgentIconNewUrl").Text = "https://example.com/icon.png";
+        InvokeButton(Descendants(iconsSection).OfType<Button>().Single(b => b.Name == "AgentIconAdd")); await Task.Delay(40);
+        Check(Descendants(iconsSection).OfType<TextBox>().Any(b => b.Name == "AgentIconUrl"), context + ": Icons expander retains add/edit functionality");
+        InvokeButton(Descendants(iconsSection).OfType<Button>().Single(b => b.Name == "AgentIconRemove"));
         var contextBefore = dialog.Draft.Definition["mcpClient"]?.DeepClone();
+        SelectNativeTab(tabs, "realtime"); await Task.Delay(60);
+        foreach (var type in new[] { "transcription", "speech" })
+        {
+            var audio = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "AgentAudio_" + type);
+            Check(!audio.IsExpanded, context + ": " + type + " starts collapsed");
+            audio.IsExpanded = true; await Task.Delay(40);
+            var audioPicker = Descendants(audio).OfType<ChatTargetPicker>().Single();
+            Check(AutomationProperties.GetLabeledBy(audioPicker) is TextBlock { Text: "Model" } label && label.ActualHeight > 0,
+                context + ": " + type + " has a visible, accessible Model label");
+        }
         SelectNativeTab(tabs, "modelContext"); await Task.Delay(60); dialog.UpdateLayout();
         var policySection = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "AgentPolicy");
         Check(!policySection.IsExpanded && JsonNode.DeepEquals(dialog.Draft.Definition["mcpClient"], contextBefore), context + ": policy is initially collapsed without changing draft values");
@@ -156,8 +190,21 @@ public partial class App
         SelectNativeTab(tabs, "tools"); await Task.Delay(60);
         var tool = Descendants(dialog).OfType<ToggleSwitch>().First(); tool.IsOn = true;
         Check((dialog.Draft.Definition["tools"] as JsonArray)?.Any(t => DesktopAgent.Text(t?["type"]) == "tool_search") == true, context + ": native Tools toggle edits supported local tool");
-        SelectNativeTab(tabs, "skills"); await Task.Delay(180); dialog.UpdateLayout();
-        Check(handler.SkillLists == 1 && Descendants(dialog).OfType<TextBox>().Any(b => b.Name == "AgentSkillSearch"), context + ": Skills catalog loads automatically with one search field");
+        handler.SkillListGate = new(TaskCreationOptions.RunContinuationsAsynchronously); handler.FailNextSkillList = true;
+        SelectNativeTab(tabs, "skills"); await Task.Delay(60); dialog.UpdateLayout();
+        var skillsProgress = Descendants(dialog).OfType<ProgressBar>().Single(b => b.Name == "AgentSkillsProgress");
+        Check(skillsProgress.IsIndeterminate && skillsProgress.Visibility == Visibility.Visible && AutomationProperties.GetName(skillsProgress) == "Loading"
+            && !Descendants(dialog).OfType<TextBlock>().Any(b => b.Text == "Loading"), context + ": Skills uses an accessible progress bar instead of Loading text");
+        handler.SkillListGate.SetResult(); await Task.Delay(120);
+        Check(!skillsProgress.IsIndeterminate && skillsProgress.Visibility == Visibility.Collapsed
+            && Descendants(dialog).OfType<TextBlock>().Any(b => b.Text == DesktopResources.Get("SkillsCatalogFailed") && b.Visibility == Visibility.Visible),
+            context + ": failed skill loading stops progress and shows an error");
+        handler.SkillListGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Content as string == DesktopResources.Get("Retry") && b.Visibility == Visibility.Visible)); await Task.Delay(60);
+        Check(skillsProgress.IsIndeterminate && skillsProgress.Visibility == Visibility.Visible, context + ": Retry restarts skill loading progress");
+        handler.SkillListGate.SetResult(); await Task.Delay(180); dialog.UpdateLayout();
+        Check(handler.SkillLists == 2 && skillsProgress.Visibility == Visibility.Collapsed && !skillsProgress.IsIndeterminate
+            && Descendants(dialog).OfType<TextBox>().Any(b => b.Name == "AgentSkillSearch"), context + ": Skills catalog retry succeeds and hides progress");
         var skill = Descendants(dialog).OfType<ToggleSwitch>().Single(t => t.Name == "AgentSkillEnabled" && t.Tag as string == "provider/sample"); skill.IsOn = true; await Task.Delay(80);
         Check((dialog.Draft.Definition["skills"] as JsonArray)?.Any(s => DesktopAgent.Text(s?["skill_id"]) == "provider/sample" && DesktopAgent.Text(s?["version"]) == "latest") == true,
             context + ": enabling catalog skill stores reference/latest without an add form");
@@ -180,7 +227,8 @@ public partial class App
         InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await shown;
         Check(saved is not null && original.Definition["tools"] is null && JsonNode.DeepEquals(saved.Definition["plugins"], original.Definition["plugins"])
             && JsonNode.DeepEquals(saved.Definition["responseFormat"], original.Definition["responseFormat"])
-            && DesktopAgent.Text(saved.Definition["owned_by"]) == "New team" && DesktopAgent.Text(original.Definition["owned_by"]) == "Imported team",
+            && DesktopAgent.Text(saved.Definition["owned_by"]) == "New team" && DesktopAgent.Text(original.Definition["owned_by"]) == "Imported team"
+            && DesktopAgent.Text(saved.Definition["argumentHint"]) == "New argument hint",
             context + ": Save preserves deferred plugin/schema JSON and commits Details without changing the original");
         var create = new AgentEditDialog(DesktopAgent.Empty(), false, session, catalog, http, models) { XamlRoot = root.XamlRoot };
         SystemAppearance.PrepareDialog(create); shown = create.ShowAsync(); await Task.Delay(100);
@@ -189,7 +237,7 @@ public partial class App
         Descendants(create).OfType<TextBox>().Single(b => b.Name == "AgentDescription").Text = "Description";
         Descendants(create).OfType<TextBox>().Single(b => b.Name == "AgentInstructions").Text = "Instructions";
         var createModel = Descendants(create).OfType<ChatTargetPicker>().Single(b => b.Name == "AgentModels");
-        InvokeButton(createModel); await Task.Delay(60);
+        await OpenAgentPickerAsync(createModel); await Task.Delay(60);
         var createChoices = Descendants((StackPanel)((Flyout)createModel.Flyout).Content).OfType<ListView>().Single();
         var first = ((IEnumerable<ChatTarget>)createModel.ItemsSource).First();
         createChoices.SelectedItems.Add(first); await Task.Delay(40);
@@ -201,15 +249,15 @@ public partial class App
         createChoices.SelectedItems.Add(second); await Task.Delay(40);
         Check(!create.IsPrimaryButtonEnabled && createDecisionField.Visibility == Visibility.Visible && createDecision.Selection.Ids.Count == 0,
             context + ": a second answer reveals a required unselected decision field");
-        createModel.IsSuggestionListOpen = false; InvokeButton(createDecision); await Task.Delay(40);
+        createModel.IsSuggestionListOpen = false; await OpenAgentPickerAsync(createDecision); await Task.Delay(40);
         var createDecisionChoices = Descendants((StackPanel)((Flyout)createDecision.Flyout).Content).OfType<ListView>().Single();
         var createDecisionOptions = ((IEnumerable<ChatTarget>)createDecision.ItemsSource).ToArray();
         createDecisionChoices.SelectedItem = createDecisionOptions.Single(t => t.Id == "router/fixture"); await Task.Delay(40);
         Check(create.IsPrimaryButtonEnabled, context + ": two answers and one decision enable Save");
-        InvokeButton(createDecision); await Task.Delay(40);
+        await OpenAgentPickerAsync(createDecision); await Task.Delay(40);
         createDecisionChoices.SelectedItem = createDecisionOptions.Single(t => t.Id == "router/alternative"); await Task.Delay(40);
         Check(create.Draft.ModelIds.SequenceEqual([first.Id, second.Id, "router/alternative"]), context + ": replacing the router retains answers and stores exactly one decision");
-        InvokeButton(createModel); await Task.Delay(40);
+        await OpenAgentPickerAsync(createModel); await Task.Delay(40);
         createChoices.SelectedItems.Remove(second); await Task.Delay(40);
         Check(!create.IsPrimaryButtonEnabled && createDecisionField.Visibility == Visibility.Collapsed
             && create.Draft.ModelIds.SequenceEqual([first.Id, "router/alternative"])
@@ -227,8 +275,74 @@ public partial class App
         InvokeButton(Descendants(create).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
         Check(create.Result is null, context + ": Cancel never commits a draft");
         await CheckDecisionOnlyAgentsAsync(root, session, catalog, http, models, context);
+        await CheckSharedAgentProvidersAsync(root, session, catalog, http, context);
+        var cancelled = new AgentEditDialog(original, true, session, catalog, http, models) { XamlRoot = root.XamlRoot };
+        SystemAppearance.PrepareDialog(cancelled); var cancelledShown = cancelled.ShowAsync(); await Task.Delay(80);
+        handler.SkillListGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        SelectNativeTab(Descendants(cancelled).OfType<NavigationView>().Single(), "skills"); await Task.Delay(60);
+        var cancelledProgress = Descendants(cancelled).OfType<ProgressBar>().Single(b => b.Name == "AgentSkillsProgress");
+        cancelled.Hide(); await cancelledShown; await Task.Delay(60);
+        Check(!cancelledProgress.IsIndeterminate && cancelledProgress.Visibility == Visibility.Collapsed && cancelled.Result is null,
+            context + ": closing during skill loading cancels the request and stops progress without committing");
         File.WriteAllLines(report, results); window.Content = null; await session.DisposeAsync();
         await CheckAgentHeaderAsync(theme);
+    }
+
+    private async Task CheckSharedAgentProvidersAsync(Grid root, DesktopSession session, DesktopCatalogClient catalog, HttpClient http, string context)
+    {
+        var original = DesktopAgent.Parse("""
+            {"name":"SharedProviderAgent","description":"D","instructions":"I","models":[
+              {"id":"openai/one","type":"language","providerMetadata":{"reasoning":{"effort":"low","opaque":1}}},
+              {"id":"openai/two","type":"language","providerMetadata":{"reasoning":{"effort":"low","opaque":2}}},
+              {"id":"anthropic/one","type":"language","providerMetadata":{"max_tokens":64000,"thinking":{"type":"adaptive"},"keep":true}},
+              {"id":"router/fixture","type":"decision","providerMetadata":{"keep":7}}]}
+            """);
+        var models = new ChatTarget[] { new("openai/one", "One") { ModelType = "language" }, new("openai/two", "Two") { ModelType = "language" },
+            new("openai/new", "New") { ModelType = "language" }, new("anthropic/one", "Anthropic") { ModelType = "language" },
+            new("router/fixture", "Router") { ModelType = "decision" } };
+        var dialog = new AgentEditDialog(original, true, session, catalog, http, models) { XamlRoot = root.XamlRoot };
+        DesktopAgent? saved = null; dialog.SaveAsync = (agent, _) => { saved = agent; return Task.CompletedTask; };
+        SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(100);
+        var tabs = Descendants(dialog).OfType<NavigationView>().Single();
+        Check(tabs.MenuItems.OfType<NavigationViewItem>().Where(item => (item.Tag as string)?.StartsWith("provider-") == true).Select(item => item.Content.ToString())
+            .SequenceEqual(["OpenAI", "Anthropic", "router"]), context + ": same-provider models share one named tab; other providers get separate tabs");
+        SelectNativeTab(tabs, "provider-anthropic"); await Task.Delay(60);
+        Check(Descendants(dialog).OfType<SettingsExpander>().Any(e => e.Name.StartsWith("Anthropic_")), context + ": Anthropic reuses its native configuration form");
+        SelectNativeTab(tabs, "provider-openai"); await Task.Delay(60);
+        Check(Descendants(dialog).OfType<SettingsExpander>().Count(e => e.Name == "OpenAI_reasoning") == 1
+            && !Descendants(dialog).OfType<ComboBox>().Any(b => b.Name == "AgentSettingsModel"), context + ": OpenAI has one shared form and no duplicate model selector");
+        var reasoning = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "OpenAI_reasoning");
+        reasoning.IsExpanded = true; await Task.Delay(60);
+        var effort = Descendants(reasoning).OfType<Slider>().Single(); effort.Value = effort.Maximum - 1;
+        SelectNativeTab(tabs, "provider-router"); await Task.Delay(60);
+        var raw = Descendants(dialog).OfType<TextBox>().Single(box => box.Header as string == DesktopResources.Get("AgentProviderMetadata"));
+        var rawBefore = raw.Text; raw.Text = "{"; await Task.Delay(40);
+        Check(!dialog.IsPrimaryButtonEnabled, context + ": invalid provider input immediately disables Save");
+        SelectNativeTab(tabs, "general"); await Task.Delay(60);
+        var picker = Descendants(dialog).OfType<ChatTargetPicker>().Single(p => p.Name == "AgentModels");
+        await OpenAgentPickerAsync(picker); await Task.Delay(60);
+        var choices = Descendants((StackPanel)((Flyout)picker.Flyout).Content).OfType<ListView>().Single();
+        var added = ((IEnumerable<ChatTarget>)picker.ItemsSource).Single(model => model.Id == "openai/new");
+        choices.SelectedItems.Add(added); await Task.Delay(60);
+        Check((tabs.SelectedItem as NavigationViewItem)?.Tag as string == "provider-router" && !dialog.Draft.ModelIds.Contains("openai/new") && raw.Text == "{",
+            context + ": model changes cannot discard invalid provider text and reveal the offending tab");
+        raw.Text = rawBefore; await Task.Delay(40); Check(dialog.IsPrimaryButtonEnabled, context + ": fixing provider input enables Save");
+        SelectNativeTab(tabs, "general"); await Task.Delay(40);
+        await OpenAgentPickerAsync(picker); await Task.Delay(40); choices.SelectedItems.Add(added); await Task.Delay(80);
+        Check(dialog.Draft.Models.Where(model => DesktopAgent.Provider(DesktopAgent.Text(model["id"])) == "openai")
+            .All(model => DesktopAgent.Text(model["providerMetadata"]?["reasoning"]?["effort"]) == "xhigh"), context + ": shared OpenAI edits survive rebuilds and reach new same-provider selections");
+        SelectNativeTab(tabs, "provider-openai"); await Task.Delay(40);
+        foreach (var width in new[] { 500, 1100 })
+        {
+            window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(80); dialog.UpdateLayout();
+            Check(Descendants(dialog).OfType<ScrollViewer>().All(view => view.ScrollableWidth < 1), context + $": shared provider form fits at {width}px");
+        }
+        InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "PrimaryButton")); await shown;
+        Check(saved is not null && saved.Models.Take(2).All(model => DesktopAgent.Text(model["providerMetadata"]?["reasoning"]?["effort"]) == "xhigh")
+            && saved.Models[0]["providerMetadata"]?["reasoning"]?["opaque"]?.ToJsonString() == "1"
+            && saved.Models[1]["providerMetadata"]?["reasoning"]?["opaque"]?.ToJsonString() == "2"
+            && JsonNode.DeepEquals(saved.Models[2], original.Models[2]) && JsonNode.DeepEquals(saved.Models[3], original.Models[3])
+            && DesktopAgent.Text(original.Models[0]["providerMetadata"]?["reasoning"]?["effort"]) == "low", context + ": Save applies shared edits losslessly while retaining other providers and the original agent");
     }
 
     private async Task CheckDecisionOnlyAgentsAsync(Grid root, DesktopSession session, DesktopCatalogClient catalog, HttpClient http,
@@ -251,9 +365,9 @@ public partial class App
             Check(dialog.IsPrimaryButtonEnabled && picker.Selection.Ids.SequenceEqual(["router/fixture"])
                 && Descendants(dialog).OfType<StackPanel>().Single(b => b.Name == "AgentDecisionModelField").Visibility == Visibility.Collapsed
                 && JsonNode.DeepEquals(dialog.Draft.Definition, original.Definition), context + $": {shape}, catalog={available}: standalone decision opens unchanged and saveable");
-            SelectNativeTab(Descendants(dialog).OfType<NavigationView>().Single(), "providers"); await Task.Delay(30);
-            Check(Descendants(dialog).OfType<ComboBox>().Single(b => b.Name == "AgentSettingsModel").SelectedItem as string == "router/fixture",
-                context + ": decision remains selectable for provider settings");
+            SelectNativeTab(Descendants(dialog).OfType<NavigationView>().Single(), "provider-router"); await Task.Delay(30);
+            Check(Descendants(dialog).OfType<TextBox>().Count(b => b.Header?.ToString() is "Provider metadata" or "Provider headers") == 2
+                && !Descendants(dialog).OfType<ComboBox>().Any(b => b.Name == "AgentSettingsModel"), context + ": decision provider has its own lossless settings page without a model selector");
             InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await shown;
             Check(saved is not null && JsonNode.DeepEquals(saved.Definition, original.Definition), context + $": {shape}, catalog={available}: Save preserves the exact document and legacy-field presence");
         }
@@ -262,7 +376,7 @@ public partial class App
             false, session, catalog, http, models) { XamlRoot = root.XamlRoot };
         SystemAppearance.PrepareDialog(create); var created = create.ShowAsync(); await Task.Delay(100);
         var main = Descendants(create).OfType<ChatTargetPicker>().Single(b => b.Name == "AgentModels");
-        InvokeButton(main); await Task.Delay(40);
+        await OpenAgentPickerAsync(main); await Task.Delay(40);
         var choices = Descendants((StackPanel)((Flyout)main.Flyout).Content).OfType<ListView>().Single();
         ChatTarget Option(string id) => ((IEnumerable<ChatTarget>)main.ItemsSource).Single(t => t.Id == id);
         choices.SelectedItems.Add(Option("router/fixture")); await Task.Delay(40);
@@ -389,6 +503,16 @@ public partial class App
             context + ": normal chat model picker retains its full model ID");
     }
 
+    private async Task OpenAgentPickerAsync(ChatTargetPicker picker)
+    {
+        // WinUI flyouts animate asynchronously. Reopening while the prior single-select
+        // popup is closing can leave the test editing an unloaded ListView.
+        picker.IsSuggestionListOpen = false; await Task.Delay(200);
+        picker.StartBringIntoView(); await Task.Delay(200);
+        InvokeButton(picker); await Task.Delay(200);
+        Check(picker.IsSuggestionListOpen, "Agent picker opens after native transitions: " + picker.Name);
+    }
+
     private static bool Within(FrameworkElement control, FrameworkElement surface)
     {
         var point = control.TransformToVisual(surface).TransformPoint(new Windows.Foundation.Point(0, 0));
@@ -405,7 +529,9 @@ public partial class App
     private sealed class AgentUiHandler : HttpMessageHandler
     {
         public int SkillLists;
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        public TaskCompletionSource? SkillListGate;
+        public bool FailNextSkillList;
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested(); HttpContent content;
             if (request.RequestUri!.AbsolutePath.EndsWith("/content"))
@@ -418,10 +544,15 @@ public partial class App
             else
             {
                 var versions = request.RequestUri.AbsolutePath.EndsWith("/versions"); if (!versions) SkillLists++;
+                if (!versions)
+                {
+                    if (SkillListGate is { } gate) await gate.Task.WaitAsync(ct);
+                    if (FailNextSkillList) { FailNextSkillList = false; return new(HttpStatusCode.InternalServerError); }
+                }
                 content = new StringContent(versions ? """{"data":[{"id":"version-2","version":"2"}],"has_more":false}"""
                     : """{"data":[{"id":"provider/sample","name":"Sample skill","description":"Sample description","default_version":"1","latest_version":"2"},{"id":"provider/other","name":"Other skill","description":"Other description","default_version":"1"}],"has_more":false}""", Encoding.UTF8, "application/json");
             }
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = content });
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = content };
         }
     }
     private sealed class AgentUiHost : IDesktopHost

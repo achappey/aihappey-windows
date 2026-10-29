@@ -14,6 +14,8 @@ internal abstract class NativeProviderChatSettingsForm(string prefix) : IChatPro
     private readonly List<(SettingsExpander Expander, StackPanel Body)> sections = [];
     public FrameworkElement View => cards;
     public bool IsValid => fields.IsValid && childFields.Values.All(f => f.IsValid);
+    protected Action? changed;
+    public void Watch(Action update) { changed += update; fields.Watch(update); }
     public abstract void Commit(ChatPreferences preferences);
     public void FocusInvalid()
     {

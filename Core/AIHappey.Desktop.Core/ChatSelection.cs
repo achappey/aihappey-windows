@@ -16,7 +16,7 @@ public sealed class ChatSelection
     public void Toggle(string id, bool multiple, bool allowEmpty)
     {
         if (FavoriteRouter) { FavoriteRouter = false; Replace([id]); return; }
-        if (!multiple) { Replace([id]); return; }
+        if (!multiple) { Replace(allowEmpty && ids.Contains(id) ? [] : [id]); return; }
         if (!ids.Contains(id)) ids.Add(id);
         else if (allowEmpty || ids.Count > 1) ids.Remove(id);
     }

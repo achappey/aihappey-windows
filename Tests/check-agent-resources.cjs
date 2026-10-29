@@ -12,6 +12,7 @@ for (const file of files) {
     const source = fs.readFileSync(path.join(core, file), 'utf8');
     for (const match of source.matchAll(/DesktopResources\.(?:Get|Format)\("([^"]+)"(?!\s*\+)/g)) requireKey(match[1], file);
     for (const match of source.matchAll(/ChatSettingsFields\.L\("([^"]+)"\)/g)) requireKey('ChatForm_' + match[1].replace(/[.:]/g, '_'), file);
+    for (const match of source.matchAll(/editor\.Fields\.Json\([^,]+,\s*"([^"]+)"/g)) requireKey('ChatForm_' + match[1].replace(/[.:]/g, '_'), file);
     for (const match of source.matchAll(/(?:fields\.(?:Text|Select|Switch|Integer)|Card)\([^,]+,\s*"(agent\.[^"]+)"(?!\s*\+)/g)) requireKey('ChatForm_' + match[1].replace(/[.:]/g, '_'), file);
 }
 for (const key of ['AgentEdit', 'AgentCreate', 'ChatForm_agent_readOnlyHint', 'ChatForm_agent_destructiveHint',
@@ -25,7 +26,8 @@ for (const language of ['en', 'nl']) {
     const missing = [...references].filter(([key]) => !keys.includes(key));
     assert.deepEqual(missing.map(([key, files]) => `${key}: ${[...files].join(', ')}`), [], `${language}: missing agent resources`);
     const labels = { Details: 'Details', AgentOwnedBy: language === 'en' ? 'Owner' : 'Eigenaar',
-        AgentModels: language === 'en' ? 'Models' : 'Modellen', AgentChecks: 'Tests' };
+        AgentModels: language === 'en' ? 'Models' : 'Modellen', AgentChecks: 'Tests',
+        AgentIdentity: language === 'en' ? 'Identity' : 'Identiteit' };
     for (const [key, expected] of Object.entries(labels)) {
         const value = xml.match(new RegExp(`<data\\s+name="${key}"[^>]*>\\s*<value>([^<]*)</value>`))?.[1];
         assert.equal(value, expected, `${language}: agent editor ${key} label`);

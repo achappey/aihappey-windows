@@ -11,7 +11,7 @@ public sealed partial class AgentEditDialog
     private StackPanel Icons()
     {
         var panel = Panel();
-        NativeSettingsSurface.Card(panel, "AgentIcons", DesktopResources.Get("AgentIcons"), out var body);
+        NativeSettingsSurface.Expander(panel, "AgentIcons", DesktopResources.Get("AgentIcons"), null, out var body);
         var rows = Panel(); body.Children.Add(rows);
         var source = IconUrl("AgentIconNewUrl", ""); body.Children.Add(source);
         var theme = IconTheme("", _ => { }); theme.Name = "AgentIconNewTheme"; body.Children.Add(theme);
