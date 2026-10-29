@@ -19,6 +19,13 @@ for (const key of ['AgentEdit', 'AgentCreate', 'ChatForm_agent_readOnlyHint', 'C
     'ChatForm_agent_openWorldHint', 'ChatForm_agent_idempotentHint', 'ChatForm_agent_caller_direct', 'ChatForm_agent_caller_programmatic',
     'ChatForm_agent_tools_all', 'ChatForm_agent_tools_none', 'ChatForm_agent_tools_selected', 'ChatForm_agent_tool_search', 'ChatForm_agent_resource_search']) requireKey(key, 'dynamic agent label');
 for (const type of ['concurrent', 'sequential', 'groupchat', 'handoff', 'decisions', 'magentic']) requireKey('Workflow_' + type, 'dynamic workflow label');
+const audioForm = fs.readFileSync(path.join(core, 'AgentEditDialog.Audio.cs'), 'utf8');
+assert.doesNotMatch(audioForm, /AgentSpeechOptionsHint/, 'The realtime speech form must not render a description beneath sample rate.');
+for (const [field, label] of [['voice', 'SpeechVoice'], ['instructions', 'SpeechInstructions'], ['language', 'SpeechLanguage']]) {
+    assert.ok(audioForm.includes(`Text("${field}", "${label}"`), `The ${field} field must use its concise localized label.`);
+    requireKey(label, 'AgentEditDialog.Audio.cs');
+}
+assert.match(audioForm, /Name = "AgentSpeechSpeed", Header = DesktopResources.Get\("SpeechSpeed"\)/);
 for (const language of ['en', 'nl']) {
     const xml = fs.readFileSync(path.join(core, 'Strings', language, 'Resources.resw'), 'utf8');
     const keys = [...xml.matchAll(/<data\s+name="([^"]+)"/g)].map(match => match[1]);
@@ -27,7 +34,11 @@ for (const language of ['en', 'nl']) {
     assert.deepEqual(missing.map(([key, files]) => `${key}: ${[...files].join(', ')}`), [], `${language}: missing agent resources`);
     const labels = { Details: 'Details', AgentOwnedBy: language === 'en' ? 'Owner' : 'Eigenaar',
         AgentModels: language === 'en' ? 'Models' : 'Modellen', AgentChecks: 'Tests',
-        AgentIdentity: language === 'en' ? 'Identity' : 'Identiteit' };
+        AgentIdentity: language === 'en' ? 'Identity' : 'Identiteit',
+        SpeechVoice: language === 'en' ? 'Voice' : 'Stem',
+        SpeechInstructions: language === 'en' ? 'Instructions' : 'Instructies',
+        SpeechLanguage: language === 'en' ? 'Language' : 'Taal',
+        SpeechSpeed: language === 'en' ? 'Speed' : 'Snelheid' };
     for (const [key, expected] of Object.entries(labels)) {
         const value = xml.match(new RegExp(`<data\\s+name="${key}"[^>]*>\\s*<value>([^<]*)</value>`))?.[1];
         assert.equal(value, expected, `${language}: agent editor ${key} label`);

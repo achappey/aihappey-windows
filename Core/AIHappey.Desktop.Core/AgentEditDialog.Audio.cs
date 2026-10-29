@@ -120,7 +120,6 @@ public sealed partial class AgentEditDialog
             if (double.IsNaN(rate.Value)) value.Remove("rate"); else value["rate"] = rate.Value;
             Set("outputFormat", value);
         };
-        body.Children.Add(new TextBlock { Text = DesktopResources.Get("AgentSpeechOptionsHint"), TextWrapping = TextWrapping.Wrap });
 
         void Set(string key, JsonNode? value)
         {
