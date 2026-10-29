@@ -129,7 +129,9 @@ public sealed partial class ChatShell
                         new() { ProviderOptions = (JsonObject)(transcription["providerMetadata"] as JsonObject ?? new()).DeepClone() },
                         (payload, token) => new DesktopRealtimeTokenClient(client, http).GetAsync(payload, AgentAudioHeaders(transcription),
                             DesktopAgent.Provider(DesktopAgent.Text(transcription["id"])), token),
-                        onEvent: value => voice.Turns.Apply(value));
+                        onEvent: value => voice.Turns.Apply(value),
+                        onAudioActivity: DesktopAgent.Provider(DesktopAgent.Text(transcription["id"])) == "mistral"
+                            ? value => voice.Turns.Activity(value) : null);
                     using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, state.Lifetime.Token);
                     try
                     {
@@ -137,6 +139,7 @@ public sealed partial class ChatShell
                         if (!RealtimeCurrent(state)) throw new OperationCanceledException(linked.Token);
                         current.Service = ServiceKind.Agents; current.Target = selected.Id; current.Metadata["realtime"] = true; current.Metadata["realtimeAgent"] = selected.Id;
                         if (current.Messages.Count == 0) current.Title = DesktopResources.Get("RealtimeConversation");
+                        voice.Turns.SetMuted(realtimeMute.IsChecked == true);
                         await voice.Connection.SetMutedAsync(realtimeMute.IsChecked == true);
                         state.Connected = true; state.Pump = PumpAgentRealtimeAsync(state); UpdateRealtimeControls();
                     }

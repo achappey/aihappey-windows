@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using System.Collections.Concurrent;
 using AIHappey.Desktop.Core;
 
 internal static class AgentRealtimeRegressionTests
@@ -98,10 +99,57 @@ internal static class AgentRealtimeRegressionTests
             gladia.Dispose(); gladia.Apply(JsonNode.Parse("""{"type":"transcript","data":{"is_final":true,"utterance":{"start":2,"text":"Late"}}}""")!.AsObject());
             check(turns.Count == 1, "disposed voice session rejects stale transcription callbacks");
         }
+        await MistralTurnsAsync(check);
         var parts = new[] { """{"type":"text","text":"I will run a tool"}""", """{"type":"tool-example","input":{"secret":1},"output":{"secret":2}}""",
             """{"type":"step-start"}""", """{"type":"reasoning","text":"Private reasoning"}""", """{"type":"text","text":"Final answer"}""" }
             .Select(json => PortableConversations.Part(JsonNode.Parse(json)!.AsObject())).ToArray();
         check(AgentRealtimeResponse.FinalText(parts) == "Final answer", "speech includes only final answer, never tool-step narration, inputs, outputs or reasoning");
         check(AgentRealtimeResponse.FinalText(parts.Take(2)) == "", "tool-only completion produces no speech");
+    }
+    private static async Task MistralTurnsAsync(Action<bool, string> check)
+    {
+        var starts = 0;
+        var previews = new ConcurrentQueue<string>(); var turns = new ConcurrentQueue<string>();
+        using var handler = new AgentRealtimeTurns("mistral", () => Interlocked.Increment(ref starts), previews.Enqueue, turns.Enqueue);
+        void Delta(string text) => handler.Apply(new() { ["type"] = "transcription.text.delta", ["text"] = text });
+        void Final(string text) => handler.Apply(new() { ["type"] = "transcription.done", ["text"] = text });
+        async Task AwaitTurns(int count)
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            while (turns.Count < count) await Task.Delay(10, timeout.Token);
+        }
+        handler.Activity(true); Delta(" \n");
+        check(starts == 0 && turns.IsEmpty, "Mistral activity and whitespace alone never interrupt an LLM run");
+        foreach (var text in new[] { "Hel", "lo", ",", " world", "!" }) Delta(text);
+        check(starts == 1 && previews.Last() == "Hello, world!", "Mistral token previews preserve spacing without inventing word separators");
+        await Task.Delay(1000);
+        check(turns.IsEmpty, "Mistral does not submit a turn while the microphone still detects speech");
+        handler.Activity(false); await AwaitTurns(1);
+        check(turns.SequenceEqual(["Hello, world!"]), "Mistral submits one combined utterance after silence");
+        foreach (var _ in new[] { 1, 2 })
+        {
+            handler.Activity(true); Delta(" Yes."); handler.Activity(false); await AwaitTurns(turns.Count + 1);
+        }
+        check(turns.SequenceEqual(["Hello, world!", "Yes.", "Yes."]), "Mistral accepts identical successive utterances as distinct turns");
+        Delta(" Discard."); handler.SetMuted(true); Delta(" Muted tail.");
+        handler.SetMuted(false); handler.Activity(true); Delta(" Keep.");
+        Final(" \nHello, world! Yes. Yes. Discard. Muted tail. Keep corrected.");
+        Final(" \nHello, world! Yes. Yes. Discard. Muted tail. Keep corrected."); Delta("late");
+        await Task.Delay(1000);
+        check(turns.SequenceEqual(["Hello, world!", "Yes.", "Yes.", "Keep corrected."]), "Mistral cumulative final emits only the unsubmitted tail and excludes muted/reset content and duplicate terminal events");
+
+        var resetTurns = new ConcurrentQueue<string>();
+        using var reset = new AgentRealtimeTurns("mistral", () => { }, _ => { }, resetTurns.Enqueue);
+        reset.Apply(new() { ["type"] = "transcription.text.delta", ["text"] = "Discard." }); reset.Reset();
+        reset.Apply(new() { ["type"] = "transcription.done", ["text"] = "Discard." });
+        check(resetTurns.IsEmpty, "Mistral reset prevents a cumulative final from reviving a discarded draft");
+        using var disposed = new AgentRealtimeTurns("mistral", () => { }, _ => { }, resetTurns.Enqueue);
+        disposed.Apply(new() { ["type"] = "transcription.text.delta", ["text"] = "Never send" }); disposed.Dispose();
+        await Task.Delay(1000);
+        check(resetTurns.IsEmpty, "Mistral disposal cancels pending silence timers");
+        using var corrected = new AgentRealtimeTurns("mistral", () => { }, _ => { }, resetTurns.Enqueue);
+        corrected.Apply(new() { ["type"] = "transcription.text.delta", ["text"] = "draft" });
+        corrected.Apply(new() { ["type"] = "transcription.done", ["text"] = "Corrected." });
+        check(resetTurns.SequenceEqual(["Corrected."]), "Mistral final is authoritative before any text has been submitted");
     }
 }

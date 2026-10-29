@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Buffers.Binary;
 using System.Text.Json.Nodes;
 using System.Threading.Channels;
 
@@ -29,18 +30,21 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
     private bool connected;
     private volatile bool muted;
     private readonly Action<JsonObject>? onEvent;
+    private readonly string provider;
+    private readonly TranscriptionAudioActivity? activity;
     public ChannelReader<RealtimeTranscriptionSnapshot> Updates => updates.Reader;
     public RealtimeTranscriptionSnapshot Snapshot { get; private set; } = new("", "", []);
 
     public RealtimeTranscriptionSession(string model, RealtimeTranscriptionPreferences preferences,
         Func<JsonObject, CancellationToken, Task<string>> getToken, ITranscriptionAudioInput? audioInput = null,
-        Action<JsonObject>? onEvent = null)
+        Action<JsonObject>? onEvent = null, Action<bool>? onAudioActivity = null)
     {
         preferences = preferences.Clone(); preferences.Validate();
-        var provider = RealtimeConfiguration.Provider(model); transcript = new(provider);
+        provider = RealtimeConfiguration.Provider(model); transcript = new(provider);
         input = audioInput ?? new TranscriptionAudioInput(provider == "openai" ? 48000 : 16000); ownsInput = audioInput is null;
         this.onEvent = onEvent;
-        var gatedInput = new MutedInput(input, () => muted);
+        activity = onAudioActivity is null ? null : new TranscriptionAudioActivity(onAudioActivity);
+        var gatedInput = new MutedInput(input, () => muted, activity);
         Task<string> Token(CancellationToken ct) => getToken(RealtimeTranscriptionConfiguration.TokenRequest(model, preferences, DateTimeOffset.UtcNow), ct);
         if (provider == "openai")
         {
@@ -76,7 +80,9 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
             {
                 if (message["type"]?.ToString() is "error" or "conversation.item.input_audio_transcription.failed")
                     throw new RealtimeFailureException("transcription-provider", "The provider reported a transcription error.");
-                if (!muted) onEvent?.Invoke((JsonObject)message.DeepClone());
+                // Mistral's handler must advance its cumulative cursor through
+                // muted/discarded deltas, without presenting them as new turns.
+                if (!muted || provider == "mistral") onEvent?.Invoke((JsonObject)message.DeepClone());
                 if (!transcript.Apply(message, clock.Elapsed.TotalSeconds)) continue;
                 Snapshot = transcript.Snapshot(); updates.Writer.TryWrite(Snapshot);
             }
@@ -99,12 +105,58 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
         }
     }
     public async ValueTask DisposeAsync() => await StopAsync().ConfigureAwait(false);
-    public Task SetMutedAsync(bool value) { muted = value; return Task.CompletedTask; }
-    private sealed class MutedInput(ITranscriptionAudioInput source, Func<bool> muted) : ITranscriptionAudioInput
+    public Task SetMutedAsync(bool value) { muted = value; activity?.Reset(); return Task.CompletedTask; }
+    private sealed class MutedInput(ITranscriptionAudioInput source, Func<bool> muted, TranscriptionAudioActivity? activity) : ITranscriptionAudioInput
     {
         public int SampleRate => source.SampleRate;
-        public IDisposable Subscribe(Action<byte[]> audio, Action<Exception> failed) => source.Subscribe(
-            bytes => audio(muted() ? new byte[bytes.Length] : bytes), failed);
+        public IDisposable Subscribe(Action<byte[]> audio, Action<Exception> failed) => source.Subscribe(bytes =>
+        {
+            var silent = muted();
+            activity?.Push(bytes, source.SampleRate, silent);
+            audio(silent ? new byte[bytes.Length] : bytes);
+        }, failed);
         public void Dispose() { } // Capture ownership remains with the session/caller.
+    }
+}
+
+/// <summary>PCM16 mono activity hints only; never manufactures transcription or an LLM turn.</summary>
+public sealed class TranscriptionAudioActivity(Action<bool> changed)
+{
+    private readonly object gate = new();
+    private bool speaking;
+    private double loudMs, quietMs;
+    public void Push(byte[] bytes, int sampleRate, bool muted = false)
+    {
+        lock (gate)
+        {
+            if (muted) { Reset(); return; }
+            var count = bytes.Length / 2;
+            if (count == 0 || sampleRate <= 0) return;
+            double energy = 0;
+            for (var i = 0; i < count; i++)
+            {
+                var sample = BinaryPrimitives.ReadInt16LittleEndian(bytes.AsSpan(i * 2, 2)) / 32768d;
+                energy += sample * sample;
+            }
+            var duration = count * 1000d / sampleRate;
+            if (Math.Sqrt(energy / count) > 0.025)
+            {
+                loudMs += duration; quietMs = 0;
+                if (!speaking && loudMs >= 120) { speaking = true; changed(true); }
+            }
+            else
+            {
+                loudMs = 0; quietMs += duration;
+                if (speaking && quietMs >= 600) { speaking = false; changed(false); }
+            }
+        }
+    }
+    public void Reset()
+    {
+        lock (gate)
+        {
+            loudMs = quietMs = 0;
+            if (speaking) { speaking = false; changed(false); }
+        }
     }
 }

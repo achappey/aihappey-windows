@@ -85,7 +85,7 @@ public sealed partial class ChatShell
             UpdateRealtimeControls();
             if (realtime?.AgentVoice is { } voice)
             {
-                voice.Turns?.Reset(); voice.Draft = null;
+                voice.Turns?.SetMuted(realtimeMute.IsChecked == true); voice.Draft = null;
                 await voice.Connection!.SetMutedAsync(realtimeMute.IsChecked == true); RenderTranscript(); return;
             }
             if (realtime?.Connection is { } connection) try { await connection.SetMutedAsync(realtimeMute.IsChecked == true); } catch { await RealtimeFailedAsync(); }

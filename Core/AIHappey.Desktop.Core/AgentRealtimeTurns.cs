@@ -14,14 +14,32 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
     private Timer? timer;
     private bool active, disposed;
     private string? unkeyedFinal;
+    private bool muted, speaking, mistralDone;
+    private string mistralText = "";
+    private int mistralThrough, mistralTimerVersion;
+    public void Activity(bool value)
+    {
+        lock (gate)
+        {
+            if (disposed || muted || provider != "mistral") return;
+            speaking = value;
+            ScheduleMistral();
+        }
+    }
+    public void SetMuted(bool value)
+    {
+        lock (gate) { muted = value; if (value) Reset(); }
+    }
     public void Apply(JsonObject message)
     {
         lock (gate)
         {
             if (disposed) return;
+            if (muted && provider != "mistral") return;
             if (message["event_id"] is { } eventId && !events.Add(eventId.ToString())) return;
             var type = message["type"]?.ToString();
-            if (provider == "openai")
+            if (provider == "mistral") ApplyMistral(message, type);
+            else if (provider == "openai")
             {
                 var id = message["item_id"]?.ToString();
                 if (id is null || completed.Contains(id)) return;
@@ -59,6 +77,48 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
             }
         }
     }
+    private void ApplyMistral(JsonObject message, string? type)
+    {
+        if (mistralDone || message["text"] is not JsonValue value || !value.TryGetValue<string>(out var text)) return;
+        if (type == "transcription.text.delta")
+        {
+            mistralText += text;
+            if (muted) { mistralThrough = mistralText.Length; return; }
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                Start(); preview(mistralText[mistralThrough..].Trim()); ScheduleMistral();
+            }
+        }
+        else if (type == "transcription.done")
+        {
+            mistralDone = true;
+            // The final is cumulative. Never replay corrections to a prefix that
+            // has already been submitted, reset, or discarded while muted.
+            if (text.StartsWith(mistralText[..mistralThrough], StringComparison.Ordinal)) mistralText = text;
+            if (muted) mistralThrough = mistralText.Length;
+            var tail = mistralText[mistralThrough..].Trim();
+            if (tail.Length > 0 && !muted) { Start(); preview(tail); }
+            FinishMistral();
+        }
+    }
+    private void ScheduleMistral()
+    {
+        timer?.Dispose(); timer = null;
+        var version = ++mistralTimerVersion;
+        if (disposed || muted || speaking || string.IsNullOrWhiteSpace(mistralText[mistralThrough..])) return;
+        timer = new Timer(_ =>
+        {
+            lock (gate)
+                if (version == mistralTimerVersion && !speaking && !muted && !disposed) FinishMistral();
+        }, null, 900, Timeout.Infinite);
+    }
+    private void FinishMistral()
+    {
+        ++mistralTimerVersion; timer?.Dispose(); timer = null;
+        var text = mistralText[mistralThrough..].Trim();
+        mistralThrough = mistralText.Length; active = false;
+        if (text.Length > 0 && !muted && !disposed) turn(text);
+    }
     private void Start() { if (!active) { active = true; started(); } }
     private void Preview(string text)
     {
@@ -85,6 +145,7 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
         {
             timer?.Dispose(); timer = null; foreach (var id in partials.Keys) completed.Add(id);
             partials.Clear(); fragments.Clear(); active = false;
+            ++mistralTimerVersion; speaking = false; mistralThrough = mistralText.Length;
         }
     }
     public void Dispose() { lock (gate) { disposed = true; Reset(); } }

@@ -8,6 +8,21 @@ internal static class MistralTranscriptionTests
 {
     public static async Task Run(Action<bool, string> check)
     {
+        var activityEvents = new List<bool>();
+        var activity = new TranscriptionAudioActivity(activityEvents.Add);
+        var loudFrame = Enumerable.Range(0, 320).SelectMany(_ => new byte[] { 0, 32 }).ToArray(); // 20 ms of PCM16 at 16 kHz.
+        for (var i = 0; i < 5; i++) activity.Push(loudFrame, 16000);
+        check(activityEvents.Count == 0, "native transcription activity ignores brief microphone noise");
+        activity.Push(loudFrame, 16000);
+        for (var i = 0; i < 29; i++) activity.Push(new byte[640], 16000);
+        check(activityEvents.SequenceEqual([true]), "native transcription activity waits for 600 ms of silence");
+        activity.Push(new byte[640], 16000);
+        check(activityEvents.SequenceEqual([true, false]), "native transcription activity reports onset and silence, not transcript events");
+        for (var i = 0; i < 10; i++) activity.Push(loudFrame, 16000, muted: true);
+        check(activityEvents.Count == 2, "native muted input cannot generate a speech onset");
+        for (var i = 0; i < 6; i++) activity.Push(loudFrame, 16000);
+        activity.Reset();
+        check(activityEvents.SequenceEqual([true, false, true, false]), "native activity reset releases the old speaking state for unmute");
         const string model = "mistral/voxtral-mini-transcribe-realtime-3";
         var preferences = new RealtimeTranscriptionPreferences { ProviderOptions = JsonNode.Parse("""{"mistral":{"language":"nl","context_bias":["Rotterdam"],"target_streaming_delay_ms":480,"diarize":true}}""")!.AsObject() };
         var session = RealtimeTranscriptionConfiguration.MistralSession(preferences.ProviderOptions["mistral"]!.AsObject());
