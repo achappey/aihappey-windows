@@ -17,6 +17,7 @@ public sealed partial class ChatShell
 
     private void RefreshWelcome()
     {
+        if (!IsRealtimeStart) welcomeSpeech.Cancel();
         if (closing || current.Messages.Count != 0)
         {
             welcomeRequest?.Cancel(); welcomeRequestKey = null;
@@ -24,11 +25,14 @@ public sealed partial class ChatShell
         }
         if (!appAgentsReady) return;
         var agent = AssignedAppAgent(AppAgentRole.WelcomeMessage);
-        var key = JsonSerializer.Serialize(new { current.Id, session.HistoryPartition, session.ActiveLanguage,
+        var key = JsonSerializer.Serialize(new { current.Id, session.HistoryPartition, session.ActiveLanguage, realtimePage = activePage == DesktopPage.Realtime,
             user = session.Host.UserContext?.Name, assignment = session.Settings.SideInferenceAgentNames.Get(AppAgentRole.WelcomeMessage),
             definition = agent?.Definition.ToJsonString(), models = aiModelTargets?.Select(m => new { m.Id, m.ProviderKey }).ToArray() });
         if (key == welcomeRequestKey) return;
         welcomeRequest?.Cancel(); welcomeRequestKey = key;
+        var generation = welcomeSpeech.Replace();
+        var language = session.ActiveLanguage; var partition = session.HistoryPartition;
+        bool CurrentGeneration() => key == welcomeRequestKey && language == session.ActiveLanguage && partition == session.HistoryPartition;
         welcome.Text = DesktopResources.Get("Welcome");
         if (agent is null) return; // None/missing agents never cause discovery or inference.
         var lifetime = CancellationTokenSource.CreateLinkedTokenSource(appAgentLifetime.Token);
@@ -41,7 +45,11 @@ public sealed partial class ChatShell
                 var models = aiModelTargets ?? await client.ListAsync(ServiceKind.Ai, lifetime.Token);
                 var text = await appAgentClient.InvokeAsync(agent, models, input, DesktopResources.Get("Welcome"), lifetime.Token);
                 if (!closing && !lifetime.IsCancellationRequested && key == welcomeRequestKey && current.Messages.Count == 0)
+                {
                     welcome.Text = text;
+                    if (IsRealtimeStart && CurrentGeneration() && agent.Speech is { } speech)
+                        await welcomeSpeech.PlayAsync(generation, token => PlayWelcomeSpeechAsync(speech, models, text, CurrentGeneration, token));
+                }
             }
             catch (Exception) { /* Keep the localized fallback; this is not a main-chat error. */ }
             finally { if (ReferenceEquals(welcomeRequest, lifetime)) welcomeRequest = null; lifetime.Dispose(); }

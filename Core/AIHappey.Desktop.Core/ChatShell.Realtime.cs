@@ -93,12 +93,12 @@ public sealed partial class ChatShell
         realtimeStop.Click += async (_, _) => await StopRealtimeAndOpenHistoryAsync();
         realtimeCamera.Click += async (_, _) => await ChangeRealtimeVideoAsync(false);
         realtimeScreen.Click += async (_, _) => await ChangeRealtimeVideoAsync(true);
-        Unloaded += (_, _) => { if (realtime is not null) realtimeCleanup = StopRealtimeAsync(); };
+        Unloaded += (_, _) => { welcomeSpeech.Cancel(); if (realtime is not null) realtimeCleanup = StopRealtimeAsync(); };
         Microsoft.Win32.SystemEvents.PowerModeChanged += RealtimePowerChanged;
     }
     private void RealtimePowerChanged(object sender, Microsoft.Win32.PowerModeChangedEventArgs args)
     {
-        if (args.Mode == Microsoft.Win32.PowerModes.Suspend) DispatcherQueue.TryEnqueue(() => { DiscardDictation(); transcriptionRealtimeCleanup = StopRealtimeTranscriptionAsync(); realtimeCleanup = StopRealtimeAsync(); });
+        if (args.Mode == Microsoft.Win32.PowerModes.Suspend) DispatcherQueue.TryEnqueue(() => { welcomeSpeech.Cancel(); DiscardDictation(); transcriptionRealtimeCleanup = StopRealtimeTranscriptionAsync(); realtimeCleanup = StopRealtimeAsync(); });
     }
     private async Task LoadRealtimeAsync(CancellationToken ct, bool useCache = false)
     {
@@ -163,6 +163,7 @@ public sealed partial class ChatShell
     }
     private async Task SendRealtimeAsync(McpSelectedPrompt? selectedPrompt = null)
     {
+        welcomeSpeech.Cancel();
         if (realtimeAgentMode) { await SendAgentRealtimeAsync(selectedPrompt); return; }
         await StopRealtimeTranscriptionAsync();
         if (realtimeSending || busy || closing || historyDialogOpen || !initialized) return;

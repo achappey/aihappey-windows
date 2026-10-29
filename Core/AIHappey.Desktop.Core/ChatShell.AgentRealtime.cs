@@ -96,6 +96,7 @@ public sealed partial class ChatShell
     private async Task SendAgentRealtimeAsync(McpSelectedPrompt? selectedPrompt)
     {
         if (busy || realtimeSending || closing || !initialized || historyDialogOpen) return;
+        welcomeSpeech.Cancel();
         realtimeSending = true; UpdateRealtimeControls();
         try
         {

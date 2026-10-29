@@ -399,6 +399,7 @@ public sealed partial class ChatShell : UserControl
 
     private async Task ReloadAccountAsync(CancellationToken ct, bool connectServices = true)
     {
+        welcomeSpeech.Cancel();
         await StopRealtimeAsync();
         var ready = !session.Host.RequiresSignIn;
         if (ready && connectServices) await StartVideoJobsAsync(ct);
@@ -897,7 +898,7 @@ public sealed partial class ChatShell : UserControl
         await runtimeWarmup;
         runtimeWarmupLifetime.Dispose();
         explorerConfirmation?.Hide(); CancelExplorerBatches();
-        appAgentLifetime.Cancel(); welcomeRequest?.Cancel();
+        appAgentLifetime.Cancel(); welcomeRequest?.Cancel(); welcomeSpeech.Dispose();
         toolOutputDialog?.Hide();
         videoWorkLifetime.Cancel();
         videoLinkDialog?.Hide(); videoDeleteDialog?.Hide(); videoPreviewDialog?.ReleasePlayer(); videoPreviewDialog?.Hide();
