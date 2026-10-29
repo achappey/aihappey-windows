@@ -44,7 +44,8 @@ public sealed class DesktopRealtimeTokenClient(DesktopChatClient client, HttpCli
         }
         var token = RealtimeSession.Parse(limited.ToArray());
         var value = token["value"]?.GetValue<string>();
-        if (string.IsNullOrWhiteSpace(value) || token["expires_at"]?.GetValue<long>() <= DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+        if (string.IsNullOrWhiteSpace(value) || token["expires_at"] is not JsonValue expiry || !expiry.TryGetValue<long>(out var expiresAt)
+            || expiresAt <= DateTimeOffset.UtcNow.ToUnixTimeSeconds())
             throw new GatewayException("The realtime credential is missing or expired.");
         return value;
     }

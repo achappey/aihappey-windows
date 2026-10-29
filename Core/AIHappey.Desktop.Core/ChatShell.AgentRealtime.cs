@@ -201,11 +201,13 @@ public sealed partial class ChatShell
             followBottom = true; RenderTranscript(); await SaveTurnHistoryAsync(state.Partition, state.Conversation, ct);
             var scope = transientConversationData.SetScope(state.Partition, state.Conversation.Id);
             var render = DateTimeOffset.MinValue; var save = render;
-            if (voice.Agent.SpeechModel is { } selectedSpeech && StreamingSpeechProtocol.Supports((aiModelTargets ?? []).FirstOrDefault(target => target.Id == DesktopAgent.Text(selectedSpeech["id"]))))
+            if (voice.Agent.SpeechModel is { } selectedSpeech && (aiModelTargets ?? []).FirstOrDefault(target => target.Id == DesktopAgent.Text(selectedSpeech["id"])) is { } speechTarget
+                && (StreamingSpeechProtocol.Supports(speechTarget) || OpenAiRealtimeSpeech.Supports(speechTarget)))
             {
                 streamedSpeech = new((started, token) => OpenAgentStreamingSpeechAsync(selectedSpeech, started, token),
                     (text, token) => PlayAgentRealtimeSpeechAsync(state, selectedSpeech, text, token),
-                    _ => DispatcherQueue.TryEnqueue(() => { if (RealtimeCurrent(state) && !ct.IsCancellationRequested) Show(DesktopResources.Get("AgentRealtimeSpeechFailed"), InfoBarSeverity.Warning); }), ct);
+                    _ => DispatcherQueue.TryEnqueue(() => { if (RealtimeCurrent(state) && !ct.IsCancellationRequested) Show(DesktopResources.Get("AgentRealtimeSpeechFailed"), InfoBarSeverity.Warning); }), ct,
+                    allowLegacyFallback: !OpenAiRealtimeSpeech.IsModel(DesktopAgent.Text(selectedSpeech["id"])));
             }
             var responseIndex = 0;
             async IAsyncEnumerable<StreamEvent> AgentStream(List<UIMessage> messages, [EnumeratorCancellation] CancellationToken token)
@@ -254,14 +256,19 @@ public sealed partial class ChatShell
     private async Task<IStreamingSpeechSession> OpenAgentStreamingSpeechAsync(JsonObject model, Action started, CancellationToken ct)
     {
         var id = DesktopAgent.Text(model["id"]); var provider = DesktopAgent.Provider(id);
-        var protocol = StreamingSpeechProtocol.Create(id, model["providerMetadata"]?[provider] as JsonObject ?? new());
+        var options = model["providerMetadata"]?[provider] as JsonObject ?? new();
+        var openai = OpenAiRealtimeSpeech.IsModel(id);
+        var config = openai ? OpenAiRealtimeSpeech.Session(id, options) : null;
+        var protocol = openai ? null : StreamingSpeechProtocol.Create(id, options);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(15));
         var token = await new DesktopRealtimeTokenClient(client, http).GetAsync(new() { ["model"] = id,
-            ["providerOptions"] = new JsonObject { [provider] = new JsonObject() } }, AgentAudioHeaders(model), provider, timeout.Token);
-        var output = new StreamingSpeechOutput(protocol.SampleRate, started);
+            ["providerOptions"] = new JsonObject { [provider] = config is null ? new JsonObject() : new JsonObject { ["session"] = config.DeepClone() } } }, AgentAudioHeaders(model), provider, timeout.Token);
+        var output = new StreamingSpeechOutput(protocol?.SampleRate ?? OpenAiRealtimeSpeech.SampleRate, started);
         try
         {
-            var session = await StreamingSpeechSession.OpenAsync(protocol, token, output.Push, ct);
+            IStreamingSpeechSession session = config is not null
+                ? await OpenAiRealtimeSpeechSession.OpenAsync(config, token, output.Push, ct, output.Dispose)
+                : await StreamingSpeechSession.OpenAsync(protocol!, token, output.Push, ct);
             ct.ThrowIfCancellationRequested();
             return new PlayedStreamingSpeechSession(session, output, ct);
         }
@@ -275,6 +282,7 @@ public sealed partial class ChatShell
             var preferences = new SpeechPreferences { ProviderOptions = (model["providerMetadata"] as JsonObject ?? new()).Where(pair => pair.Value is JsonObject)
                 .ToDictionary(pair => pair.Key, pair => (JsonObject)pair.Value!.DeepClone(), StringComparer.OrdinalIgnoreCase) };
             var id = DesktopAgent.Text(model["id"]);
+            if (OpenAiRealtimeSpeech.IsModel(id)) throw new InvalidOperationException("OpenAI Realtime speech is unavailable; refresh the model catalog.");
             var result = await new DesktopSpeechClient(client, http).GenerateAsync(new(id, id) { ModelType = "speech" }, text, preferences, ct, AgentAudioHeaders(model));
             ct.ThrowIfCancellationRequested(); if (!RealtimeCurrent(state)) return;
             using var stream = new InMemoryRandomAccessStream();

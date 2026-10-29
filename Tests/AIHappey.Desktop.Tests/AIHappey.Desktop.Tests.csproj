@@ -29,6 +29,8 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/AgentRealtimeTurns.cs" Link="Core/AgentRealtimeTurns.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/StreamingSpeechProtocol.cs" Link="Core/StreamingSpeechProtocol.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/StreamingSpeechSession.cs" Link="Core/StreamingSpeechSession.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/OpenAiRealtimeSpeech.cs" Link="Core/OpenAiRealtimeSpeech.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/OpenAiRealtimeSpeechSession.cs" Link="Core/OpenAiRealtimeSpeechSession.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/StreamingAgentSpeech.cs" Link="Core/StreamingAgentSpeech.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AgentOverviewProjection.cs" Link="Core/AgentOverviewProjection.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AgentIcons.cs" Link="Core/AgentIcons.cs" />

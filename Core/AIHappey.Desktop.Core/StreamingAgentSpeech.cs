@@ -17,13 +17,14 @@ public sealed class StreamingAgentSpeech : IAsyncDisposable
     private readonly Func<Action, CancellationToken, Task<IStreamingSpeechSession>> open;
     private readonly Func<string, CancellationToken, Task> legacy;
     private readonly Action<Exception> error;
+    private readonly bool allowLegacyFallback;
     private readonly CancellationTokenSource lifetime;
     private Task tail = Task.CompletedTask;
     private int played, retained;
     private bool failed, reported;
     public StreamingAgentSpeech(Func<Action, CancellationToken, Task<IStreamingSpeechSession>> open,
-        Func<string, CancellationToken, Task> legacy, Action<Exception> error, CancellationToken ct)
-    { this.open = open; this.legacy = legacy; this.error = error; lifetime = CancellationTokenSource.CreateLinkedTokenSource(ct); }
+        Func<string, CancellationToken, Task> legacy, Action<Exception> error, CancellationToken ct, bool allowLegacyFallback = true)
+    { this.open = open; this.legacy = legacy; this.error = error; this.allowLegacyFallback = allowLegacyFallback; lifetime = CancellationTokenSource.CreateLinkedTokenSource(ct); }
     public void Observe(int response, StreamEvent item)
     {
         if (lifetime.IsCancellationRequested || item.Type is not ("text-start" or "text-delta" or "text-end")) return;
@@ -77,7 +78,7 @@ public sealed class StreamingAgentSpeech : IAsyncDisposable
                 // Failed sockets may precede the rest of the LLM answer. Wait for authoritative text, never synthesize a preview twice.
                 await foreach (var _ in block.Input.Reader.ReadAllAsync(ct)) { }
                 ct.ThrowIfCancellationRequested();
-                if (Volatile.Read(ref played) == 0) await legacy(block.Text.ToString(), ct);
+                if (Volatile.Read(ref played) == 0 && allowLegacyFallback) await legacy(block.Text.ToString(), ct);
                 else if (!reported) { reported = true; error(new InvalidOperationException("Streaming speech failed after playback started.", failure)); }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { }

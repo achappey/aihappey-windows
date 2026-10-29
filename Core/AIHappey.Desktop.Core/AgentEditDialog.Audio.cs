@@ -18,7 +18,7 @@ public sealed partial class AgentEditDialog
             NativeSettingsSurface.Expander(panel, "AgentAudio_" + type, title, null, out var body);
             var configuration = type == "transcription" ? draft.TranscriptionModel : draft.SpeechModel;
             var id = DesktopAgent.Text(configuration?["id"]);
-            var options = ProviderPreferences.Filter(models, session.Settings).Where(m => m.ModelType == type
+            var options = ProviderPreferences.Filter(models, session.Settings).Where(m => (m.ModelType == type || type == "speech" && OpenAiRealtimeSpeech.Supports(m))
                 && (type != "transcription" || m.Tags.Contains("real-time")))
                 .Concat(id.Length > 0 ? new[] { new ChatTarget(id, id) { ModelType = type } } : []).DistinctBy(m => m.Id).ToArray();
             var picker = new ChatTargetPicker { Name = "AgentAudioModel_" + type, AllowEmptySelection = true,
@@ -65,7 +65,9 @@ public sealed partial class AgentEditDialog
         {
             var preferences = new SpeechPreferences { ProviderOptions = metadata.Where(pair => pair.Value is JsonObject)
                 .ToDictionary(pair => pair.Key, pair => (JsonObject)pair.Value!.DeepClone(), StringComparer.OrdinalIgnoreCase) };
-            if (SpeechProviderForms.Create(provider, preferences) is { } form)
+            if ((provider == "openai" && OpenAiRealtimeSpeech.IsModel(DesktopAgent.Text(model["id"]))
+                ? new OpenAiRealtimeSpeechSettingsForm(metadata["openai"] as JsonObject ?? new())
+                : SpeechProviderForms.Create(provider, preferences)) is { } form)
             {
                 form.Commit(preferences); var baseline = Options(); panel.Children.Add(form.View);
                 commit = () => { form.Commit(preferences); Apply(baseline, Options()); };

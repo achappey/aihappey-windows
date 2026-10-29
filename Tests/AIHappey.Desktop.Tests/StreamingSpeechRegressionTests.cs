@@ -17,6 +17,7 @@ internal static class StreamingSpeechRegressionTests
     }
     public static async Task RunAsync(Action<bool, string> check)
     {
+        await OpenAiRealtimeSpeechRegressionTests.RunAsync(check);
         var dg = StreamingSpeechProtocol.Create("deepgram/aura-2-asteria-en", new() { ["sampleRate"] = 48000, ["api_key"] = "never-forward" });
         check(dg.SampleRate == 48000 && dg.Endpoint.Host == "api.deepgram.com" && !dg.Endpoint.ToString().Contains("never-forward"), "streaming speech: provider settings are allowlisted and sample rates explicit");
         var cs = StreamingSpeechProtocol.Create("cartesia/tts/sonic-3.6/voice-id", new() { ["language"] = "nl", ["speed"] = 1.1 });
@@ -92,7 +93,7 @@ internal static class StreamingSpeechRegressionTests
         public Task CancelAsync() => Task.CompletedTask;
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
-    private sealed class FixtureSocket : WebSocket
+    internal sealed class FixtureSocket : WebSocket
     {
         private readonly Channel<(byte[] Bytes, WebSocketMessageType Type)> incoming = Channel.CreateUnbounded<(byte[], WebSocketMessageType)>();
         public readonly ConcurrentQueue<JsonObject> Sent = new();
