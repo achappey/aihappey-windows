@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json.Nodes;
 using AIHappey.Desktop.Core;
@@ -24,7 +25,9 @@ internal static class MistralRealtimeSpeechRegressionTests
     }
     private static async Task<bool> Rejects(Func<Task> action, string? safe = null)
     {
-        try { await action(); return false; } catch (Exception error) { return safe is null || !error.ToString().Contains(safe); }
+        try { await action(); return false; }
+        catch (TimeoutException) { throw; } // A stuck session is not a successful rejection.
+        catch (Exception error) { return safe is null || !error.ToString().Contains(safe); }
     }
     private static async Task Configure(StreamingSpeechRegressionTests.FixtureSocket socket, MistralRealtimeSpeechSession session, JsonObject config)
     {
@@ -64,10 +67,59 @@ internal static class MistralRealtimeSpeechRegressionTests
             await session.FlushAsync(default); socket.Event(Delta(Wave()[45..])); socket.Event(Done());
             await session.AppendAsync(" Again.", default); var finish = session.FinishAsync(default);
             socket.Event(Delta(Wave([1, 2]))); socket.Event(Done()); await Until(() => audio.Count == 3);
-            check(!finish.IsCompleted, "Mistral speech: generation done still waits for final server closure");
+            await finish.WaitAsync(TimeSpan.FromSeconds(5));
+            check(finish.IsCompletedSuccessfully, "Mistral speech: validated final audio completes without waiting for server closure");
             socket.ServerClose(); await finish.WaitAsync(TimeSpan.FromSeconds(5));
             check(audio.SelectMany(bytes => bytes).SequenceEqual(new byte[] { 0, 128, 255, 127, 1, 2 }), "Mistral speech: multiple WAV generations preserve ordered audio without replaying headers");
             check(socket.Sent.Last()["type"]!.ToString() == "input_text.end" && socket.Sent.Last()["text"] is null, "Mistral speech: final end carries no text");
+        }
+        foreach (var status in new WebSocketCloseStatus?[] { null, WebSocketCloseStatus.NormalClosure, WebSocketCloseStatus.Empty, WebSocketCloseStatus.InternalServerError })
+        {
+            using var socket = new StreamingSpeechRegressionTests.FixtureSocket();
+            var audio = new ConcurrentQueue<byte[]>(); var failures = 0;
+            await using var session = new MistralRealtimeSpeechSession(socket, config, (pcm, _) => audio.Enqueue(pcm), default, () => Interlocked.Increment(ref failures)); session.Start();
+            await Configure(socket, session, config); await session.AppendAsync("Complete reply.", default); var finish = session.FinishAsync(default);
+            check(ReferenceEquals(finish, session.FinishAsync(default)), "Mistral speech: repeated finish shares one completion task");
+            socket.Event(Delta(Wave())); socket.Event(Done()); if (status is { } code) socket.ServerClose(code);
+            await finish.WaitAsync(TimeSpan.FromSeconds(5));
+            socket.Abort(); await Task.Delay(30); await session.DisposeAsync(); await session.DisposeAsync();
+            check(failures == 0 && audio.SelectMany(bytes => bytes).SequenceEqual(new byte[] { 0, 128, 255, 127 }),
+                "Mistral speech: final audio survives missing/abnormal close or receive failure and disposal does not stop playback as a failure");
+        }
+        foreach (var empty in new[] { false, true })
+        {
+            using var socket = new StreamingSpeechRegressionTests.FixtureSocket();
+            var audio = new ConcurrentQueue<byte[]>();
+            await using var session = new MistralRealtimeSpeechSession(socket, config, (pcm, _) => audio.Enqueue(pcm), default); session.Start();
+            await Configure(socket, session, config);
+            if (!empty)
+            {
+                await session.AppendAsync("Already flushed.", default); await session.FlushAsync(default);
+                socket.Event(Delta(Wave())); socket.Event(Done());
+                await Until(() => !audio.IsEmpty); await Task.Delay(30);
+            }
+            await session.FinishAsync(default).WaitAsync(TimeSpan.FromSeconds(5));
+            check(socket.Sent.Count(value => value["type"]?.ToString() == "input_text.end") == 1,
+                "Mistral speech: empty or fully flushed input ends without a phantom generation or a required server close");
+        }
+        using (var socket = new StreamingSpeechRegressionTests.FixtureSocket())
+        {
+            var audio = new ConcurrentQueue<byte[]>(); var failures = 0;
+            await using var session = new MistralRealtimeSpeechSession(socket, config, (pcm, _) => audio.Enqueue(pcm), default, () => Interlocked.Increment(ref failures)); session.Start();
+            await Configure(socket, session, config); await session.AppendAsync("First.", default); await session.FlushAsync(default);
+            socket.Event(Delta(Wave())); socket.Event(Done()); await Until(() => !audio.IsEmpty);
+            await session.AppendAsync("Second.", default); var finish = session.FinishAsync(default);
+            socket.ServerClose(WebSocketCloseStatus.InternalServerError);
+            check(await Rejects(() => finish.WaitAsync(TimeSpan.FromSeconds(5))), "Mistral speech: earlier flush completion cannot acknowledge missing later input on abnormal close");
+            await Until(() => Volatile.Read(ref failures) == 1);
+        }
+        foreach (var bytes in new byte[]?[] { null, Wave()[..45] })
+        {
+            using var socket = new StreamingSpeechRegressionTests.FixtureSocket();
+            await using var session = new MistralRealtimeSpeechSession(socket, config, (_, _) => { }, default); session.Start();
+            await Configure(socket, session, config); await session.AppendAsync("Pending.", default); var finish = session.FinishAsync(default);
+            if (bytes is not null) socket.Event(Delta(bytes)); socket.Event(Done());
+            check(await Rejects(() => finish.WaitAsync(TimeSpan.FromSeconds(5))), "Mistral speech: final done cannot acknowledge missing or truncated WAV audio");
         }
         using (var socket = new StreamingSpeechRegressionTests.FixtureSocket())
         {

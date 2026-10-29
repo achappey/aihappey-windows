@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 
 namespace AIHappey.Desktop.Core;
 
-/// <summary>A block-owned Mistral output socket. Completion requires generation acks and normal server close.</summary>
+/// <summary>A block-owned Mistral output socket. Validated generation completion is independent of transport cleanup.</summary>
 public sealed class MistralRealtimeSpeechSession : IStreamingSpeechSession
 {
     private readonly WebSocket socket;
@@ -19,8 +19,8 @@ public sealed class MistralRealtimeSpeechSession : IStreamingSpeechSession
     private Task receiving = Task.CompletedTask;
     private Task? finishing;
     private bool created, configured, disposed;
-    private volatile bool ending, dirty;
-    private int submitted, completed, sampleRate, faulted;
+    private volatile bool ending, inputEnded, dirty;
+    private int submitted, completed, sampleRate, terminal; // 0: active, 1: failed, 2: validated completion.
     private long bytesReceived;
     private StreamingWaveDecoder? decoder;
 
@@ -59,9 +59,16 @@ public sealed class MistralRealtimeSpeechSession : IStreamingSpeechSession
     }
     private void Fail(string message = "Mistral returned invalid speech audio or incompatible session settings.")
     {
-        if (Interlocked.Exchange(ref faulted, 1) != 0) return;
+        if (disposed || Interlocked.CompareExchange(ref terminal, 1, 0) != 0) return;
         var error = new InvalidOperationException(message);
         ready.TrySetException(error); done.TrySetException(error); failed(); socket.Abort();
+    }
+    private void Complete()
+    {
+        if (!inputEnded || dirty || Volatile.Read(ref completed) != Volatile.Read(ref submitted) || decoder is not null || disposed) return;
+        // Each audio.done acknowledges a generation, not local playback. Keep the receive
+        // loop for transport cleanup, but never let it stop PCM that the caller is draining.
+        if (Interlocked.CompareExchange(ref terminal, 2, 0) == 0) done.TrySetResult();
     }
     private async Task SendAsync(JsonObject message, CancellationToken ct)
     {
@@ -112,6 +119,7 @@ public sealed class MistralRealtimeSpeechSession : IStreamingSpeechSession
             {
                 ending = true; if (dirty) { Interlocked.Increment(ref submitted); dirty = false; }
                 await SendAsync(new() { ["type"] = "input_text.end" }, timeout.Token);
+                inputEnded = true; Complete();
             }
             finally { sending.Release(); }
             await done.Task.WaitAsync(timeout.Token);
@@ -131,17 +139,28 @@ public sealed class MistralRealtimeSpeechSession : IStreamingSpeechSession
                     part = await socket.ReceiveAsync(buffer.AsMemory(), lifetime.Token);
                     if (part.MessageType == WebSocketMessageType.Close)
                     {
-                        if (!ending || socket.CloseStatus != WebSocketCloseStatus.NormalClosure
-                            || Volatile.Read(ref completed) != Volatile.Read(ref submitted) || decoder is not null) throw new InvalidOperationException();
+                        // An acknowledgement can race the end-send continuation. Observe
+                        // the completed send under its gate before judging an immediate close.
                         await sending.WaitAsync(lifetime.Token);
-                        try { await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", lifetime.Token); }
+                        try
+                        {
+                            Complete();
+                            if (Volatile.Read(ref terminal) != 2)
+                            {
+                                // State only: never expose provider reasons, text, credentials or audio payloads.
+                                Fail($"Mistral disconnected before confirming the final speech. (Close code {(int?)socket.CloseStatus}; input ended {inputEnded}; generations {Volatile.Read(ref completed)}/{Volatile.Read(ref submitted)}; pending audio {decoder is not null}.)");
+                                return;
+                            }
+                            await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", lifetime.Token);
+                        }
                         finally { sending.Release(); }
-                        done.TrySetResult(); return;
+                        return;
                     }
                     if (part.MessageType != WebSocketMessageType.Text || message.Length + part.Count > 1024 * 1024) throw new InvalidOperationException();
                     message.Write(buffer, 0, part.Count);
                 } while (!part.EndOfMessage);
                 if (lifetime.IsCancellationRequested) return;
+                if (Volatile.Read(ref terminal) != 0) continue;
                 var value = JsonNode.Parse(message.ToArray())!.AsObject();
                 var type = value["type"]?.GetValue<string>();
                 if (type == "error") { Fail("Mistral reported a speech error. Check the selected model and settings."); return; }
@@ -176,8 +195,8 @@ public sealed class MistralRealtimeSpeechSession : IStreamingSpeechSession
                 }
                 else if (type == "speech.audio.done")
                 {
-                    if (!configured || Volatile.Read(ref completed) >= Volatile.Read(ref submitted)) throw new InvalidOperationException();
-                    decoder?.Finish(); decoder = null; Interlocked.Increment(ref completed);
+                    if (!configured || Volatile.Read(ref completed) >= Volatile.Read(ref submitted) || decoder is null) throw new InvalidOperationException();
+                    decoder.Finish(); decoder = null; Interlocked.Increment(ref completed); Complete();
                 }
             }
         }

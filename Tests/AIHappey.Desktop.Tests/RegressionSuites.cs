@@ -55,6 +55,8 @@ internal static class RegressionSuites
         // Existing focused flags remain supported, but no longer run unrelated prerequisites.
         var extra = new Dictionary<string, Func<Task>>(StringComparer.Ordinal)
         {
+            ["streaming-speech"] = () => StreamingSpeechRegressionTests.RunAsync(check),
+            ["mistral-speech"] = () => MistralRealtimeSpeechRegressionTests.RunAsync(check),
             ["windows-tools"] = () => WindowsToolRegressionTests.RunAsync(check, Data("windows-tools")),
             ["authoring-tools"] = () => AuthoringToolRegressionTests.RunAsync(check, Data("authoring-tools")),
             ["chat-provider-forms"] = () => ChatProviderFormRegressionTests.RunAsync(check, Data("provider-forms")),
