@@ -18,6 +18,7 @@ internal static class StreamingSpeechRegressionTests
     public static async Task RunAsync(Action<bool, string> check)
     {
         await OpenAiRealtimeSpeechRegressionTests.RunAsync(check);
+        await MistralRealtimeSpeechRegressionTests.RunAsync(check);
         var dg = StreamingSpeechProtocol.Create("deepgram/aura-2-asteria-en", new() { ["sampleRate"] = 48000, ["api_key"] = "never-forward" });
         check(dg.SampleRate == 48000 && dg.Endpoint.Host == "api.deepgram.com" && !dg.Endpoint.ToString().Contains("never-forward"), "streaming speech: provider settings are allowlisted and sample rates explicit");
         var cs = StreamingSpeechProtocol.Create("cartesia/tts/sonic-3.6/voice-id", new() { ["language"] = "nl", ["speed"] = 1.1 });
@@ -99,11 +100,14 @@ internal static class StreamingSpeechRegressionTests
         public readonly ConcurrentQueue<JsonObject> Sent = new();
         private WebSocketState state = WebSocketState.Open;
         public override WebSocketState State => state;
-        public override WebSocketCloseStatus? CloseStatus => null;
+        private WebSocketCloseStatus? closeStatus;
+        public override WebSocketCloseStatus? CloseStatus => closeStatus;
         public override string? CloseStatusDescription => null;
         public override string? SubProtocol => null;
         public void Event(JsonObject value) => incoming.Writer.TryWrite((Encoding.UTF8.GetBytes(value.ToJsonString()), WebSocketMessageType.Text));
         public void Binary(byte[] bytes) => incoming.Writer.TryWrite((bytes, WebSocketMessageType.Binary));
+        public void ServerClose(WebSocketCloseStatus status = WebSocketCloseStatus.NormalClosure)
+        { closeStatus = status; incoming.Writer.TryWrite(([], WebSocketMessageType.Close)); }
         public override void Abort() { state = WebSocketState.Aborted; incoming.Writer.TryComplete(); }
         public override Task CloseAsync(WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken ct) { Abort(); return Task.CompletedTask; }
         public override Task CloseOutputAsync(WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken ct) { Abort(); return Task.CompletedTask; }

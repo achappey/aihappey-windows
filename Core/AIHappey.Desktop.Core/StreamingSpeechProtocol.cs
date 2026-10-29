@@ -24,7 +24,7 @@ public abstract class StreamingSpeechProtocol
         };
     public static bool Supports(ChatTarget? target) => target?.ModelType == "speech"
         && target.Tags.Contains("real-time") && target.Tags.Contains("realtime-token")
-        && Factories.ContainsKey(target.Id.Split('/')[0]);
+        && (MistralRealtimeSpeech.IsModel(target.Id) || Factories.ContainsKey(target.Id.Split('/')[0]));
     public static StreamingSpeechProtocol Create(string model, JsonObject options)
     {
         var slash = model.IndexOf('/');

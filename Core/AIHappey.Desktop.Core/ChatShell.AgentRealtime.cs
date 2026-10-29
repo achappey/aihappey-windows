@@ -259,11 +259,14 @@ public sealed partial class ChatShell
         var id = DesktopAgent.Text(model["id"]); var provider = DesktopAgent.Provider(id);
         var options = AgentSpeechConfiguration.SocketOptions(speech);
         var openai = OpenAiRealtimeSpeech.IsModel(id);
+        var mistral = provider == "mistral";
+        var mistralConfig = mistral ? MistralRealtimeSpeech.Session(id, options) : null;
         var config = openai ? OpenAiRealtimeSpeech.Session(id, options, DesktopAgent.Text(speech["instructions"])) : null;
-        var protocol = openai ? null : StreamingSpeechProtocol.Create(id, options);
+        var protocol = openai || mistral ? null : StreamingSpeechProtocol.Create(id, options);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(15));
         var token = await new DesktopRealtimeTokenClient(client, http).GetAsync(new() { ["model"] = id,
             ["providerOptions"] = new JsonObject { [provider] = config is null ? new JsonObject() : new JsonObject { ["session"] = config.DeepClone() } } }, AgentAudioHeaders(model), provider, timeout.Token);
+        if (mistralConfig is not null) return await PlayedMistralSpeechSession.OpenAsync(mistralConfig, token, started, ct);
         var output = new StreamingSpeechOutput(protocol?.SampleRate ?? OpenAiRealtimeSpeech.SampleRate, started);
         try
         {
