@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Runtime.CompilerServices;
 using AIHappey.Vercel.Models;
 using FluentIcons.Common;
 using Microsoft.UI.Xaml;
@@ -188,6 +189,7 @@ public sealed partial class ChatShell
     {
         var voice = state.AgentVoice!; var ct = run.Token;
         ConversationMessage? output = null;
+        StreamingAgentSpeech? streamedSpeech = null;
         try
         {
             await previous; ct.ThrowIfCancellationRequested(); if (!RealtimeCurrent(state)) return;
@@ -199,9 +201,25 @@ public sealed partial class ChatShell
             followBottom = true; RenderTranscript(); await SaveTurnHistoryAsync(state.Partition, state.Conversation, ct);
             var scope = transientConversationData.SetScope(state.Partition, state.Conversation.Id);
             var render = DateTimeOffset.MinValue; var save = render;
+            if (voice.Agent.SpeechModel is { } selectedSpeech && StreamingSpeechProtocol.Supports((aiModelTargets ?? []).FirstOrDefault(target => target.Id == DesktopAgent.Text(selectedSpeech["id"]))))
+            {
+                streamedSpeech = new((started, token) => OpenAgentStreamingSpeechAsync(selectedSpeech, started, token),
+                    (text, token) => PlayAgentRealtimeSpeechAsync(state, selectedSpeech, text, token),
+                    _ => DispatcherQueue.TryEnqueue(() => { if (RealtimeCurrent(state) && !ct.IsCancellationRequested) Show(DesktopResources.Get("AgentRealtimeSpeechFailed"), InfoBarSeverity.Warning); }), ct);
+            }
+            var responseIndex = 0;
+            async IAsyncEnumerable<StreamEvent> AgentStream(List<UIMessage> messages, [EnumeratorCancellation] CancellationToken token)
+            {
+                var index = responseIndex++;
+                await foreach (var item in client.StreamAsync(ServiceKind.Agents, voice.Target.RemoteAgentId ?? voice.Target.Id, state.Conversation.Id,
+                    messages, token, voice.Preferences, voice.Target.ProviderKey, mcp: state.Tools, agentRequest: voice.Request))
+                {
+                    streamedSpeech?.Observe(index, item); yield return item;
+                }
+                streamedSpeech?.CompleteResponse(index);
+            }
             await DesktopChatTurn.RunAsync(state.Conversation, output,
-                (messages, token) => client.StreamAsync(ServiceKind.Agents, voice.Target.RemoteAgentId ?? voice.Target.Id, state.Conversation.Id,
-                    messages, token, voice.Preferences, voice.Target.ProviderKey, mcp: state.Tools, agentRequest: voice.Request), ApproveToolAsync,
+                AgentStream, ApproveToolAsync,
                 async (force, token) =>
                 {
                     token.ThrowIfCancellationRequested(); if (!RealtimeCurrent(state) || !ReferenceEquals(voice.Run, run)) throw new OperationCanceledException(token);
@@ -210,7 +228,8 @@ public sealed partial class ChatShell
                     if (force || now - save > TimeSpan.FromSeconds(1)) { await SaveTurnHistoryAsync(state.Partition, state.Conversation, token); save = now; }
                 }, state.Tools, session.ActiveLanguage, ct, session.ElicitAsync, item => CaptureConversationData(scope, item, output));
             ct.ThrowIfCancellationRequested();
-            if (output.Status == "complete" && RealtimeCurrent(state) && voice.Agent.SpeechModel is { } speech)
+            if (streamedSpeech is not null) await streamedSpeech.DrainAsync();
+            else if (output.Status == "complete" && RealtimeCurrent(state) && voice.Agent.SpeechModel is { } speech)
             {
                 var text = AgentRealtimeResponse.FinalText(output.Message.Parts);
                 if (!string.IsNullOrWhiteSpace(text)) await PlayAgentRealtimeSpeechAsync(state, speech, text, ct);
@@ -220,6 +239,7 @@ public sealed partial class ChatShell
         catch (Exception error) { if (RealtimeCurrent(state) && !ct.IsCancellationRequested) Show(RealtimeErrorMessage(error), InfoBarSeverity.Error); }
         finally
         {
+            if (streamedSpeech is not null) await streamedSpeech.DisposeAsync();
             if (output is not null)
             {
                 if (output.Status == "streaming") output.Status = "interrupted";
@@ -230,6 +250,22 @@ public sealed partial class ChatShell
             activeMcpTurn = null; activeConversationTools = null;
             if (RealtimeCurrent(state)) RenderTranscript(); run.Dispose();
         }
+    }
+    private async Task<IStreamingSpeechSession> OpenAgentStreamingSpeechAsync(JsonObject model, Action started, CancellationToken ct)
+    {
+        var id = DesktopAgent.Text(model["id"]); var provider = DesktopAgent.Provider(id);
+        var protocol = StreamingSpeechProtocol.Create(id, model["providerMetadata"]?[provider] as JsonObject ?? new());
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(15));
+        var token = await new DesktopRealtimeTokenClient(client, http).GetAsync(new() { ["model"] = id,
+            ["providerOptions"] = new JsonObject { [provider] = new JsonObject() } }, AgentAudioHeaders(model), provider, timeout.Token);
+        var output = new StreamingSpeechOutput(protocol.SampleRate, started);
+        try
+        {
+            var session = await StreamingSpeechSession.OpenAsync(protocol, token, output.Push, ct);
+            ct.ThrowIfCancellationRequested();
+            return new PlayedStreamingSpeechSession(session, output, ct);
+        }
+        catch { output.Dispose(); throw; }
     }
     private async Task PlayAgentRealtimeSpeechAsync(RealtimeState state, JsonObject model, string text, CancellationToken ct)
     {
