@@ -20,8 +20,24 @@ internal static class OpenAiRealtimeSpeechRegressionTests
     {
         var target = new ChatTarget(Model, "Realtime speech") { ModelType = "audio", Tags = ["real-time", "realtime-token", "realtime-session", "realtime-speech"] };
         check(OpenAiRealtimeSpeech.Supports(target) && !StreamingSpeechProtocol.Supports(target), "OpenAI speech: explicit agent capability leaves the shared model classified as audio");
-        check(!OpenAiRealtimeSpeech.Supports(new(Model, "missing tags") { ModelType = "audio" })
-            && !OpenAiRealtimeSpeech.Supports(new("openai/gpt-realtime-2.1", "other model") { ModelType = "audio", Tags = target.Tags }), "OpenAI speech: missing capability or unsupported model cannot activate speech");
+        foreach (var id in new[] { "openai/gpt-realtime-2.1", Model, "openai/gpt-realtime-2", "openai/gpt-realtime-1.5" }
+            .SelectMany(id => new[] { id, id + "-2026-10-01" }))
+        {
+            var current = new ChatTarget(id, "Realtime speech") { ModelType = "audio", Tags = target.Tags };
+            check(OpenAiRealtimeSpeech.IsModel(id) && OpenAiRealtimeSpeech.Supports(current)
+                && !StreamingSpeechProtocol.Supports(current) && current.ModelType == "audio", "OpenAI speech: aliases and dated snapshots support agent speech without changing global audio classification: " + id);
+            check(OpenAiRealtimeSpeech.Session(id, new())["model"]!.ToString() == id["openai/".Length..], "OpenAI speech: selected model is preserved in session configuration: " + id);
+            foreach (var tag in new[] { "real-time", "realtime-token", "realtime-speech" })
+                check(!OpenAiRealtimeSpeech.Supports(new(id, "missing capability") { ModelType = "audio", Tags = target.Tags.Where(value => value != tag).ToList() }), "OpenAI speech: each explicit capability is required: " + tag);
+            check(!OpenAiRealtimeSpeech.Supports(new(id, "missing tags") { ModelType = "audio" })
+                && !OpenAiRealtimeSpeech.Supports(new(id, "wrong type") { ModelType = "language", Tags = target.Tags }), "OpenAI speech: missing tags or wrong type cannot activate speech");
+        }
+        foreach (var id in new[] { "openai/gpt-realtime", "openai/gpt-realtime-2-mini", "openai/gpt-realtime-2.10", "openai/gpt-realtime-1.5-mini", Model + "-unexpected", Model + "-2026-10", Model + "-2026-10-01-extra", "other/gpt-realtime-2.1", "gpt-realtime-2.1" })
+        {
+            check(!OpenAiRealtimeSpeech.IsModel(id) && !OpenAiRealtimeSpeech.Supports(new(id, "unsupported") { ModelType = "audio", Tags = target.Tags }), "OpenAI speech: unsupported or malformed model is rejected: " + id);
+            try { OpenAiRealtimeSpeech.Session(id, new()); check(false, "OpenAI speech: unsupported model must fail session validation"); }
+            catch (InvalidOperationException) { check(true, "OpenAI speech: unsupported model fails before credential acquisition"); }
+        }
         var config = OpenAiRealtimeSpeech.Session(Model, new() { ["voice"] = "cedar", ["speed"] = 1.2, ["api_key"] = "private", ["response_format"] = "mp3", ["instructions"] = "override" });
         check(config["audio"]!["output"]!["format"]!["rate"]!.GetValue<int>() == 24000
             && config["audio"]!["output"]!["voice"]!.ToString() == "cedar" && config["audio"]!["input"]!["turn_detection"] is null
