@@ -16,7 +16,7 @@ internal static class MessageUsage
             FormatMetric(Property(nested, "tps") ?? Property(legacy, "tps"), false));
     }
 
-    private static object? Property(object? value, string name)
+    internal static object? Property(object? value, string name)
     {
         object? result = value switch
         {

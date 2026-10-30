@@ -2020,4 +2020,8 @@ Speaker: {1}</value></data>
   <data name="AgentSpeechOptionsHint" xml:space="preserve"><value>Voice accepts a custom voice ID. Blank settings use provider defaults or advanced options; explicit settings override equivalent provider options. Support varies by model: voice-bound models retain their voice, and some providers do not support instructions or language. Enter the audio format as a MIME type, for example audio/mpeg. Direct WebSocket playback uses raw PCM (OpenAI: 24,000 Hz); the requested encoding applies to HTTP speech. Sample rate applies to streaming where supported; non-streaming HTTP speech may use the provider's rate.</value></data>
   <data name="ProviderCountry_RU" xml:space="preserve"><value>Russia</value></data>
   <data name="ProviderCountry_VG" xml:space="preserve"><value>British Virgin Islands</value></data>
+  <data name="ComposerTokensUsed" xml:space="preserve"><value>{0} of {1} tokens used</value></data>
+  <data name="ComposerTokensReserved" xml:space="preserve"><value>{0} tokens reserved for output</value></data>
+  <data name="ComposerTokensAvailable" xml:space="preserve"><value>{0} tokens available</value></data>
+  <data name="ComposerConversationCost" xml:space="preserve"><value>Total conversation cost: {0}</value></data>
 </root>

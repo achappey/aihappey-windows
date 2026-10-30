@@ -95,7 +95,9 @@ public sealed partial class ChatShell
         RenderResourceTags();
         RenderSkillTags();
         RenderPluginTags();
+        RenderLocalPluginTags();
         contextTagScroll.Visibility = contextTags.Children.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        UpdateComposerBadgeRow();
     }
 
     private async Task PickAttachmentsAsync()

@@ -1,7 +1,51 @@
+using FluentIcons.Common;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+
 namespace AIHappey.Desktop.Core;
 
 public sealed partial class ChatShell
 {
+    private void RenderLocalPluginTags()
+    {
+        if (Service != ServiceKind.Ai) return;
+        var plugins = DesktopLocalTools.Plugins.ToDictionary(p => p.Id, StringComparer.Ordinal);
+        foreach (var id in session.Settings.Chat.ActivePlugins.Distinct(StringComparer.Ordinal))
+        {
+            var label = plugins.TryGetValue(id, out var plugin) ? DesktopResources.Get(plugin.ResourceKey) : id;
+            var content = new Grid { ColumnSpacing = 6, MaxWidth = 320 };
+            content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+            content.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+            content.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+            content.Children.Add(DesktopIcons.Create(Icon.Wrench, 14));
+            var text = new TextBlock { Text = label, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(text, 1); content.Children.Add(text);
+            var remove = new Button { Name = "DisableLocalPlugin", Tag = id, Content = DesktopIcons.Create(Icon.Dismiss, 10),
+                Width = 24, Height = 24, Padding = new Thickness(0), IsEnabled = !busy };
+            ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("RemoveContext", label));
+            remove.Click += async (_, _) =>
+            {
+                if (busy || closing) return;
+                var partition = session.HistoryPartition;
+                await RunAsync(async ct =>
+                {
+                    var next = session.Settings.Clone(); next.Chat.ActivePlugins.RemoveAll(p => p == id);
+                    await SettingsStore.SaveAsync(session.DataDirectory, next);
+                    ct.ThrowIfCancellationRequested();
+                    if (closing || session.HistoryPartition != partition) return;
+                    session.Settings = next;
+                    RenderContextTags();
+                    chatSettingsDialog?.RefreshAvailableTools();
+                });
+                if (!closing) input.Focus(FocusState.Programmatic);
+            };
+            Grid.SetColumn(remove, 2); content.Children.Add(remove);
+            var badge = new Border { Name = "EnabledLocalPluginBadge", Tag = id, Child = content,
+                Padding = new Thickness(10, 2, 4, 2), CornerRadius = new CornerRadius(16) };
+            ControlAppearance.TokenBadge(badge); ToolbarControls.Label(badge, label); contextTags.Children.Add(badge);
+        }
+    }
+
     private LocalConversationTools? activeConversationTools;
     private void RegisterLocalPlugins(McpTurnSnapshot snapshot, ChatPreferences preferences, string partition, bool includePluginContext = true)
     {

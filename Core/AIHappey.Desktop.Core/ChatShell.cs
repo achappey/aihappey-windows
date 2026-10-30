@@ -199,7 +199,7 @@ public sealed partial class ChatShell : UserControl
         models.Unchecked += (_, _) => { if (!updatingMode) UpdateMode(Service); };
         agents.Unchecked += (_, _) => { if (!updatingMode) UpdateMode(Service); };
         target.Opening = () => UpdateTargetSuggestions();
-        target.SelectionChanged += () => { if (!busy) RememberSelection(); UpdateModelFavorites(); };
+        target.SelectionChanged += () => { if (!busy) RememberSelection(); UpdateModelFavorites(); UpdateComposerUsage(); };
         chats.SelectionChanged += async (_, _) =>
         {
             if (suppress || busy || chats.SelectedItem is not Conversation selected) return;
@@ -363,7 +363,7 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(account, 5); top.Children.Add(account);
         workspace.Children.Add(top);
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
-        composer.Children.Add(welcome); composer.Children.Add(contextTagScroll); composer.Children.Add(composerBadgeRow);
+        composer.Children.Add(welcome); composer.Children.Add(composerBadgeRow);
         composer.Children.Add(input);
         composer.Children.Add(realtimePreview);
         var actions = new Grid { Name = "ComposerActions", ColumnSpacing = 4 };
@@ -436,6 +436,7 @@ public sealed partial class ChatShell : UserControl
         searchContext.Visibility = selected == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
         RenderMcpTags();
         RenderContextTags();
+        UpdateComposerUsage();
     }
 
     private async Task SelectServiceAsync(ServiceKind selected)
@@ -600,6 +601,7 @@ public sealed partial class ChatShell : UserControl
         RenderTranscriptRows(MessageDetails.Project(draft is null ? current.Messages : current.Messages.Append(draft).ToList()));
         RefreshDetails();
         RefreshConversationActivity();
+        UpdateComposerUsage();
         if (followBottom && !empty)
             DispatcherQueue.TryEnqueue(() =>
             {

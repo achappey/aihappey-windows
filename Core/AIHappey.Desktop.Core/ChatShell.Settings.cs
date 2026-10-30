@@ -39,6 +39,7 @@ public sealed partial class ChatShell
             session.Settings = next;
             await LoadPluginsAsync(downloadLifetime.Token);
             RenderContextTags();
+            UpdateComposerUsage();
         }
         dialog.SaveAsync = preferences => SaveAsync(preferences, null);
         dialog.SaveWithRealtimeAsync = (preferences, realtimePreferences) => SaveAsync(preferences, realtimePreferences);

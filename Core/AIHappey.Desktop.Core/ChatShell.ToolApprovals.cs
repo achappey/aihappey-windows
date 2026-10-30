@@ -1,3 +1,4 @@
+using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -15,23 +16,35 @@ public sealed partial class ChatShell
 
     private void PrepareToolApprovals()
     {
+        Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("ms-appx:///AIHappey.Desktop.Core/ComposerStyles.xaml") });
+        PrepareComposerUsage();
         approvalBadgeScroll.Content = approvalBadges;
+        composerBadgeRow.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        composerBadgeRow.RowDefinitions.Add(new() { Height = GridLength.Auto });
         composerBadgeRow.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         composerBadgeRow.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        composerBadgeRow.Children.Add(mcpTagScroll);
+        var selections = new StackPanel { Spacing = 6 };
+        selections.Children.Add(contextTagScroll); selections.Children.Add(mcpTagScroll);
+        composerBadgeRow.Children.Add(selections);
         Grid.SetColumn(approvalBadgeScroll, 1); composerBadgeRow.Children.Add(approvalBadgeScroll);
+        composerBadgeRow.SizeChanged += (_, _) => UpdateComposerBadgeRow();
         RenderApprovalBadges();
     }
 
     private void UpdateComposerBadgeRow()
     {
         if (composerBadgeRow.ColumnDefinitions.Count == 0) return;
-        var left = mcpTagScroll.Visibility == Visibility.Visible;
-        var right = approvalBadgeScroll.Visibility == Visibility.Visible;
+        var left = mcpTagScroll.Visibility == Visibility.Visible || contextTagScroll.Visibility == Visibility.Visible;
+        var right = approvalBadges.Children.Count > 0;
+        approvalBadgeScroll.Visibility = right ? Visibility.Visible : Visibility.Collapsed;
+        var stacked = composerBadgeRow.ActualWidth is > 0 and < 640 && left && right;
         composerBadgeRow.Visibility = left || right ? Visibility.Visible : Visibility.Collapsed;
-        composerBadgeRow.ColumnDefinitions[0].Width = left ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
-        composerBadgeRow.ColumnDefinitions[1].Width = right ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
-        composerBadgeRow.ColumnSpacing = left && right ? 12 : 0;
+        Grid.SetRow(approvalBadgeScroll, stacked ? 1 : 0);
+        Grid.SetColumn(approvalBadgeScroll, stacked ? 0 : 1);
+        composerBadgeRow.ColumnDefinitions[0].Width = left || stacked ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+        composerBadgeRow.ColumnDefinitions[1].Width = right && !stacked ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+        composerBadgeRow.ColumnSpacing = left && right && !stacked ? 12 : 0;
+        composerBadgeRow.RowSpacing = stacked ? 8 : 0;
     }
 
     private async Task<ToolApprovalDecision> ApproveToolAsync(PendingToolApproval pending, CancellationToken ct)
@@ -101,7 +114,15 @@ public sealed partial class ChatShell
             var text = new TextBlock { Text = label, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
             var button = new Button { Name = tool is null ? "AutoApproveAllBadge" : "AutoApproveToolBadge", Tag = tool,
                 Content = text, MaxWidth = 360, Padding = new Thickness(10, 4, 10, 4), CornerRadius = new CornerRadius(16) };
-            ToolbarControls.Subtle(button); ToolbarControls.Label(button, DesktopResources.Format("ManageAutoApproval", label));
+            if (tool is null)
+            {
+                var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+                content.Children.Add(DesktopIcons.Create(Icon.Shield, 14)); content.Children.Add(text);
+                button.Content = content; button.Style = (Style)Resources["ComposerBrrrStyle"];
+                ControlAppearance.Stock(button);
+            }
+            else ToolbarControls.Subtle(button);
+            ToolbarControls.Label(button, DesktopResources.Format("ManageAutoApproval", label));
             var menu = new MenuFlyout();
             var remove = new MenuFlyoutItem { Name = "DisableAutoApprovalRule", Text = DesktopResources.Get("DisableAutoApproval") };
             remove.Click += async (_, _) => await DisableAutomaticApprovalsAsync(tool);
@@ -110,12 +131,12 @@ public sealed partial class ChatShell
             ControlAppearance.Native(remove); ControlAppearance.Native(clear);
             menu.Items.Add(remove); menu.Items.Add(clear); button.Flyout = menu;
             var badge = new Border { Child = button, CornerRadius = new CornerRadius(16) };
-            ControlAppearance.TokenBadge(badge); approvalBadges.Children.Add(badge);
+            if (tool is not null) ControlAppearance.TokenBadge(badge);
+            approvalBadges.Children.Add(badge);
         }
         if (session.ToolApprovals.ApproveAll) AddBadge(DesktopResources.Get("AutoApproveAllBadge"), null);
         foreach (var tool in session.Settings.AllowedToolList.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
             AddBadge(DesktopResources.Format("AutoApproveToolBadge", tool), tool);
-        approvalBadgeScroll.Visibility = approvalBadges.Children.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
-        UpdateComposerBadgeRow();
+        UpdateComposerUsage();
     }
 }
