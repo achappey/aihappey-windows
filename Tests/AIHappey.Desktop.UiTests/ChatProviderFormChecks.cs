@@ -29,6 +29,12 @@ public partial class App
     private static FrameworkElement ProviderView(object form) => (FrameworkElement)form.GetType().GetProperty("View")!.GetValue(form)!;
     private static bool ProviderValid(object form) => (bool)form.GetType().GetProperty("IsValid")!.GetValue(form)!;
     private static string ProviderLabel(string key) => DesktopResources.Get("ChatForm_" + key.Replace('.', '_'));
+    private static NavigationViewItem SelectChatSettingsTab(ChatSettingsDialog dialog, string name)
+    {
+        var navigation = Field<NavigationView>(dialog, "tabs");
+        var tab = navigation.MenuItems.OfType<NavigationViewItem>().Single(item => item.Name == name);
+        navigation.SelectedItem = tab; return tab;
+    }
     private static void Choose(ComboBox control, string value) => control.SelectedItem = control.Items.OfType<ComboBoxItem>().Single(item => (string)item.Tag == value);
     private async Task CheckNativeChatProvidersAsync(ElementTheme theme)
     {
@@ -43,8 +49,8 @@ public partial class App
             var dialog = new ChatSettingsDialog(original, provider) { XamlRoot = root.XamlRoot, RequestedTheme = theme,
                 SaveAsync = next => { saved = next; return Task.CompletedTask; } };
             SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(100);
-            var tab = Descendants(dialog).OfType<ToggleButton>().Single(t => t.Name == "ChatProviderTab"); Toggle(tab); await Task.Delay(80);
-            Check((string)tab.Content == (provider == "deepseek" ? "DeepSeek" : "Anthropic") && tab.IsChecked == true, context + ": branded native provider tab");
+            var tab = SelectChatSettingsTab(dialog, "ChatProviderTab"); await Task.Delay(80);
+            Check((string)tab.Content == (provider == "deepseek" ? "DeepSeek" : "Anthropic") && ReferenceEquals(Field<NavigationView>(dialog, "tabs").SelectedItem, tab), context + ": branded native provider tab");
             var form = ProviderForm(dialog); var view = ProviderView(form);
             var controls = ProviderControls(view).ToArray();
             Check(ProviderValid(form), context + ": initial default form is valid");
@@ -75,11 +81,11 @@ public partial class App
                     && saved.ProviderMetadata[provider]["tools"]!.AsArray().Any(n => n?["type"]?.GetValue<string>() == "web_search"), context + ": DeepSeek controls save native fields");
             else Check(saved!.ProviderMetadata[provider]["future"]!["keep"]!.GetValue<bool>() && !saved.ProviderMetadata[provider].ContainsKey("web_search"), context + ": unknown configuration survives and UI aliases never persist");
             var reopen = new ChatSettingsDialog(saved!, provider) { XamlRoot = root.XamlRoot, RequestedTheme = theme };
-            shown = reopen.ShowAsync(); await Task.Delay(80); Toggle(Descendants(reopen).OfType<ToggleButton>().Single(t => t.Name == "ChatProviderTab")); await Task.Delay(60);
+            shown = reopen.ShowAsync(); await Task.Delay(80); SelectChatSettingsTab(reopen, "ChatProviderTab"); await Task.Delay(60);
             Check(ProviderValid(ProviderForm(reopen)), context + ": saved provider form reopens valid");
             InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80);
             InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
-            Check(reopen.Result!.ProviderHeaders.Count == 0 && (provider == "deepseek" ? !reopen.Result.ProviderMetadata.ContainsKey("deepseek")
+            Check(reopen.Result!.ProviderHeaders.Count == 0 && (provider == "deepseek" ? JsonNode.DeepEquals(reopen.Result.ProviderMetadata["deepseek"], new JsonObject())
                 : JsonNode.DeepEquals(reopen.Result.ProviderMetadata["anthropic"], AnthropicChatConfig.Defaults())), context + ": restore defaults rebuilds and commits provider defaults");
         }
         // Registration must remain an additive extension, including case-insensitive lookup.
@@ -98,25 +104,31 @@ public partial class App
         ToggleSwitch Header(string name) => All().OfType<ToggleSwitch>().Single(t => t.Name == "Anthropic_" + name + "_Enabled");
         TextBox Input(string section, string label) => Body(section).OfType<TextBox>().Single(t => (string)t.Header == ProviderLabel(label));
         ComboBox Select(string section, string label) => Body(section).OfType<ComboBox>().Single(t => (string)t.Header == ProviderLabel(label));
+        async Task EditTextAsync(TextBox box, string text)
+        {
+            box.Focus(FocusState.Programmatic); box.Text = text;
+            // WinUI can defer TextChanged; observe validation after the native event.
+            await Task.Delay(60);
+        }
         Check(All().OfType<SettingsExpander>().Count() == 18 && All().OfType<SettingsCard>().Count() == 2, context + ": all nineteen cards plus maximum tokens are native");
         var maxTokens = All().OfType<TextBox>().Single(t => (string)t.Header == ProviderLabel("maxOutputTokens"));
-        maxTokens.Text = "0"; Check(!ProviderValid(form), context + ": required token bound rejects zero");
-        maxTokens.Text = "64000"; Check(ProviderValid(form), context + ": correcting tokens clears validation");
+        await EditTextAsync(maxTokens, "0"); Check(!ProviderValid(form), context + ": required token bound rejects zero");
+        await EditTextAsync(maxTokens, "64000"); Check(ProviderValid(form), context + ": correcting tokens clears validation");
         Header("thinking").IsOn = false; Header("thinking").IsOn = true;
         var mode = Select("thinking", "mode"); Choose(mode, "enabled");
-        var budget = Input("thinking", "budget"); budget.Text = "100";
+        var budget = Input("thinking", "budget"); await EditTextAsync(budget, "100");
         Check(!ProviderValid(form), context + ": thinking budget enforces minimum");
         Section("thinking").IsExpanded = false;
         InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await Task.Delay(100);
         Check(dialog.Result is null && Section("thinking").IsExpanded, context + ": invalid close keeps draft and expands invalid section");
         Choose(mode, "adaptive"); Check(ProviderValid(form) && !budget.IsEnabled, context + ": hidden enabled-only budget cannot block adaptive mode");
-        Choose(mode, "enabled"); Check(!ProviderValid(form), context + ": invalid re-enabled budget is validated again"); budget.Text = "4096";
+        Choose(mode, "enabled"); Check(!ProviderValid(form), context + ": invalid re-enabled budget is validated again"); await EditTextAsync(budget, "4096");
         Header("output_config").IsOn = true;
-        var taskBudget = Input("output_config", "anthropic.outputConfig.taskBudget"); taskBudget.Text = "19999";
-        Check(!ProviderValid(form), context + ": task budget uses chat form minimum"); taskBudget.Text = "25000";
+        var taskBudget = Input("output_config", "anthropic.outputConfig.taskBudget"); await EditTextAsync(taskBudget, "19999");
+        Check(!ProviderValid(form), context + ": task budget uses chat form minimum"); await EditTextAsync(taskBudget, "25000");
         Header("container").IsOn = true;
-        Input("container", "anthropic.containerSettings.id").Text = " container-ui ";
-        Input("container", "anthropic.containerSettings.customSkillIds").Text = " custom-ui, custom-ui ";
+        await EditTextAsync(Input("container", "anthropic.containerSettings.id"), " container-ui ");
+        await EditTextAsync(Input("container", "anthropic.containerSettings.customSkillIds"), " custom-ui, custom-ui ");
         Body("container").OfType<ToggleSwitch>().Single(t => AutomationProperties.GetName(t) == ProviderLabel("anthropic.containerSettings.skills.pdf")).IsOn = true;
         Check(model.ContainerId == "container-ui" && model.ContainerSkills("custom").SequenceEqual(["custom-ui"]), context + ": native container ID and skill normalization");
         foreach (var tool in AnthropicChatConfig.ToolTypes)
@@ -132,14 +144,15 @@ public partial class App
                 Check(model.String(tool + "/type") == AnthropicChatConfig.Versions(tool)[^1], context + ": all current version choices " + tool);
             }
         }
-        var examples = Input("bash", "anthropic.inputExamples"); examples.Text = "{broken";
-        Check(!ProviderValid(form), context + ": malformed optional JSON retained and blocks saving");
+        var examples = Input("bash", "anthropic.inputExamples"); await EditTextAsync(examples, "{broken");
+        Check(!ProviderValid(form), context + $": malformed optional JSON retained and blocks saving (text={examples.Text}, enabled={examples.IsEnabled})");
         Header("bash").IsOn = false; Check(ProviderValid(form), context + ": disabling tool clears inactive JSON error");
-        Header("bash").IsOn = true; examples.Text = "[]"; Check(ProviderValid(form), context + ": optional JSON correction restores validity");
-        examples.Text = ""; Check(model.Get("bash/input_examples") is null, context + ": clearing JSON omits field instead of saving an empty object");
+        Header("bash").IsOn = true; await EditTextAsync(examples, "[]"); Check(ProviderValid(form), context + ": optional JSON correction restores validity");
+        await EditTextAsync(examples, ""); Check(model.Get("bash/input_examples") is null, context + ": clearing JSON omits field instead of saving an empty object");
         Header("budget").IsOn = true; Check(!ProviderValid(form), context + ": newly enabled session budget requires positive USD amount");
-        var money = Input("budget", "anthropic.session.maxListCostUsd"); money.Text = "12345678901234567890.99";
-        Check(model.String("budget/max_list_cost/amount") == "1234567890123456789099" && ProviderValid(form), context + ": large native USD input serializes exact string cents");
+        var money = Input("budget", "anthropic.session.maxListCostUsd"); await EditTextAsync(money, "12345678901234567890.99");
+        Check(model.String("budget/max_list_cost/amount") == "1234567890123456789099" && ProviderValid(form),
+            context + $": large native USD input serializes exact string cents (text={money.Text}, cents={model.String("budget/max_list_cost/amount")}, enabled={money.IsEnabled})");
         Header("speed").IsOn = true; Choose(Select("speed", "anthropic.other.speed.title"), "fast");
         Choose(Select("other", "anthropic.other.serviceTier.title"), "standard_only"); Choose(Select("other", "anthropic.other.inferenceGeo.title"), "us");
         var contextSection = Section("context_management"); contextSection.IsExpanded = true;
@@ -149,7 +162,7 @@ public partial class App
         var type = Select("context_management", "anthropic.contextManagement.type"); Choose(type, "clear_thinking_20251015");
         Choose(Select("context_management", "anthropic.contextManagement.keep"), "all_literal"); ActionButton("save");
         ActionButton("anthropic.contextManagement.add"); Choose(Select("context_management", "anthropic.contextManagement.type"), "compact_20260112");
-        Input("context_management", "anthropic.contextManagement.instructions").Text = " preserve facts "; ActionButton("save");
+        await EditTextAsync(Input("context_management", "anthropic.contextManagement.instructions"), " preserve facts "); ActionButton("save");
         Check((model.Get("context_management/edits") as JsonArray)?.Count == 2, context + ": context editor saves each type without replacing unrelated entries");
         ActionButton("up");
         Check(ProviderChatConfig.Text(model.Get("context_management/edits")?[0]?["type"]) == "compact_20260112", context + ": native context reorder preserves payload order");

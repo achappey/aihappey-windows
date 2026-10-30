@@ -25,15 +25,16 @@ public partial class App
         SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(120);
         Check(Descendants(dialog).OfType<TextBox>().Any(t => t.Name == "MaxOutputTokens")
             && !Descendants(dialog).OfType<TextBox>().Any(t => t.Name == "SystemInstructions"), context + ": General retains token limit but has no custom-instructions field");
-        var tabs = Descendants(dialog).OfType<ToggleButton>().Where(t => t.Name.StartsWith("Chat") && t.Name.EndsWith("Tab")).ToArray();
+        var navigation = Field<NavigationView>(dialog, "tabs"); CheckNativeTabs(navigation, context);
+        var tabs = navigation.MenuItems.OfType<NavigationViewItem>().ToArray();
         Check(tabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab", "ChatPluginsTab", "ChatProviderTab"])
-            && tabs[0].IsChecked == true && tabs.Count(t => t.IsChecked == true) == 1,
+            && ReferenceEquals(navigation.SelectedItem, tabs[0]),
             context + ": chat tabs retain General, Tools, Skills, Plugins and provider with General selected by default");
         dialog.ShowToolsTab(); await Task.Delay(80);
-        Check(tabs.Single(t => t.Name == "ChatToolsTab").IsChecked == true && tabs.Count(t => t.IsChecked == true) == 1,
+        Check(ReferenceEquals(navigation.SelectedItem, tabs.Single(t => t.Name == "ChatToolsTab")),
             context + ": reordered Tools tab retains exclusive native navigation");
         dialog.ShowSkillsTab(); await Task.Delay(120); dialog.UpdateLayout();
-        Check(Descendants(dialog).OfType<ToggleButton>().Single(t => t.Name == "ChatSkillsTab").IsChecked == true,
+        Check(ReferenceEquals(navigation.SelectedItem, tabs.Single(t => t.Name == "ChatSkillsTab")),
             context + ": native Skills tab selected alongside General and provider");
         var skillsView = Descendants(dialog).OfType<SkillsSettingsView>().Single();
         Check(skillsView.Children[0] is TextBox { Name: "ChatSkillSearch" }
@@ -82,14 +83,21 @@ public partial class App
         var reset = new ChatSettingsDialog(saved!, null, _ => Task.FromResult(new DesktopSkillSelection(items, new HashSet<string>(), "api.example")))
             { XamlRoot = root.XamlRoot, RequestedTheme = theme };
         shown = reset.ShowAsync(); await Task.Delay(100); InvokeButton(Descendants(reset).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80);
-        var resetTabs = Descendants(reset).OfType<ToggleButton>().Where(t => t.Name.StartsWith("Chat") && t.Name.EndsWith("Tab")).ToArray();
+        var resetNavigation = Field<NavigationView>(reset, "tabs");
+        var resetTabs = resetNavigation.MenuItems.OfType<NavigationViewItem>().ToArray();
         Check(resetTabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab", "ChatPluginsTab"])
-            && resetTabs[0].IsChecked == true && resetTabs.Count(t => t.IsChecked == true) == 1,
+            && ReferenceEquals(resetNavigation.SelectedItem, resetTabs[0]),
             context + ": restore defaults preserves General, Tools, Skills order without a provider form");
         InvokeButton(Descendants(reset).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
         Check(reset.Result?.EnabledSkillIds.Count == 0, context + ": restore defaults clears enabled skills");
-        var failedSave = new ChatSettingsDialog(saved!, null) { XamlRoot = root.XamlRoot, RequestedTheme = theme, SaveAsync = _ => throw new IOException("disk") };
-        shown = failedSave.ShowAsync(); await Task.Delay(80); InvokeButton(Descendants(failedSave).OfType<Button>().Single(b => b.Name == "CloseButton")); await Task.Delay(80);
+        var failedSaveAttempted = false;
+        var failedSave = new ChatSettingsDialog(saved!, null) { XamlRoot = root.XamlRoot, RequestedTheme = theme, SaveAsync = _ => { failedSaveAttempted = true; throw new IOException("disk"); } };
+        var failedSaveOpened = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        failedSave.Opened += (_, _) => failedSaveOpened.TrySetResult();
+        shown = failedSave.ShowAsync(); await failedSaveOpened.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await WaitForProviderUiAsync(() => Descendants(failedSave).OfType<Button>().Any(button => button.Name == "CloseButton"), "Save-failure dialog close action did not render");
+        InvokeButton(Descendants(failedSave).OfType<Button>().Single(b => b.Name == "CloseButton"));
+        await WaitForProviderUiAsync(() => failedSaveAttempted && Field<TextBlock>(failedSave, "validation").Visibility == Visibility.Visible, "Save-failure validation did not arrive");
         Check(shown.Status == Windows.Foundation.AsyncStatus.Started && failedSave.Result is null, context + ": disk failure keeps dialog and previous state intact");
         failedSave.DiscardOnShutdown = true; failedSave.Hide(); await shown;
     }

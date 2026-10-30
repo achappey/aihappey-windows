@@ -55,7 +55,9 @@ public partial class App
                 && !Descendants(composer).OfType<FrameworkElement>().Any(e => e.Name is "RealtimeSettings" or "RealtimeStatus"), context + ": icon-only real-time actions replace the standalone settings/status row");
             await CheckRealtimeSettingsEntryAsync(shell, "Google", false, context);
             var stateType = typeof(ChatShell).GetNestedType("RealtimeState", BindingFlags.NonPublic)!;
-            var state = Activator.CreateInstance(stateType, Field<Conversation>(shell, "current"), session.HistoryPartition, picker.Text, McpTurnSnapshot.Empty, new RealtimePreferences())!;
+            // A connected session owns an immutable canonical model, independent of
+            // deferred text/selection updates in the disabled idle-model picker.
+            var state = Activator.CreateInstance(stateType, Field<Conversation>(shell, "current"), session.HistoryPartition, "google/gemini-live", McpTurnSnapshot.Empty, new RealtimePreferences())!;
             var connection = new RealtimeUiConnection();
             stateType.GetProperty("Connection")!.SetValue(state, connection);
             typeof(ChatShell).GetField("realtime", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(shell, state);
@@ -130,11 +132,11 @@ public partial class App
     {
         var shown = (Task)Call(shell, "EditChatSettingsAsync")!; await Task.Delay(100);
         var dialog = Field<ChatSettingsDialog>(shell, "chatSettingsDialog");
-        Toggle(await RealtimeProviderTabAsync(dialog)); await Task.Delay(100);
+        await SelectRealtimeProviderTabAsync(dialog); await Task.Delay(100);
         var form = (FrameworkElement)Field<object>(dialog, "realtimeForm");
         var audio = Descendants(form).OfType<SettingsExpander>().Single(s => s.Name == "RealtimeAudioSection");
         audio.IsExpanded = true; await Task.Delay(70);
-        Check((string)Descendants(dialog).OfType<ToggleButton>().Single(t => t.Name == "ChatProviderTab").Content == provider
+        Check((string)Field<NavigationView>(dialog, "tabs").MenuItems.OfType<NavigationViewItem>().Single(t => t.Name == "ChatProviderTab").Content == provider
             && Descendants(form).OfType<ComboBox>().Single(c => c.Name == "RealtimeVoice").IsEnabled != locked,
             context + $": shared Chat Settings resolves {provider} from the real-time model and provider lock={locked}");
         InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
@@ -151,10 +153,10 @@ public partial class App
         var dialog = new ChatSettingsDialog(new(), provider, realtimePreferences: original) { XamlRoot = shell.XamlRoot, RequestedTheme = theme,
             SaveWithRealtimeAsync = (chat, realtime) => { if (failSave) throw new IOException("fixture"); savedChat = chat; saved = realtime; return Task.CompletedTask; } };
         SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(100);
-        Toggle(await RealtimeProviderTabAsync(dialog)); await Task.Delay(100);
+        await SelectRealtimeProviderTabAsync(dialog); await Task.Delay(100);
         var form = (FrameworkElement)Field<object>(dialog, "realtimeForm");
         var sections = Descendants(form).OfType<SettingsExpander>().ToArray();
-        var expected = provider == "openai" ? new[] { "Audio", "TurnDetection", "Responses" } : new[] { "Audio", "TurnDetection", "Tools", "Session", "Video" };
+        var expected = provider == "openai" ? new[] { "Audio", "TurnDetection", "Responses", "Live" } : new[] { "Audio", "TurnDetection", "Tools", "Session", "Video" };
         Check(sections.Select(s => s.Name).SequenceEqual(expected.Select(s => "Realtime" + s + "Section")) && sections.All(s => !s.IsExpanded), context + ": logical native card groups default collapsed");
         Check(!Descendants(form).OfType<Button>().Any(b => b.Name == "RealtimeReset")
             && !((StackPanel)form).Children.OfType<TextBlock>().Any(), context + ": no introductory description or duplicate provider-reset button");
@@ -183,7 +185,7 @@ public partial class App
         {
             var expiry = Descendants(form).OfType<TextBox>().Single(t => t.Name == "RealtimeExpiry"); expiry.Text = "invalid";
             var session = sections.Single(s => s.Name == "RealtimeSessionSection"); session.IsExpanded = false;
-            Toggle(Descendants(dialog).OfType<ToggleButton>().Single(t => t.Name == "ChatGeneralTab"));
+            SelectChatSettingsTab(dialog, "ChatGeneralTab");
             InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await Task.Delay(120);
             Check(shown.Status == Windows.Foundation.AsyncStatus.Started && session.IsExpanded && expiry.FocusState != FocusState.Unfocused, context + ": invalid hidden expiry expands its section and receives focus");
             expiry.Text = "20m";
@@ -196,9 +198,9 @@ public partial class App
             && original.ProviderOptions.ToJsonString() == originalJson, context + ": close commits edited real-time and chat drafts together while preserving unknown options and original settings");
         window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); await Task.Delay(80);
         var resetDialog = new ChatSettingsDialog(new(), provider, realtimePreferences: saved) { XamlRoot = shell.XamlRoot, RequestedTheme = theme };
-        shown = resetDialog.ShowAsync(); Toggle(await RealtimeProviderTabAsync(resetDialog)); await Task.Delay(80);
+        shown = resetDialog.ShowAsync(); await SelectRealtimeProviderTabAsync(resetDialog); await Task.Delay(80);
         InvokeButton(Descendants(resetDialog).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(60);
-        Toggle(await RealtimeProviderTabAsync(resetDialog)); await Task.Delay(80);
+        await SelectRealtimeProviderTabAsync(resetDialog); await Task.Delay(80);
         Check(Descendants(resetDialog).OfType<SettingsExpander>().Count() == expected.Length
             && Descendants(resetDialog).OfType<SettingsExpander>().All(s => !s.IsExpanded), context + ": footer Restore defaults rebuilds sections collapsed");
         InvokeButton(Descendants(resetDialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
@@ -208,14 +210,15 @@ public partial class App
             && !RealtimeConfiguration.Session("google/gemini-live", restored, "", [], "auto").ToJsonString().Contains("Puck"), context + ": single footer reset restores both providers and media defaults without changing the selected model");
     }
 
-    private static async Task<ToggleButton> RealtimeProviderTabAsync(ChatSettingsDialog dialog)
+    private static async Task SelectRealtimeProviderTabAsync(ChatSettingsDialog dialog)
     {
         for (var attempt = 0; attempt < 40; attempt++)
         {
-            if (Descendants(dialog).OfType<ToggleButton>().FirstOrDefault(t => t.Name == "ChatProviderTab") is { } tab) return tab;
+            if (dialog.IsLoaded && Field<NavigationView>(dialog, "tabs").MenuItems.OfType<NavigationViewItem>().Any(t => t.Name == "ChatProviderTab"))
+            { SelectChatSettingsTab(dialog, "ChatProviderTab"); return; }
             await Task.Delay(50);
         }
-        throw new InvalidOperationException($"Provider tab not rendered: provider={Field<string>(dialog, "provider")}; loaded={dialog.IsLoaded}; tabs={string.Join(",", Field<StackPanel>(dialog, "tabs").Children.OfType<ToggleButton>().Select(t => t.Name))}");
+        throw new InvalidOperationException($"Provider tab not rendered: provider={Field<string>(dialog, "provider")}; loaded={dialog.IsLoaded}; tabs={string.Join(",", Field<NavigationView>(dialog, "tabs").MenuItems.OfType<NavigationViewItem>().Select(t => t.Name))}");
     }
 }
 

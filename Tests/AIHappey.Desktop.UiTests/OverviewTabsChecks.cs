@@ -41,11 +41,16 @@ public partial class App
                 context + ": favorite refresh retains selected item, focus and navigation identities");
             var search = Descendants(page).OfType<TextBox>().Single(box => box.Name == "CatalogSearch");
             search.Text = "Needle";
-            await Task.Delay(80); page.UpdateLayout();
+            await WaitForProviderUiAsync(() => CardCount(page, "CatalogCard") == 0
+                && ((NavigationViewItem)tabs.MenuItems[0]).Content.ToString()!.Contains("(1)"), context + ": search results did not arrive");
+            page.UpdateLayout();
             Check(CardCount(page, "CatalogCard") == 0 && ((NavigationViewItem)tabs.MenuItems[0]).Content.ToString()!.Contains("(1)")
                 && favoritesTab.Content.ToString()!.Contains("(0)") && ReferenceEquals(tabs.SelectedItem, favoritesTab), context + ": search updates counts without resetting selection");
-            search.Text = ""; await Task.Delay(80); SelectNativeTab(tabs, "all");
+            search.Text = "";
+            await WaitForProviderUiAsync(() => ((NavigationViewItem)tabs.MenuItems[0]).Content.ToString()!.Contains("(56)"), context + ": search reset did not arrive");
+            SelectNativeTab(tabs, "all");
             InvokeButton(Descendants(page).OfType<Button>().Single(button => button.Content?.ToString() == DesktopResources.Get("ShowMore")));
+            await WaitForProviderUiAsync(() => CardCount(page, "CatalogCard") == 56, context + ": Show more did not complete");
             Check(CardCount(page, "CatalogCard") == 56, context + ": Show more retains pagination");
             SelectNativeTab(tabs, "backend");
             Check(CardCount(page, "CatalogCard") == 50, context + ": changing filters resets pagination");
@@ -119,7 +124,9 @@ public partial class App
             var item = new CatalogItem(kind, "provider/fixture", "Details fixture", "Description") { Definition = Json("""{"instructions":"Read-only instructions","future":{"keep":true}}"""), Version = "1" };
             var dialog = (ContentDialog)Activator.CreateInstance(assembly.GetType("AIHappey.Desktop.Core.CatalogDetailsDialog")!, [item])!;
             dialog.XamlRoot = root.XamlRoot; SystemAppearance.PrepareDialog(dialog);
-            var shown = dialog.ShowAsync(); await Task.Delay(120); dialog.UpdateLayout();
+            var opened = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            dialog.Opened += (_, _) => opened.TrySetResult();
+            var shown = dialog.ShowAsync(); await opened.Task.WaitAsync(TimeSpan.FromSeconds(5)); dialog.UpdateLayout();
             var tabs = Descendants(dialog).OfType<NavigationView>().Single(view => view.Name == "CatalogDetailsTabs");
             CheckNativeTabs(tabs, context);
             var keys = kind == CatalogKind.Agent ? new[] { "general", "instructions", "definition" } : new[] { "general", "versions" };
@@ -127,6 +134,7 @@ public partial class App
                 && (string)((NavigationViewItem)tabs.SelectedItem).Tag == "general", context + ": unchanged tab order and initial General selection");
             SelectNativeTab(tabs, keys[1]);
             var selected = (NavigationViewItem)tabs.SelectedItem;
+            await WaitForProviderUiAsync(() => selected.Focus(FocusState.Keyboard), context + ": selected tab did not become focusable");
             Check(selected.Focus(FocusState.Keyboard) && new NavigationViewItemAutomationPeer(selected).GetName() == selected.Content.ToString(), context + ": details keyboard focus and accessible name");
             if (kind == CatalogKind.Agent)
             {

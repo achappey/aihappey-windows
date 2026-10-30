@@ -20,7 +20,11 @@ public partial class App
             new ChatTarget("p/" + type + "-new", type + " new") { ModelType = type, Created = 100 + index }
         }).ToArray();
         var original = new DesktopSettings { AllowedToolList = ["keep-tool"] };
-        foreach (var type in AiModelCatalog.Types) original.AiModels.SetDefault(type, "p/" + type + "-old");
+        foreach (var type in AiModelCatalog.Types)
+        {
+            original.AiModels.SetDefault(type, "p/" + type + "-old");
+            ProviderPreferences.SetEnabled(original, type, "p", true);
+        }
         original.ModelContext.ToolTimeoutMinutes = 13;
         original.Images = new() { StorageRoot = Path.Combine(Path.GetTempPath(), "ui-custom-images"), N = 7, Seed = -3, Size = "1024x1536", MaskPath = "retained-mask.png" };
         original.Images.ProviderOptions["future"] = new() { ["keep"] = true };
@@ -44,8 +48,16 @@ public partial class App
                 && options.All(x => x.ModelType == type) && options[0].Created > options[1].Created,
                 context + ": " + type + " default and type-specific newest-first catalog");
             Check(!string.IsNullOrEmpty(AutomationProperties.GetName(picker)), context + ": accessible " + type + " picker");
-            picker.Text = "p/" + type + "-new";
+            var editor = Descendants(picker).OfType<TextBox>().Single();
+            editor.Focus(FocusState.Programmatic); await Task.Delay(80);
+            // Edit the realized native text box, as user input does, so suggestion
+            // filtering clears the previous selection before submitting the query.
+            editor.Text = "p/" + type + "-new";
+            await WaitForProviderUiAsync(() => picker.Text == editor.Text && editor.Text == "p/" + type + "-new"
+                && ((IEnumerable<ChatTarget>)picker.ItemsSource).All(model => model.Id == editor.Text), "Model picker text did not synchronize: " + type);
+            picker.IsSuggestionListOpen = false;
             InvokeButton(Descendants(picker).OfType<Button>().Single(x => x.Name == "QueryButton"));
+            await WaitForProviderUiAsync(() => Field<AiModelPreferences>(view, "draft").DefaultFor(type) == "p/" + type + "-new", "Model picker did not commit: " + type);
             Check(picker.Text == "p/" + type + "-new", context + ": native query button commits available " + type + " model");
             var switches = Descendants(view).OfType<ToggleSwitch>().Where(x => x.Name == "AiChatWith_" + type).ToArray();
             Check(switches.Length == (type is "image" or "video" or "speech" or "transcription" ? 1 : 0),
@@ -87,6 +99,7 @@ public partial class App
         Check(missing.Result?.AiModels.LanguageModel == "missing", context + ": viewing/saving does not auto-replace unavailable defaults");
 
         var noPreference = new DesktopSettings();
+        foreach (var type in AiModelCatalog.Types) ProviderPreferences.SetEnabled(noPreference, type, "p", true);
         var effective = new SettingsDialog(noPreference, true, "en", catalog) { XamlRoot = root.XamlRoot };
         shown = effective.ShowAsync(); await Task.Delay(100);
         ((NavigationView)effective.FindName("Tabs")).SelectedItem = effective.FindName("ArtificialIntelligenceTab"); effective.UpdateLayout();
@@ -110,6 +123,8 @@ public partial class App
             { XamlRoot = root.XamlRoot };
         shown = failed.ShowAsync(); await Task.Delay(100);
         ((NavigationView)failed.FindName("Tabs")).SelectedItem = failed.FindName("ArtificialIntelligenceTab"); failed.UpdateLayout();
+        await WaitForProviderUiAsync(() => Field<Dictionary<string, TextBlock>>(failed.AiModelView, "states").Values.All(state => state.Text == DesktopResources.Get("AiModelsLoadFailed")), "Model catalog failure state did not arrive");
+        failed.UpdateLayout();
         Check(Descendants(failed.AiModelView).OfType<TextBlock>().Any(x => x.Text == DesktopResources.Get("AiModelsLoadFailed")),
             context + ": catalog failure is a sanitized native state, not a settings failure");
         InvokeButton(Descendants(failed).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await shown;
@@ -131,11 +146,12 @@ public partial class App
         Check(Descendants(loading).OfType<AutoSuggestBox>().All(x => x.IsEnabled), context + ": catalog arrival enables selection without changing preferences");
 
         var session = new DesktopSession(new UiHost(true), new UiRuntime(), new());
+        foreach (var type in AiModelCatalog.Types) ProviderPreferences.SetEnabled(session.Settings, type, "p", true);
         var shell = new ChatShell(session);
         try
         {
             typeof(ChatShell).GetField("targets", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(shell, catalog);
-            var picker = Field<AutoSuggestBox>(shell, "target");
+            var picker = Field<ChatTargetPicker>(shell, "target");
             void Call(string method, params object[] arguments) => typeof(ChatShell).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(shell, arguments);
             Call("UpdateTargetSuggestions", "");
             Check(((IEnumerable<ChatTarget>)picker.ItemsSource).All(x => x.ModelType == "language"), context + ": actual chat suggestions initially expose language only");
