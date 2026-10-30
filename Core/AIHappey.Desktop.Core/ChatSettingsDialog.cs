@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AIHappey.Desktop.Core;
 
@@ -10,7 +9,9 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private ChatPreferences draft;
     private readonly string? provider;
     private readonly Grid layout = new() { RowSpacing = 16 };
-    private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
+    private readonly NavigationView tabs = new() { Name = "ChatSettingsTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock validation = new() { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private TextBox tokens = null!;
@@ -61,8 +62,13 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        var navigation = new ScrollViewer { Content = tabs, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollMode = ScrollMode.Enabled, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
-        layout.Children.Add(navigation); Grid.SetRow(page, 1); layout.Children.Add(page);
+        tabs.SelectionChanged += (_, _) =>
+        {
+            if (tabs.SelectedItem is not NavigationViewItem { Tag: FrameworkElement view }) return;
+            if (ReferenceEquals(view, general)) RefreshAvailableTools();
+            page.Content = view; page.ChangeView(null, 0, null, true);
+        };
+        layout.Children.Add(tabs); Grid.SetRow(page, 1); layout.Children.Add(page);
         Grid.SetRow(validation, 2); layout.Children.Add(validation); Content = layout;
         AutomationProperties.SetLiveSetting(validation, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Assertive);
         Build();
@@ -81,7 +87,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private void Build()
     {
         skillsView?.Dispose(); skillsView = new(draft, loadSkills, prefetchSkill);
-        tabs.Children.Clear(); general = new StackPanel { Spacing = 16 };
+        page.Content = null; tabs.MenuItems.Clear(); general = new StackPanel { Spacing = 16 };
         NativeSettingsSurface.Card(general, "GeneralChatCard", ChatSettingsFields.L("artificialIntelligence"), out var body);
         tokens = new TextBox { Name = "MaxOutputTokens", Header = DesktopResources.Get("ChatMaxOutputTokens"), PlaceholderText = DesktopResources.Get("ChatOptional"), Text = draft.MaxOutputTokens?.ToString() ?? "" };
         ControlAppearance.Stock(tokens); AutomationProperties.SetName(tokens, DesktopResources.Get("ChatMaxOutputTokens")); body.Children.Add(tokens);
@@ -90,37 +96,30 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         toolSettings = modelChat ? new ChatToolSettingsView(draft, availableTools) : null;
         if (toolSettings is not null) general.Children.Add(toolSettings);
         providerForm = realtimeForm is null ? ChatProviderForms.Create(provider, draft) : null;
-        var generalTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatGeneralTab", Content = DesktopResources.Get("General"), IsChecked = true };
-        ControlAppearance.Stock(generalTab); tabs.Children.Add(generalTab);
+        NavigationViewItem Tab(string name, string label, FrameworkElement view)
+        {
+            var tab = new NavigationViewItem { Name = name, Content = label, Tag = view };
+            AutomationProperties.SetAutomationId(tab, name); AutomationProperties.SetName(tab, label);
+            tabs.MenuItems.Add(tab); return tab;
+        }
+        var generalTab = Tab("ChatGeneralTab", DesktopResources.Get("General"), general);
         var toolsView = new LocalToolsSettingsView(draft);
-        var toolsTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatToolsTab", Content = DesktopResources.Get("Tools") };
-        ControlAppearance.Stock(toolsTab); tabs.Children.Add(toolsTab);
-        var skillsTab = new Microsoft.UI.Xaml.Controls.Primitives.ToggleButton { Name = "ChatSkillsTab", Content = DesktopResources.Get("Skills") };
-        ControlAppearance.Stock(skillsTab); tabs.Children.Add(skillsTab);
-        var pluginsTab = new ToggleButton { Name = "ChatPluginsTab", Content = DesktopResources.Get("PluginsTitle") };
-        ControlAppearance.Stock(pluginsTab); tabs.Children.Add(pluginsTab);
+        var toolsTab = Tab("ChatToolsTab", DesktopResources.Get("Tools"), toolsView);
+        var skillsTab = Tab("ChatSkillsTab", DesktopResources.Get("Skills"), skillsView);
         var pluginsView = new PluginsSettingsView(plugins, draft.EnabledAgentPluginIds);
-        selectPluginsTab = () => { foreach (var tab in tabs.Children.OfType<ToggleButton>()) tab.IsChecked = tab == pluginsTab; page.Content = pluginsView; page.ChangeView(null, 0, null, true); };
-        pluginsTab.Click += (_, _) => ShowPluginsTab();
-        foreach (var tab in tabs.Children.OfType<ToggleButton>().Where(t => t != pluginsTab)) tab.Click += (_, _) => pluginsTab.IsChecked = false;
-        Microsoft.UI.Xaml.Controls.Primitives.ToggleButton? providerTab = null;
+        var pluginsTab = Tab("ChatPluginsTab", DesktopResources.Get("PluginsTitle"), pluginsView);
+        selectPluginsTab = () => tabs.SelectedItem = pluginsTab;
         selectProviderTab = null;
         if (providerForm is not null || realtimeForm is not null)
         {
-            providerTab = new() { Name = "ChatProviderTab", Content = provider?.ToLowerInvariant() switch { "openai" => "OpenAI", "google" => "Google", "mistral" => "Mistral", "anthropic" => "Anthropic", "deepseek" => "DeepSeek", _ => provider } };
-            ControlAppearance.Stock(providerTab); tabs.Children.Add(providerTab);
-            selectProviderTab = () => { generalTab.IsChecked = skillsTab.IsChecked = toolsTab.IsChecked = false; providerTab.IsChecked = true; page.Content = (FrameworkElement?)realtimeForm ?? providerForm!.View; page.ChangeView(null, 0, null, true); };
-            providerTab.Click += (_, _) => selectProviderTab();
+            var providerTab = Tab("ChatProviderTab", provider?.ToLowerInvariant() switch { "openai" => "OpenAI", "google" => "Google", "mistral" => "Mistral", "anthropic" => "Anthropic", "deepseek" => "DeepSeek", _ => provider ?? "" },
+                (FrameworkElement?)realtimeForm ?? providerForm!.View);
+            selectProviderTab = () => tabs.SelectedItem = providerTab;
         }
-        selectGeneralTab = () => { generalTab.IsChecked = true; skillsTab.IsChecked = toolsTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false; RefreshAvailableTools(); page.Content = general; page.ChangeView(null, 0, null, true); };
-        generalTab.Click += (_, _) => selectGeneralTab();
-        selectSkillsTab = () => { skillsTab.IsChecked = true; generalTab.IsChecked = toolsTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false;
-            page.Content = skillsView; page.ChangeView(null, 0, null, true); };
-        skillsTab.Click += (_, _) => ShowSkillsTab();
-        selectToolsTab = () => { toolsTab.IsChecked = true; generalTab.IsChecked = skillsTab.IsChecked = false; if (providerTab is not null) providerTab.IsChecked = false;
-            page.Content = toolsView; page.ChangeView(null, 0, null, true); };
-        toolsTab.Click += (_, _) => ShowToolsTab();
-        page.Content = general;
+        selectGeneralTab = () => tabs.SelectedItem = generalTab;
+        selectSkillsTab = () => tabs.SelectedItem = skillsTab;
+        selectToolsTab = () => tabs.SelectedItem = toolsTab;
+        selectGeneralTab();
     }
 
     private async void CommitOnClose(ContentDialog sender, ContentDialogClosingEventArgs args)
@@ -155,6 +154,13 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         finally { deferral.Complete(); }
     }
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => SizeToRoot();
+    protected override void OnApplyTemplate()
+    {
+        // Bound top-navigation overflow before its first measure, including callers that
+        // show the dialog directly rather than through SystemAppearance.PrepareDialog.
+        if (XamlRoot is not null) SizeToRoot();
+        base.OnApplyTemplate();
+    }
     void IResponsiveDialog.SizeToRoot() => SizeToRoot();
     private void SizeToRoot()
     {

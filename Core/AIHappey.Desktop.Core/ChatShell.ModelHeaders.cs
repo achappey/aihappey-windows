@@ -55,6 +55,7 @@ public sealed partial class ChatShell
         ct.ThrowIfCancellationRequested(); if (closing || partition != session.HistoryPartition) return;
         modelFavorites = next; modelFavoritesPartition = partition;
         modelsOverview.SetFavorites(next);
+        providerDialog?.SetFavorites(next);
         UpdateModelFavorites();
     }
 

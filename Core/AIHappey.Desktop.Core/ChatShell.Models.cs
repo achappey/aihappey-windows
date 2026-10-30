@@ -86,16 +86,17 @@ public sealed partial class ChatShell
         if (!CanUseModelOverview || modelFavoritesPartition != session.HistoryPartition) return;
         await RunAsync(ct => SaveModelFavoriteAsync(model, ct));
     }
-    private async Task LaunchModelAsync(ChatTarget requested)
+    private async Task LaunchModelAsync(ChatTarget requested, bool fromProviders = false)
     {
-        if (!CanUseModelOverview || !ModelOverviewCatalog.CanLaunch(requested)) return;
+        if (!(fromProviders ? CanUseProviders : CanUseModelOverview) || !ModelOverviewCatalog.CanLaunch(requested)) return;
         await RunAsync(async ct =>
         {
             var partition = session.HistoryPartition;
             // Revalidate against current discovery, not against a label or a stale card from a previous endpoint.
             var available = await client.ListAsync(ServiceKind.Ai, ct);
             ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != partition) return;
-            var selected = available.FirstOrDefault(m => m.Id == requested.Id && m.ModelType == requested.ModelType)
+            var selected = available.FirstOrDefault(m => m.Id == requested.Id && m.ModelType == requested.ModelType
+                && (!fromProviders || ModelOverviewCatalog.ProviderKey(m) == ModelOverviewCatalog.ProviderKey(requested)))
                 ?? throw new GatewayException(DesktopResources.Get("ModelsUnavailable"));
             aiModelTargets = available;
             if (selected.ModelType == "image")

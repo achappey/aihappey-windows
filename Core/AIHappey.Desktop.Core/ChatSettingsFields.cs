@@ -11,9 +11,10 @@ namespace AIHappey.Desktop.Core;
 internal sealed class ChatSettingsFields
 {
     private readonly List<Action> refresh = [];
+    private readonly Dictionary<Control, Action> validators = [];
     private readonly HashSet<Control> invalid = [];
     private bool syncing;
-    public bool IsValid => invalid.Count == 0;
+    public bool IsValid { get { foreach (var validate in validators.Values) validate(); return invalid.Count == 0; } }
     public Control? FirstInvalid => invalid.FirstOrDefault(control => control.IsEnabled);
     public static string L(string key) => DesktopResources.Get("ChatForm_" + key.Replace(':', '_').Replace('.', '_'));
     public void Refresh()
@@ -25,7 +26,11 @@ internal sealed class ChatSettingsFields
     }
     public void Changed(Action change) { if (syncing) return; change(); Refresh(); }
     public void Watch(Action update) { refresh.Add(update); update(); }
-    public void Forget(Panel view) => invalid.RemoveWhere(control => NativeSettingsSurface.Contains(view, control));
+    public void Forget(Panel view)
+    {
+        invalid.RemoveWhere(control => NativeSettingsSurface.Contains(view, control));
+        foreach (var control in validators.Keys.Where(control => NativeSettingsSurface.Contains(view, control)).ToArray()) validators.Remove(control);
+    }
     private void Enabled(Control control, Func<bool>? enabled)
     {
         if (enabled is null) return;
@@ -50,16 +55,20 @@ internal sealed class ChatSettingsFields
             if (valid) invalid.Remove(box); else invalid.Add(box);
             error.Visibility = valid ? Visibility.Collapsed : Visibility.Visible;
         }
-        refresh.Add(() => { if (!invalid.Contains(box) && box.FocusState == FocusState.Unfocused && box.Text != read()) box.Text = read(); if (!box.IsEnabled) error.Visibility = Visibility.Collapsed; });
-        if (trackValidation) Watch(Validate);
-        box.TextChanged += (_, _) =>
+        // Disabled fields do not block saving, but their invalid draft text must survive
+        // until re-enabled. The active-error set intentionally drops disabled controls.
+        refresh.Add(() => { if ((validate?.Invoke(box.Text) ?? true) && box.FocusState == FocusState.Unfocused && box.Text != read()) box.Text = read(); if (!box.IsEnabled) error.Visibility = Visibility.Collapsed; });
+        if (trackValidation) { validators.Add(box, Validate); Watch(Validate); }
+        // TextChanged can be deferred until a refresh or tab switch. Observe the value
+        // synchronously so validation and commit always see the user's latest edit.
+        box.RegisterPropertyChangedCallback(TextBox.TextProperty, (_, _) =>
         {
             if (syncing) return;
             var valid = validate?.Invoke(box.Text) ?? true;
             if (valid) invalid.Remove(box); else invalid.Add(box);
             error.Visibility = valid ? Visibility.Collapsed : Visibility.Visible;
             if (valid) Changed(() => write(box.Text)); else Refresh();
-        };
+        });
         return box;
     }
 

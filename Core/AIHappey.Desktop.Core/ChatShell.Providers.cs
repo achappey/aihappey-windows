@@ -2,6 +2,7 @@ using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
 
 namespace AIHappey.Desktop.Core;
@@ -69,17 +70,50 @@ public sealed partial class ChatShell
     private async Task OpenProviderDetailsAsync(CatalogProvider provider, Button owner)
     {
         if (!CanUseProviders) return;
-        var modelTypes = new ProviderOverviewCatalog([], aiModelTargets).Types(provider.Id);
-        var dialog = new ProviderDetailsDialog(provider, modelTypes) { XamlRoot = XamlRoot };
+        var partition = session.HistoryPartition;
+        await RunAsync(LoadModelFavoritesAsync);
+        if (!CanUseProviders || partition != session.HistoryPartition || modelFavoritesPartition != partition) return;
+        var dialog = new ProviderDetailsDialog(provider, aiModelTargets ?? [], modelFavorites) { XamlRoot = XamlRoot };
+        ChatTarget? launch = null;
         SystemAppearance.PrepareDialog(dialog); providerDialog = dialog; historyDialogOpen = true;
         dialog.LinkRequested = async uri => await OpenProviderLinkAsync(uri, dialog);
+        bool Current(ChatTarget model) => CanUseProviderDialog(dialog, partition)
+            && ModelOverviewCatalog.ProviderKey(model) == provider.Id
+            && aiModelTargets?.Any(available => available.Id == model.Id && available.ModelType == model.ModelType
+                && ModelOverviewCatalog.ProviderKey(available) == provider.Id) == true;
+        dialog.CopyRequested = model =>
+        {
+            if (!Current(model)) return;
+            try { var data = new DataPackage(); data.SetText(ModelOverviewCatalog.DisplayId(model)); Clipboard.SetContent(data); }
+            catch { dialog.Notice(DesktopResources.Get("ClipboardUnavailable")); }
+        };
+        dialog.FavoriteRequested = async model =>
+        {
+            if (!Current(model)) return;
+            await RunAsync(async ct =>
+            {
+                try { await SaveModelFavoriteAsync(model, ct); }
+                catch (OperationCanceledException) { if (providerDialog == dialog) dialog.Notice(DesktopResources.Get("OperationCanceled")); }
+                catch { if (providerDialog == dialog) dialog.Notice(DesktopResources.Get("OperationFailed")); }
+            });
+        };
+        dialog.LaunchRequested = model =>
+        {
+            if (!Current(model) || !ModelOverviewCatalog.CanLaunch(model)) return;
+            launch = model; dialog.Hide();
+        };
         try { await dialog.ShowAsync(); }
         finally
         {
             providerDialog = null; historyDialogOpen = false;
-            if (!closing && owner.IsLoaded) owner.Focus(FocusState.Programmatic);
+            if (launch is null && !closing && activePage == DesktopPage.Providers && partition == session.HistoryPartition && owner.IsLoaded) owner.Focus(FocusState.Programmatic);
         }
+        // Await the complete native modal teardown before launching or focusing another page.
+        if (launch is not null && partition == session.HistoryPartition) await LaunchModelAsync(launch, fromProviders: true);
     }
+    private bool CanUseProviderDialog(ProviderDetailsDialog dialog, string partition) => providerDialog == dialog && dialog.IsPresented
+        && activePage == DesktopPage.Providers && initialized && !busy && !closing && !downloading
+        && historyDialogOpen && catalogDialog is null && session.HistoryPartition == partition;
     private async Task OpenProviderLinkAsync(Uri uri, ProviderDetailsDialog? owner = null)
     {
         if (closing || busy || activePage != DesktopPage.Providers || !initialized || ModelProviders.SafeWebUri(uri.AbsoluteUri) is null

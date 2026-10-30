@@ -46,6 +46,9 @@ internal sealed class ProviderLogo : Grid
             try
             {
                 image.Source = null;
+                // Keep URI images eligible for native decoding while awaiting ImageOpened.
+                // Retain the placeholder until success and clear each failed source.
+                image.Visibility = Visibility.Visible;
                 if (embedded)
                 {
                     // Only bounded raster data from our bundled catalog, never HTML or script-bearing data URIs.
@@ -72,7 +75,7 @@ internal sealed class ProviderLogo : Grid
             catch (Exception) { /* Network, decode or timeout failure: try the next bounded candidate. */ }
             finally { image.ImageOpened -= opened; image.ImageFailed -= failed; }
         }
-        if (!ct.IsCancellationRequested) image.Source = null;
+        if (!ct.IsCancellationRequested) { image.Source = null; image.Visibility = Visibility.Collapsed; }
     }
     private void SetDisplayedSource(string? source)
     {

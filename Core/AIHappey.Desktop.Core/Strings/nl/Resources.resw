@@ -2013,4 +2013,6 @@ Luidspreker: {1}</value></data>
   <data name="AgentRealtimeSpeechFailed" xml:space="preserve"><value>Het antwoord kon niet worden afgespeeld. Het tekstantwoord blijft beschikbaar.</value></data>
   <data name="AgentSpeechSampleRate" xml:space="preserve"><value>Samplefrequentie (Hz)</value></data>
   <data name="AgentSpeechOptionsHint" xml:space="preserve"><value>Stem accepteert een aangepaste stem-ID. Lege instellingen gebruiken providerstandaarden of geavanceerde opties; expliciete instellingen gaan voor overeenkomstige provideropties. Ondersteuning verschilt per model: stemgebonden modellen behouden hun stem en sommige providers ondersteunen geen instructies of taal. Voer het audioformaat in als MIME-type, bijvoorbeeld audio/mpeg. Directe WebSocket-weergave gebruikt ruwe PCM (OpenAI: 24.000 Hz); de gekozen codering geldt voor HTTP-spraak. De samplefrequentie geldt waar ondersteund voor streaming; niet-streamende HTTP-spraak kan de providerfrequentie gebruiken.</value></data>
+  <data name="ProviderCountry_RU" xml:space="preserve"><value>Rusland</value></data>
+  <data name="ProviderCountry_VG" xml:space="preserve"><value>Britse Maagdeneilanden</value></data>
 </root>

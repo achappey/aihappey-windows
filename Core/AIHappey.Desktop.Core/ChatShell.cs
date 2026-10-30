@@ -844,6 +844,7 @@ public sealed partial class ChatShell : UserControl
         RenderContextTags();
         RenderApprovalBadges();
         SetOverviewBusy(value);
+        providerDialog?.SetActionsEnabled(!value);
         SetNavigationBusy(value);
         imageTarget.IsEnabled = !value;
         imagesPage.SetBusy(value, inference && activePage == DesktopPage.Images);

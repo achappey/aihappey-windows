@@ -168,7 +168,7 @@ internal sealed class ProvidersOverviewPage : UserControl
         var metadata = new NativeWrapPanel { Spacing = 6 };
         if (provider.Category is { } category) metadata.Children.Add(Badge(FacetLabel("category", category)));
         if (provider.Experimental) metadata.Children.Add(Badge(DesktopResources.Get("ProviderExperimental")));
-        foreach (var type in catalog.Types(provider.Id)) metadata.Children.Add(Badge(FacetLabel("modelType", type)));
+        foreach (var type in catalog.Types(provider.Id)) metadata.Children.Add(Badge(FacetLabel("modelType", type), DesktopIcons.ModelType(type)));
         labels.Children.Add(metadata);
         var country = provider.ProviderCountry?.Trim().ToUpperInvariant();
         if (country is { Length: 2 } && country.All(c => c is >= 'A' and <= 'Z')
@@ -194,9 +194,15 @@ internal sealed class ProvidersOverviewPage : UserControl
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) }; NativeCardSurface.Divider(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
         var card = new Border { Name = "ProviderCard", Tag = provider, Child = grid }; NativeCardSurface.Card(card); AutomationProperties.SetName(card, provider.Name); return card;
     }
-    internal static Border Badge(string text)
+    internal static Border Badge(string text, Icon? icon = null)
     {
-        var badge = new Border { Child = new TextBlock { Text = text, FontSize = 12, TextWrapping = TextWrapping.Wrap }, VerticalAlignment = VerticalAlignment.Top };
+        var content = new Grid { ColumnSpacing = icon is null ? 0 : 4 };
+        content.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); content.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        if (icon is { } value) content.Children.Add(DesktopIcons.Create(value, 12));
+        var label = new TextBlock { Text = text, FontSize = 12, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
+        Grid.SetColumn(label, 1); content.Children.Add(label);
+        var badge = new Border { Child = content, VerticalAlignment = VerticalAlignment.Top };
+        AutomationProperties.SetName(badge, text);
         NativeCardSurface.Badge(badge); return badge;
     }
     private static Button ActionButton(CatalogProvider provider, string resource, Icon icon, string action, IconVariant variant = IconVariant.Regular)
