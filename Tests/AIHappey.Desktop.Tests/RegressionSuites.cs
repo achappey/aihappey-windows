@@ -15,6 +15,7 @@ internal static class RegressionSuites
             ["canvas"] = () => Sync(() => CanvasRegressionTests.Run(check)),
             ["primitive-routing"] = () => PrimitiveRoutingRegressionTests.RunAsync(check, Data("routing")),
             ["realtime"] = () => RealtimeRegressionTests.RunAsync(check, Data("realtime")),
+            ["fishaudio"] = () => RealtimeRegressionTests.RunFishAudioAsync(check, Data("fishaudio")),
             ["welcome-speech"] = () => WelcomeSpeechRegressionTests.RunAsync(check),
             ["agent-realtime"] = async () => { await AgentRealtimeRegressionTests.RunAsync(check, Data("agent-realtime")); await StreamingSpeechRegressionTests.RunAsync(check); },
             ["overview-consistency"] = () => OverviewConsistencyRegressionTests.RunAsync(check, Data("overview")),

@@ -26,6 +26,18 @@ public sealed class DesktopRealtimeTokenClient(DesktopChatClient client, HttpCli
         return result["sdp"]!.GetValue<string>();
     }
     public async Task<string> GetAsync(JsonObject payload, ChatPreferences preferences, string provider, CancellationToken ct)
+        => (await GetResponseAsync(payload, preferences, provider, ct))["value"]!.GetValue<string>();
+
+    public async Task<JsonObject> GetFishSessionAsync(JsonObject payload, ChatPreferences preferences, CancellationToken ct)
+    {
+        var response = await GetResponseAsync(payload, preferences, "fishaudio", ct);
+        if (response["providerMetadata"]?["fishaudio"] is not JsonObject token || token["transport"]?.ToString() != "livekit"
+            || token["token"]?.ToString() != response["value"]?.ToString())
+            throw new GatewayException("Invalid Fish Audio session response.");
+        return (JsonObject)token.DeepClone();
+    }
+
+    private async Task<JsonObject> GetResponseAsync(JsonObject payload, ChatPreferences preferences, string provider, CancellationToken ct)
     {
         using var request = await client.RequestAsync(ServiceKind.Ai, HttpMethod.Post, "v1/realtime/client_secrets", ct);
         preferences.ApplyHeaders(request, provider);
@@ -47,6 +59,6 @@ public sealed class DesktopRealtimeTokenClient(DesktopChatClient client, HttpCli
         if (string.IsNullOrWhiteSpace(value) || token["expires_at"] is not JsonValue expiry || !expiry.TryGetValue<long>(out var expiresAt)
             || expiresAt <= DateTimeOffset.UtcNow.ToUnixTimeSeconds())
             throw new GatewayException("The realtime credential is missing or expired.");
-        return value;
+        return token;
     }
 }

@@ -56,6 +56,34 @@ internal static class RealtimeRegressionTests
         check(startup.Contains("\"store\":false") && !startup.Contains("private-client-model") && !startup.Contains("semantic_vad"),
             "Live provisioning: storage remains disabled and client selection/legacy VAD stay off the wire");
     }
+    public static async Task RunFishAudioAsync(Action<bool, string> check, string root)
+    {
+        var history = new HistoryStore(root);
+        var fishHistory = new Conversation(); var fish = new RealtimeTranscript(fishHistory, "fishaudio/agents/fixture");
+        foreach (var json in new[] {
+            """{"type":"transcript.user.delta","item_id":"u1","text":"Hel"}""",
+            """{"type":"transcript.user","item_id":"u1","text":"Hello"}""",
+            """{"type":"transcript.user","item_id":"u1","text":"Hello"}""",
+            """{"type":"transcript.agent.delta","item_id":"a1","text":"Answer"}""",
+            """{"type":"transcript.agent","item_id":"a1","text":"Answer shortened"}""" }) fish.Apply(JsonNode.Parse(json)!.AsObject());
+        check(fishHistory.Messages.Count == 2 && fishHistory.Messages[0].Text == "Hello" && fishHistory.Messages[1].Text == "Answer shortened"
+            && fishHistory.Messages.All(message => message.Status == "complete"), "Fish Audio history: cumulative segments replace, duplicate finals deduplicate, interrupted speech uses the final spoken snapshot");
+        var partition = HistoryStore.Partition("fish-tests", "account", "endpoint"); await history.SaveAsync(partition, fishHistory);
+        check((await history.ListAsync(partition)).Single().Messages.Count == 2, "Fish Audio history uses the existing app-local listing");
+        check(RealtimeConfiguration.Supported("fishaudio/agents/fixture") && !RealtimeConfiguration.Supported("fishaudio/s2.1-pro"), "Fish Audio discovery: TTS models are not exposed as live voice agents");
+        var options = new RealtimePreferences { ProviderOptions = JsonNode.Parse("""{"fishaudio":{"record_audio":false,"overrides":{"language":"nl"}},"openai":{"private":"do-not-send"}}""")!.AsObject() };
+        var payload = RealtimeConfiguration.TokenRequest("fishaudio/agents/fixture", options, new(), DateTimeOffset.UtcNow);
+        check(payload["providerOptions"]!.AsObject().Count == 1 && payload["providerOptions"]?["fishaudio"]?["overrides"]?["language"]?.ToString() == "nl"
+            && !payload.ToJsonString().Contains("do-not-send"), "Fish Audio provisioning scopes options to the selected provider and preserves REST fields");
+        using var handler = new TokenHandler { Fish = true }; using var http = new HttpClient(handler);
+        var host = new TokenHost(); var client = new DesktopRealtimeTokenClient(new(new DesktopSession(host, new TestRuntime(), new()), http), http);
+        var token = await client.GetFishSessionAsync(payload, new ChatPreferences { ApiDebugEnabled = true }, default);
+        check(token["transport"]?.ToString() == "livekit" && token["token"]?.ToString() == "fixture-ephemeral" && token["livekit_url"]?.ToString() == "wss://fixture.test",
+            "Fish Audio token client preserves the SDK session object, transport and join credentials");
+        check(host.Authenticated && !handler.Debug, "Fish Audio session provisioning retains backend authentication but disables debug capture");
+        check(!PortableConversations.Write(fishHistory).Contains("fixture-ephemeral"), "Fish Audio session token never enters portable local history");
+    }
+
     private sealed class TokenHost : IDesktopHost
     {
         public bool Authenticated;
@@ -71,10 +99,15 @@ internal static class RealtimeRegressionTests
     }
     private sealed class TokenHandler : HttpMessageHandler
     {
-        public bool Invalid, Debug; public string? Path, Authorization;
+        public bool Invalid, Debug, Fish; public string? Path, Authorization;
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
             Path = request.RequestUri!.AbsolutePath; Debug = request.Headers.Contains("X-AIHappey-Debug"); Authorization = request.Headers.Authorization?.ToString();
+            if (Fish) return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(new
+            {
+                value = "fixture-ephemeral", expires_at = DateTimeOffset.UtcNow.AddMinutes(1).ToUnixTimeSeconds(),
+                providerMetadata = new { fishaudio = new { session_id = "fixture", transport = "livekit", livekit_url = "wss://fixture.test", token = "fixture-ephemeral", expires_at = DateTimeOffset.UtcNow.AddMinutes(1).ToString("O"), max_duration_seconds = 1800 } }
+            }), Encoding.UTF8, "application/json") });
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(new
             { value = "fixture-ephemeral", expires_at = Invalid ? 1 : DateTimeOffset.UtcNow.AddMinutes(1).ToUnixTimeSeconds() }), Encoding.UTF8, "application/json") });
         }

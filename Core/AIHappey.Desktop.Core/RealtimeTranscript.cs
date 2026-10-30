@@ -32,6 +32,14 @@ public sealed class RealtimeTranscript(Conversation conversation, string model)
     public bool Apply(JsonObject value)
     {
         var type = value["type"]?.ToString() ?? "";
+        if (RealtimeConfiguration.Provider(model) == "fishaudio" && type is "transcript.user" or "transcript.user.delta" or "transcript.agent" or "transcript.agent.delta")
+        {
+            var user = type.StartsWith("transcript.user", StringComparison.Ordinal);
+            if (value["item_id"] is not JsonValue segment || !segment.TryGetValue<string>(out var id) || string.IsNullOrWhiteSpace(id))
+                throw new InvalidDataException("Invalid Fish Audio transcript segment.");
+            Text((user ? "user:" : "assistant:") + id, user ? Role.user : Role.assistant, value["text"]?.GetValue<string>() ?? "", !type.EndsWith(".delta", StringComparison.Ordinal), false);
+            return true;
+        }
         if (RealtimeConfiguration.Provider(model) == "smallestai" && type is "transcript" or "transcript.delta")
         {
             var role = value["role"]?.ToString();

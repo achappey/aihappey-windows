@@ -11,6 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Assets\FishAudio\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3719.77" />
     <None Remove="ProviderCatalog\ProviderCatalog.sha256" />
     <None Include="ProviderCatalog\ProviderCatalog.sha256" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" TargetPath="ProviderCatalog.sha256" />
     <EmbeddedResource Include="AgentProviderDefaults.json" LogicalName="Desktop.AgentProviderDefaults" />
@@ -33,4 +35,7 @@
     <ProjectReference Include="..\..\..\aihappey-agents\core\AgentHappey.Common\AgentHappey.Common.csproj" />
   </ItemGroup>
   <Import Project="DocumentExtraction.Packages.props" />
+  <Target Name="VerifyFishAudioTransportAssets" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\Tests\check-fishaudio-assets.ps1&quot;" />
+  </Target>
 </Project>

@@ -1,0 +1,8 @@
+{
+  "sdk": "0.3.0",
+  "sources": {
+    "fishAudioSession.ts": "69a201590ab47412796b0f20ed5dd45e0bbcdad17eee8009d97a7f5efbfeed71",
+    "fishAudioDesktopBridge.ts": "2b56e8efc9d0f239cd23fc520be85bb2c382d98df539701e64bc3b64d23a2aa6"
+  },
+  "bundle": "5419f9c0bbe1e86f0e17616eaa684b57d89f5151ba06dc38fa4f690fd3bcae54"
+}

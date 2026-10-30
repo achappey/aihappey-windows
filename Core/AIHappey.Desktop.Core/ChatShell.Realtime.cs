@@ -180,8 +180,8 @@ public sealed partial class ChatShell
                     session.Settings.ConvertAttachmentsToText, documentExtractor, CancellationToken.None, selectedResources.ToArray(), selectedPrompt?.Parts);
                 RealtimeTranscript.InputContent(prepared.Message, RealtimeConfiguration.Provider(model.Id) == "google");
                 message = prepared.Message;
-                if (RealtimeConfiguration.Provider(model.Id) == "smallestai" && message.Parts.Any(part => part.Type != "text"))
-                    throw new NotSupportedException("Smallest AI agents accept text input only.");
+                if (RealtimeConfiguration.Provider(model.Id) is "smallestai" or "fishaudio" && message.Parts.Any(part => part.Type != "text"))
+                    throw new NotSupportedException("This voice agent accepts text input only.");
                 if (prepared.Warnings.Count > 0) Show(string.Join("\n", prepared.Warnings), InfoBarSeverity.Warning);
             }
             if (partition != session.HistoryPartition || closing || activePage != DesktopPage.Realtime) return;
@@ -202,7 +202,7 @@ public sealed partial class ChatShell
                     if (provider == "openai" && chat.ProviderMetadata.TryGetValue(provider, out var openai))
                         foreach (var field in new[] { "truncation", "parallel_tool_calls" }) if (openai[field] is { } value) chatDefaults[field] = value.DeepClone();
                     var config = RealtimeConfiguration.Session(model.Id, preferences, instructions, definitions, chat.ToolChoice, chatDefaults);
-                    if (provider != "smallestai" && chat.MaxOutputTokens is { } maximum) config[provider == "openai" ? "max_output_tokens" : "maxOutputTokens"] = maximum;
+                    if (provider is not ("smallestai" or "fishaudio") && chat.MaxOutputTokens is { } maximum) config[provider == "openai" ? "max_output_tokens" : "maxOutputTokens"] = maximum;
                     var tokenClient = new DesktopRealtimeTokenClient(client, http);
                     var state = new RealtimeState(current, partition, model.Id, snapshot, preferences) { Live = RealtimeConfiguration.IsLive(model) };
                     realtime = state; UpdateRealtimeControls();
@@ -212,6 +212,8 @@ public sealed partial class ChatShell
                             RealtimeConfiguration.UsesSessions(model) ? (sdp, token) => tokenClient.CreateSessionAsync(model.Id, sdp,
                                 state.Live ? RealtimeConfiguration.LiveSession(preferences, instructions)
                                     : new JsonObject { ["providerOptions"] = new JsonObject { ["openai"] = new JsonObject { ["session"] = config.DeepClone() } } }, chat, token) : null, state.Live)
+                        : provider == "fishaudio" ? new FishAudioRealtimeSession(token => tokenClient.GetFishSessionAsync(RealtimeConfiguration.TokenRequest(model.Id, preferences, config, DateTimeOffset.UtcNow), chat, token),
+                            chat.ToolChoice == "none" ? [] : definitions.Select(tool => tool["name"]!.ToString()))
                         : provider == "smallestai" ? new SmallestRealtimeSession(token => tokenClient.GetAsync(RealtimeConfiguration.TokenRequest(model.Id, preferences, config, DateTimeOffset.UtcNow), chat, provider, token))
                         : new GoogleRealtimeSession(RealtimeConfiguration.GoogleSetup(model.Id, config), (handle, token) =>
                         {
@@ -296,6 +298,16 @@ public sealed partial class ChatShell
                 {
                     state.Reconnecting = type == "session.reconnecting"; state.Connected = !state.Reconnecting;
                     UpdateRealtimeControls(); continue;
+                }
+                if (type == "fishaudio.session.closed")
+                {
+                    state.Conversation.Metadata["realtimeEndReason"] = value["reason"]?.ToString() ?? "connection_lost";
+                    break;
+                }
+                if (type == "session.error" && RealtimeConfiguration.Provider(state.Model) == "fishaudio")
+                {
+                    Show("Fish Audio reported a session error (" + value["code"]?.ToString() + ").", InfoBarSeverity.Warning);
+                    continue;
                 }
                 var changed = state.Transcript.Apply(value);
                 if (type == "response.output_item.done" && value["item"] is JsonObject item && item["type"]?.ToString() == "function_call") QueueRealtimeTool(state, item);

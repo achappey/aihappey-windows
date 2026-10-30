@@ -25,7 +25,8 @@ public sealed class RealtimePreferences
 public static class RealtimeConfiguration
 {
     public static string Provider(string model) => model.Split('/')[0].ToLowerInvariant();
-    public static bool Supported(string model) => Provider(model) is "openai" or "google" or "smallestai";
+    public static bool Supported(string model) => Provider(model) is "openai" or "google" or "smallestai"
+        || model.StartsWith("fishaudio/agents/", StringComparison.Ordinal);
     public static bool UsesSessions(ChatTarget model) => Provider(model.Id) == "openai" && model.Tags.Contains("realtime-session");
     public static bool IsLive(ChatTarget model) => UsesSessions(model) && !model.Tags.Contains("realtime-token");
     public static JsonObject LiveSession(RealtimePreferences preferences, string instructions)
@@ -62,7 +63,7 @@ public static class RealtimeConfiguration
         var provider = Provider(model);
         var options = preferences.ProviderOptions[provider] as JsonObject ?? new();
         var definitions = tools.ToArray();
-        if (provider == "smallestai") return new(); // Hosted Atoms configuration lives at the provider.
+        if (provider is "smallestai" or "fishaudio") return new(); // Hosted agent configuration lives at the provider.
         if (provider == "openai")
         {
             var defaults = JsonNode.Parse("""{"type":"realtime","output_modalities":["audio"],"audio":{"input":{"turn_detection":{"type":"semantic_vad","eagerness":"auto","create_response":true,"interrupt_response":true}},"output":{"voice":"marin"}}}""")!.AsObject();
@@ -115,6 +116,12 @@ public static class RealtimeConfiguration
         {
             payload = new();
             if (metadata["variables"] is { } variables) payload["variables"] = variables.DeepClone();
+        }
+        else if (provider == "fishaudio")
+        {
+            payload = (JsonObject)metadata.DeepClone();
+            payload["client_timezone"] ??= TimeZoneInfo.Local.HasIanaId ? TimeZoneInfo.Local.Id
+                : TimeZoneInfo.TryConvertWindowsIdToIanaId(TimeZoneInfo.Local.Id, out var timezone) ? timezone : "UTC";
         }
         else throw new NotSupportedException();
         return new() { ["model"] = model, ["providerOptions"] = new JsonObject { [provider] = payload } };

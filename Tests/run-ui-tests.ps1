@@ -1,5 +1,5 @@
 param([switch]$SkipBuild, [switch]$StartupOnly, [switch]$TranscriptOnly, [switch]$ActivityOnly, [switch]$McpPresentationOnly, [switch]$ElicitationOnly, [switch]$SkillsOnly, [switch]$ImagesOnly, [switch]$VideosOnly, [switch]$OverviewTabsOnly, [switch]$AgentsOnly, [switch]$ProvidersOnly, [switch]$LocalToolsOnly, [switch]$ChatSettingsOnly, [switch]$SidebarOnly, [switch]$IconsOnly, [switch]$ExplorerOnly, [switch]$AuthoringToolsOnly, [switch]$ToolOutputOnly, [switch]$ChatFilesOnly, [switch]$ContextSearchOnly, [switch]$SettingsAppearanceOnly, [switch]$UsageOnly, [switch]$ChartsOnly, [switch]$ChatProviderFormsOnly, [switch]$RealtimeOnly,
-    [string[]]$Suite, [string]$ReportDirectory, [ValidateRange(10,600)][int]$TimeoutSeconds = 120)
+    [string[]]$Suite, [string]$ReportDirectory, [ValidateRange(10,600)][int]$TimeoutSeconds = 120, [switch]$FishAudioMediaOnly)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'RunnerTools.ps1')
 $repo = Split-Path $PSScriptRoot -Parent
@@ -11,6 +11,7 @@ $failures = [Collections.Generic.List[string]]::new()
 $manifest = Get-Content (Join-Path $PSScriptRoot 'ui-suites.json') -Raw | ConvertFrom-Json
 $aliases = @{ StartupOnly='startup'; TranscriptOnly='transcript'; ActivityOnly='activity'; McpPresentationOnly='mcp-presentation'; ElicitationOnly='elicitation'; SkillsOnly='skills'; ImagesOnly='images'; VideosOnly='videos'; OverviewTabsOnly='overview-tabs'; AgentsOnly='agents'; ProvidersOnly='providers'; LocalToolsOnly='local-tools'; ChatSettingsOnly='chat-settings'; SidebarOnly='sidebar'; IconsOnly='icons'; ExplorerOnly='explorer'; AuthoringToolsOnly='authoring-tools'; ToolOutputOnly='tool-output'; ChatFilesOnly='chat-files'; ContextSearchOnly='context-search'; SettingsAppearanceOnly='settings-appearance'; UsageOnly='usage'; ChartsOnly='charts'; ChatProviderFormsOnly='chat-provider-forms'; RealtimeOnly='realtime' }
 $selected = @()
+if ($FishAudioMediaOnly) { $aliases['FishAudioMediaOnly'] = 'fishaudio-media' }
 if ($PSBoundParameters.ContainsKey('Suite')) { $selected = @($Suite) }
 foreach ($key in $aliases.Keys) { if ($PSBoundParameters.ContainsKey($key) -and $PSBoundParameters[$key]) { $selected += $aliases[$key] } }
 if ($selected.Count -eq 0) { $selected = $manifest }

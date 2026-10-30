@@ -105,6 +105,27 @@ public partial class App
         finally { await shell.ShutdownAsync(); window!.Content = null; }
     }
 
+    private async Task CheckFishAudioHiddenMediaAsync()
+    {
+        window!.Content = new Grid(); window.Activate();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        for (var pass = 0; pass < 2; pass++)
+        {
+            if (pass == 1 && window!.AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter) presenter.Minimize();
+            await using var transport = new FishAudioRealtimeSession(_ => throw new InvalidOperationException("The media probe must not mint a Fish Audio session."));
+            await transport.ProbeMediaAsync(timeout.Token);
+            var value = await transport.Events.ReadAsync(timeout.Token);
+            Check(value["type"]?.ToString() == "fishaudio.media.probe" && value["microphone"]?.GetValue<bool>() == true && value["playback"]?.GetValue<bool>() == true,
+                "Fish Audio invisible transport: real microphone track and running playback context, pass " + pass);
+            var controller = Field<Microsoft.Web.WebView2.Core.CoreWebView2Controller>(transport, "controller");
+            Check(!controller.IsVisible, "Fish Audio transport never exposes a visible WebView surface, pass " + pass);
+            await transport.DisposeAsync(); await transport.DisposeAsync();
+            Check(typeof(FishAudioRealtimeSession).GetField("controller", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(transport) is null,
+                "Fish Audio invisible transport: native controller closes idempotently");
+            if (window!.AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter restore) restore.Restore();
+        }
+    }
+
     private async Task CheckRealtimeSettingsEntryAsync(ChatShell shell, string provider, bool locked, string context)
     {
         var shown = (Task)Call(shell, "EditChatSettingsAsync")!; await Task.Delay(100);

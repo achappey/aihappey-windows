@@ -46,6 +46,8 @@ public partial class App
             ["tool-output"] = CheckToolOutputSettingsAsync,
         };
         var flags = Environment.GetCommandLineArgs().Skip(2).ToArray();
+        // Hardware/media access is explicit opt-in, never part of the default UI regression run.
+        if (flags.SequenceEqual(["--fishaudio-media-only"])) suites["fishaudio-media"] = _ => CheckFishAudioHiddenMediaAsync();
         var selected = suites.Keys.ToArray();
         if (flags.Length > 0)
         {
