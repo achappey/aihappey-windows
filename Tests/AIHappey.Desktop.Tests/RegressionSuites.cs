@@ -35,6 +35,7 @@ internal static class RegressionSuites
             ["models-overview"] = () => ModelsOverviewRegressionTests.RunAsync(check, Data("models")),
             ["agents"] = () => AgentRegressionTests.RunAsync(check, Data("agents")),
             ["transcript"] = () => Sync(() => TranscriptRegressionTests.Run(check)),
+            ["composer-usage"] = () => Sync(() => ComposerUsageRegressionTests.Run(check)),
             ["tool-approval"] = () => ToolApprovalRegressionTests.RunAsync(check, Data("approval")),
             ["mcp-presentation"] = () => McpPresentationRegressionTests.RunAsync(check, Data("mcp-presentation")),
             ["mcp-auth"] = () => McpAuthenticationRegressionTests.RunAsync(check, Data("mcp-auth")),

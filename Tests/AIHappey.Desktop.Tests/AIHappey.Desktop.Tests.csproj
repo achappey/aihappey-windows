@@ -13,6 +13,7 @@
     <EmbeddedResource Include="../../Core/AIHappey.Desktop.Core/Strings/nl/Resources.resw" LogicalName="Desktop.Resources.nl" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RelativeTime.cs" Link="Core/RelativeTime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/MessageUsage.cs" Link="Core/MessageUsage.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ComposerUsage.cs" Link="Core/ComposerUsage.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/UsageAnalytics.cs" Link="Core/UsageAnalytics.cs" />
     <EmbeddedResource Include="../Fixtures/usage-conversations.json" LogicalName="Desktop.UsageFixture" />
     <EmbeddedResource Include="../Fixtures/chat-provider-parity.json" LogicalName="Desktop.ChatProviderFixture" />
