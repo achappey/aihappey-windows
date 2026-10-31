@@ -62,6 +62,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpToolTimeout.cs" Link="Core/McpToolTimeout.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpRequestLifetime.cs" Link="Core/McpRequestLifetime.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpCatalog.cs" Link="Core/McpCatalog.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/McpHeaderConfiguration.cs" Link="Core/McpHeaderConfiguration.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpIcons.cs" Link="Core/McpIcons.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpStore.cs" Link="Core/McpStore.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/McpClient.cs" Link="Core/McpClient.cs" />

@@ -9,6 +9,7 @@ internal static class McpAuthenticationRegressionTests
 {
     public static async Task RunAsync(Action<bool, string> check, string root)
     {
+        await McpHeaderConfigurationRegressionTests.RunAsync(check, root);
         var host = new Host();
         await using var session = new DesktopSession(host, new Runtime(), new()
         {
@@ -56,6 +57,10 @@ internal static class McpAuthenticationRegressionTests
         var manualOptions = new HttpClientTransportOptions { Endpoint = options.Endpoint };
         using (await serviceAuth.ConfigureAsync(manual, manualOptions, default))
             check(manualOptions.OAuth is null && manualOptions.AdditionalHeaders!["Authorization"] == "Bearer explicit-secret", "MCP explicit headers take precedence");
+        var ordinary = Server(new("https://custom.example/tools")); ordinary.Headers["X-Tenant"] = "tenant";
+        var ordinaryOptions = new HttpClientTransportOptions { Endpoint = new(ordinary.Url) };
+        using (await serviceAuth.ConfigureAsync(ordinary, ordinaryOptions, default))
+            check(ordinaryOptions.OAuth is not null && ordinaryOptions.AdditionalHeaders!["X-Tenant"] == "tenant", "MCP ordinary custom headers preserve SDK OAuth discovery");
 
         foreach (var legacy in new[] { true, false })
         {
@@ -69,12 +74,19 @@ internal static class McpAuthenticationRegressionTests
             };
             var factory = new DesktopMcpClientFactory(auth);
             var server = Server(fixture.Endpoint);
+            server.Headers["X-Tenant"] = "tenant";
             var store = new DesktopMcpStore(Path.Combine(root, "mcp-manager-" + legacy));
             await using var manager = new DesktopMcpManager(factory, store);
             await manager.LoadAsync("test", default);
             server.Enabled = true;
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             await manager.InstallAsync(server, timeout.Token);
+            if (manager.Servers.Single().State == McpConnectionState.Error)
+            {
+                // Fixture-only diagnostics: manager errors intentionally redact SDK details in production.
+                try { await using var unexpected = await factory.ConnectAsync(server, timeout.Token); }
+                catch (Exception e) { throw new Exception("OAuth fixture handshake failed before sign-in", e); }
+            }
             check(fixture.Launches == 0 && manager.Servers.Single().State == McpConnectionState.AuthenticationRequired,
                 $"MCP startup/install silently reports sign-in required: legacy={legacy}; actual state={manager.Servers.Single().State}; error={manager.Servers.Single().Error}; browser launches={fixture.Launches}");
             await manager.SignInAsync(server.Id, timeout.Token);
@@ -203,7 +215,13 @@ internal static class McpAuthenticationRegressionTests
             if (uri.AbsolutePath == "/register")
             {
                 var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync()).RootElement;
-                check(body.GetProperty("redirect_uris")[0].GetString()!.StartsWith("http://127.0.0.1:"), "MCP native registration uses loopback redirect");
+                var redirect = new Uri(body.GetProperty("redirect_uris")[0].GetString()!);
+                // Silent discovery uses a non-listening placeholder; interactive sign-in allocates an ephemeral port.
+                var path = redirect.AbsolutePath;
+                check(redirect.Scheme == "http" && redirect.Host == "127.0.0.1"
+                    && (path == "/oauth-callback" || path.StartsWith("/oauth-callback/", StringComparison.Ordinal)
+                        && Guid.TryParseExact(path["/oauth-callback/".Length..], "N", out _)),
+                    "MCP native registration uses loopback redirect");
                 return Json(new { client_id = "native-client", token_endpoint_auth_method = "none" });
             }
             if (uri.AbsolutePath == "/token")

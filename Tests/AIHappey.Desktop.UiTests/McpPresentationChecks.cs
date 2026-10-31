@@ -106,6 +106,7 @@ public partial class App
         approval.Hide(); await approvalTask;
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 800));
         await CheckSystemContextToolsAsync(root, context);
+        await CheckMcpHeaderEditorAsync(root, context);
         File.WriteAllLines(report, results); window.Content = null;
     }
 
@@ -208,6 +209,78 @@ public partial class App
                 prefix + ": other context tabs remain separately navigable");
             dialog.Hide(); await dialogTask;
         }
+    }
+
+    private async Task CheckMcpHeaderEditorAsync(Grid root, string context)
+    {
+        root.Children.Clear();
+        var server = new DesktopMcpServer { Name = "Header fixture", Url = "https://mcp.example/images", HeaderDefinitions = [new()
+        {
+            Name = "Authorization", Description = "Header-level credential guidance", Value = "Bearer {key}", IsRequired = true,
+            Variables = new() { ["key"] = new() { IsSecret = true, IsRequired = true, Placeholder = "Provider key" } }
+        }, new() { Name = "X-Region", Choices = ["eu", "us"], Default = "eu" }] };
+        var type = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.McpHeadersEditor")!;
+        var editor = (UserControl)Activator.CreateInstance(type, [server])!;
+        root.Children.Add(editor); await Task.Delay(100);
+        var tabs = Descendants(editor).OfType<TabView>().Single(view => view.Name == "McpHeaderTabs");
+        var secret = Descendants(editor).OfType<PasswordBox>().Single();
+        Check(((TabViewItem)tabs.SelectedItem).Tag?.ToString() == "form" && tabs.TabItems.Count == 3 && !tabs.IsAddTabButtonVisible
+            && tabs.TabItems.OfType<TabViewItem>().All(item => !item.IsClosable) && secret.PasswordRevealMode == PasswordRevealMode.Hidden
+            && secret.PlaceholderText == "Provider key" && Descendants(editor).OfType<ComboBox>().Single().SelectedItem?.ToString() == "eu",
+            context + ": registry editor defaults to native Form/Headers/Raw tabs with secret input and declared choices/defaults");
+        Check(Descendants(editor).OfType<Border>().Count(card => card.Name == "McpRegistryHeaderCard") == 2
+            && Descendants(editor).OfType<TextBlock>().Any(text => text.Text == "Header-level credential guidance"),
+            context + ": each header has a card including its own description");
+        var incomplete = (Dictionary<string, string>)type.GetMethod("ReadHeaders")!.Invoke(editor, null)!;
+        Check(incomplete["Authorization"] == "Bearer {key}" && !McpHeaderConfiguration.CanConnect(new()
+            { HeaderDefinitions = server.HeaderDefinitions, Headers = incomplete }), context + ": incomplete form can be saved but cannot connect");
+        secret.Password = "fixture-key";
+        var resolved = (Dictionary<string, string>)type.GetMethod("ReadHeaders")!.Invoke(editor, null)!;
+        Check(resolved["Authorization"] == "Bearer fixture-key" && server.Headers.Count == 0,
+            context + ": registry credential resolved in isolated draft only");
+        type.GetMethod("Switch", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(editor, ["raw"]); await Task.Delay(80);
+        var raw = Descendants(editor).OfType<TextBox>().Single(box => box.Name == "McpHeadersJson");
+        Check(raw.Visibility == Visibility.Visible && McpHeaderConfiguration.Parse(raw.Text)["Authorization"] == "Bearer fixture-key",
+            context + ": form values available in raw JSON tab");
+        raw.Text = "{\"Authorization\":\"Bearer changed\",\"X-Region\":\"us\",\"X-Extra\":\"retain\"}";
+        type.GetMethod("Switch", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(editor, ["form"]); await Task.Delay(80);
+        resolved = (Dictionary<string, string>)type.GetMethod("ReadHeaders")!.Invoke(editor, null)!;
+        Check(resolved["Authorization"] == "Bearer changed" && resolved["X-Extra"] == "retain"
+            && Descendants(editor).OfType<PasswordBox>().All(box => box.PasswordRevealMode == PasswordRevealMode.Hidden),
+            context + ": JSON edits and unknown headers round-trip into masked form fields");
+        root.Children.Clear();
+
+        var customEditor = (UserControl)Activator.CreateInstance(type, [new DesktopMcpServer { Name = "Custom", Url = "https://custom.example/mcp" }])!;
+        root.Children.Add(customEditor); await Task.Delay(80);
+        var customTabs = Descendants(customEditor).OfType<TabView>().Single(view => view.Name == "McpHeaderTabs");
+        Check(customTabs.TabItems.Count == 2 && ((TabViewItem)customTabs.SelectedItem).Tag?.ToString() == "headers"
+            && customTabs.TabItems.OfType<TabViewItem>().Select(item => item.Header?.ToString()).SequenceEqual(["Headers", "Raw"]),
+            context + ": URL-only server shows Headers/Raw native tabs without empty Form tab");
+        root.Children.Clear();
+
+        var storeRoot = Path.Combine(Path.GetTempPath(), "AIHappey-McpHeaderUi-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            await using var manager = new DesktopMcpManager(new DesktopMcpClientFactory(), new DesktopMcpStore(storeRoot));
+            await manager.LoadAsync("fixture", default);
+            var dialogType = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.McpServersDialog")!;
+            var dialog = (ContentDialog)Activator.CreateInstance(dialogType, [manager, false, server])!;
+            dialog.XamlRoot = root.XamlRoot; var opened = dialog.ShowAsync(); await Task.Delay(120);
+            Check(!Descendants(dialog).OfType<TextBlock>().Any(text => text.Text.Contains("Explicit headers take precedence")),
+                context + ": verbose MCP edit description removed");
+            InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "Cancel"));
+            Check(manager.Servers.Count == 0, context + ": cancel configuration never installs a server");
+            dialog.Hide(); await opened;
+            dialog = (ContentDialog)Activator.CreateInstance(dialogType, [manager, false, server])!;
+            dialog.XamlRoot = root.XamlRoot; opened = dialog.ShowAsync(); await Task.Delay(120);
+            Descendants(dialog).OfType<PasswordBox>().Single().Password = "saved-fixture-key";
+            InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "Save"));
+            for (var attempt = 0; manager.Servers.Count == 0 && attempt < 30; attempt++) await Task.Delay(50);
+            Check(manager.Servers.Count == 1 && manager.Servers[0].Server.Headers["Authorization"] == "Bearer saved-fixture-key"
+                && manager.Servers[0].State == McpConnectionState.Disabled, context + ": valid form saves server disabled without initiating OAuth");
+            dialog.Hide(); await opened;
+        }
+        finally { if (Directory.Exists(storeRoot)) Directory.Delete(storeRoot, true); }
     }
 
     private static JsonElement Json(string value) => JsonSerializer.Deserialize<JsonElement>(value);
