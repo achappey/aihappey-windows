@@ -99,6 +99,7 @@ internal static class SkillRegressionTests
         check(await DesktopMcpToolExecution.ExecutePendingAsync(output, snapshot, executed, "en", default) == 0, "skills: completed activation never executes twice");
 
         await CheckLocalAsync(check, root);
+        await GitHubSkillRegressionTests.RunAsync(check, root);
         await CheckMcpAsync(check, root);
         await CheckSdkDiscoveryAsync(check);
         foreach (var lang in new[] { "en", "nl" })

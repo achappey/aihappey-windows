@@ -2029,4 +2029,19 @@ Speaker: {1}</value></data>
   <data name="ComposerTokensReserved" xml:space="preserve"><value>{0} tokens reserved for output</value></data>
   <data name="ComposerTokensAvailable" xml:space="preserve"><value>{0} tokens available</value></data>
   <data name="ComposerConversationCost" xml:space="preserve"><value>Total conversation cost: {0}</value></data>
+  <data name="SkillFromGitHub" xml:space="preserve"><value>From GitHub</value></data>
+  <data name="SkillGitHubUrl" xml:space="preserve"><value>GitHub URL</value></data>
+  <data name="SkillGitHubDiscover" xml:space="preserve"><value>Discover</value></data>
+  <data name="SkillGitHubDiscovering" xml:space="preserve"><value>Discovering…</value></data>
+  <data name="SkillGitHubImporting" xml:space="preserve"><value>Importing…</value></data>
+  <data name="SkillGitHubHint" xml:space="preserve"><value>Select folders to import. Candidates are checked only when you click Import. Complete skill folders are downloaded; bundled scripts are never run.</value></data>
+  <data name="SkillGitHubInvalidUrl" xml:space="preserve"><value>Enter a public HTTPS GitHub repository, skill folder, or SKILL.md URL.</value></data>
+  <data name="SkillGitHubNotFound" xml:space="preserve"><value>The public GitHub repository, ref, or folder was not found.</value></data>
+  <data name="SkillGitHubRateLimit" xml:space="preserve"><value>GitHub's public API rate limit was reached. Try again later.</value></data>
+  <data name="SkillGitHubDownload" xml:space="preserve"><value>Could not download from GitHub. Check your connection and try again.</value></data>
+  <data name="SkillGitHubDiscoveryLimit" xml:space="preserve"><value>The GitHub listing is incomplete or exceeds discovery limits. Use a more specific folder URL.</value></data>
+  <data name="SkillGitHubLimit" xml:space="preserve"><value>The GitHub response is too large. A skill may contain at most 512 files and 16 MiB.</value></data>
+  <data name="SkillGitHubMissingManifest" xml:space="preserve"><value>The selected folder does not contain SKILL.md.</value></data>
+  <data name="SkillGitHubInvalidSkill" xml:space="preserve"><value>The selected folder is not a valid Agent Skill.</value></data>
+  <data name="SkillGitHubUnsafePath" xml:space="preserve"><value>The skill contains unsafe or conflicting paths, symbolic links, or submodules.</value></data>
 </root>

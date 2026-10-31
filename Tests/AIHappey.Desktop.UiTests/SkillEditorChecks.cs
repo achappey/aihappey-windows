@@ -90,6 +90,7 @@ public partial class App
         stale.SaveAsync = (_, _) => { saves++; return Task.CompletedTask; }; shown = stale.ShowAsync(); await Task.Delay(100); current = false;
         InvokeButton(Descendants(stale).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80);
         Check(saves == 0 && stale.Result is null, context + ": account/API change blocks Save before persistence"); stale.CancelAndHide(); await shown;
+        await CheckGitHubSkillDialogAsync(root, theme);
         await CheckLocalSkillAgentAsync(root, original, theme);
         await CheckLocalSkillShellAsync(original, theme);
     }
@@ -101,6 +102,60 @@ public partial class App
             await Task.Delay(25);
         }
         throw new InvalidOperationException("Expected skill editor UI transition did not finish.");
+    }
+    private async Task CheckGitHubSkillDialogAsync(Grid root, ElementTheme theme)
+    {
+        var context = "GitHub skill import / " + theme;
+        using var handler = new GitHubSkillUiHandler(); using var http = new HttpClient(handler);
+        var saved = new List<DesktopSkillDraft>();
+        var dialog = new GitHubSkillImportDialog(new GitHubSkillsClient(http), (draft, _) => { saved.Add(draft); return Task.CompletedTask; })
+            { XamlRoot = root.XamlRoot, RequestedTheme = theme };
+        SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(100);
+        var url = Descendants(dialog).OfType<TextBox>().Single(b => b.Name == "SkillGitHubUrl");
+        var discover = Descendants(dialog).OfType<Button>().Single(b => b.Name == "SkillGitHubDiscover");
+        Check(!dialog.IsPrimaryButtonEnabled && !discover.IsEnabled, context + ": empty URL disables discovery/import");
+        url.Text = "https://example.com/repo";
+        await WaitForSkillUiAsync(() => Descendants(dialog).OfType<TextBlock>().Single(b => b.Name == "SkillGitHubFeedback").Text.Length > 0);
+        Check(!discover.IsEnabled && handler.ZipCount == 0, context + ": invalid URL is reported without network requests");
+        url.Text = "https://github.com/owner/repo"; await WaitForSkillUiAsync(() => discover.IsEnabled);
+        InvokeButton(discover);
+        await WaitForSkillUiAsync(() => Descendants(dialog).OfType<CheckBox>().Any(b => b.Tag as string == "skills/ui-skill"));
+        var choices = Descendants(dialog).OfType<CheckBox>().ToArray();
+        Check(saved.Count == 0 && handler.ZipCount == 1 && choices.All(c => AutomationProperties.GetName(c).Length > 0), context + ": one ZIP populates accessible unvalidated selector, with no automatic import");
+        choices.Single(c => c.Tag as string == "skills/ui-skill").IsChecked = true;
+        await WaitForSkillUiAsync(() => dialog.IsPrimaryButtonEnabled);
+        InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "PrimaryButton"));
+        await WaitForSkillUiAsync(() => dialog.ImportedCount == 1 && discover.IsEnabled);
+        Check(saved.Single().Name == "ui-skill" && saved[0].Files.Single().Data.SequenceEqual(new byte[] { 0, 255, 1 }) && handler.ZipCount == 1,
+            context + ": selection imports validated binary contents locally without another download");
+        choices.Single(c => c.Tag as string == "skills/broken").IsChecked = true;
+        InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "PrimaryButton"));
+        await WaitForSkillUiAsync(() => discover.IsEnabled && Descendants(dialog).OfType<TextBlock>().Single(b => b.Name == "SkillGitHubFeedback").Text.Contains("skills/broken"));
+        Check(saved.Count == 1 && dialog.IsPrimaryButtonEnabled, context + ": invalid candidate shows per-skill error and remains retryable");
+        InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
+    }
+    private sealed class GitHubSkillUiHandler : HttpMessageHandler
+    {
+        private static readonly string Commit = new('a', 40);
+        public int ZipCount { get; private set; }
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (request.RequestUri!.Host == "codeload.github.com")
+            {
+                ZipCount++; using var bytes = new MemoryStream();
+                using (var zip = new System.IO.Compression.ZipArchive(bytes, System.IO.Compression.ZipArchiveMode.Create, true))
+                {
+                    using (var file = zip.CreateEntry("repo/skills/ui-skill/SKILL.md").Open()) file.Write(Encoding.UTF8.GetBytes("---\nname: ui-skill\ndescription: UI fixture\n---\nInstructions"));
+                    using (var file = zip.CreateEntry("repo/skills/ui-skill/assets/raw.bin").Open()) file.Write(new byte[] { 0, 255, 1 });
+                    using (var file = zip.CreateEntry("repo/skills/broken/other.txt").Open()) file.WriteByte(1);
+                }
+                return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new ByteArrayContent(bytes.ToArray()) });
+            }
+            var json = request.RequestUri.AbsolutePath.EndsWith("/commits/main", StringComparison.Ordinal)
+                ? JsonSerializer.Serialize(new { sha = Commit }) : "{\"private\":false,\"default_branch\":\"main\"}";
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent(json) });
+        }
     }
     private async Task CheckLocalSkillAgentAsync(Grid root, DesktopSkillDraft draft, ElementTheme theme)
     {
@@ -139,7 +194,7 @@ public partial class App
             var pageType = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.DesktopPage")!; Call(shell, "ShowPage", Enum.Parse(pageType, "Skills"));
             await Task.Delay(80); shell.UpdateLayout();
             var plus = Field<Button>(shell, "addSkill");
-            Check(plus.Visibility == Visibility.Visible && ((MenuFlyout)plus.Flyout).Items.Count == 2 && Field<Button>(shell, "addAgent").Visibility == Visibility.Collapsed,
+            Check(plus.Visibility == Visibility.Visible && ((MenuFlyout)plus.Flyout).Items.Count == 3 && Field<Button>(shell, "addAgent").Visibility == Visibility.Collapsed,
                 $"Skill editor / {theme}: Skills header has dedicated create/import menu");
             var overview = Field<UserControl>(shell, "skillsOverview"); var tabs = Descendants(overview).OfType<NavigationView>().Single();
             tabs.SelectedItem = tabs.MenuItems.OfType<NavigationViewItem>().Single(i => i.Tag as string == "local");

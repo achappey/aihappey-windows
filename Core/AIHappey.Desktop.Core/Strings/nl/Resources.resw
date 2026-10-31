@@ -2024,4 +2024,19 @@ Luidspreker: {1}</value></data>
   <data name="ComposerTokensReserved" xml:space="preserve"><value>{0} tokens gereserveerd voor uitvoer</value></data>
   <data name="ComposerTokensAvailable" xml:space="preserve"><value>{0} tokens beschikbaar</value></data>
   <data name="ComposerConversationCost" xml:space="preserve"><value>Totale gesprekskosten: {0}</value></data>
+  <data name="SkillFromGitHub" xml:space="preserve"><value>Van GitHub</value></data>
+  <data name="SkillGitHubUrl" xml:space="preserve"><value>GitHub-URL</value></data>
+  <data name="SkillGitHubDiscover" xml:space="preserve"><value>Zoeken</value></data>
+  <data name="SkillGitHubDiscovering" xml:space="preserve"><value>Zoeken…</value></data>
+  <data name="SkillGitHubImporting" xml:space="preserve"><value>Importeren…</value></data>
+  <data name="SkillGitHubHint" xml:space="preserve"><value>Selecteer mappen om te importeren. Kandidaten worden pas gecontroleerd bij Importeren. Volledige skillmappen worden gedownload; meegeleverde scripts worden nooit uitgevoerd.</value></data>
+  <data name="SkillGitHubInvalidUrl" xml:space="preserve"><value>Voer een openbare HTTPS GitHub-URL in van een repository, skillmap of SKILL.md.</value></data>
+  <data name="SkillGitHubNotFound" xml:space="preserve"><value>De openbare GitHub-repository, referentie of map is niet gevonden.</value></data>
+  <data name="SkillGitHubRateLimit" xml:space="preserve"><value>De limiet van de openbare GitHub-API is bereikt. Probeer het later opnieuw.</value></data>
+  <data name="SkillGitHubDownload" xml:space="preserve"><value>Downloaden van GitHub is mislukt. Controleer uw verbinding en probeer opnieuw.</value></data>
+  <data name="SkillGitHubDiscoveryLimit" xml:space="preserve"><value>De GitHub-lijst is onvolledig of overschrijdt de zoeklimieten. Gebruik een specifiekere map-URL.</value></data>
+  <data name="SkillGitHubLimit" xml:space="preserve"><value>Het GitHub-antwoord is te groot. Een skill mag maximaal 512 bestanden en 16 MiB bevatten.</value></data>
+  <data name="SkillGitHubMissingManifest" xml:space="preserve"><value>De geselecteerde map bevat geen SKILL.md.</value></data>
+  <data name="SkillGitHubInvalidSkill" xml:space="preserve"><value>De geselecteerde map is geen geldige Agent Skill.</value></data>
+  <data name="SkillGitHubUnsafePath" xml:space="preserve"><value>De skill bevat onveilige of conflicterende paden, symbolische koppelingen of submodules.</value></data>
 </root>

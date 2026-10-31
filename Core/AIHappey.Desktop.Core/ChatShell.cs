@@ -914,6 +914,7 @@ public sealed partial class ChatShell : UserControl
         providerSelectionFlyout?.Hide();
         agentEditor?.Hide();
         skillEditor?.CancelAndHide();
+        githubSkillImportDialog?.CancelAndHide();
         pluginDialog?.CancelAndHide(); pluginSelectionDialog?.Hide();
         skillDeleteDialog?.Hide();
         removeSharedFileDialog?.Hide();

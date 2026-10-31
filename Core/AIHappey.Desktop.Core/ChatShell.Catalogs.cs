@@ -240,6 +240,7 @@ public sealed partial class ChatShell
         runtimeSkillCatalog = []; runtimeSkillPartition = null;
         localAgents = []; localAgentPartition = null; agentEditor?.Hide();
         localSkills = []; localSkillPartition = null; skillEditor?.CancelAndHide();
+        githubSkillImportDialog?.CancelAndHide();
         agentPlugins = []; pluginPartition = null; pluginEpoch++; pluginsOverview.SetItems([]); pluginDialog?.CancelAndHide(); pluginSelectionDialog?.Hide();
         skillDeleteDialog?.Hide();
         catalogDialogLoad?.Cancel(); catalogDialog?.Hide();
