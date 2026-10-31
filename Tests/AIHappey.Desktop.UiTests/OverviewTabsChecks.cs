@@ -77,6 +77,44 @@ public partial class App
         }
 
         {
+            var context = "Agent plugin actions / " + theme;
+            var page = (UserControl)Activator.CreateInstance(assembly.GetType("AIHappey.Desktop.Core.OverviewPage")!, [CatalogKind.Agent])!;
+            root.Children.Add(page);
+            var cases = new (string Name, string? Json, bool Eligible)[] {
+                ("Neither", "{}", false),
+                ("Empty", """{"skills":[],"mcpServers":{}}""", false),
+                ("Skills", """{"skills":[{"type":"skill_reference","skill_id":"provider/example"}]}""", true),
+                ("Mcp", """{"mcpServers":{"example":{"url":"https://example.org/mcp"}}}""", true),
+                ("Both", """{"skills":[{}],"mcpServers":{"example":{}}}""", true),
+                ("Disabled", """{"mcpServers":{"example":{"disabled":true}}}""", false),
+                ("Opaque", null, false),
+            };
+            var items = cases.SelectMany(fixture => new[] { CatalogOrigin.Local, CatalogOrigin.Backend }.Select(origin =>
+                new CatalogItem(CatalogKind.Agent, fixture.Name, fixture.Name, "Description") { Origin = origin,
+                    Definition = fixture.Json is null ? null : System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(fixture.Json) })).ToArray();
+            CatalogItem? requested = null;
+            page.GetType().GetProperty("PluginRequested")!.SetValue(page, (Action<CatalogItem>)(item => requested = item));
+            SetOverview(page, items, []);
+            await Task.Delay(100); page.UpdateLayout();
+            foreach (var card in Descendants(page).OfType<Border>().Where(card => card.Name == "CatalogCard"))
+            {
+                var item = (CatalogItem)card.Tag;
+                var buttons = Descendants(card).OfType<Button>().ToArray();
+                var eligible = cases.Single(fixture => fixture.Name == item.Name).Eligible;
+                Check(buttons.Count(button => button.Name == "CatalogCreatePlugin") == (eligible ? 1 : 0), context + ": plugin visibility / " + item.Key);
+                Check(buttons.Any(button => button.Name == "CatalogStartChat") && buttons.Any(button => button.Name == "CatalogFavorite")
+                    && buttons.Any(button => button.Name == "CatalogAgentEdit") == (item.Origin == CatalogOrigin.Local)
+                    && buttons.Any(button => button.Name == "CatalogDelete") == (item.Origin == CatalogOrigin.Local), context + ": other actions retained / " + item.Key);
+                if (eligible)
+                {
+                    InvokeButton(buttons.Single(button => button.Name == "CatalogCreatePlugin"));
+                    Check(requested == item, context + ": plugin button retains its callback / " + item.Key);
+                }
+            }
+            root.Children.Clear();
+        }
+
+        {
             var context = "Overview tabs / Model context / " + theme;
             var page = (UserControl)Activator.CreateInstance(assembly.GetType("AIHappey.Desktop.Core.McpOverviewPage")!)!;
             root.Children.Add(page);

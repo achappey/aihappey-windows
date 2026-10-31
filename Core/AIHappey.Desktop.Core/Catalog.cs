@@ -20,6 +20,11 @@ public sealed record CatalogItem(CatalogKind Kind, string Id, string Name, strin
     public JsonElement? Definition { get; init; }
     public IReadOnlyList<CatalogIcon> Icons { get; init; } = [];
     public bool CanDownload => Kind == CatalogKind.Agent ? Definition.HasValue : Origin == CatalogOrigin.Local || CatalogRoutes.SupportsSkill(Id);
+    public bool CanSaveAsPlugin => Kind == CatalogKind.Agent && Definition is { ValueKind: JsonValueKind.Object } definition
+        && ((definition.TryGetProperty("skills", out var skills) && skills.ValueKind == JsonValueKind.Array && skills.GetArrayLength() > 0)
+            || (definition.TryGetProperty("mcpServers", out var servers) && servers.ValueKind == JsonValueKind.Object
+                && servers.EnumerateObject().Any(server => !string.IsNullOrWhiteSpace(server.Name) && server.Value.ValueKind == JsonValueKind.Object
+                    && (!server.Value.TryGetProperty("disabled", out var disabled) || disabled.ValueKind != JsonValueKind.True))));
 }
 
 public sealed record CatalogIcon(string Source, string? Theme);

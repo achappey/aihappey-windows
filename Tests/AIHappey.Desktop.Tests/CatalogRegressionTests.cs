@@ -19,6 +19,32 @@ internal static class CatalogRegressionTests
         check(agent.Key != (agent with { Origin = CatalogOrigin.Local }).Key, "backend and future user-created local items have separate identities");
         using var noDefinition = JsonDocument.Parse("""{"id":"opaque-agent","created":"unknown"}""");
         check(!CatalogProjection.Agent(noDefinition.RootElement)!.CanDownload && CatalogProjection.Agent(noDefinition.RootElement)!.Created is null, "opaque agents remain browsable without fake definition export");
+        check(!agent.CanSaveAsPlugin && !CatalogProjection.Agent(noDefinition.RootElement)!.CanSaveAsPlugin, "agents without plugin content or a definition cannot be saved as plugins");
+        foreach (var (json, expected) in new (string, bool)[] {
+            ("""{"skills":[],"mcpServers":{}}""", false),
+            ("""{"skills":[{"type":"skill_reference","skill_id":"provider/example"}]}""", true),
+            ("""{"skills":[{"type":"inline","source":{"type":"base64","data":"archive"}}]}""", true),
+            ("""{"mcpServers":{"example":{"url":"https://example.org/mcp"}}}""", true),
+            ("""{"mcpServers":{"example":{"disabled":false}}}""", true),
+            ("""{"skills":[{}],"mcpServers":{"example":{}}}""", true),
+            ("""{"mcpServers":{"example":{"disabled":true}}}""", false),
+            ("""{"mcpServers":{"off":{"disabled":true},"on":{}}}""", true),
+            ("""{"skills":[{}],"mcpServers":{"example":{"disabled":true}}}""", true),
+            ("""{"mcpServers":{" ":{}}}""", false),
+            ("""{"plugins":[{"type":"base64","data":"archive"}]}""", false),
+            ("""{"skills":null,"mcpServers":{"invalid":null}}""", false),
+            ("""{"skills":{},"mcpServers":[]}""", false),
+            ("null", false),
+        })
+        {
+            using var definition = JsonDocument.Parse(json);
+            foreach (var origin in new[] { CatalogOrigin.Local, CatalogOrigin.Backend })
+            {
+                var item = agent with { Definition = definition.RootElement.Clone(), Origin = origin };
+                check(item.CanSaveAsPlugin == expected, "plugin eligibility / " + origin + " / " + json);
+                check(!(item with { Kind = CatalogKind.Skill }).CanSaveAsPlugin, "skill cards never offer agent plugin conversion");
+            }
+        }
         foreach (var id in new[] { "../escape", "provider/..", "provider/a/b", "provider/a%2fb", "provider/a\\b", "provider/" })
             reject(() => CatalogRoutes.Skill(id), "unsafe skill route rejected: " + id);
         reject(() => CatalogRoutes.Version(".."), "skill version traversal rejected");
