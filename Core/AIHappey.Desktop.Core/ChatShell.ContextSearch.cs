@@ -35,8 +35,10 @@ public sealed partial class ChatShell
             var existing = Mcp.Servers.FirstOrDefault(view => view.Server.Id.Equals(item.Id, StringComparison.OrdinalIgnoreCase)
                 || view.Server.Name.Equals(item.Name, StringComparison.OrdinalIgnoreCase) || view.Server.Url.Equals(item.Url, StringComparison.OrdinalIgnoreCase));
             if (install && existing is null)
-                await Mcp.InstallAsync(new DesktopMcpServer { Id = item.Id, Name = item.Name, Description = item.Description,
-                    Url = item.Url, RegistryUrl = item.RegistryUrl, Version = item.Version, Icons = item.Icons.ToArray(), Enabled = false }, ct);
+            {
+                var server = item.CreateServer(); server.Headers = McpHeaderConfiguration.Initial(item);
+                await Mcp.InstallAsync(server, ct);
+            }
             else if (!install && existing is not null) await Mcp.RemoveAsync(existing.Server.Id, ct);
         }) { XamlRoot = XamlRoot };
         dialog.SaveAsync = async preferences =>
@@ -54,6 +56,7 @@ public sealed partial class ChatShell
             contextSearchDialog = null; historyDialogOpen = false;
             if (Current()) addContext.Focus(FocusState.Programmatic);
         }
-        if (Current() && dialog.Result is not null && dialog.CatalogInstallHappened) await ManageMcpAsync();
+        if (Current() && dialog.Result is not null && dialog.ServerConfigurationRequested is { } configure) await ManageMcpAsync(edit: configure);
+        else if (Current() && dialog.Result is not null && dialog.CatalogInstallHappened) await ManageMcpAsync();
     }
 }

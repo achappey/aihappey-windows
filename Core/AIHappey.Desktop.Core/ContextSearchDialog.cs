@@ -38,6 +38,7 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
     private bool skillsLoading, catalogLoading, pending, saving, closed, discard;
     private int visible = 20;
     public bool CatalogInstallHappened { get; private set; }
+    public DesktopMcpServer? ServerConfigurationRequested { get; private set; }
     public ChatPreferences? Result { get; private set; }
     public Func<ChatPreferences, Task>? SaveAsync { get; set; }
 
@@ -209,11 +210,25 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
         ControlAppearance.Stock(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", button.Content, item.Name));
         var content = CardContent(item.Name, item.Description, item.Version, new McpServerIcon(item.Icons, 32));
         content.Children.Add(button);
+        if (existing is not null && existing.PluginId is null)
+        {
+            var configure = new Button { Name = "ContextCatalogConfigure", Content = DesktopIcons.Create(Icon.Edit) };
+            ControlAppearance.Stock(configure); ToolbarControls.Label(configure, DesktopResources.Format("ActionForItem", DesktopResources.Get("Edit"), item.Name));
+            configure.Click += (_, _) =>
+            {
+                ServerConfigurationRequested = existing.Clone();
+                if (existing.Url == item.Url) { ServerConfigurationRequested.HeaderDefinitions = item.HeaderDefinitions.ToArray(); ServerConfigurationRequested.OAuthManaged = item.OAuthManaged; }
+                Hide();
+            };
+            content.Children.Add(configure);
+        }
         var card = new Border { Name = "ContextCatalogCard", Tag = item.Id, Child = content, Padding = new Thickness(16) };
         NativeCardSurface.Card(card); cards.Children.Add(card);
         button.Click += async (_, _) =>
         {
             if (pending || saving || closed || discard) return;
+            if (existing is null && McpHeaderConfiguration.RequiresConfiguration(item))
+            { ServerConfigurationRequested = item.CreateServer(); Hide(); return; }
             pending = true; error.Visibility = Visibility.Collapsed; Render();
             try
             {

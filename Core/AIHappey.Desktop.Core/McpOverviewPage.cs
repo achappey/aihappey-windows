@@ -30,6 +30,7 @@ internal sealed class McpOverviewPage : UserControl
     public Action? ManageRequested { get; set; }
     public Action<McpCatalogItem>? InstallRequested { get; set; }
     public Action<McpCatalogItem>? RemoveRequested { get; set; }
+    public Action<McpCatalogItem>? ConfigureRequested { get; set; }
 
     public McpOverviewPage()
     {
@@ -147,7 +148,13 @@ internal sealed class McpOverviewPage : UserControl
         button.Click += (_, _) => { if (installedServer is null) InstallRequested?.Invoke(item); else RemoveRequested?.Invoke(item); };
         actions.Children.Add(button);
         if (installedServer is not null)
-        { var view = new Button { Content = DesktopResources.Get("McpManage") }; ControlAppearance.Native(view); view.Click += (_, _) => ManageRequested?.Invoke(); actions.Children.Add(view); }
+        {
+            var configure = new Button { Name = "McpConfigure", Content = DesktopIcons.Create(FluentIcons.Common.Icon.Edit) };
+            ControlAppearance.Native(configure); ToolbarControls.Label(configure, DesktopResources.Format("ActionForItem", DesktopResources.Get("Edit"), item.Name));
+            AutomationProperties.SetAutomationId(configure, item.Id + ":Configure");
+            configure.Click += (_, _) => ConfigureRequested?.Invoke(item); actions.Children.Add(configure);
+            var view = new Button { Content = DesktopResources.Get("McpManage") }; ControlAppearance.Native(view); view.Click += (_, _) => ManageRequested?.Invoke(); actions.Children.Add(view);
+        }
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
         NativeCardSurface.Divider(footer); content.Children.Add(footer);
         var card = new Border { Name = "McpServerCard", Child = content };

@@ -73,6 +73,7 @@ public sealed class DesktopMcpClientFactory(IDesktopMcpAuthentication? authentic
     public async Task<IDesktopMcpConnection> ConnectAsync(DesktopMcpServer server, bool interactive, CancellationToken ct)
     {
         server = server.Clone(); server.Validate();
+        McpHeaderConfiguration.Validate(server.HeaderDefinitions, server.OAuthManaged, server.Headers);
         var options = new HttpClientTransportOptions { Endpoint = server.PluginId is null ? McpValidation.Endpoint(server.Url) : new Uri(server.Url), TransportMode = HttpTransportMode.StreamableHttp };
         var handler = await authentication.ConfigureAsync(server, options, interactive, ct);
         var http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan, MaxResponseContentBufferSize = 8 * 1024 * 1024 };
@@ -431,6 +432,11 @@ public sealed class DesktopMcpManager(IDesktopMcpClientFactory factory, DesktopM
     private bool Current(Entry entry) => !disposed && entries.TryGetValue(entry.Server.Id, out var current) && current == entry;
     private async Task ConnectAsync(Entry entry, CancellationToken ct, bool interactive = false)
     {
+        if (!McpHeaderConfiguration.CanConnect(entry.Server))
+        {
+            lock (sync) { entry.State = McpConnectionState.Error; entry.Error = DesktopResources.Get("McpInvalidHeaderInputs"); }
+            Changed?.Invoke(); return;
+        }
         lock (sync) { entry.State = interactive ? McpConnectionState.SigningIn : McpConnectionState.Connecting; entry.Error = null; }
         Changed?.Invoke();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct, entry.Lifetime.Token);

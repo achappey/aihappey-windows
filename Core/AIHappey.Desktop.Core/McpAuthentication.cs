@@ -27,7 +27,7 @@ public sealed class DesktopMcpAuthentication(DesktopSession session) : IDesktopM
         var endpoint = options.Endpoint;
         // Explicit per-server credentials win; never combine them with host credentials or OAuth.
         options.AdditionalHeaders = server.PluginId is null ? McpValidation.Headers(server.Headers) : new(server.Headers, StringComparer.OrdinalIgnoreCase);
-        var manual = options.AdditionalHeaders.Count != 0;
+        var manual = McpHeaderConfiguration.HasManualCredentials(server);
         var service = manual ? null : MatchService(endpoint, session.Settings, session.Runtime);
         var handler = new McpAuthenticationHandler(endpoint, () => session.McpPartition == partition
                 && (service is null || MatchService(endpoint, session.Settings, session.Runtime) == service),

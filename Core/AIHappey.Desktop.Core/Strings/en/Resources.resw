@@ -700,6 +700,11 @@
   <data name="McpRemoveHeader" xml:space="preserve"><value>Remove header</value></data>
   <data name="McpHeaderName" xml:space="preserve"><value>Header name</value></data>
   <data name="McpHeaderValue" xml:space="preserve"><value>Header value</value></data>
+  <data name="McpHeadersForm" xml:space="preserve"><value>Form</value></data>
+  <data name="McpHeaders" xml:space="preserve"><value>Headers</value></data>
+  <data name="McpHeadersRaw" xml:space="preserve"><value>Raw</value></data>
+  <data name="McpOAuthManaged" xml:space="preserve"><value>OAuth credentials are managed automatically when you connect.</value></data>
+  <data name="McpInvalidHeaderInputs" xml:space="preserve"><value>Complete required header fields with valid values before connecting. You can save this configuration now.</value></data>
   <data name="McpInvalidUrl" xml:space="preserve"><value>Use an HTTPS URL without credentials, query, or fragment. HTTP is allowed only for loopback servers.</value></data>
   <data name="McpInvalidHeaders" xml:space="preserve"><value>Check header names and values. Duplicate, control-character, cookie, and SDK-owned transport/session headers are not allowed.</value></data>
   <data name="McpInvalidName" xml:space="preserve"><value>A server name is required (up to 256 characters).</value></data>

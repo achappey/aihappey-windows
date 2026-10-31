@@ -17,12 +17,16 @@ public sealed class DesktopMcpServer
     public bool Enabled { get; set; }
     public string? PluginId { get; set; }
     public JsonElement? PluginSettings { get; set; }
+    public IReadOnlyList<McpRegistryHeader> HeaderDefinitions { get; set; } = [];
+    public bool OAuthManaged { get; set; }
     [JsonIgnore] public Dictionary<string, string> Headers { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public string? ProtectedHeaders { get; set; }
 
     public DesktopMcpServer Clone() => new() { Id = Id, Name = Name, Description = Description, Url = Url,
-        RegistryUrl = RegistryUrl, Version = Version, Icons = Icons.ToArray(), Enabled = Enabled, PluginId = PluginId, PluginSettings = PluginSettings?.Clone(), Headers = new(Headers, StringComparer.OrdinalIgnoreCase) };
-    public McpCatalogItem CatalogItem => new(Id, Name, Description, Url, Version, RegistryUrl) { Icons = Icons.ToArray(), PluginId = PluginId, PluginSettings = PluginSettings?.Clone() };
+        RegistryUrl = RegistryUrl, Version = Version, Icons = Icons.ToArray(), Enabled = Enabled, PluginId = PluginId, PluginSettings = PluginSettings?.Clone(),
+        HeaderDefinitions = HeaderDefinitions.ToArray(), OAuthManaged = OAuthManaged, Headers = new(Headers, StringComparer.OrdinalIgnoreCase) };
+    public McpCatalogItem CatalogItem => new(Id, Name, Description, Url, Version, RegistryUrl) { Icons = Icons.ToArray(), PluginId = PluginId,
+        PluginSettings = PluginSettings?.Clone(), HeaderDefinitions = HeaderDefinitions.ToArray(), OAuthManaged = OAuthManaged };
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Id) || Id.Length > 2048 || string.IsNullOrWhiteSpace(Name) || Name.Length > 256)
@@ -35,6 +39,7 @@ public sealed class DesktopMcpServer
             Headers = Headers.Where(p => !p.Key.StartsWith("Mcp-", StringComparison.OrdinalIgnoreCase) && !new[] { "Host", "Content-Length", "Content-Type", "Accept", "Connection", "Transfer-Encoding", "Cookie", "Authorization" }.Contains(p.Key, StringComparer.OrdinalIgnoreCase)).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
         }
         Icons = (Icons ?? []).Where(icon => icon is not null && McpIcons.Supported(icon)).Take(32).ToArray();
+        HeaderDefinitions ??= [];
     }
 }
 

@@ -29,8 +29,20 @@ public sealed partial class ChatShell
         addMcpServer.Click += async (_, _) => await ManageMcpAsync(add: true);
         mcpOverview.RetryRequested = async () => await RunAsync(ct => LoadMcpOverviewAsync(ct));
         mcpOverview.ManageRequested = async () => await ManageMcpAsync();
-        mcpOverview.InstallRequested = async item => await RunAsync(ct => Mcp.InstallAsync(new DesktopMcpServer
-        { Id = item.Id, Name = item.Name, Description = item.Description, Url = item.Url, RegistryUrl = item.RegistryUrl, Version = item.Version, Icons = item.Icons.ToArray() }, ct));
+        mcpOverview.InstallRequested = async item =>
+        {
+            if (McpHeaderConfiguration.RequiresConfiguration(item)) await ManageMcpAsync(edit: item.CreateServer());
+            else await RunAsync(ct => { var server = item.CreateServer(); server.Headers = McpHeaderConfiguration.Initial(item); return Mcp.InstallAsync(server, ct); });
+        };
+        mcpOverview.ConfigureRequested = async item =>
+        {
+            var server = Mcp.Servers.FirstOrDefault(view => view.Server.Id == item.Id)?.Server.Clone();
+            if (server is null) return;
+            // Older installations acquire public declarations only from the same catalog endpoint.
+            if (server.Url == item.Url && item.HeaderDefinitions.Count > 0)
+            { server.HeaderDefinitions = item.HeaderDefinitions.ToArray(); server.OAuthManaged = item.OAuthManaged; }
+            await ManageMcpAsync(edit: server);
+        };
         mcpOverview.RemoveRequested = async item => await RunAsync(ct => Mcp.RemoveAsync(item.Id, ct));
     }
     private void McpChanged() => DispatcherQueue.TryEnqueue(() =>
@@ -103,10 +115,10 @@ public sealed partial class ChatShell
         _ => LoadOverviewAsync(ActiveOverview, ct, useCache)
     };
 
-    private async Task ManageMcpAsync(bool add = false)
+    private async Task ManageMcpAsync(bool add = false, DesktopMcpServer? edit = null)
     {
         if (busy || closing || historyDialogOpen || catalogDialog is not null || mcpDialog is not null || !initialized) return;
-        var dialog = new McpServersDialog(Mcp, add) { XamlRoot = XamlRoot };
+        var dialog = new McpServersDialog(Mcp, add, edit) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog); mcpDialog = dialog; historyDialogOpen = true;
         try { await dialog.ShowAsync(); }
         finally

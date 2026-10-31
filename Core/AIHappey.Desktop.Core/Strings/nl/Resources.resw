@@ -696,6 +696,11 @@
   <data name="McpRemoveHeader" xml:space="preserve"><value>Header verwijderen</value></data>
   <data name="McpHeaderName" xml:space="preserve"><value>Headernaam</value></data>
   <data name="McpHeaderValue" xml:space="preserve"><value>Headerwaarde</value></data>
+  <data name="McpHeadersForm" xml:space="preserve"><value>Formulier</value></data>
+  <data name="McpHeaders" xml:space="preserve"><value>Headers</value></data>
+  <data name="McpHeadersRaw" xml:space="preserve"><value>Ruw</value></data>
+  <data name="McpOAuthManaged" xml:space="preserve"><value>OAuth-aanmeldgegevens worden automatisch beheerd wanneer je verbinding maakt.</value></data>
+  <data name="McpInvalidHeaderInputs" xml:space="preserve"><value>Vul verplichte headervelden in met geldige waarden voordat je verbinding maakt. Je kunt deze configuratie nu opslaan.</value></data>
   <data name="McpInvalidUrl" xml:space="preserve"><value>Gebruik een HTTPS-URL zonder aanmeldgegevens, query of fragment. HTTP is alleen toegestaan voor loopbackservers.</value></data>
   <data name="McpInvalidHeaders" xml:space="preserve"><value>Controleer headernamen en waarden. Dubbele headers, besturingstekens, cookies en transport- of sessieheaders van de SDK zijn niet toegestaan.</value></data>
   <data name="McpInvalidName" xml:space="preserve"><value>Een servernaam is verplicht (maximaal 256 tekens).</value></data>

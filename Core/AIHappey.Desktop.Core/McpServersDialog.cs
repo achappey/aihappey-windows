@@ -14,12 +14,10 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     private readonly TextBlock status = new() { Name = "McpManagementStatus", TextWrapping = TextWrapping.Wrap };
     private readonly TextBox name = new() { Header = DesktopResources.Get("Name"), Name = "McpServerName", MaxLength = 256 };
     private readonly TextBox url = new() { Header = DesktopResources.Get("McpServerUrl"), Name = "McpServerUrl" };
-    private readonly StackPanel headerRows = new() { Spacing = 8 };
-    private readonly List<(TextBox Key, PasswordBox Value)> headers = [];
     private DesktopMcpServer? draft;
     private bool working, closed;
     private CancellationTokenSource? operation;
-    public McpServersDialog(DesktopMcpManager manager, bool add = false)
+    public McpServersDialog(DesktopMcpManager manager, bool add = false, DesktopMcpServer? edit = null)
     {
         this.manager = manager;
         Name = "McpServersDialog"; Title = DesktopResources.Get("McpInstalledServers"); CloseButtonText = DesktopResources.Get("Close");
@@ -33,7 +31,7 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; };
         Closing += (_, args) => { if (working && !closed) { operation?.Cancel(); args.Cancel = true; } };
         Closed += (_, _) => { closed = true; lifetime.Cancel(); manager.Changed -= ManagerChanged; XamlRoot.Changed -= RootChanged; };
-        if (add) Edit(new()); else Render();
+        if (edit is not null) Edit(edit.Clone()); else if (add) Edit(new()); else Render();
     }
     public void Shutdown() { closed = true; lifetime.Cancel(); Hide(); }
     private void ManagerChanged() => DispatcherQueue.TryEnqueue(() =>
@@ -57,6 +55,7 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
         foreach (var view in servers)
         {
             var server = view.Server;
+            var canConnect = McpHeaderConfiguration.CanConnect(server);
             var panel = new StackPanel { Spacing = 8 };
             var header = new Grid { ColumnSpacing = 12 };
             header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
@@ -67,6 +66,7 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
             var toggle = new ToggleSwitch { Name = "McpServerEnabled", IsOn = server.Enabled,
                 OnContent = "", OffContent = "", MinWidth = 0,
                 HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
+            toggle.IsEnabled = server.Enabled || canConnect;
             ControlAppearance.Stock(toggle); AutomationProperties.SetAutomationId(toggle, server.Id + ":Enabled");
             AutomationProperties.SetName(toggle, server.Name);
             toggle.Toggled += async (_, _) => await ActAsync(ct => manager.SetEnabledAsync(server.Id, toggle.IsOn, ct, interactive: true));
@@ -79,11 +79,15 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
             var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
             actions.Children.Add(Button("Edit", () => Edit(server.Clone())));
             actions.Children.Add(Button("McpRemove", async () => await ActAsync(ct => manager.RemoveAsync(server.Id, ct))));
-            if (server.Enabled && view.State == McpConnectionState.AuthenticationRequired)
+            if (server.Enabled && canConnect && view.State == McpConnectionState.AuthenticationRequired)
                 actions.Children.Add(Button("McpSignIn", async () => await ActAsync(ct => manager.SignInAsync(server.Id, ct))));
             else if (view.State == McpConnectionState.SigningIn)
                 actions.Children.Add(Button("Cancel", () => manager.CancelSignIn(server.Id)));
-            else if (server.Enabled) actions.Children.Add(Button("Retry", async () => await ActAsync(ct => manager.SetEnabledAsync(server.Id, true, ct))));
+            else if (server.Enabled)
+            {
+                var retry = Button("Retry", async () => await ActAsync(ct => manager.SetEnabledAsync(server.Id, true, ct)));
+                retry.IsEnabled = canConnect; actions.Children.Add(retry);
+            }
             panel.Children.Add(actions);
             if (view.Discovery is { } discovery)
             {
@@ -110,33 +114,20 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     {
         draft = server; status.Text = ""; body.Children.Clear(); body.Children.Add(status);
         body.Children.Add(name); body.Children.Add(url); name.Text = server.Name; url.Text = server.Url;
-        body.Children.Add(new TextBlock { Text = DesktopResources.Get("McpHeadersHint"), TextWrapping = TextWrapping.Wrap });
-        headerRows.Children.Clear(); headers.Clear(); body.Children.Add(headerRows);
-        foreach (var header in server.Headers) AddHeader(header.Key, header.Value);
-        body.Children.Add(Button("McpAddHeader", () => { if (headers.Count < 32) AddHeader("", ""); }));
+        var headersEditor = new McpHeadersEditor(server); body.Children.Add(headersEditor);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         actions.Children.Add(Button("Save", async () =>
         {
             try
             {
                 server.Name = name.Text.Trim(); server.Url = url.Text.Trim();
-                server.Headers = McpValidation.Headers(headers.Where(h => !string.IsNullOrWhiteSpace(h.Key.Text))
-                    .Select(h => new KeyValuePair<string, string>(h.Key.Text.Trim(), h.Value.Password)));
+                server.Headers = headersEditor.ReadHeaders();
                 server.Validate();
             }
             catch (InvalidOperationException e) { status.Text = e.Message; return; }
             await ActAsync(ct => manager.InstallAsync(server, ct), saved: true);
         }));
         actions.Children.Add(Button("Cancel", () => { draft = null; status.Text = ""; Render(); })); body.Children.Add(actions);
-    }
-    private void AddHeader(string key, string value)
-    {
-        var keyBox = new TextBox { Header = DesktopResources.Get("McpHeaderName"), Text = key, MaxLength = 256 };
-        var valueBox = new PasswordBox { Header = DesktopResources.Get("McpHeaderValue"), Password = value, PasswordRevealMode = PasswordRevealMode.Hidden, MaxLength = 16384 };
-        ControlAppearance.Native(keyBox); ControlAppearance.Native(valueBox);
-        var row = new StackPanel { Spacing = 6 }; row.Children.Add(keyBox); row.Children.Add(valueBox);
-        row.Children.Add(Button("McpRemoveHeader", () => { headers.Remove((keyBox, valueBox)); headerRows.Children.Remove(row); }));
-        headers.Add((keyBox, valueBox)); headerRows.Children.Add(row);
     }
     private async Task ActAsync(Func<CancellationToken, Task> action, bool saved = false)
     {

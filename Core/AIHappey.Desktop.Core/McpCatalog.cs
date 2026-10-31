@@ -10,6 +10,11 @@ public sealed record McpCatalogItem(string Id, string Name, string Description, 
     public IReadOnlyList<McpIcon> Icons { get; init; } = [];
     public string? PluginId { get; init; }
     public JsonElement? PluginSettings { get; init; }
+    public IReadOnlyList<McpRegistryHeader> HeaderDefinitions { get; init; } = [];
+    public bool OAuthManaged { get; init; }
+    public DesktopMcpServer CreateServer() => new() { Id = Id, Name = Name, Description = Description, Url = Url,
+        RegistryUrl = RegistryUrl, Version = Version, Icons = Icons.ToArray(), HeaderDefinitions = HeaderDefinitions.ToArray(),
+        OAuthManaged = OAuthManaged };
 }
 public sealed record McpCatalogResult(IReadOnlyList<McpCatalogItem> Items, IReadOnlyList<string> FailedSources);
 
@@ -85,14 +90,17 @@ public sealed class DesktopMcpCatalogClient(HttpClient http)
                                 var url = McpValidation.Endpoint(CatalogProjection.Text(remote, "url") ?? "").AbsoluteUri;
                                 var id = McpValidation.Id(name);
                                 items.TryAdd(source + "|" + id, new(id, name, CatalogProjection.Text(server, "description") ?? "", url,
-                                    CatalogProjection.Text(server, "version"), source) { Icons = McpIcons.Read(server) });
+                                    CatalogProjection.Text(server, "version"), source) { Icons = McpIcons.Read(server),
+                                    HeaderDefinitions = remote.TryGetProperty("headers", out var headers) && headers.ValueKind == JsonValueKind.Array
+                                        ? JsonSerializer.Deserialize<McpRegistryHeader[]>(headers.GetRawText(), JsonSerializerOptions.Web) ?? [] : [],
+                                    OAuthManaged = McpHeaderConfiguration.HasOAuthHint(entry) });
                                 break;
                             }
                             catch (InvalidOperationException) { /* Unusable remote: try another endpoint. */ }
                         }
                     }
                     cursor = root.TryGetProperty("metadata", out var metadata) && metadata.ValueKind == JsonValueKind.Object
-                        ? CatalogProjection.Text(metadata, "next_cursor") : null;
+                        ? CatalogProjection.Text(metadata, "nextCursor") ?? CatalogProjection.Text(metadata, "next_cursor") : null;
                     if (string.IsNullOrEmpty(cursor)) break;
                     if (!seen.Add(cursor)) throw new JsonException("Repeated registry cursor.");
                 }
