@@ -11,9 +11,9 @@ public sealed partial class ChatShell
 {
     private IReadOnlyList<ChatTarget>? aiModelTargets;
     private readonly ModelsOverviewPage modelsOverview = new() { Visibility = Visibility.Collapsed };
-    private readonly StackPanel aiNavigation = new() { Spacing = 2 };
+    private readonly StackPanel aiNavigation = new() { Spacing = 2, Visibility = Visibility.Collapsed };
     private Button? aiCategory;
-    private bool aiCategoryExpanded = true;
+    private bool aiCategoryExpanded;
     private readonly ToggleButton modelFilters = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Filter), DesktopResources.Get("Filters"));
     private CatalogFavoritesStore modelFavoritesStore = null!;
     private HashSet<string> modelFavorites = new(StringComparer.Ordinal);

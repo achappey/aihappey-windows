@@ -14,13 +14,15 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     private readonly TextBlock status = new() { Name = "McpManagementStatus", TextWrapping = TextWrapping.Wrap };
     private readonly TextBox name = new() { Header = DesktopResources.Get("Name"), Name = "McpServerName", MaxLength = 256 };
     private readonly TextBox url = new() { Header = DesktopResources.Get("McpServerUrl"), Name = "McpServerUrl" };
+    private readonly bool editorOnly;
     private DesktopMcpServer? draft;
+    private McpHeadersEditor? headersEditor;
     private bool working, closed;
     private CancellationTokenSource? operation;
     public McpServersDialog(DesktopMcpManager manager, bool add = false, DesktopMcpServer? edit = null)
     {
-        this.manager = manager;
-        Name = "McpServersDialog"; Title = DesktopResources.Get("McpInstalledServers"); CloseButtonText = DesktopResources.Get("Close");
+        this.manager = manager; editorOnly = add || edit is not null;
+        Name = "McpServersDialog";
         Resources["ContentDialogMaxWidth"] = 1000d; Resources["ContentDialogMinWidth"] = 0d;
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
@@ -28,6 +30,13 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
         AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         foreach (var control in new Control[] { name, url }) ControlAppearance.Native(control);
         manager.Changed += ManagerChanged;
+        PrimaryButtonClick += async (_, args) => { args.Cancel = true; await SaveAsync(); };
+        CloseButtonClick += (_, args) =>
+        {
+            if (working) { operation?.Cancel(); args.Cancel = true; }
+            else if (draft is not null && !editorOnly)
+            { args.Cancel = true; draft = null; status.Text = ""; Render(); }
+        };
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; };
         Closing += (_, args) => { if (working && !closed) { operation?.Cancel(); args.Cancel = true; } };
         Closed += (_, _) => { closed = true; lifetime.Cancel(); manager.Changed -= ManagerChanged; XamlRoot.Changed -= RootChanged; };
@@ -47,6 +56,7 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     }
     private void Render()
     {
+        Title = DesktopResources.Get("McpInstalledServers"); headersEditor = null; UpdateFooter();
         body.Children.Clear(); body.Children.Add(status);
         body.Children.Add(new TextBlock { Text = DesktopResources.Get("McpEnableHint"), TextWrapping = TextWrapping.Wrap });
         body.Children.Add(Button("McpAddServer", () => Edit(new())));
@@ -113,39 +123,52 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     private void Edit(DesktopMcpServer server)
     {
         draft = server; status.Text = ""; body.Children.Clear(); body.Children.Add(status);
+        Title = DesktopResources.Get(manager.Servers.Any(view => view.Server.Id == server.Id) ? "McpEditServer" : "McpAddServer");
+        UpdateFooter();
         body.Children.Add(name); body.Children.Add(url); name.Text = server.Name; url.Text = server.Url;
-        var headersEditor = new McpHeadersEditor(server); body.Children.Add(headersEditor);
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        actions.Children.Add(Button("Save", async () =>
-        {
-            try
-            {
-                server.Name = name.Text.Trim(); server.Url = url.Text.Trim();
-                server.Headers = headersEditor.ReadHeaders();
-                server.Validate();
-            }
-            catch (InvalidOperationException e) { status.Text = e.Message; return; }
-            await ActAsync(ct => manager.InstallAsync(server, ct), saved: true);
-        }));
-        actions.Children.Add(Button("Cancel", () => { draft = null; status.Text = ""; Render(); })); body.Children.Add(actions);
+        headersEditor = new McpHeadersEditor(server); body.Children.Add(headersEditor);
     }
-    private async Task ActAsync(Func<CancellationToken, Task> action, bool saved = false)
+    private void UpdateFooter()
     {
-        if (working || closed) return;
+        PrimaryButtonText = draft is null ? "" : DesktopResources.Get("Save");
+        IsPrimaryButtonEnabled = !working;
+        CloseButtonText = DesktopResources.Get(working || draft is not null ? "Cancel" : "Close");
+        DefaultButton = draft is null ? ContentDialogButton.None : ContentDialogButton.Primary;
+    }
+    private async Task SaveAsync()
+    {
+        if (working || closed || draft is not { } server || headersEditor is null) return;
+        try
+        {
+            server.Name = name.Text.Trim(); server.Url = url.Text.Trim();
+            server.Headers = headersEditor.ReadHeaders();
+            server.Validate();
+        }
+        catch (InvalidOperationException e) { status.Text = e.Message; return; }
+        if (await ActAsync(ct => manager.InstallAsync(server, ct)) && !closed)
+        {
+            draft = null;
+            if (editorOnly) Hide(); else Render();
+        }
+    }
+    private async Task<bool> ActAsync(Func<CancellationToken, Task> action)
+    {
+        if (working || closed) return false;
         using var currentOperation = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
         operation = currentOperation;
-        working = true; CloseButtonText = DesktopResources.Get("Cancel"); status.Text = DesktopResources.Get("Working");
-        foreach (var control in ControlAppearance.Descendants(body).OfType<Control>()) control.IsEnabled = false;
-        try { await action(currentOperation.Token); if (saved) draft = null; status.Text = ""; }
-        catch (OperationCanceledException) { status.Text = DesktopResources.Get("OperationCanceled"); }
-        catch (Exception e) { status.Text = DesktopMcpManager.SafeError(e); }
+        var controls = ControlAppearance.Descendants(body).OfType<Control>().Select(control => (Control: control, control.IsEnabled)).ToArray();
+        working = true; UpdateFooter(); status.Text = DesktopResources.Get("Working");
+        foreach (var (control, _) in controls) control.IsEnabled = false;
+        try { await action(currentOperation.Token); status.Text = ""; return true; }
+        catch (OperationCanceledException) { status.Text = DesktopResources.Get("OperationCanceled"); return false; }
+        catch (Exception e) { status.Text = DesktopMcpManager.SafeError(e); return false; }
         finally
         {
-            operation = null; working = false; CloseButtonText = DesktopResources.Get("Close");
+            operation = null; working = false; UpdateFooter();
             if (!closed)
             {
                 if (draft is null) Render();
-                else foreach (var control in ControlAppearance.Descendants(body).OfType<Control>()) control.IsEnabled = true;
+                else foreach (var (control, enabled) in controls) control.IsEnabled = enabled;
             }
         }
     }

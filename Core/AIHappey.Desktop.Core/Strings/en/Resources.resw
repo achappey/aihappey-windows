@@ -667,6 +667,7 @@
   <data name="McpTitle" xml:space="preserve"><value>Model Context</value></data>
   <data name="McpDescription" xml:space="preserve"><value>Model Context Protocol gives you one structured way to work with prompts, resources and tools, no matter where the information comes from. You always work clearly, transparently and in the same way.</value></data>
   <data name="McpAddServer" xml:space="preserve"><value>Add server</value></data>
+  <data name="McpEditServer" xml:space="preserve"><value>Edit server</value></data>
   <data name="McpInstalledServers" xml:space="preserve"><value>Installed servers</value></data>
   <data name="McpManage" xml:space="preserve"><value>Manage</value></data>
   <data name="McpInstall" xml:space="preserve"><value>Install</value></data>

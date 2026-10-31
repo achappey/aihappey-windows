@@ -23,7 +23,8 @@ public partial class App
         try
         {
             window!.Content = shell; window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); window.Activate();
-            await Task.Delay(200); await HistoryIdleAsync(shell);
+            await WaitForProviderUiAsync(() => shell.IsLoaded && shell.XamlRoot is not null && Field<bool>(shell, "initialized"), "Sidebar shell did not load");
+            await HistoryIdleAsync(shell);
             await CheckCompactSidebarAsync(shell, theme, $"Sidebar / {(local ? "HeaderAuth" : "AzureAuth")} / {theme}");
         }
         finally { await shell.ShutdownAsync(); window!.Content = null; }
@@ -33,6 +34,18 @@ public partial class App
     {
         Check(Field<TextBlock>(shell, "disclaimer").Text == "UI image app can make mistakes. Check important information.",
             context + ": chat footer uses the injected app name and retains the warning");
+        var aiCategory = Field<Button>(shell, "aiCategory");
+        var aiNavigation = Field<StackPanel>(shell, "aiNavigation");
+        Check(!Field<bool>(shell, "aiCategoryExpanded") && aiNavigation.Visibility == Visibility.Collapsed,
+            context + ": Artificial Intelligence starts collapsed");
+        InvokeButton(aiCategory);
+        Check(Field<bool>(shell, "aiCategoryExpanded") && aiNavigation.Visibility == Visibility.Visible,
+            context + ": category click expands Artificial Intelligence");
+        InvokeButton(aiCategory);
+        var destinations = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.DesktopPage")!;
+        foreach (var destination in new[] { "Models", "Providers", "Usage", "Chat" }) Call(shell, "ShowPage", Enum.Parse(destinations, destination));
+        Check(!Field<bool>(shell, "aiCategoryExpanded") && aiNavigation.Visibility == Visibility.Collapsed,
+            context + ": page changes never override the collapsed category");
         var split = Field<SplitView>(shell, "split");
         var pane = (Grid)split.Pane;
         var toggle = Descendants(pane).OfType<Button>().Single(button => button.Name == "SidebarToggle");
@@ -122,6 +135,7 @@ public partial class App
         await Task.Delay(100);
         InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();
         Check(split.IsPaneOpen && expanded.Visibility == Visibility.Visible && Field<ListView>(shell, "chats").Visibility == Visibility.Visible
+            && aiNavigation.Visibility == Visibility.Collapsed
             && header.Margin == new Thickness(0, 0, 0, 12) && navigation.Spacing == 2
             && buttons.All(button => double.IsNaN(button.Width) && double.IsNaN(button.Height)
                 && button.MinHeight == 36 && button.ActualHeight <= 36.5 && button.Padding == new Thickness(12, 4, 12, 4) && button.HorizontalContentAlignment == HorizontalAlignment.Left
@@ -148,6 +162,13 @@ public partial class App
         InvokeButton(toggle); await Task.Delay(250); shell.UpdateLayout();
         Check(split.IsPaneOpen, context + ": expanded sidebar remains available after narrow-window collapse");
         await CheckCompactHiddenNavigationAsync(shell, context);
+        Call(shell, "ShowPage", Enum.Parse(destinations, "Chat"));
+        Invoke(Field<MenuFlyoutItem>(shell, "manageMcp"));
+        var management = await OpenDialogAsync(shell);
+        Check(management.Name == "McpServersDialog" && management.Title.ToString() == "Installed servers"
+            && management.PrimaryButtonText == "" && management.CloseButtonText == "Close",
+            context + ": composer retains the installed-server management dialog");
+        management.Hide(); await HistoryIdleAsync(shell);
     }
 
     private async Task CheckCompactHiddenNavigationAsync(ChatShell shell, string context)

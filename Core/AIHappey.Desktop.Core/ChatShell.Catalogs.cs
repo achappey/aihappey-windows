@@ -64,7 +64,7 @@ public sealed partial class ChatShell
                 header.Children.Add(DesktopIcons.Create(Icon.Brain));
                 var title = new TextBlock { Text = DesktopResources.Get("ArtificialIntelligence"), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
                 Grid.SetColumn(title, 1); header.Children.Add(title);
-                var chevron = DesktopIcons.Create(Icon.ChevronUp, 12); chevron.Name = "ArtificialIntelligenceChevron";
+                var chevron = DesktopIcons.Create(Icon.ChevronDown, 12); chevron.Name = "ArtificialIntelligenceChevron";
                 Grid.SetColumn(chevron, 2); header.Children.Add(chevron);
                 aiCategory = new Button { Name = "ArtificialIntelligenceCategory", Content = header,
                     HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
@@ -72,6 +72,7 @@ public sealed partial class ChatShell
                 ToolbarControls.Subtle(aiCategory); ToolbarControls.Label(aiCategory, DesktopResources.Get("ArtificialIntelligence"));
                 void UpdateCategory() { aiNavigation.Visibility = aiCategoryExpanded ? Visibility.Visible : Visibility.Collapsed; chevron.Icon = aiCategoryExpanded ? Icon.ChevronUp : Icon.ChevronDown; }
                 aiCategory.Click += (_, _) => { aiCategoryExpanded = !aiCategoryExpanded; UpdateCategory(); };
+                UpdateCategory();
                 expandedPageNavigation.Children.Add(aiCategory); expandedPageNavigation.Children.Add(aiNavigation);
             }
             var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
@@ -168,11 +169,6 @@ public sealed partial class ChatShell
         addMcpServer.Visibility = page == DesktopPage.Mcp ? Visibility.Visible : Visibility.Collapsed;
         pluginsOverview.Visibility = addPlugin.Visibility = page == DesktopPage.Plugins ? Visibility.Visible : Visibility.Collapsed;
         filesOverview.Visibility = addFiles.Visibility = page == DesktopPage.Files ? Visibility.Visible : Visibility.Collapsed;
-        if (page is DesktopPage.Models or DesktopPage.Providers or DesktopPage.Usage && aiCategory is not null)
-        {
-            aiCategoryExpanded = true; aiNavigation.Visibility = Visibility.Visible;
-            if (aiCategory.Content is Grid categoryHeader && categoryHeader.Children.OfType<FluentIcon>().FirstOrDefault(icon => icon.Name == "ArtificialIntelligenceChevron") is { } chevron) chevron.Icon = Icon.ChevronUp;
-        }
         mcpOverview.Visibility = page == DesktopPage.Mcp ? Visibility.Visible : Visibility.Collapsed;
         imagesPage.Visibility = imageTarget.Visibility = page == DesktopPage.Images ? Visibility.Visible : Visibility.Collapsed;
         videosPage.Visibility = videoModelToolbar.Visibility = page == DesktopPage.Videos ? Visibility.Visible : Visibility.Collapsed;

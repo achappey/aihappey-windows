@@ -90,11 +90,14 @@ public partial class App
             var header = (Grid)category.Content;
             var chevron = header.Children.OfType<FluentIcon>().Single(i => i.Name == "ArtificialIntelligenceChevron");
             var brain = header.Children.OfType<FluentIcon>().Single(i => i.Icon == Icon.Brain);
+            Check(chevron.Icon == Icon.ChevronDown && brain.Icon == Icon.Brain, context + ": category starts collapsed with its brain icon intact");
+            InvokeButton(category);
+            Check(chevron.Icon == Icon.ChevronUp && brain.Icon == Icon.Brain, context + ": expansion changes only the named chevron");
             InvokeButton(category);
             Check(chevron.Icon == Icon.ChevronDown && brain.Icon == Icon.Brain, context + ": collapse changes only the named chevron");
             var pageType = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.DesktopPage")!;
             typeof(ChatShell).GetMethod("ShowPage", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(shell, [Enum.Parse(pageType, "Models")]);
-            Check(chevron.Icon == Icon.ChevronUp && brain.Icon == Icon.Brain, context + ": navigation re-expands chevron without replacing brain");
+            Check(chevron.Icon == Icon.ChevronDown && brain.Icon == Icon.Brain, context + ": navigation preserves the user's collapsed category and brain icon");
             Check(!Descendants(shell).OfType<IconElement>().Any(i => i is Microsoft.UI.Xaml.Controls.SymbolIcon or PathIcon),
                 context + ": app navigation and toolbars no longer use legacy symbol or copied path artwork");
         }

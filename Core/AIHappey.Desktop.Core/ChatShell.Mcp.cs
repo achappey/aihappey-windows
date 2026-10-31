@@ -28,7 +28,6 @@ public sealed partial class ChatShell
         ControlAppearance.Stock(addMcpServer); ToolbarControls.Label(addMcpServer, DesktopResources.Get("McpAddServer"));
         addMcpServer.Click += async (_, _) => await ManageMcpAsync(add: true);
         mcpOverview.RetryRequested = async () => await RunAsync(ct => LoadMcpOverviewAsync(ct));
-        mcpOverview.ManageRequested = async () => await ManageMcpAsync();
         mcpOverview.InstallRequested = async item =>
         {
             if (McpHeaderConfiguration.RequiresConfiguration(item)) await ManageMcpAsync(edit: item.CreateServer());

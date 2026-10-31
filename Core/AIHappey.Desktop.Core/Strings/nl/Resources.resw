@@ -663,6 +663,7 @@
   <data name="McpTitle" xml:space="preserve"><value>Model Context</value></data>
   <data name="McpDescription" xml:space="preserve"><value>Model Context Protocol biedt één gestructureerde manier om met prompts, bronnen en tools te werken, ongeacht waar de informatie vandaan komt. Je werkt altijd overzichtelijk, transparant en op dezelfde manier.</value></data>
   <data name="McpAddServer" xml:space="preserve"><value>Server toevoegen</value></data>
+  <data name="McpEditServer" xml:space="preserve"><value>Server bewerken</value></data>
   <data name="McpInstalledServers" xml:space="preserve"><value>Ge├»nstalleerde servers</value></data>
   <data name="McpManage" xml:space="preserve"><value>Beheren</value></data>
   <data name="McpInstall" xml:space="preserve"><value>Installeren</value></data>

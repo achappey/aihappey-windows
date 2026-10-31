@@ -127,8 +127,34 @@ public partial class App
             var tabs = Descendants(page).OfType<NavigationView>().Single(view => view.Name == "McpFilters");
             CheckNativeTabs(tabs, context);
             Check(tabs.MenuItems.Count == 10 && CardCount(page, "McpServerCard") == 8, context + ": All, Installed and dynamic registry tabs");
+            var requested = new List<string>();
+            foreach (var action in new[] { "Install", "Remove", "Configure" })
+                page.GetType().GetProperty(action + "Requested")!.SetValue(page, (Action<McpCatalogItem>)(item => requested.Add(action + ":" + item.Id)));
+            var cards = Descendants(page).OfType<Border>().Where(card => card.Name == "McpServerCard").ToArray();
+            foreach (var card in cards)
+            {
+                var actions = Descendants(card).OfType<Button>().ToArray();
+                var isInstalled = AutomationProperties.GetName(card) == server.Name;
+                Check(actions.Select(button => button.Name).SequenceEqual(isInstalled ? new[] { "McpRemove", "McpConfigure" } : new[] { "McpInstall" })
+                    && actions.All(button => button.Content is FluentIcons.WinUI.FluentIcon && button.Width == 32 && button.Height == 32
+                        && !string.IsNullOrEmpty(AutomationProperties.GetName(button)) && ToolTipService.GetToolTip(button) is ToolTip tooltip
+                        && tooltip.Content.ToString() == AutomationProperties.GetName(button)), context + ": icon-only actions and accessible tooltips without Manage / " + AutomationProperties.GetName(card));
+            }
+            var install = Descendants(page).OfType<Button>().First(button => button.Name == "McpInstall");
+            Check(((FluentIcons.WinUI.FluentIcon)install.Content).Icon == FluentIcons.Common.Icon.ArrowDownload, context + ": install uses download artwork");
+            InvokeButton(install);
             SelectNativeTab(tabs, "installed");
-            Check(CardCount(page, "McpServerCard") == 1 && Descendants(page).OfType<Button>().Any(button => button.Name == "McpRemove"), context + ": Installed retains remove/manage actions");
+            var remove = Descendants(page).OfType<Button>().Single(button => button.Name == "McpRemove");
+            var configure = Descendants(page).OfType<Button>().Single(button => button.Name == "McpConfigure");
+            Check(CardCount(page, "McpServerCard") == 1 && ((FluentIcons.WinUI.FluentIcon)remove.Content).Icon == FluentIcons.Common.Icon.Delete
+                && configure.Focus(FocusState.Keyboard), context + ": Installed retains delete and keyboard-accessible Edit without Manage");
+            InvokeButton(configure); InvokeButton(remove);
+            Check(requested.SequenceEqual(["Install:server-1", "Configure:server-0", "Remove:server-0"]), context + ": icon actions retain their original callbacks");
+            var focusedId = AutomationProperties.GetAutomationId(configure);
+            InvokeOverview(page, "SetInstalled", (object)new McpConnectionView[] { new(server, McpConnectionState.Connected, null, null) });
+            await Task.Delay(80);
+            Check(Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(page.XamlRoot) is Button focused && AutomationProperties.GetAutomationId(focused) == focusedId,
+                context + ": installed refresh restores icon action focus by stable automation ID");
             // Select the first registry, which remains in the primary strip at wide widths.
             SelectNativeTab(tabs, sources[0]);
             var selected = tabs.SelectedItem;

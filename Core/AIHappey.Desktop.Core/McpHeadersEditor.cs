@@ -14,9 +14,12 @@ internal sealed class McpHeadersEditor : UserControl
     private readonly TextBox json = new() { Name = "McpHeadersJson", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 160,
         FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Mono, Consolas") };
     private readonly TextBlock status = new() { Name = "McpHeaderError", TextWrapping = TextWrapping.Wrap };
-    private readonly TabView tabs = new() { Name = "McpHeaderTabs", IsAddTabButtonVisible = false, CanDragTabs = false,
-        CanReorderTabs = false, TabWidthMode = TabViewWidthMode.SizeToContent };
-    private readonly Dictionary<string, TabViewItem> tabItems = [];
+    private readonly NavigationView tabs = new() { Name = "McpHeaderTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
+    private readonly ContentControl page = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch };
+    private readonly Dictionary<string, NavigationViewItem> tabItems = [];
+    private readonly Dictionary<string, FrameworkElement> pages = [];
     private readonly List<(TextBox Name, PasswordBox Value)> headerRows = [];
     private readonly List<(TextBox Name, PasswordBox Value)> extraRows = [];
     private List<McpHeaderField> fields = [];
@@ -34,16 +37,16 @@ internal sealed class McpHeadersEditor : UserControl
         if (hasForm) AddTab("form", "McpHeadersForm", form);
         AddTab("headers", "McpHeaders", headers); AddTab("raw", "McpHeadersRaw", json);
         ControlAppearance.Native(tabs); ControlAppearance.Native(json); ToolbarControls.Label(json, DesktopResources.Get("McpHeadersRaw"));
-        body.Children.Add(tabs); body.Children.Add(status);
+        body.Children.Add(tabs); body.Children.Add(page); body.Children.Add(status);
         RenderForm(server.Headers); RenderHeaders(server.Headers);
-        tabs.SelectedItem = tabItems[active];
-        tabs.SelectionChanged += (_, _) => { if (!switching && tabs.SelectedItem is TabViewItem { Tag: string key }) Switch(key); };
+        tabs.SelectedItem = tabItems[active]; page.Content = pages[active];
+        tabs.SelectionChanged += (_, args) => { if (!switching && args.SelectedItem is NavigationViewItem { Tag: string key }) Switch(key); };
         json.TextChanged += (_, _) => UpdateStatus(); UpdateStatus();
     }
     private void AddTab(string key, string label, FrameworkElement content)
     {
-        var item = new TabViewItem { Name = "McpHeadersTab_" + key, Header = DesktopResources.Get(label), Tag = key, IsClosable = false, Content = content };
-        ToolbarControls.Label(item, DesktopResources.Get(label)); tabItems.Add(key, item); tabs.TabItems.Add(item);
+        var item = new NavigationViewItem { Name = "McpHeadersTab_" + key, Content = DesktopResources.Get(label), Tag = key };
+        ToolbarControls.Label(item, DesktopResources.Get(label)); tabItems.Add(key, item); pages.Add(key, content); tabs.MenuItems.Add(item);
     }
     private void Switch(string next)
     {
@@ -59,7 +62,7 @@ internal sealed class McpHeadersEditor : UserControl
             active = next;
         }
         catch (InvalidOperationException e) { status.Text = e.Message; }
-        switching = true; tabs.SelectedItem = tabItems[active]; switching = false; UpdateStatus();
+        switching = true; tabs.SelectedItem = tabItems[active]; page.Content = pages[active]; switching = false; UpdateStatus();
     }
     private void RenderForm(IReadOnlyDictionary<string, string> values)
     {
