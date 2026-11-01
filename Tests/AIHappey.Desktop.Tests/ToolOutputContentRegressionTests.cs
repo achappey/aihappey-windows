@@ -10,7 +10,7 @@ using AIHappey.Vercel.Models;
 internal static class ToolOutputContentRegressionTests
 {
     private static JsonElement Json(string value) => JsonSerializer.Deserialize<JsonElement>(value);
-    private static bool Defaults(ToolOutputContentSettings settings) => settings.Text && !settings.Images && !settings.Audio && !settings.Video && !settings.Documents;
+    private static bool Defaults(ToolOutputContentSettings settings) => settings.Text && settings.Links && !settings.Images && !settings.Audio && !settings.Video && !settings.Documents;
     private static JsonObject Part(JsonNode? output) => new()
     {
         ["type"] = "tool-fixture", ["toolCallId"] = "fixture", ["state"] = "output-available", ["providerExecuted"] = false, ["output"] = output
@@ -23,6 +23,7 @@ internal static class ToolOutputContentRegressionTests
         switch (category)
         {
             case "Text": settings.Text = true; break;
+            case "Link": settings.Links = true; break;
             case "Image": settings.Images = true; break;
             case "Audio": settings.Audio = true; break;
             case "Video": settings.Video = true; break;
@@ -34,13 +35,14 @@ internal static class ToolOutputContentRegressionTests
     {
         await CheckPreferencesAsync(check, root);
         CheckMapping(check);
+        CheckLinks(check);
         await CheckExecutionAndTransportAsync(check, root);
         foreach (var language in new[] { "en", "nl" })
         {
             using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Desktop.Resources." + language)!;
             var resources = XDocument.Load(stream).Root!.Elements("data").ToDictionary(e => e.Attribute("name")!.Value, e => e.Element("value")!.Value);
             check(resources["SettingsToolOutputContent"].Length > 0 && !resources.ContainsKey("ToolOutputImages") && !resources.ContainsKey("ToolOutputImagesHint"), language + ": tool output card replaces obsolete image resources");
-            foreach (var category in new[] { "Text", "Images", "Audio", "Video", "Documents" })
+            foreach (var category in new[] { "Text", "Links", "Images", "Audio", "Video", "Documents" })
                 foreach (var property in new[] { "Header", "OnContent", "OffContent", "[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" })
                     check(resources["SettingsToolOutput" + category + "." + property].Length > 0, language + ": tool output localized " + category + " " + property);
         }
@@ -48,27 +50,32 @@ internal static class ToolOutputContentRegressionTests
 
     private static async Task CheckPreferencesAsync(Action<bool, string> check, string root)
     {
-        check(Defaults(new ChatPreferences().ToolOutputContentSettings), "tool output: browser defaults send text only");
+        check(Defaults(new ChatPreferences().ToolOutputContentSettings), "tool output: browser defaults send text and links, not raw media");
         foreach (var raw in new[] { "{}", "{\"sendToolOutputImages\":true}", "{\"sendToolOutputImages\":false}", "{\"toolOutputContentSettings\":null}" })
             check(Defaults(JsonSerializer.Deserialize<ChatPreferences>(raw, JsonSerializerOptions.Web)!.ToolOutputContentSettings), "tool output: missing/null new settings discard obsolete image preference: " + raw);
         var preferences = JsonSerializer.Deserialize<ChatPreferences>("""{"sendToolOutputImages":true,"toolOutputContentSettings":{"text":false,"audio":true,"future":true}}""", JsonSerializerOptions.Web)!;
-        check(!preferences.ToolOutputContentSettings.Text && !preferences.ToolOutputContentSettings.Images && preferences.ToolOutputContentSettings.Audio
+        check(!preferences.ToolOutputContentSettings.Text && preferences.ToolOutputContentSettings.Links && !preferences.ToolOutputContentSettings.Images && preferences.ToolOutputContentSettings.Audio
             && !preferences.ToolOutputContentSettings.Video && !preferences.ToolOutputContentSettings.Documents, "tool output: partial settings keep explicit values and default missing categories");
-        var clone = preferences.Clone(); clone.ToolOutputContentSettings.Images = true; clone.ToolOutputContentSettings.Text = true;
-        check(!preferences.ToolOutputContentSettings.Images && !preferences.ToolOutputContentSettings.Text && clone.ToolOutputContentSettings.Audio, "tool output: cloned settings retain values without sharing mutable draft");
-        preferences.ToolOutputContentSettings = new() { Text = false, Images = true, Audio = true, Video = true, Documents = true };
+        var legacy = JsonSerializer.Deserialize<ChatPreferences>("""{"toolOutputContentSettings":{"text":false,"images":true,"audio":true,"video":false,"documents":true}}""", JsonSerializerOptions.Web)!;
+        check(legacy.ToolOutputContentSettings.Links && !legacy.ToolOutputContentSettings.Text && legacy.ToolOutputContentSettings.Images
+            && legacy.ToolOutputContentSettings.Audio && !legacy.ToolOutputContentSettings.Video && legacy.ToolOutputContentSettings.Documents, "tool output: existing five-category settings gain Links on without overriding saved choices");
+        var clone = preferences.Clone(); clone.ToolOutputContentSettings.Images = true; clone.ToolOutputContentSettings.Text = true; clone.ToolOutputContentSettings.Links = false;
+        check(!preferences.ToolOutputContentSettings.Images && !preferences.ToolOutputContentSettings.Text && preferences.ToolOutputContentSettings.Links
+            && !clone.ToolOutputContentSettings.Links && clone.ToolOutputContentSettings.Audio, "tool output: cloned settings retain values without sharing mutable draft");
+        preferences.ToolOutputContentSettings = new() { Text = false, Links = false, Images = true, Audio = true, Video = true, Documents = true };
         var directory = Path.Combine(root, "tool-output-settings");
         await SettingsStore.SaveAsync(directory, new() { Chat = preferences });
         var loaded = (await SettingsStore.LoadAsync(directory, new())).Chat;
-        check(!loaded.ToolOutputContentSettings.Text && loaded.ToolOutputContentSettings.Images && loaded.ToolOutputContentSettings.Audio
-            && loaded.ToolOutputContentSettings.Video && loaded.ToolOutputContentSettings.Documents, "tool output: all five explicit values survive settings save/load");
+        check(!loaded.ToolOutputContentSettings.Text && !loaded.ToolOutputContentSettings.Links && loaded.ToolOutputContentSettings.Images && loaded.ToolOutputContentSettings.Audio
+            && loaded.ToolOutputContentSettings.Video && loaded.ToolOutputContentSettings.Documents, "tool output: all six explicit values including Links off survive settings save/load");
         loaded.MaxOutputTokens = 123; loaded.ApiDebugEnabled = loaded.ShowTokens = true; loaded.ShowProviderLogo = false;
         var reset = loaded.InferenceDefaults();
         check(reset.MaxOutputTokens is null && reset.ApiDebugEnabled && reset.ShowTokens && !reset.ShowProviderLogo
-            && !reset.ToolOutputContentSettings.Text && reset.ToolOutputContentSettings.Images && reset.ToolOutputContentSettings.Audio
-            && reset.ToolOutputContentSettings.Video && reset.ToolOutputContentSettings.Documents, "tool output: inference reset preserves all five output settings and other user-level preferences");
+            && !reset.ToolOutputContentSettings.Text && !reset.ToolOutputContentSettings.Links && reset.ToolOutputContentSettings.Images && reset.ToolOutputContentSettings.Audio
+            && reset.ToolOutputContentSettings.Video && reset.ToolOutputContentSettings.Documents, "tool output: inference reset preserves all six output settings and other user-level preferences");
         reset.ToolOutputContentSettings.Images = false;
-        check(loaded.ToolOutputContentSettings.Images, "tool output: inference reset clones output settings independently");
+        reset.ToolOutputContentSettings.Links = true;
+        check(loaded.ToolOutputContentSettings.Images && !loaded.ToolOutputContentSettings.Links, "tool output: inference reset clones output settings independently");
         var persisted = await File.ReadAllTextAsync(Path.Combine(directory, "settings.json"));
         check(!persisted.Contains("sendToolOutputImages") && persisted.Contains("toolOutputContentSettings"), "tool output: obsolete property is not saved");
         preferences.ToolOutputContentSettings = new();
@@ -84,8 +91,9 @@ internal static class ToolOutputContentRegressionTests
             ("""{"type":"text","text":"keep","mimeType":"image/png"}""", "Text"),
             ("""{"type":"image","mimeType":" image/JPEG ","data":"bytes"}""", "Image"),
             ("""{"type":"audio","mimeType":"audio/wav","data":"bytes"}""", "Audio"),
-            ("""{"type":"resource_link","mimeType":"video/mp4","uri":"https://example/video"}""", "Video"),
-            ("""{"type":"resource_link","mimeType":"application/pdf","uri":"file:///report"}""", "Document"),
+            ("""{"type":"resource_link","mimeType":"video/mp4","uri":"https://example/video"}""", "Link"),
+            ("""{"type":"resource_link","mimeType":"application/pdf","uri":"file:///report"}""", "Link"),
+            ("""{"type":"resource_link","mimeType":7,"uri":"mcp://report"}""", "Link"),
             ("""{"type":"resource","resource":{"mimeType":"image/png","blob":"bytes","uri":"image"}}""", "Image"),
             ("""{"type":"resource","resource":{"mimeType":"audio/mpeg","blob":"bytes"}}""", "Audio"),
             ("""{"type":"resource","resource":{"mimeType":"video/webm","blob":"bytes"}}""", "Video"),
@@ -116,7 +124,7 @@ internal static class ToolOutputContentRegressionTests
             var original = JsonNode.Parse(raw);
             var output = new JsonObject { ["content"] = new JsonArray(original?.DeepClone()), ["isError"] = true, ["structuredContent"] = new JsonObject { ["keep"] = "original" }, ["future"] = 7 };
             var part = Part(output); var before = part.ToJsonString();
-            var disabled = new ToolOutputContentSettings { Text = false };
+            var disabled = new ToolOutputContentSettings { Text = false, Links = false };
             var request = Request(part, disabled);
             var expected = category is null ? original : new JsonObject { ["type"] = "text", ["text"] = $"{category} content omitted by user settings." };
             check(JsonNode.DeepEquals(Content(request)[0], expected), "tool output: explicit MCP classification " + raw);
@@ -148,9 +156,34 @@ internal static class ToolOutputContentRegressionTests
         check(Content(Request(mixed, new())).Count == 3, "tool output: dynamic tool parts use same mapping");
     }
 
+    private static void CheckLinks(Action<bool, string> check)
+    {
+        foreach (var mime in new string?[] { null, "", "text/plain", "application/json", "image/png", "image/svg+xml", "audio/mpeg", "video/mp4", "application/pdf", "application/octet-stream", "model/gltf-binary" })
+        {
+            var link = JsonNode.Parse("""{"type":"resource_link","uri":"https://files.example/image.png","name":"Generated image","description":"Result","size":123,"annotations":{"audience":["user","assistant"]},"_meta":{"keep":true}}""")!.AsObject();
+            if (mime is not null) link["mimeType"] = mime;
+            var part = Part(new JsonObject { ["content"] = new JsonArray(link.DeepClone()) });
+            var before = part.ToJsonString();
+            foreach (var enabled in new[] { true, false })
+                foreach (var others in new[] { true, false })
+                {
+                    var settings = new ToolOutputContentSettings { Text = others, Links = enabled, Images = others, Audio = others, Video = others, Documents = others };
+                    var expected = enabled ? link : new JsonObject { ["type"] = "text", ["text"] = "Link content omitted by user settings." };
+                    check(JsonNode.DeepEquals(Content(Request(part, settings))[0], expected) && part.ToJsonString() == before,
+                        $"tool output: link MIME={mime ?? "missing"} uses Links={enabled}, independently of other categories={others}, without changing stored metadata");
+                }
+        }
+        var mixed = Part(JsonNode.Parse("""{"content":[{"type":"text","text":"https://example/image.png"},{"type":"resource_link","uri":"mcp://generated","mimeType":"image/png"},{"type":"image","mimeType":"image/png","data":"bytes"},{"type":"resource","resource":{"uri":"mcp://embedded","mimeType":"image/png","blob":"bytes"}}]}"""));
+        var defaults = Content(Request(mixed, new()));
+        check(defaults[0]!["text"]!.GetValue<string>() == "https://example/image.png" && defaults[1]!["uri"]!.GetValue<string>() == "mcp://generated"
+            && defaults[2]!["text"]!.GetValue<string>() == "Image content omitted by user settings." && defaults[3]!["text"]!.GetValue<string>() == "Image content omitted by user settings.",
+            "tool output: defaults retain ordinary URL text and resource links but omit inline and embedded image bytes");
+    }
+
     private static async Task CheckExecutionAndTransportAsync(Action<bool, string> check, string root)
     {
-        var result = Json("""{"content":[{"type":"text","text":"result"},{"type":"image","mimeType":"image/jpeg","data":"retained bytes"}],"isError":false,"structuredContent":{"reference":"keep"}}""");
+        var result = Json("""{"content":[{"type":"text","text":"result"},{"type":"image","mimeType":"image/jpeg","data":"retained bytes"},{"type":"resource_link","uri":"https://files.example/generated.jpg","mimeType":"image/jpeg","name":"Generated image","_meta":{"keep":true}}],"isError":false,"structuredContent":{"reference":"keep"}}""");
+        var originalLink = JsonNode.Parse(result.GetProperty("content")[2].GetRawText());
         var definition = Json("""{"name":"remote_image","inputSchema":{"type":"object"}}""");
         var discovery = new McpDiscovery(Json("{}"), Json("{}"), null, [definition]);
         var calls = 0;
@@ -169,7 +202,8 @@ internal static class ToolOutputContentRegressionTests
         // History saving updates the conversation timestamp; take the request baseline afterwards.
         var before = PortableConversations.Write(conversation);
         var restored = (await store.GetAsync(partition, conversation.Id))!;
-        check(restored.Messages[0].Message.Parts.All(part => PortableConversations.Element(part).GetProperty("output").GetProperty("content")[1].GetProperty("data").GetString() == "retained bytes"), "tool output: history retains original bytes and client marker");
+        check(restored.Messages[0].Message.Parts.All(part => PortableConversations.Element(part).GetProperty("output").GetProperty("content")[1].GetProperty("data").GetString() == "retained bytes"
+            && JsonNode.DeepEquals(JsonNode.Parse(PortableConversations.Element(part).GetProperty("output").GetProperty("content")[2].GetRawText()), originalLink)), "tool output: history retains original bytes, links and client marker");
         var session = new DesktopSession(new TestHost(), new TestRuntime(), new());
         using var handler = new CaptureHandler(); using var http = new HttpClient(handler); var client = new DesktopChatClient(session, http);
         var agent = DesktopAgent.Parse("""{"name":"Fixture","description":"Transport fixture","model":{"id":"p/model"},"instructions":"Test"}""");
@@ -177,9 +211,15 @@ internal static class ToolOutputContentRegressionTests
         {
             await foreach (var _ in client.StreamAsync(service, "p/model", "chat", [output.Message], default, mcp: snapshot, localAgent: localAgent)) { }
             check(Enumerable.Range(0, 2).All(i => Content(handler.Body!, i)[1]!["text"]!.GetValue<string>() == "Image content omitted by user settings."), "tool output: actual HTTP request filters both local/MCP results for " + service + (localAgent is null ? "" : " local agent"));
+            check(Enumerable.Range(0, 2).All(i => JsonNode.DeepEquals(Content(handler.Body!, i)[2], originalLink)), "tool output: actual HTTP request preserves image links with images disabled for " + service);
             session.Settings.Chat.ToolOutputContentSettings.Images = true;
             await foreach (var _ in client.StreamAsync(service, "p/model", "chat", [output.Message], default, mcp: snapshot, localAgent: localAgent)) { }
             check(Enumerable.Range(0, 2).All(i => Content(handler.Body!, i)[1]!["data"]!.GetValue<string>() == "retained bytes"), "tool output: actual HTTP opt-in includes original local/MCP bytes for " + service);
+            session.Settings.Chat.ToolOutputContentSettings.Links = false;
+            await foreach (var _ in client.StreamAsync(service, "p/model", "chat", [output.Message], default, mcp: snapshot, localAgent: localAgent)) { }
+            check(Enumerable.Range(0, 2).All(i => Content(handler.Body!, i)[2]!["text"]!.GetValue<string>() == "Link content omitted by user settings."
+                && Content(handler.Body!, i)[1]!["data"]!.GetValue<string>() == "retained bytes"), "tool output: actual HTTP request respects Links off independently of images enabled for " + service);
+            session.Settings.Chat.ToolOutputContentSettings.Links = true;
             session.Settings.Chat.ToolOutputContentSettings.Images = false;
         }
         check(PortableConversations.Write(conversation) == before && calls == 2, "tool output: requests never mutate conversation or rerun tools");

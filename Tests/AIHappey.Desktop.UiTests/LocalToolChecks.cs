@@ -18,7 +18,7 @@ public partial class App
         window.Activate(); await Task.Delay(100);
         var scale = root.XamlRoot.RasterizationScale;
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(1200 * scale), (int)(900 * scale))); await Task.Delay(100);
-        var original = new ChatPreferences { ApiDebugEnabled = true, ToolOutputContentSettings = new() { Text = false, Images = true, Audio = true, Video = true, Documents = true } }; ChatPreferences? saved = null;
+        var original = new ChatPreferences { ApiDebugEnabled = true, ToolOutputContentSettings = new() { Text = false, Links = false, Images = true, Audio = true, Video = true, Documents = true } }; ChatPreferences? saved = null;
         var dialog = new ChatSettingsDialog(original, "openai") { XamlRoot = root.XamlRoot, RequestedTheme = theme,
             SaveAsync = next => { saved = next; return Task.CompletedTask; } };
         SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(120); dialog.ShowToolsTab(); await Task.Delay(100); dialog.UpdateLayout();
@@ -68,9 +68,9 @@ public partial class App
         InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80); reopen.ShowToolsTab(); await Task.Delay(80);
         Check(Descendants(reopen).OfType<ToggleSwitch>().Where(t => t.Name == "ChatPluginToggle").All(t => !t.IsOn), context + ": restore defaults clears plugins and rebuilds tools page");
         InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
-        Check(reopen.Result is { ApiDebugEnabled: true } reset && !reset.ToolOutputContentSettings.Text && reset.ToolOutputContentSettings.Images
+        Check(reopen.Result is { ApiDebugEnabled: true } reset && !reset.ToolOutputContentSettings.Text && !reset.ToolOutputContentSettings.Links && reset.ToolOutputContentSettings.Images
             && reset.ToolOutputContentSettings.Audio && reset.ToolOutputContentSettings.Video && reset.ToolOutputContentSettings.Documents,
-            context + ": inference reset preserves user-settings debug and all five tool-output choices");
+            context + ": inference reset preserves user-settings debug and all six tool-output choices");
     }
 
     private async Task CheckLocalToolsAsync(ElementTheme theme)
