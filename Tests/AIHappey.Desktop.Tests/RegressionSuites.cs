@@ -12,7 +12,7 @@ internal static class RegressionSuites
         var suites = new Dictionary<string, Func<Task>>(StringComparer.Ordinal)
         {
             ["runner"] = () => RunnerRegressionTests.RunAsync(check),
-            ["canvas"] = () => Sync(() => CanvasRegressionTests.Run(check)),
+            ["canvas"] = () => Sync(() => { CanvasRegressionTests.Run(check); LocalCanvasHistoryRegressionTests.Run(check); }),
             ["primitive-routing"] = () => PrimitiveRoutingRegressionTests.RunAsync(check, Data("routing")),
             ["realtime"] = () => RealtimeRegressionTests.RunAsync(check, Data("realtime")),
             ["fishaudio"] = () => RealtimeRegressionTests.RunFishAudioAsync(check, Data("fishaudio")),
@@ -33,6 +33,7 @@ internal static class RegressionSuites
             // Includes shared cursors, local files, Windows tools, desktop tools, and authoring.
             ["local-tools"] = () => LocalToolRegressionTests.RunAsync(check, Data("local-tools")),
             ["apply-patch"] = () => ApplyPatchRegressionTests.RunAsync(check, Data("apply-patch")),
+            ["document-tools"] = () => DocumentToolRegressionTests.RunAsync(check, Data("document-tools")),
             ["models-overview"] = () => ModelsOverviewRegressionTests.RunAsync(check, Data("models")),
             ["agents"] = () => AgentRegressionTests.RunAsync(check, Data("agents")),
             ["transcript"] = () => Sync(() => TranscriptRegressionTests.Run(check)),

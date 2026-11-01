@@ -23,6 +23,7 @@ function skillTool(name) {
 }
 const contracts = {
   'local-conversations': staticTools('useLocalConversationsToolCall.ts'),
+  'local-canvas': staticTools('useLocalCanvasToolCall.ts'),
   'skill-search': ['buildSearchSkillsTool', 'buildActivateSkillTool', 'buildReadSkillResourceTool'].map(skillTool),
   'local-artificial-intelligence': staticTools('useLocalArtificialIntelligenceToolCall.ts'),
   'local-images': [...staticTools('useLocalImagesToolCall.ts'), ...staticTools('localImages.ts', ['imageReferenceSchema', 'readAnnotations'])],

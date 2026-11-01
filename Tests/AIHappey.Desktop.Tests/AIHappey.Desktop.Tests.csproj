@@ -86,6 +86,10 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFilePaths.cs" Link="Core/LocalFilePaths.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFileTools.cs" Link="Core/LocalFileTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/OpenAIApplyPatchTools.cs" Link="Core/OpenAIApplyPatchTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalDocumentFiles.cs" Link="Core/LocalDocumentFiles.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalDocumentEdits.cs" Link="Core/LocalDocumentEdits.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/AnthropicTextEditorTools.cs" Link="Core/AnthropicTextEditorTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalCanvasTools.cs" Link="Core/LocalCanvasTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/V4ADiff.cs" Link="Core/V4ADiff.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SharedFiles.cs" Link="Core/SharedFiles.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SharedFileAccess.cs" Link="Core/SharedFileAccess.cs" />
@@ -125,6 +129,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/PortableConversations.cs" Link="Core/PortableConversations.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ConversationActivity.cs" Link="Core/ConversationActivity.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ConversationCanvas.cs" Link="Core/ConversationCanvas.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalCanvasHistory.cs" Link="Core/LocalCanvasHistory.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptProjection.cs" Link="Core/TranscriptProjection.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/MessageDetails.cs" Link="Core/MessageDetails.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AttachmentDownloads.cs" Link="Core/AttachmentDownloads.cs" />

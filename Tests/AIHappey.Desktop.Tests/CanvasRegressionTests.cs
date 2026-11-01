@@ -112,7 +112,7 @@ internal static class CanvasRegressionTests
         {
             using var stream = typeof(CanvasRegressionTests).Assembly.GetManifestResourceStream("Desktop.Resources." + language)!;
             var resources = XDocument.Load(stream).Descendants("data").ToDictionary(item => item.Attribute("name")!.Value, item => item.Element("value")!.Value);
-            foreach (var key in new[] { "CanvasCount", "NoCanvasActivities", "CanvasVersions", "CopyCanvasMarkdown", "OpenCanvasLink", "CanvasLinkUnavailable" })
+            foreach (var key in new[] { "CanvasCount", "NoCanvasActivities", "CanvasVersions", "CopyCanvasMarkdown", "OpenCanvasLink", "CanvasLinkUnavailable", "LocalPluginCanvas" })
                 check(resources.TryGetValue(key, out var translated) && !string.IsNullOrWhiteSpace(translated), "canvas: localized " + language + " resource " + key);
         }
     }
