@@ -2044,4 +2044,5 @@ Luidspreker: {1}</value></data>
   <data name="SkillGitHubMissingManifest" xml:space="preserve"><value>De geselecteerde map bevat geen SKILL.md.</value></data>
   <data name="SkillGitHubInvalidSkill" xml:space="preserve"><value>De geselecteerde map is geen geldige Agent Skill.</value></data>
   <data name="SkillGitHubUnsafePath" xml:space="preserve"><value>De skill bevat onveilige of conflicterende paden, symbolische koppelingen of submodules.</value></data>
+  <data name="ChatForm_openai_applyPatch" xml:space="preserve"><value>Patch toepassen</value></data>
 </root>

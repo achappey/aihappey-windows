@@ -2049,4 +2049,5 @@ Speaker: {1}</value></data>
   <data name="SkillGitHubMissingManifest" xml:space="preserve"><value>The selected folder does not contain SKILL.md.</value></data>
   <data name="SkillGitHubInvalidSkill" xml:space="preserve"><value>The selected folder is not a valid Agent Skill.</value></data>
   <data name="SkillGitHubUnsafePath" xml:space="preserve"><value>The skill contains unsafe or conflicting paths, symbolic links, or submodules.</value></data>
+  <data name="ChatForm_openai_applyPatch" xml:space="preserve"><value>Apply patch</value></data>
 </root>

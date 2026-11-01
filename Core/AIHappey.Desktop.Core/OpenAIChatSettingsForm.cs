@@ -23,7 +23,7 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
     public OpenAIChatSettingsForm(ChatPreferences preferences)
     {
         model = new(preferences.ProviderMetadata.GetValueOrDefault("openai") ?? new JsonObject(), preferences.ProviderHeaders.GetValueOrDefault("openai"));
-        Reasoning(); WebSearch(); ImageGeneration(); ToolSearch(); Programmatic(); CodeInterpreter(); Shell(); FileSearch();
+        Reasoning(); WebSearch(); ImageGeneration(); ToolSearch(); Programmatic(); CodeInterpreter(); Shell(); ApplyPatch(); FileSearch();
         ContextManagement(); Moderation(); PromptCache(); MultiAgent(); AgentSession(); EnvironmentSession(); Other();
         fields.Refresh();
     }
@@ -258,6 +258,7 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
         }));
         fields.Watch(() => { RenderSecrets(); if (childFields.TryGetValue(path, out var local)) local.Refresh(); });
     }
+    private void ApplyPatch() => Section("apply_patch", "openai.applyPatch", expandable: false);
     private void FileSearch()
     {
         var body = Section("file_search", "openai.file_search");

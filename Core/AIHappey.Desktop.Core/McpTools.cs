@@ -38,6 +38,7 @@ public sealed class McpTurnSnapshot
         var hasResources = servers.Any(s => s.Discovery.Resources.Count > 0 || s.Discovery.ResourceTemplates.Count > 0);
         used.Add(DesktopMcpResources.ToolName);
         used.Add(DesktopMcpToolExecution.ElicitationToolName);
+        used.Add(DesktopMcpToolExecution.ApplyPatchToolName);
         used.Add(DesktopSkillTurn.ActivateTool); used.Add(DesktopSkillTurn.ResourceTool);
         foreach (var tool in DesktopLocalTools.Plugins.SelectMany(p => p.Tools)) used.Add(CatalogProjection.Text(tool, "name")!);
         foreach (var server in servers)
@@ -46,7 +47,7 @@ public sealed class McpTurnSnapshot
             foreach (var candidate in candidates.Where(c => c.Server.Id == server.Server.Id))
             {
                 var name = candidate.Name;
-                if (name == AgentPluginTools.ReadToolName || name is DesktopMcpResources.ToolName or DesktopMcpToolExecution.ElicitationToolName || DesktopLocalTools.Reserved(name) || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
+                if (name == AgentPluginTools.ReadToolName || name is DesktopMcpResources.ToolName or DesktopMcpToolExecution.ElicitationToolName or DesktopMcpToolExecution.ApplyPatchToolName || DesktopLocalTools.Reserved(name) || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
                 {
                     var stem = Regex.Replace(name, "[^a-zA-Z0-9_-]", "_");
                     stem = stem[..Math.Min(stem.Length, 40)];
@@ -151,6 +152,10 @@ public sealed class McpTurnSnapshot
         routes.Add(name, new(name, (_, input, _, _, ct) => call(input, ct))); tools.Add(tool.Clone());
     }
     public void AddContext(JsonElement block) => context.Add(block.Clone());
+    // Native provider tools already have a declaration in provider metadata.
+    // Capture their executable route without advertising a duplicate function.
+    public void AddNative(string name, Func<JsonElement, CancellationToken, Task<JsonElement>> call)
+        => routes.Add(name, new(name, (_, input, _, _, ct) => call(input, ct)));
     public Task<JsonElement> CallAsync(string name, JsonElement input, string callId, string locale, CancellationToken ct) =>
         routes.TryGetValue(name, out var route) ? route.Call(route.OriginalName, input, callId, locale, ct)
             : throw new InvalidOperationException(DesktopResources.Get("McpUnknownTool"));
@@ -160,6 +165,7 @@ public sealed class McpTurnSnapshot
 public static class DesktopMcpToolExecution
 {
     public const string ElicitationToolName = "ai_input_required";
+    public const string ApplyPatchToolName = "apply_patch";
 
     public static async Task<int> ExecutePendingAsync(ConversationMessage output, McpTurnSnapshot snapshot,
         HashSet<string> executed, string locale, CancellationToken ct, DesktopElicitationHandler? elicit = null, bool executeMcp = true)

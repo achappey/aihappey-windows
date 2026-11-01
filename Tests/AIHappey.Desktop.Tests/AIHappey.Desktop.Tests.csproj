@@ -85,6 +85,8 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalArtificialIntelligenceTools.cs" Link="Core/LocalArtificialIntelligenceTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFilePaths.cs" Link="Core/LocalFilePaths.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFileTools.cs" Link="Core/LocalFileTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/OpenAIApplyPatchTools.cs" Link="Core/OpenAIApplyPatchTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/V4ADiff.cs" Link="Core/V4ADiff.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SharedFiles.cs" Link="Core/SharedFiles.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SharedFileAccess.cs" Link="Core/SharedFileAccess.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalSharedFileTools.cs" Link="Core/LocalSharedFileTools.cs" />

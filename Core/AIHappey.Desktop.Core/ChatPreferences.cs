@@ -205,7 +205,7 @@ public sealed class ChatToolPolicy
 /// <summary>Mutable draft view with browser-compatible tool aliases. Only Canonical is stored/sent.</summary>
 public sealed class OpenAIChatConfig
 {
-    public static readonly string[] ToolTypes = ["web_search", "image_generation", "code_interpreter", "file_search", "shell", "programmatic_tool_calling", "tool_search"];
+    public static readonly string[] ToolTypes = ["web_search", "image_generation", "code_interpreter", "file_search", "shell", "apply_patch", "programmatic_tool_calling", "tool_search"];
     public static readonly string[] Efforts = ["none", "minimal", "low", "medium", "high", "xhigh", "max"];
     public JsonObject Root { get; }
     public Dictionary<string, string> Headers { get; }
@@ -230,6 +230,7 @@ public sealed class OpenAIChatConfig
         "image_generation" => """{"model":"gpt-image-1.5","action":"auto","size":"auto","quality":"auto","input_fidelity":"low","background":"auto","moderation":"auto","output_compression":100,"partial_images":3}""",
         "code_interpreter" => """{"container":{"type":"auto"}}""",
         "shell" => """{"type":"shell","environment":{"type":"container_auto"}}""",
+        "apply_patch" => """{"type":"apply_patch"}""",
         "file_search" => """{"max_num_results":10,"vector_store_ids":[]}""",
         "moderation" => """{"model":"omni-moderation-latest","policy":{"input":{"mode":"score"},"output":{"mode":"score"}}}""",
         "prompt_cache_options" => """{"mode":"implicit","ttl":"30m"}""",
