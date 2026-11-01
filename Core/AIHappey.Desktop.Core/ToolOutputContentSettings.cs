@@ -6,6 +6,7 @@ namespace AIHappey.Desktop.Core;
 public sealed class ToolOutputContentSettings
 {
     public bool Text { get; set; } = true;
+    public bool Links { get; set; } = true;
     public bool Images { get; set; }
     public bool Audio { get; set; }
     public bool Video { get; set; }
@@ -13,7 +14,7 @@ public sealed class ToolOutputContentSettings
 
     public ToolOutputContentSettings Clone() => new()
     {
-        Text = Text, Images = Images, Audio = Audio, Video = Video, Documents = Documents
+        Text = Text, Links = Links, Images = Images, Audio = Audio, Video = Video, Documents = Documents
     };
 
     // Only call on a serialized request, never on live or persisted message parts.
@@ -42,6 +43,8 @@ public sealed class ToolOutputContentSettings
     {
         if (content is not JsonObject block) return null;
         if (String(block["type"]) == "text") return Text ? null : "Text";
+        // A resource link describes content; its MIME type is not an inline payload.
+        if (String(block["type"]) == "resource_link") return Links ? null : "Link";
         var mime = String(String(block["type"]) == "resource" ? (block["resource"] as JsonObject)?["mimeType"] : block["mimeType"]);
         if (mime is null) return null;
         var normalized = mime.Trim().ToLowerInvariant();

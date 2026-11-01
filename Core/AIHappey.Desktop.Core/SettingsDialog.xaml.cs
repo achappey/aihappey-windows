@@ -64,6 +64,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         ShowProviderLogo.IsOn = chatPreferences.ShowProviderLogo;
         ApiDebugEnabled.IsOn = chatPreferences.ApiDebugEnabled;
         ToolOutputText.IsOn = chatPreferences.ToolOutputContentSettings.Text;
+        ToolOutputLinks.IsOn = chatPreferences.ToolOutputContentSettings.Links;
         ToolOutputImages.IsOn = chatPreferences.ToolOutputContentSettings.Images;
         ToolOutputAudio.IsOn = chatPreferences.ToolOutputContentSettings.Audio;
         ToolOutputVideo.IsOn = chatPreferences.ToolOutputContentSettings.Video;
@@ -128,6 +129,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         chatPreferences.ShowProviderLogo = ShowProviderLogo.IsOn;
         chatPreferences.ApiDebugEnabled = ApiDebugEnabled.IsOn;
         chatPreferences.ToolOutputContentSettings.Text = ToolOutputText.IsOn;
+        chatPreferences.ToolOutputContentSettings.Links = ToolOutputLinks.IsOn;
         chatPreferences.ToolOutputContentSettings.Images = ToolOutputImages.IsOn;
         chatPreferences.ToolOutputContentSettings.Audio = ToolOutputAudio.IsOn;
         chatPreferences.ToolOutputContentSettings.Video = ToolOutputVideo.IsOn;

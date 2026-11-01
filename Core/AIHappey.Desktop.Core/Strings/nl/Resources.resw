@@ -1241,6 +1241,10 @@
   <data name="SettingsToolOutputText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Tekst</value></data>
   <data name="SettingsToolOutputText.OnContent" xml:space="preserve"><value>Aan</value></data>
   <data name="SettingsToolOutputText.OffContent" xml:space="preserve"><value>Uit</value></data>
+  <data name="SettingsToolOutputLinks.Header" xml:space="preserve"><value>Links</value></data>
+  <data name="SettingsToolOutputLinks.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Links</value></data>
+  <data name="SettingsToolOutputLinks.OnContent" xml:space="preserve"><value>Aan</value></data>
+  <data name="SettingsToolOutputLinks.OffContent" xml:space="preserve"><value>Uit</value></data>
   <data name="SettingsToolOutputImages.Header" xml:space="preserve"><value>Afbeeldingen</value></data>
   <data name="SettingsToolOutputImages.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Afbeeldingen</value></data>
   <data name="SettingsToolOutputImages.OnContent" xml:space="preserve"><value>Aan</value></data>

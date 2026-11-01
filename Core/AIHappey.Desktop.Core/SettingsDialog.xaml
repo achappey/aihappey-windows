@@ -64,6 +64,7 @@
                     </ComboBox>
                     <StackPanel x:Name="ToolOutputContentPanel" Spacing="12">
                         <ToggleSwitch x:Name="ToolOutputText" x:Uid="SettingsToolOutputText" />
+                        <ToggleSwitch x:Name="ToolOutputLinks" x:Uid="SettingsToolOutputLinks" />
                         <ToggleSwitch x:Name="ToolOutputImages" x:Uid="SettingsToolOutputImages" />
                         <ToggleSwitch x:Name="ToolOutputAudio" x:Uid="SettingsToolOutputAudio" />
                         <ToggleSwitch x:Name="ToolOutputVideo" x:Uid="SettingsToolOutputVideo" />
