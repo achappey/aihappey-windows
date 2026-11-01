@@ -13,8 +13,5 @@
       <Platform Project="x64" />
     </Project>
   </Folder>
-  <Project Path="../aihappey-agents/core/AgentHappey.Common/AgentHappey.Common.csproj" />
-  <Project Path="../aihappey-ai/Core/AIHappey.Responses/AIHappey.Responses.csproj" />
-  <Project Path="../aihappey-ai/Core/AIhappey.Unified/AIhappey.Unified.csproj" />
-  <Project Path="../aihappey-ai/Core/AIHappey.Vercel/AIHappey.Vercel.csproj" />
+  <Project Path="../aihappey-vercel/AIHappey.Vercel.csproj" />
 </Solution>

@@ -10,6 +10,7 @@ internal static class AgentRegressionTests
     {
         AgentOverviewRegressionTests.Run(check);
         CheckSharedProviders(check);
+        CheckOptionalContract(check);
         var optionalSelection = new ChatSelection(); optionalSelection.Replace(["provider/model"]);
         optionalSelection.Toggle("provider/model", multiple: false, allowEmpty: true);
         check(optionalSelection.Ids.Count == 0, "optional single-select agent model pickers can clear their current model");
@@ -178,6 +179,8 @@ internal static class AgentRegressionTests
         await foreach (var _ in client.StreamAsync(ServiceKind.Agents, "local:PortableAgent", "conversation", [], CancellationToken.None, localAgent: original)) { }
         check(handler.Body.GetProperty("agents")[0].GetProperty("plugins")[0].GetProperty("data").GetString() == "opaque" && handler.Path.EndsWith("/api/chat"),
             "local agent execution forwards plugins/schema/options to the existing agents gateway unchanged");
+        check(JsonNode.DeepEquals(JsonNode.Parse(handler.Body.GetProperty("agents")[0].GetRawText()), original.Definition),
+            "agent HTTP serialization preserves the complete inline document without a server-model projection");
         using (var call = JsonDocument.Parse("""{"type":"tool-search","toolCallId":"call","input":{"query":"models"},"output":{"items":["test/model"]}}"""))
         using (var tool = JsonDocument.Parse("""{"name":"search","description":"Search models"}"""))
         {
@@ -190,6 +193,22 @@ internal static class AgentRegressionTests
         check(handler.Body.GetProperty("model").GetString() == "backend-id" && (!handler.Body.TryGetProperty("agents", out var agents) || agents.ValueKind == JsonValueKind.Null),
             "backend agent execution retains its existing model-based request");
         await session.DisposeAsync();
+    }
+    private static void CheckOptionalContract(Action<bool, string> check)
+    {
+        foreach (var optional in new[] { "{}",
+            """{"argumentHint":null,"owned_by":null,"tags":null,"responseFormat":null,"mcpClient":null,"mcpServers":null,"skills":null,"plugins":null,"tools":null,"icons":null,"evaluations":null,"transcription":null,"speech":null,"future":null}""",
+            """{"tags":[],"mcpClient":{},"mcpServers":{},"skills":[],"plugins":[],"tools":[],"icons":[],"evaluations":{},"future":{"keep":null}}""" })
+        {
+            var expected = JsonNode.Parse(optional)!.AsObject();
+            expected["name"] = "Optional"; expected["description"] = "D"; expected["instructions"] = "I";
+            expected["model"] = new JsonObject { ["id"] = "provider/model" };
+            var agent = DesktopAgent.Parse(expected.ToJsonString());
+            check(JsonNode.DeepEquals(agent.Definition, expected), "agent import/export retains omitted, null, and empty optional fields: " + optional);
+            var wire = JsonSerializer.SerializeToElement(DesktopChatClient.LocalAgentRequest(agent, "conversation", []), PortableConversations.Json);
+            check(JsonNode.DeepEquals(JsonNode.Parse(wire.GetProperty("agents")[0].GetRawText()), expected),
+                "agent request serialization retains optional-field presence without injecting SDK defaults: " + optional);
+        }
     }
     private static void CheckSharedProviders(Action<bool, string> check)
     {

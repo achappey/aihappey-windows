@@ -2,10 +2,6 @@ using System.Net;
 using System.Text.Json;
 using AIHappey.Desktop.Core;
 using AIHappey.Vercel.Models;
-using AIHappey.Vercel.Mapping;
-using AIHappey.Unified.Models;
-using AIHappey.Responses.Streaming;
-using AIHappey.Responses.Mapping;
 
 internal static class ChatErrorRegressionTests
 {
@@ -16,21 +12,6 @@ internal static class ChatErrorRegressionTests
         var gatewayWire = JsonSerializer.Serialize(gatewayPart, JsonSerializerOptions.Web);
         check(GatewayErrors.Message(JsonSerializer.Deserialize<JsonElement>(gatewayWire)) == exact,
             "chat errors: real gateway polymorphic ErrorUIPart serialization retains error text");
-        var mappedError = new AIEventEnvelope { Type = "error", Data = new AIErrorEventData { ErrorText = exact } };
-        var gatewayMappedPart = mappedError.ToUIMessagePart("openai").Single();
-        check(gatewayMappedPart is ErrorUIPart { ErrorText: exact },
-            "chat errors: real unified-to-Vercel error mapper retains provider message");
-        var nestedResponseError = JsonSerializer.Deserialize<ResponseStreamPart>(JsonSerializer.Serialize(new
-            { type = "error", error = new { message = exact, code = "invalid_request_error" } }))!;
-        var nestedEvents = nestedResponseError.ToUnifiedStreamEvent("openai").ToArray();
-        check(nestedEvents.Length == 1 && nestedEvents[0].Event.Data is AIErrorEventData { ErrorText: exact },
-            "chat errors: nested OpenAI Responses error survives real stream converter and mapper; actual="
-                + JsonSerializer.Serialize(nestedEvents.Select(item => item.Event.Data)));
-        var failedResponse = JsonSerializer.Deserialize<ResponseStreamPart>(JsonSerializer.Serialize(new { type = "response.failed",
-            response = new { id = "response", status = "failed", model = "gpt-6-luna", output = Array.Empty<object>(), error = new { message = exact, code = "invalid_request_error" } } }))!;
-        var failedEvents = failedResponse.ToUnifiedStreamEvent("openai").ToArray();
-        check(failedEvents.Length == 1 && failedEvents[0].Event.Data is AIErrorEventData { ErrorText: exact },
-            "chat errors: response.failed preserves response.error.message instead of silently dropping failure");
         var message = new ConversationMessage { Message = new UIMessage { Id = "assistant", Role = Role.assistant }, Status = "streaming" };
         var assembler = new MessageAssembler(message);
         try { assembler.Apply(StreamEvent.Parse(JsonSerializer.Serialize(new { type = "error", errorText = exact }))); throw new Exception("Expected stream failure"); }
@@ -84,7 +65,9 @@ internal static class ChatErrorRegressionTests
             var backend = body.Deserialize<ChatRequest>(JsonSerializerOptions.Web)!;
             check(backend.Messages.Count == 2 && backend.Messages[0].Role == Role.system && backend.Messages[1].Role == Role.user
                 && backend.Messages.All(m => !string.IsNullOrWhiteSpace(m.Id) && m.Parts.All(p => p.Type == "text"))
-                && backend.Tools!.Count == (enabled ? 13 : 0), "chat errors: actual backend request contract accepts plain model chat, plugins " + (enabled ? "on" : "off"));
+                && backend.Tools is { } tools && tools.Select(tool => tool.Name).Order(StringComparer.Ordinal)
+                    .SequenceEqual(snapshot.Tools.Select(tool => tool.GetProperty("name").GetString()!).Order(StringComparer.Ordinal)),
+                "chat errors: actual backend request contract accepts plain model chat and every registered tool, plugins " + (enabled ? "on" : "off"));
             var desktopRoundTrip = body["messages"]!.Deserialize<List<UIMessage>>(PortableConversations.Json)!;
             check(desktopRoundTrip.Count == 2, "chat errors: outgoing messages are valid portable UI messages, plugins " + (enabled ? "on" : "off"));
         }
