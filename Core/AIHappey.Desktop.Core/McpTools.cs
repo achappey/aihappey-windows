@@ -39,6 +39,7 @@ public sealed class McpTurnSnapshot
         used.Add(DesktopMcpResources.ToolName);
         used.Add(DesktopMcpToolExecution.ElicitationToolName);
         used.Add(DesktopMcpToolExecution.ApplyPatchToolName);
+        foreach (var name in AnthropicTextEditorTools.ToolNames) used.Add(name);
         used.Add(DesktopSkillTurn.ActivateTool); used.Add(DesktopSkillTurn.ResourceTool);
         foreach (var tool in DesktopLocalTools.Plugins.SelectMany(p => p.Tools)) used.Add(CatalogProjection.Text(tool, "name")!);
         foreach (var server in servers)
@@ -47,7 +48,7 @@ public sealed class McpTurnSnapshot
             foreach (var candidate in candidates.Where(c => c.Server.Id == server.Server.Id))
             {
                 var name = candidate.Name;
-                if (name == AgentPluginTools.ReadToolName || name is DesktopMcpResources.ToolName or DesktopMcpToolExecution.ElicitationToolName or DesktopMcpToolExecution.ApplyPatchToolName || DesktopLocalTools.Reserved(name) || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
+                if (name == AgentPluginTools.ReadToolName || name is DesktopMcpResources.ToolName or DesktopMcpToolExecution.ElicitationToolName or DesktopMcpToolExecution.ApplyPatchToolName || AnthropicTextEditorTools.ToolNames.Contains(name) || DesktopLocalTools.Reserved(name) || counts[name] > 1 || !Regex.IsMatch(name, "^[a-zA-Z0-9_-]{1,64}$"))
                 {
                     var stem = Regex.Replace(name, "[^a-zA-Z0-9_-]", "_");
                     stem = stem[..Math.Min(stem.Length, 40)];

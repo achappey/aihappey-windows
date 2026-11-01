@@ -39,7 +39,17 @@ public sealed partial class ChatShell
             Width = 32, Height = 32, Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Top };
         NativeCardSurface.Action(versions); ToolbarControls.Label(versions, DesktopResources.Format("CanvasVersions", document.Title));
         var menu = new MenuFlyout(); versions.Flyout = menu;
-        var markdown = new ChatMarkdown { Name = "CanvasMarkdown", Text = currentVersion.Text };
+        var markdown = new ChatMarkdown { Name = "CanvasMarkdown" };
+        var plain = new TextBlock { Name = "CanvasPlainText", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+        void Content(CanvasVersion version)
+        {
+            var isPlain = version.MimeType == "text/plain";
+            markdown.Text = isPlain ? "" : version.Text;
+            markdown.Visibility = isPlain ? Visibility.Collapsed : Visibility.Visible;
+            plain.Text = isPlain ? version.Text : "";
+            plain.Visibility = isPlain ? Visibility.Visible : Visibility.Collapsed;
+        }
+        Content(currentVersion);
         foreach (var version in document.Versions)
         {
             var option = new ToggleMenuFlyoutItem { Name = "CanvasVersion", Text = ConversationCanvasProjection.FormatTimestamp(version.Timestamp),
@@ -47,18 +57,25 @@ public sealed partial class ChatShell
             option.Click += (_, _) =>
             {
                 currentVersion = version; canvasSelection.Select(document, version);
-                timestamp.Text = ConversationCanvasProjection.FormatTimestamp(version.Timestamp); markdown.Text = version.Text;
+                timestamp.Text = ConversationCanvasProjection.FormatTimestamp(version.Timestamp); Content(version);
                 foreach (var entry in menu.Items.OfType<ToggleMenuFlyoutItem>()) entry.IsChecked = Equals(entry.Tag, version);
             };
             menu.Items.Add(option);
         }
-        Grid.SetColumn(versions, 1); header.Children.Add(versions); body.Children.Add(header); body.Children.Add(markdown);
+        Grid.SetColumn(versions, 1); header.Children.Add(versions); body.Children.Add(header); body.Children.Add(markdown); body.Children.Add(plain);
         var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         var copy = new Button { Name = "CopyCanvasMarkdown", Content = DesktopIcons.Create(Icon.Copy, 16), Width = 32, Height = 32, Padding = new Thickness(0) };
         NativeCardSurface.Action(copy); ToolbarControls.Label(copy, DesktopResources.Format("CopyCanvasMarkdown", document.Title));
         copy.Click += (_, _) =>
         {
-            try { Clipboard.SetContent(CanvasClipboard.Create(currentVersion.Text)); }
+            try
+            {
+                if (currentVersion.MimeType == "text/plain")
+                {
+                    var data = new DataPackage(); data.SetText(currentVersion.Text); Clipboard.SetContent(data);
+                }
+                else Clipboard.SetContent(CanvasClipboard.Create(currentVersion.Text));
+            }
             catch { Show(DesktopResources.Get("ClipboardUnavailable"), InfoBarSeverity.Warning); }
         };
         actions.Children.Add(copy);

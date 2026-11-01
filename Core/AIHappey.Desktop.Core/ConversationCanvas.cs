@@ -3,18 +3,20 @@ using System.Text.Json;
 
 namespace AIHappey.Desktop.Core;
 
-public sealed record CanvasVersion(string MessageId, DateTimeOffset Timestamp, int MessageIndex, int PartIndex, string Text);
+public sealed record CanvasVersion(string MessageId, DateTimeOffset Timestamp, int MessageIndex, int PartIndex, string Text,
+    string MimeType = "text/markdown", bool LocalDocument = false);
 public sealed record CanvasDocument(string Uri, IReadOnlyList<CanvasVersion> Versions)
 {
     public string Title => ConversationCanvasProjection.Title(Uri);
 }
 
-/// <summary>Read-only browser-compatible projection of embedded Markdown tool resources. No resource reads or tool execution.</summary>
+/// <summary>Embedded Markdown resources and creation-based local document history. No reads or tool execution.</summary>
 public static class ConversationCanvasProjection
 {
     public static IReadOnlyList<CanvasDocument> Project(IReadOnlyList<ConversationMessage> messages)
     {
         var groups = new Dictionary<string, Dictionary<string, CanvasVersion>>(StringComparer.Ordinal);
+        var localHistory = new LocalCanvasHistory();
         for (var messageIndex = 0; messageIndex < messages.Count; messageIndex++)
         {
             var message = messages[messageIndex];
@@ -23,6 +25,8 @@ public static class ConversationCanvasProjection
                 var part = message.Message.Parts[partIndex];
                 if (!PortableConversations.IsTool(part) || part.Type == "tool-call") continue;
                 var raw = PortableConversations.Element(part);
+                if (raw.ValueKind == JsonValueKind.Object && localHistory.Apply(raw) is { } local)
+                    AddVersion(local.Uri, local.Text, local.MimeType, true);
                 if (raw.ValueKind != JsonValueKind.Object || !raw.TryGetProperty("output", out var output)
                     || output.ValueKind != JsonValueKind.Object || !output.TryGetProperty("content", out var content)) continue;
                 if (content.ValueKind == JsonValueKind.Array)
@@ -36,11 +40,16 @@ public static class ConversationCanvasProjection
                         || PortableConversations.String(resource, "mimeType") != "text/markdown"
                         || PortableConversations.String(resource, "uri") is not { } uri || string.IsNullOrWhiteSpace(uri)
                         || PortableConversations.String(resource, "text") is not { } text) return;
+                    AddVersion(uri, text, "text/markdown", false);
+                }
+
+                void AddVersion(string uri, string text, string mimeType, bool localDocument)
+                {
                     if (!groups.TryGetValue(uri, out var versions)) groups[uri] = versions = new(StringComparer.Ordinal);
                     // As in the browser, one version per document per message: last tool part wins.
                     // Multiple matching blocks in that same part retain the first block.
                     if (!versions.TryGetValue(message.Message.Id, out var previous) || partIndex > previous.PartIndex)
-                        versions[message.Message.Id] = new(message.Message.Id, message.Timestamp, messageIndex, partIndex, text);
+                        versions[message.Message.Id] = new(message.Message.Id, message.Timestamp, messageIndex, partIndex, text, mimeType, localDocument);
                 }
             }
         }
@@ -53,6 +62,7 @@ public static class ConversationCanvasProjection
     {
         var path = System.Uri.TryCreate(uri, UriKind.Absolute, out var parsed) ? parsed.AbsolutePath : uri.Replace('\\', '/');
         var name = path[(path.LastIndexOf('/') + 1)..].Trim();
+        if (uri.StartsWith("localcanvas:", StringComparison.Ordinal)) name = System.Uri.UnescapeDataString(name);
         var dot = name.LastIndexOf('.');
         if (dot > 0) name = name[..dot];
         return string.IsNullOrWhiteSpace(name) ? uri : name;

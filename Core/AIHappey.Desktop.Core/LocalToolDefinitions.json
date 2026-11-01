@@ -122,6 +122,134 @@
       }
     }
   ],
+  "local-canvas": [
+    {
+      "name": "local_canvas_read",
+      "title": "Read local canvas",
+      "description": "Read a local markdown canvas (.md) file. Optionally read a specific line range.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Canvas path (e.g. /Projects/Notes/Todo.md). '.md' is auto-appended if missing."
+          },
+          "view_range": {
+            "type": "array",
+            "description": "Optional [startLine, endLine] (1-based).",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_canvas_create",
+      "title": "Create canvas",
+      "description": "Create or overwrite a local markdown canvas (.md) file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Canvas file path (e.g. /Projects/Notes/Todo.md). '.md' is auto-appended if missing."
+          },
+          "file_text": {
+            "type": "string",
+            "description": "Markdown content to write."
+          }
+        },
+        "required": [
+          "path",
+          "file_text"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_canvas_insert",
+      "title": "Insert canvas line",
+      "description": "Insert a line into a local markdown canvas at a given 1-based line index.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Canvas file path (e.g. /Projects/Notes/Todo.md)."
+          },
+          "insert_line": {
+            "type": "number",
+            "description": "1-based line number to insert at. If beyond EOF, appends."
+          },
+          "insert_text": {
+            "type": "string",
+            "description": "Text to insert at the specified line."
+          }
+        },
+        "required": [
+          "path",
+          "insert_line",
+          "insert_text"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "local_canvas_replace",
+      "title": "Replace canvas text",
+      "description": "Replace text inside a local markdown canvas using simple find/replace.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Canvas file path (e.g. /Projects/Notes/Todo.md)."
+          },
+          "old_str": {
+            "type": "string",
+            "description": "Text to find."
+          },
+          "new_str": {
+            "type": "string",
+            "description": "Replacement text."
+          }
+        },
+        "required": [
+          "path",
+          "old_str",
+          "new_str"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    }
+  ],
   "skill-search": [
     {
       "name": "search_skills",

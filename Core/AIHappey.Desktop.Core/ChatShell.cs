@@ -536,6 +536,10 @@ public sealed partial class ChatShell : UserControl
                 var patches = new OpenAIApplyPatchTools(isCurrent: () => !closing && session.HistoryPartition == partition);
                 mcpTurn.AddNative(OpenAIApplyPatchTools.ToolName, patches.CallAsync);
             }
+            if (Service == ServiceKind.Ai)
+                AnthropicTextEditorTools.Register(mcpTurn, inferencePreferences,
+                    ChatPreferences.ResolveProvider(ServiceKind.Ai, selected, selectedProvider),
+                    () => !closing && session.HistoryPartition == partition);
             activeConversationTools = mcpTurn.ConversationTools;
             activeMcpTurn = mcpTurn;
             var systemContext = Service == ServiceKind.Ai ? CaptureSystemContext(inferencePreferences, mcpTurn) : null;

@@ -70,6 +70,11 @@ public sealed partial class ChatShell
             DesktopLocalTools.Register(snapshot, DesktopLocalTools.WindowsSearch, tools.CallAsync);
         }
         bool Current() => !closing && session.HistoryPartition == partition;
+        if (preferences.PluginEnabled(DesktopLocalTools.Canvas))
+        {
+            var tools = new LocalCanvasTools(isCurrent: Current);
+            DesktopLocalTools.Register(snapshot, DesktopLocalTools.Canvas, tools.CallAsync);
+        }
         if (preferences.PluginEnabled(DesktopLocalTools.Clipboard))
         {
             var clipboard = new NativeWindowsClipboard(DispatcherQueue, Current);

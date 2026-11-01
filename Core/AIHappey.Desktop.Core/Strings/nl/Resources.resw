@@ -1235,6 +1235,7 @@
   <data name="LocalOcrTooLarge" xml:space="preserve"><value>De OCR-afbeelding overschrijdt 20 MiB, 16 megapixels of de maximale afbeeldingsafmeting van Windows OCR.</value></data>
   <data name="LocalOcrTimeout" xml:space="preserve"><value>Lokale Windows OCR duurde te lang. Probeer een kleinere afbeelding.</value></data>
   <data name="LocalPluginFiles" xml:space="preserve"><value>Bestanden</value></data>
+  <data name="LocalPluginCanvas" xml:space="preserve"><value>Canvas</value></data>
   <data name="LocalPluginImages" xml:space="preserve"><value>Afbeeldingen</value></data>
   <data name="SettingsToolOutputContent" xml:space="preserve"><value>Types tooluitvoer</value></data>
   <data name="SettingsToolOutputText.Header" xml:space="preserve"><value>Tekst</value></data>
