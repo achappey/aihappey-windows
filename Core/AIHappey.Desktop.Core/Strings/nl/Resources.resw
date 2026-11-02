@@ -7,6 +7,19 @@
   <data name="SkillCreate" xml:space="preserve"><value>Nieuwe Skill maken</value></data>
   <data name="SkillEdit" xml:space="preserve"><value>Skill bewerken</value></data>
   <data name="SkillImport" xml:space="preserve"><value>Vaardigheidspakket importeren</value></data>
+  <data name="SkillImportMenu" xml:space="preserve"><value>Importeren</value></data>
+  <data name="SkillFolder" xml:space="preserve"><value>Map</value></data>
+  <data name="SkillZipOnly" xml:space="preserve"><value>Alleen ZIP-bestanden kunnen als skills worden geïmporteerd.</value></data>
+  <data name="AgentJsonOnly" xml:space="preserve"><value>Alleen JSON-bestanden kunnen als agents worden geïmporteerd.</value></data>
+  <data name="SkillDropHint" xml:space="preserve"><value>Skill-ZIP-bestanden importeren</value></data>
+  <data name="AgentDropHint" xml:space="preserve"><value>Agent-JSON-bestanden importeren</value></data>
+  <data name="PluginDropHint" xml:space="preserve"><value>Plugin-ZIP-bestanden importeren</value></data>
+  <data name="SkillFolderScanning" xml:space="preserve"><value>De geselecteerde map doorzoeken op skills…</value></data>
+  <data name="SkillFolderEmpty" xml:space="preserve"><value>Er zijn geen SKILL.md-bestanden gevonden in de geselecteerde map.</value></data>
+  <data name="SkillFolderLimit" xml:space="preserve"><value>Een scan- of groottelimiet is overschreden. Selecteer een kleinere map; onvolledige skills worden niet geïmporteerd.</value></data>
+  <data name="SkillFolderLink" xml:space="preserve"><value>Symbolische koppelingen en junctions kunnen niet als skillbestanden worden geïmporteerd.</value></data>
+  <data name="SkillFolderIncomplete" xml:space="preserve"><value>Sommige skillbestanden konden niet veilig worden gelezen. Deze skill is niet geïmporteerd.</value></data>
+  <data name="SkillFolderDuplicate" xml:space="preserve"><value>Er is al een skill met deze naam gevonden. De eerste geldige skill op padvolgorde wordt gebruikt.</value></data>
   <data name="SkillName" xml:space="preserve"><value>Naam</value></data>
   <data name="SkillDescription" xml:space="preserve"><value>Beschrijving</value></data>
   <data name="SkillInstructions" xml:space="preserve"><value>Instructies</value></data>
@@ -2030,7 +2043,7 @@ Luidspreker: {1}</value></data>
   <data name="ComposerTokensReserved" xml:space="preserve"><value>{0} tokens gereserveerd voor uitvoer</value></data>
   <data name="ComposerTokensAvailable" xml:space="preserve"><value>{0} tokens beschikbaar</value></data>
   <data name="ComposerConversationCost" xml:space="preserve"><value>Totale gesprekskosten: {0}</value></data>
-  <data name="SkillFromGitHub" xml:space="preserve"><value>Van GitHub</value></data>
+  <data name="SkillFromGitHub" xml:space="preserve"><value>GitHub</value></data>
   <data name="SkillGitHubUrl" xml:space="preserve"><value>GitHub-URL</value></data>
   <data name="SkillGitHubDiscover" xml:space="preserve"><value>Zoeken</value></data>
   <data name="SkillGitHubDiscovering" xml:space="preserve"><value>Zoeken…</value></data>

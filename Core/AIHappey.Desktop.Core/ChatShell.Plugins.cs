@@ -26,7 +26,7 @@ public sealed partial class ChatShell
         pluginsOverview.DownloadRequested = DownloadPluginAsync;
         pluginsOverview.DeleteRequested = DeletePluginAsync;
         pluginsOverview.FavoriteRequested = plugin => RunAsync(async ct => { var partition = session.PluginPartition; await pluginStore.FavoriteAsync(partition, plugin.Id, !plugin.Favorite, ct); await LoadPluginsAsync(ct); });
-        pluginsOverview.ImportRequested = ImportPluginsAsync;
+        pluginsOverview.ImportRequested = data => ImportOverviewFilesAsync(data, DesktopPage.Plugins, ".zip", "PluginZipOnly", ImportPluginFilesAsync);
     }
     private bool CurrentPluginPartition(string partition) => !closing && session.PluginPartition == partition;
     private async Task LoadPluginsAsync(CancellationToken ct, bool connectServices = true)
@@ -108,18 +108,27 @@ public sealed partial class ChatShell
         }
         else
         {
-            var picker = new FileOpenPicker(); picker.FileTypeFilter.Add(".zip"); InitializePluginPicker(picker);
-            await ImportPluginsAsync(await picker.PickMultipleFilesAsync());
+            await RunAsync(async ct =>
+            {
+                var partition = session.PluginPartition;
+                var picker = new FileOpenPicker(); picker.FileTypeFilter.Add(".zip"); InitializePluginPicker(picker);
+                var files = await picker.PickMultipleFilesAsync().AsTask(ct);
+                ct.ThrowIfCancellationRequested(); if (!CurrentPluginPartition(partition)) throw new OperationCanceledException(ct);
+                if (files.Count > 0) await ImportPluginFilesAsync(files, ct);
+            });
         }
     }
     private async Task ImportPluginsAsync(IReadOnlyList<StorageFile> files)
     {
         if (busy || closing || historyDialogOpen) return;
-        await RunAsync(async ct =>
-        {
+        await RunAsync(ct => ImportPluginFilesAsync(files, ct));
+    }
+    private async Task ImportPluginFilesAsync(IReadOnlyList<StorageFile> files, CancellationToken ct)
+    {
             var partition = session.PluginPartition; var count = 0; var failures = new List<string>();
             foreach (var file in files)
             {
+                ct.ThrowIfCancellationRequested(); if (!CurrentPluginPartition(partition)) throw new OperationCanceledException(ct);
                 try
                 {
                     if (!file.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException(DesktopResources.Get("PluginZipOnly"));
@@ -128,8 +137,10 @@ public sealed partial class ChatShell
                 }
                 catch (Exception e) when (e is not OperationCanceledException) { failures.Add(file.Name + ": " + (e is InvalidDataException ? e.Message : DesktopResources.Get("PluginOperationFailed"))); }
             }
-            await LoadPluginsAsync(ct); Show(DesktopResources.Format("PluginImported", count) + (failures.Count > 0 ? "\n" + string.Join("\n", failures) : ""), failures.Count > 0 ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
-        });
+            ct.ThrowIfCancellationRequested(); if (!CurrentPluginPartition(partition)) throw new OperationCanceledException(ct);
+            await LoadPluginsAsync(ct);
+            ct.ThrowIfCancellationRequested(); if (!CurrentPluginPartition(partition)) throw new OperationCanceledException(ct);
+            Show(DesktopResources.Format("PluginImported", count) + (failures.Count > 0 ? "\n" + string.Join("\n", failures) : ""), failures.Count > 0 || count == 0 ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
     }
     private async Task DownloadPluginAsync(DesktopAgentPlugin plugin)
     {

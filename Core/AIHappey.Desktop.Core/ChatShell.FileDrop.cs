@@ -42,7 +42,7 @@ public sealed partial class ChatShell
 
     private void ChatFileDragOver(object sender, DragEventArgs args)
     {
-        if (activePage is DesktopPage.Images or DesktopPage.Videos or DesktopPage.Speech or DesktopPage.Transcriptions or DesktopPage.Files) return; // Pages own their routed drop events.
+        if (activePage != DesktopPage.Chat) return; // Overview pages own their routed drop events.
         args.Handled = true;
         var accepts = CanAddContext && args.DataView.Contains(StandardDataFormats.StorageItems)
             && args.AllowedOperations.HasFlag(DataPackageOperation.Copy);
@@ -54,6 +54,7 @@ public sealed partial class ChatShell
 
     private void ChatFileDragLeave(object sender, DragEventArgs args)
     {
+        if (activePage != DesktopPage.Chat) return;
         // DragLeave also bubbles when crossing descendants. Only clear outside the workspace.
         var point = args.GetPosition(workspace);
         if (point.X <= 0 || point.Y <= 0 || point.X >= workspace.ActualWidth || point.Y >= workspace.ActualHeight)
@@ -62,7 +63,7 @@ public sealed partial class ChatShell
 
     private async void ChatFileDrop(object sender, DragEventArgs args)
     {
-        if (activePage is DesktopPage.Images or DesktopPage.Videos or DesktopPage.Speech or DesktopPage.Transcriptions or DesktopPage.Files) return;
+        if (activePage != DesktopPage.Chat) return;
         args.Handled = true;
         ResetFileDrop();
         args.AcceptedOperation = DataPackageOperation.None;

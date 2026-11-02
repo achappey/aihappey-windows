@@ -1,6 +1,7 @@
 using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.Storage;
 using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
@@ -17,14 +18,19 @@ public sealed partial class ChatShell
         Padding = new Thickness(0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     private void PrepareSkillActions()
     {
-        var menu = new MenuFlyout(); var create = new MenuFlyoutItem { Text = DesktopResources.Get("SkillCreate"), Icon = DesktopIcons.Create(Icon.Add) };
-        var import = new MenuFlyoutItem { Text = DesktopResources.Get("SkillImport"), Icon = DesktopIcons.Create(Icon.FolderOpen) };
+        var menu = new MenuFlyout(); var create = new MenuFlyoutItem { Text = DesktopResources.Get("New"), Icon = DesktopIcons.Create(Icon.Add) };
+        var import = new MenuFlyoutSubItem { Name = "SkillImportMenu", Text = DesktopResources.Get("SkillImportMenu"), Icon = DesktopIcons.Create(Icon.Attach) };
+        var zip = new MenuFlyoutItem { Name = "SkillImportZip", Text = "ZIP", Icon = DesktopIcons.Create(Icon.Attach) };
         var github = new MenuFlyoutItem { Name = "SkillFromGitHub", Text = DesktopResources.Get("SkillFromGitHub"), Icon = DesktopIcons.Create(Icon.Link) };
-        menu.Items.Add(create); menu.Items.Add(import); menu.Items.Add(github); addSkill.Flyout = menu;
+        var folder = new MenuFlyoutItem { Name = "SkillImportFolder", Text = DesktopResources.Get("SkillFolder"), Icon = DesktopIcons.Create(Icon.FolderOpen) };
+        import.Items.Add(zip); import.Items.Add(github); import.Items.Add(folder);
+        menu.Items.Add(create); menu.Items.Add(import); addSkill.Flyout = menu;
         ControlAppearance.Stock(addSkill); ToolbarControls.Label(addSkill, DesktopResources.Get("Add"));
         create.Click += async (_, _) => await EditSkillAsync(null, addSkill);
-        import.Click += async (_, _) => await ImportSkillsAsync();
+        zip.Click += async (_, _) => await ImportSkillsAsync();
         github.Click += async (_, _) => await ImportGitHubSkillsAsync();
+        folder.Click += async (_, _) => await ImportSkillFolderAsync();
+        skillsOverview.ImportRequested = data => ImportOverviewFilesAsync(data, DesktopPage.Skills, ".zip", "SkillZipOnly", ImportSkillFilesAsync);
         skillsOverview.EditRequested = async (item, owner) => await EditSkillAsync(item, owner);
         skillsOverview.DeleteRequested = async item => await DeleteSkillAsync(item);
     }
@@ -94,37 +100,75 @@ public sealed partial class ChatShell
         if (busy || closing || historyDialogOpen) return;
         await RunAsync(async ct =>
         {
-            var partition = session.HistoryPartition; await LoadLocalSkillsAsync(ct);
             var picker = new FileOpenPicker(); picker.FileTypeFilter.Add(".zip");
             WinRT.Interop.InitializeWithWindow.Initialize(picker, Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId));
-            var files = await picker.PickMultipleFilesAsync(); if (files.Count == 0) return;
-            var errors = new List<string>(); var imported = new List<string>();
-            foreach (var file in files)
+            var partition = session.HistoryPartition;
+            var files = await picker.PickMultipleFilesAsync().AsTask(ct);
+            CheckSkillImportPartition(partition, ct);
+            if (files.Count > 0) await ImportSkillFilesAsync(files, ct);
+        });
+    }
+    private void CheckSkillImportPartition(string partition, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested(); if (closing || partition != session.HistoryPartition) throw new OperationCanceledException(ct);
+    }
+    private async Task SaveImportedSkillsAsync(DesktopSkillImport parsed, string partition, List<string> imported, CancellationToken ct)
+    {
+        foreach (var draft in parsed.Skills)
+        {
+            CheckSkillImportPartition(partition, ct);
+            var previous = (await localSkillStore.ListAsync(partition, ct)).FirstOrDefault(s => s.Name == draft.Name);
+            CheckSkillImportPartition(partition, ct);
+            var stored = await localSkillStore.SaveAsync(partition, draft, previous?.Id, ct); imported.Add(stored.Id);
+        }
+    }
+    private async Task FinishSkillImportAsync(string partition, List<string> imported, List<string> errors, CancellationToken ct)
+    {
+        CheckSkillImportPartition(partition, ct);
+        try { if (imported.Count > 0) await EnableLocalSkillsAsync(imported, partition, ct); }
+        finally { if (!closing && session.HistoryPartition == partition) await RefreshLocalSkillsAsync(ct); }
+        CheckSkillImportPartition(partition, ct);
+        Show(DesktopResources.Format("SkillImportedCount", imported.Count) + (errors.Count > 0 ? "\n" + string.Join("\n", errors) : ""),
+            errors.Count > 0 || imported.Count == 0 ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
+    }
+    private async Task ImportSkillFilesAsync(IReadOnlyList<StorageFile> files, CancellationToken ct)
+    {
+        var partition = session.HistoryPartition; var errors = new List<string>(); var imported = new List<string>();
+        foreach (var file in files)
+        {
+            CheckSkillImportPartition(partition, ct);
+            try
             {
-                ct.ThrowIfCancellationRequested(); if (closing || partition != session.HistoryPartition) throw new OperationCanceledException(ct);
-                try
-                {
-                    if ((await file.GetBasicPropertiesAsync()).Size > DesktopCatalogClient.MaxDownloadBytes) throw new InvalidDataException(DesktopResources.Get("SkillPackageTooLarge"));
-                    await using var input = await file.OpenStreamForReadAsync(); using var content = new StreamContent(input);
-                    var parsed = await DesktopSkillPackages.ImportAsync(await DesktopCatalogClient.ReadBoundedAsync(content, DesktopCatalogClient.MaxDownloadBytes, ct), ct);
-                    errors.AddRange(parsed.Diagnostics.Select(e => file.Name + ": " + e));
-                    foreach (var value in parsed.Skills)
-                    {
-                        ct.ThrowIfCancellationRequested(); if (closing || partition != session.HistoryPartition) throw new OperationCanceledException(ct);
-                        try
-                        {
-                            var previous = (await localSkillStore.ListAsync(partition, ct)).FirstOrDefault(s => s.Name == value.Name);
-                            var stored = await localSkillStore.SaveAsync(partition, value, previous?.Id, ct); imported.Add(stored.Id);
-                        }
-                        catch (Exception error) when (error is not OperationCanceledException) { errors.Add(value.Name + ": " + error.Message); }
-                    }
-                }
-                catch (Exception error) when (error is not OperationCanceledException) { errors.Add(file.Name + ": " + error.Message); }
+                if (!file.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException(DesktopResources.Get("SkillZipOnly"));
+                if ((await file.GetBasicPropertiesAsync()).Size > DesktopCatalogClient.MaxDownloadBytes) throw new InvalidDataException(DesktopResources.Get("SkillPackageTooLarge"));
+                await using var input = await file.OpenStreamForReadAsync(); using var content = new StreamContent(input);
+                var parsed = await DesktopSkillPackages.ImportAsync(await DesktopCatalogClient.ReadBoundedAsync(content, DesktopCatalogClient.MaxDownloadBytes, ct), ct);
+                errors.AddRange(parsed.Diagnostics.Select(e => file.Name + ": " + e));
+                foreach (var value in parsed.Skills)
+                    try { await SaveImportedSkillsAsync(new([value], []), partition, imported, ct); }
+                    catch (Exception error) when (error is not OperationCanceledException) { errors.Add(value.Name + ": " + error.Message); }
             }
-            try { if (imported.Count > 0) await EnableLocalSkillsAsync(imported, partition, ct); }
-            finally { if (!closing && session.HistoryPartition == partition) await RefreshLocalSkillsAsync(ct); }
-            Show(DesktopResources.Format("SkillImportedCount", imported.Count) + (errors.Count > 0 ? "\n" + string.Join("\n", errors) : ""),
-                errors.Count > 0 || imported.Count == 0 ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
+            catch (Exception error) when (error is not OperationCanceledException) { errors.Add(file.Name + ": " + error.Message); }
+        }
+        await FinishSkillImportAsync(partition, imported, errors, ct);
+    }
+    private async Task ImportSkillFolderAsync()
+    {
+        if (busy || closing || historyDialogOpen) return;
+        await RunAsync(async ct =>
+        {
+            var partition = session.HistoryPartition; var picker = new FolderPicker(); picker.FileTypeFilter.Add("*");
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId));
+            var folder = await picker.PickSingleFolderAsync().AsTask(ct); if (folder is null) return;
+            CheckSkillImportPartition(partition, ct);
+            Show(DesktopResources.Get("SkillFolderScanning"), InfoBarSeverity.Informational);
+            var parsed = await Task.Run(() => DesktopSkillDirectories.ImportAsync(folder.Path, ct), ct);
+            CheckSkillImportPartition(partition, ct);
+            var imported = new List<string>(); var errors = parsed.Diagnostics.ToList();
+            foreach (var draft in parsed.Skills)
+                try { await SaveImportedSkillsAsync(new([draft], []), partition, imported, ct); }
+                catch (Exception error) when (error is not OperationCanceledException) { errors.Add(draft.Name + ": " + error.Message); }
+            await FinishSkillImportAsync(partition, imported, errors, ct);
         });
     }
     private async Task ImportGitHubSkillsAsync()

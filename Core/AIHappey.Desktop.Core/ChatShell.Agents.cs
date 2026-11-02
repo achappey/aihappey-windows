@@ -2,6 +2,7 @@ using FluentIcons.Common;
 using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.Storage;
 using Windows.Storage.Pickers;
 
 namespace AIHappey.Desktop.Core;
@@ -22,6 +23,7 @@ public sealed partial class ChatShell
         ControlAppearance.Stock(addAgent); ToolbarControls.Label(addAgent, DesktopResources.Get("Add"));
         create.Click += async (_, _) => await EditAgentAsync(null, addAgent);
         import.Click += async (_, _) => await ImportAgentsAsync();
+        agentsOverview.ImportRequested = data => ImportOverviewFilesAsync(data, DesktopPage.Agents, ".json", "AgentJsonOnly", ImportAgentFilesAsync);
         agentsOverview.EditRequested = async (item, owner) => await EditAgentAsync(item, owner);
         agentsOverview.DeleteRequested = async item => await DeleteAgentAsync(item);
         agentsOverview.PluginRequested = async item => await ConvertAgentToPluginAsync(item);
@@ -119,28 +121,38 @@ public sealed partial class ChatShell
         if (busy || closing || historyDialogOpen) return;
         await RunAsync(async ct =>
         {
-            var partition = session.AgentPartition; await LoadLocalAgentsAsync(ct);
+            var partition = session.AgentPartition;
             var picker = new FileOpenPicker(); picker.FileTypeFilter.Add(".json");
             WinRT.Interop.InitializeWithWindow.Initialize(picker, Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId));
-            var files = await picker.PickMultipleFilesAsync(); if (files.Count == 0) return;
-            var errors = new List<string>(); var imported = 0;
-            foreach (var file in files)
-            {
-                ct.ThrowIfCancellationRequested(); if (session.AgentPartition != partition || closing) throw new OperationCanceledException();
-                try
-                {
-                    if ((await file.GetBasicPropertiesAsync()).Size > DesktopAgent.MaxDocumentBytes) throw new InvalidDataException(DesktopResources.Get("ResponseSizeLimit"));
-                    await using var input = await file.OpenStreamForReadAsync(); using var content = new StreamContent(input);
-                    var bytes = await DesktopCatalogClient.ReadBoundedAsync(content, DesktopAgent.MaxDocumentBytes, ct);
-                    var agent = DesktopAgent.Parse(System.Text.Encoding.UTF8.GetString(bytes));
-                    await agentStore.SaveAsync(partition, agent, null, ct); imported++;
-                }
-                catch (Exception error) when (error is not OperationCanceledException)
-                { errors.Add(file.Name + ": " + (error is JsonException ? DesktopResources.Get("InvalidCatalogDocument") : error.Message)); }
-            }
-            await RefreshLocalAgentsAsync(ct);
-            Show(DesktopResources.Format("AgentImportedCount", imported) + (errors.Count > 0 ? "\n" + string.Join("\n", errors) : ""), errors.Count > 0 ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
+            var files = await picker.PickMultipleFilesAsync().AsTask(ct);
+            ct.ThrowIfCancellationRequested(); if (session.AgentPartition != partition || closing) throw new OperationCanceledException(ct);
+            if (files.Count > 0) await ImportAgentFilesAsync(files, ct);
         });
+    }
+    private async Task ImportAgentFilesAsync(IReadOnlyList<StorageFile> files, CancellationToken ct)
+    {
+        var partition = session.AgentPartition; var errors = new List<string>(); var imported = 0;
+        foreach (var file in files)
+        {
+            ct.ThrowIfCancellationRequested(); if (session.AgentPartition != partition || closing) throw new OperationCanceledException(ct);
+            try
+            {
+                if (!file.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException(DesktopResources.Get("AgentJsonOnly"));
+                if ((await file.GetBasicPropertiesAsync()).Size > DesktopAgent.MaxDocumentBytes) throw new InvalidDataException(DesktopResources.Get("ResponseSizeLimit"));
+                await using var input = await file.OpenStreamForReadAsync(); using var content = new StreamContent(input);
+                var bytes = await DesktopCatalogClient.ReadBoundedAsync(content, DesktopAgent.MaxDocumentBytes, ct);
+                var agent = DesktopAgent.Parse(System.Text.Encoding.UTF8.GetString(bytes));
+                ct.ThrowIfCancellationRequested(); if (session.AgentPartition != partition || closing) throw new OperationCanceledException(ct);
+                await agentStore.SaveAsync(partition, agent, null, ct); imported++;
+            }
+            catch (Exception error) when (error is not OperationCanceledException)
+            { errors.Add(file.Name + ": " + (error is JsonException ? DesktopResources.Get("InvalidCatalogDocument") : error.Message)); }
+        }
+        ct.ThrowIfCancellationRequested(); if (session.AgentPartition != partition || closing) throw new OperationCanceledException(ct);
+        await RefreshLocalAgentsAsync(ct);
+        ct.ThrowIfCancellationRequested(); if (session.AgentPartition != partition || closing) throw new OperationCanceledException(ct);
+        Show(DesktopResources.Format("AgentImportedCount", imported) + (errors.Count > 0 ? "\n" + string.Join("\n", errors) : ""),
+            errors.Count > 0 || imported == 0 ? InfoBarSeverity.Warning : InfoBarSeverity.Success);
     }
     private async Task DeleteAgentAsync(CatalogItem item)
     {

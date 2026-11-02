@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace AIHappey.Desktop.Core;
 
@@ -44,6 +45,7 @@ internal sealed class OverviewPage : UserControl
     public Action<CatalogItem, Button>? EditRequested { get; set; }
     public Action<CatalogItem>? DeleteRequested { get; set; }
     public Action<CatalogItem>? PluginRequested { get; set; }
+    public Func<DataPackageView, Task>? ImportRequested { get; set; }
 
     public OverviewPage(CatalogKind kind)
     {
@@ -70,7 +72,9 @@ internal sealed class OverviewPage : UserControl
         body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cancel); body.Children.Add(Cards); body.Children.Add(more);
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };
-        Content = viewer;
+        Content = OverviewFileDrop.Wrap(viewer, () => actionsEnabled && !working && ImportRequested is not null,
+            data => ImportRequested?.Invoke(data) ?? Task.CompletedTask, DesktopResources.Get(kind == CatalogKind.Skill ? "SkillDropHint" : "AgentDropHint"));
+        SearchBox.AllowDrop = false;
         ControlAppearance.Native(SearchBox);
         ToolbarControls.Label(SearchBox, kind == CatalogKind.Agent ? DesktopResources.Get("SearchAgents") : DesktopResources.Get("SearchSkills"));
         foreach (var button in new[] { retry, cancel, more }) ControlAppearance.Native(button);

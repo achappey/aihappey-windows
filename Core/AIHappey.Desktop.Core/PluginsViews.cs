@@ -27,7 +27,7 @@ public sealed class PluginsOverviewPage : UserControl
     public Func<DesktopAgentPlugin, Task>? DownloadRequested { get; set; }
     public Func<DesktopAgentPlugin, Task>? DeleteRequested { get; set; }
     public Func<DesktopAgentPlugin, Task>? FavoriteRequested { get; set; }
-    public Func<IReadOnlyList<StorageFile>, Task>? ImportRequested { get; set; }
+    public Func<DataPackageView, Task>? ImportRequested { get; set; }
     public PluginsOverviewPage()
     {
         Name = "PluginsOverview";
@@ -51,7 +51,9 @@ public sealed class PluginsOverviewPage : UserControl
         panel.Children.Add(tabs); panel.Children.Add(rows);
         var viewer = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
-        Content = viewer;
+        Content = OverviewFileDrop.Wrap(viewer, () => enabled && ImportRequested is not null,
+            data => ImportRequested?.Invoke(data) ?? Task.CompletedTask, DesktopResources.Get("PluginDropHint"));
+        search.AllowDrop = false;
         void SizeBody()
         {
             var width = viewer.ViewportWidth > 0 ? viewer.ViewportWidth : viewer.ActualWidth;
@@ -69,14 +71,6 @@ public sealed class PluginsOverviewPage : UserControl
             favoriteOnly = selected; Render();
         };
         keywords.Click += (_, _) => Facet(keywords, true); authors.Click += (_, _) => Facet(authors, false);
-        AllowDrop = true;
-        DragOver += (_, args) => { args.AcceptedOperation = enabled && args.DataView.Contains(StandardDataFormats.StorageItems) ? DataPackageOperation.Copy : DataPackageOperation.None; args.Handled = true; };
-        Drop += async (_, args) =>
-        {
-            var deferral = args.GetDeferral();
-            try { if (enabled && args.DataView.Contains(StandardDataFormats.StorageItems) && ImportRequested is not null) await ImportRequested((await args.DataView.GetStorageItemsAsync()).OfType<StorageFile>().ToArray()); }
-            finally { deferral.Complete(); }
-        };
     }
     public void SetItems(IReadOnlyList<DesktopAgentPlugin> value)
     {

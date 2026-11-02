@@ -7,6 +7,19 @@
   <data name="SkillCreate" xml:space="preserve"><value>Create new skill</value></data>
   <data name="SkillEdit" xml:space="preserve"><value>Edit skill</value></data>
   <data name="SkillImport" xml:space="preserve"><value>Import skill package</value></data>
+  <data name="SkillImportMenu" xml:space="preserve"><value>Import</value></data>
+  <data name="SkillFolder" xml:space="preserve"><value>Folder</value></data>
+  <data name="SkillZipOnly" xml:space="preserve"><value>Only ZIP files can be imported as skills.</value></data>
+  <data name="AgentJsonOnly" xml:space="preserve"><value>Only JSON files can be imported as agents.</value></data>
+  <data name="SkillDropHint" xml:space="preserve"><value>Import skill ZIP files</value></data>
+  <data name="AgentDropHint" xml:space="preserve"><value>Import agent JSON files</value></data>
+  <data name="PluginDropHint" xml:space="preserve"><value>Import plugin ZIP files</value></data>
+  <data name="SkillFolderScanning" xml:space="preserve"><value>Scanning the selected folder for skills…</value></data>
+  <data name="SkillFolderEmpty" xml:space="preserve"><value>No SKILL.md files were found in the selected folder.</value></data>
+  <data name="SkillFolderLimit" xml:space="preserve"><value>A folder scan or size limit was exceeded. Select a smaller folder; incomplete skills are not imported.</value></data>
+  <data name="SkillFolderLink" xml:space="preserve"><value>Symbolic links and junctions cannot be imported as skill files.</value></data>
+  <data name="SkillFolderIncomplete" xml:space="preserve"><value>Some skill files could not be read safely. This skill was not imported.</value></data>
+  <data name="SkillFolderDuplicate" xml:space="preserve"><value>A skill with this name was already found. The first valid skill in path order is used.</value></data>
   <data name="SkillName" xml:space="preserve"><value>Name</value></data>
   <data name="SkillDescription" xml:space="preserve"><value>Description</value></data>
   <data name="SkillInstructions" xml:space="preserve"><value>Instructions</value></data>
@@ -2035,7 +2048,7 @@ Speaker: {1}</value></data>
   <data name="ComposerTokensReserved" xml:space="preserve"><value>{0} tokens reserved for output</value></data>
   <data name="ComposerTokensAvailable" xml:space="preserve"><value>{0} tokens available</value></data>
   <data name="ComposerConversationCost" xml:space="preserve"><value>Total conversation cost: {0}</value></data>
-  <data name="SkillFromGitHub" xml:space="preserve"><value>From GitHub</value></data>
+  <data name="SkillFromGitHub" xml:space="preserve"><value>GitHub</value></data>
   <data name="SkillGitHubUrl" xml:space="preserve"><value>GitHub URL</value></data>
   <data name="SkillGitHubDiscover" xml:space="preserve"><value>Discover</value></data>
   <data name="SkillGitHubDiscovering" xml:space="preserve"><value>Discovering…</value></data>
