@@ -23,7 +23,7 @@ public sealed partial class ChatShell
         var zip = new MenuFlyoutItem { Name = "SkillImportZip", Text = "ZIP", Icon = DesktopIcons.Create(Icon.Attach) };
         var github = new MenuFlyoutItem { Name = "SkillFromGitHub", Text = DesktopResources.Get("SkillFromGitHub"), Icon = DesktopIcons.Create(Icon.Link) };
         var folder = new MenuFlyoutItem { Name = "SkillImportFolder", Text = DesktopResources.Get("SkillFolder"), Icon = DesktopIcons.Create(Icon.FolderOpen) };
-        import.Items.Add(zip); import.Items.Add(github); import.Items.Add(folder);
+        import.Items.Add(zip); import.Items.Add(folder); import.Items.Add(github);
         menu.Items.Add(create); menu.Items.Add(import); addSkill.Flyout = menu;
         ControlAppearance.Stock(addSkill); ToolbarControls.Label(addSkill, DesktopResources.Get("Add"));
         create.Click += async (_, _) => await EditSkillAsync(null, addSkill);

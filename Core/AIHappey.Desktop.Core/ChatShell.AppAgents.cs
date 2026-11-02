@@ -11,6 +11,14 @@ public sealed partial class ChatShell
     private CancellationTokenSource? welcomeRequest;
     private string? welcomeRequestKey;
     private bool appAgentsReady;
+    private bool welcomeDiscovering;
+
+    private void SetWelcomeLoading(bool loading)
+    {
+        welcome.Visibility = loading ? Microsoft.UI.Xaml.Visibility.Collapsed : Microsoft.UI.Xaml.Visibility.Visible;
+        welcomeLoading.Visibility = loading ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+        welcomeLoading.RefreshAnimation();
+    }
 
     private DesktopAgent? AssignedAppAgent(AppAgentRole role) => localAgentPartition == session.AgentPartition
         ? localAgents.FirstOrDefault(a => a.Name == session.Settings.SideInferenceAgentNames.Get(role))?.Clone() : null;
@@ -21,9 +29,15 @@ public sealed partial class ChatShell
         if (closing || current.Messages.Count != 0)
         {
             welcomeRequest?.Cancel(); welcomeRequestKey = null;
+            SetWelcomeLoading(false);
             return;
         }
-        if (!appAgentsReady) return;
+        if (!appAgentsReady || welcomeDiscovering)
+        {
+            welcome.Text = DesktopResources.Get("Welcome");
+            SetWelcomeLoading(session.Settings.SideInferenceAgentNames.Get(AppAgentRole.WelcomeMessage) != "");
+            return;
+        }
         var agent = AssignedAppAgent(AppAgentRole.WelcomeMessage);
         var key = JsonSerializer.Serialize(new { current.Id, session.HistoryPartition, session.ActiveLanguage, realtimePage = activePage == DesktopPage.Realtime,
             user = session.Host.UserContext?.Name, assignment = session.Settings.SideInferenceAgentNames.Get(AppAgentRole.WelcomeMessage),
@@ -31,10 +45,12 @@ public sealed partial class ChatShell
         if (key == welcomeRequestKey) return;
         welcomeRequest?.Cancel(); welcomeRequestKey = key;
         var generation = welcomeSpeech.Replace();
-        var language = session.ActiveLanguage; var partition = session.HistoryPartition;
-        bool CurrentGeneration() => key == welcomeRequestKey && language == session.ActiveLanguage && partition == session.HistoryPartition;
+        var language = session.ActiveLanguage; var partition = session.HistoryPartition; var conversationId = current.Id;
+        bool CurrentGeneration() => !closing && key == welcomeRequestKey && language == session.ActiveLanguage
+            && partition == session.HistoryPartition && conversationId == current.Id && current.Messages.Count == 0;
         welcome.Text = DesktopResources.Get("Welcome");
-        if (agent is null) return; // None/missing agents never cause discovery or inference.
+        SetWelcomeLoading(agent is not null && !session.Host.RequiresSignIn);
+        if (agent is null || session.Host.RequiresSignIn) return; // None/missing agents never cause discovery or inference.
         var lifetime = CancellationTokenSource.CreateLinkedTokenSource(appAgentLifetime.Token);
         lifetime.CancelAfter(TimeSpan.FromSeconds(30)); welcomeRequest = lifetime;
         var input = DesktopAppAgentClient.WelcomeInput(session.ActiveLanguage, session.Host.UserContext?.Name, DateTimeOffset.UtcNow);
@@ -43,16 +59,26 @@ public sealed partial class ChatShell
             try
             {
                 var models = aiModelTargets ?? await client.ListAsync(ServiceKind.Ai, lifetime.Token);
-                var text = await appAgentClient.InvokeAsync(agent, models, input, DesktopResources.Get("Welcome"), lifetime.Token);
-                if (!closing && !lifetime.IsCancellationRequested && key == welcomeRequestKey && current.Messages.Count == 0)
+                var text = await appAgentClient.InvokeAsync(agent, models, input, DesktopResources.Get("Welcome"), lifetime.Token).WaitAsync(lifetime.Token);
+                if (!lifetime.IsCancellationRequested && CurrentGeneration())
                 {
-                    welcome.Text = text;
+                    var displayedText = string.IsNullOrWhiteSpace(text) ? DesktopResources.Get("Welcome") : text;
+                    welcome.Text = displayedText;
+                    SetWelcomeLoading(false);
                     if (IsRealtimeStart && CurrentGeneration() && agent.Speech is { } speech)
-                        await welcomeSpeech.PlayAsync(generation, token => PlayWelcomeSpeechAsync(speech, models, text, CurrentGeneration, token));
+                        await welcomeSpeech.PlayAsync(generation, token => PlayWelcomeSpeechAsync(speech, models, displayedText, CurrentGeneration, token));
                 }
             }
-            catch (Exception) { /* Keep the localized fallback; this is not a main-chat error. */ }
-            finally { if (ReferenceEquals(welcomeRequest, lifetime)) welcomeRequest = null; lifetime.Dispose(); }
+            catch (Exception) { /* Use the localized fallback; this is not a main-chat error. */ }
+            finally
+            {
+                if (ReferenceEquals(welcomeRequest, lifetime))
+                {
+                    welcomeRequest = null;
+                    if (CurrentGeneration()) SetWelcomeLoading(false);
+                }
+                lifetime.Dispose();
+            }
         });
     }
 

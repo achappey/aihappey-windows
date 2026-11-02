@@ -22,8 +22,8 @@ internal sealed class OverviewPage : UserControl
         IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly Dictionary<string, NavigationViewItem> filterItems = [];
     private readonly TextBlock status = new() { Name = "CatalogStatus", TextWrapping = TextWrapping.Wrap, TextAlignment = TextAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+    private readonly ProgressBar loading = new() { Name = "CatalogProgress", Height = 4, Visibility = Visibility.Collapsed };
     private readonly Button retry = new() { Content = DesktopResources.Get("Retry"), HorizontalAlignment = HorizontalAlignment.Center };
-    private readonly Button cancel = new() { Content = DesktopResources.Get("Cancel"), HorizontalAlignment = HorizontalAlignment.Center };
     private readonly Button more = new() { Content = DesktopResources.Get("ShowMore"), HorizontalAlignment = HorizontalAlignment.Center };
     private readonly ScrollViewer viewer;
     private IReadOnlyList<CatalogItem> items = [];
@@ -37,7 +37,6 @@ internal sealed class OverviewPage : UserControl
     private bool actionsEnabled = true;
     public CatalogKind Kind { get; }
     public Action? RetryRequested { get; set; }
-    public Action? CancelRequested { get; set; }
     public Action<CatalogItem, Button>? DetailsRequested { get; set; }
     public Action<CatalogItem>? FavoriteRequested { get; set; }
     public Action<CatalogItem>? DownloadRequested { get; set; }
@@ -69,7 +68,8 @@ internal sealed class OverviewPage : UserControl
         }
         // Stock top navigation supplies the animated indicator, keyboard behavior and overflow.
         body.Children.Add(filters);
-        body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cancel); body.Children.Add(Cards); body.Children.Add(more);
+        AutomationProperties.SetName(loading, DesktopResources.Get("Loading"));
+        body.Children.Add(loading); body.Children.Add(status); body.Children.Add(retry); body.Children.Add(Cards); body.Children.Add(more);
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalContentAlignment = HorizontalAlignment.Stretch };
         Content = OverviewFileDrop.Wrap(viewer, () => actionsEnabled && !working && ImportRequested is not null,
@@ -77,7 +77,7 @@ internal sealed class OverviewPage : UserControl
         SearchBox.AllowDrop = false;
         ControlAppearance.Native(SearchBox);
         ToolbarControls.Label(SearchBox, kind == CatalogKind.Agent ? DesktopResources.Get("SearchAgents") : DesktopResources.Get("SearchSkills"));
-        foreach (var button in new[] { retry, cancel, more }) ControlAppearance.Native(button);
+        foreach (var button in new[] { retry, more }) ControlAppearance.Native(button);
         ControlAppearance.Apply(description, (_, _) => { }, palette => description.Foreground = new SolidColorBrush(palette.Text));
         ControlAppearance.Apply(status, (_, _) => { }, palette => status.Foreground = new SolidColorBrush(palette.Text));
         AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
@@ -88,10 +88,11 @@ internal sealed class OverviewPage : UserControl
             activeFilter = key; visible = 50; Render();
         };
         retry.Click += (_, _) => RetryRequested?.Invoke();
-        cancel.Click += (_, _) => CancelRequested?.Invoke();
         more.Click += (_, _) => { visible += 50; Render(); };
         viewer.SizeChanged += (_, _) => SizeBody();
-        Loaded += (_, _) => SizeBody();
+        Loaded += (_, _) => { SizeBody(); RefreshLoading(); };
+        Unloaded += (_, _) => { loading.IsIndeterminate = false; loading.Visibility = Visibility.Collapsed; };
+        RegisterPropertyChangedCallback(VisibilityProperty, (_, _) => RefreshLoading());
         Render();
     }
 
@@ -113,10 +114,18 @@ internal sealed class OverviewPage : UserControl
 
     public void SetFavorites(IReadOnlySet<string> value) { favorites = value; Render(); }
 
-    public void Loading(string? message = null)
+    private void RefreshLoading()
     {
-        working = true; Cards.Children.Clear(); status.Text = message ?? DesktopResources.Get("Loading");
-        status.Visibility = cancel.Visibility = Visibility.Visible; retry.Visibility = more.Visibility = Visibility.Collapsed;
+        var active = working && IsLoaded && Visibility == Visibility.Visible;
+        loading.IsIndeterminate = active;
+        loading.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public void Loading()
+    {
+        working = true; Cards.Children.Clear(); status.Text = "";
+        status.Visibility = retry.Visibility = more.Visibility = Visibility.Collapsed;
+        RefreshLoading();
         SearchBox.IsEnabled = filters.IsEnabled = false;
         tagFilter.IsEnabled = ownerFilter.IsEnabled = false;
     }
@@ -124,8 +133,9 @@ internal sealed class OverviewPage : UserControl
     public void Error(string message)
     {
         working = false; Cards.Children.Clear(); status.Text = message;
+        RefreshLoading();
         failed = true;
-        status.Visibility = retry.Visibility = Visibility.Visible; cancel.Visibility = more.Visibility = Visibility.Collapsed;
+        status.Visibility = retry.Visibility = Visibility.Visible; more.Visibility = Visibility.Collapsed;
         SearchBox.IsEnabled = actionsEnabled; filters.IsEnabled = false;
         tagFilter.IsEnabled = ownerFilter.IsEnabled = false;
     }
@@ -144,10 +154,11 @@ internal sealed class OverviewPage : UserControl
     private void Render()
     {
         if (working) return;
+        RefreshLoading();
         failed = false;
         var focused = XamlRoot is null ? null : FocusManager.GetFocusedElement(XamlRoot) as Button;
         var focusId = focused is null ? null : AutomationProperties.GetAutomationId(focused);
-        SearchBox.IsEnabled = true; retry.Visibility = cancel.Visibility = Visibility.Collapsed;
+        SearchBox.IsEnabled = true; retry.Visibility = Visibility.Collapsed;
         var searched = Kind == CatalogKind.Agent ? AgentOverviewProjection.Search(items, SearchBox.Text) : CatalogProjection.Search(items, SearchBox.Text);
         if (Kind == CatalogKind.Agent)
         {

@@ -118,7 +118,6 @@ public sealed partial class ChatShell
         foreach (var page in new[] { agentsOverview, skillsOverview })
         {
             page.RetryRequested = async () => await RunAsync(ct => LoadOverviewAsync(page, ct));
-            page.CancelRequested = () => operation?.Cancel();
             page.FavoriteRequested = async item => await ToggleCatalogFavoriteAsync(item);
             page.DetailsRequested = async (item, owner) => await OpenCatalogDetailsAsync(item, owner);
             page.DownloadRequested = async item => await DownloadCatalogAsync(item, null);
@@ -152,6 +151,7 @@ public sealed partial class ChatShell
         var chat = page is DesktopPage.Chat or DesktopPage.Realtime;
         overviewHost.Visibility = chat ? Visibility.Collapsed : Visibility.Visible;
         chatModes.Visibility = target.Visibility = composer.Visibility = disclaimer.Visibility = chat ? Visibility.Visible : Visibility.Collapsed;
+        welcomeLoading.RefreshAnimation();
         if (page == DesktopPage.Realtime) chatModes.Visibility = target.Visibility = Visibility.Collapsed;
         else { input.PlaceholderText = DesktopResources.Get("AskAnything"); ToolbarControls.Label(send, DesktopResources.Get("SendMessage")); }
         target.IsSuggestionListOpen = false;

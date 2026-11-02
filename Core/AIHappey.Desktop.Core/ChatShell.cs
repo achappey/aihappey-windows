@@ -25,7 +25,9 @@ public sealed partial class ChatShell : UserControl
     private readonly StackPanel transcript = new() { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 24, 0, 24) };
     private readonly ScrollViewer scroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly StackPanel composer = new() { Spacing = 8, MaxWidth = 1040, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(24, 12, 24, 16) };
-    private readonly TextBlock welcome = new() { Text = DesktopResources.Get("Welcome"), TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 16), FontSize = 28 };
+    private readonly Grid welcomeSlot = new() { Name = "WelcomeSlot", MinHeight = 34, Margin = new Thickness(0, 0, 0, 16) };
+    private readonly WelcomeShimmer welcomeLoading = new();
+    private readonly TextBlock welcome = new() { Text = DesktopResources.Get("Welcome"), TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center, FontSize = 28, Visibility = Visibility.Collapsed };
     private readonly TextBlock disclaimer = new() { Name = "Disclaimer", Text = DesktopResources.Format("Disclaimer", DesktopBranding.DisclaimerName), FontSize = 12, TextWrapping = TextWrapping.Wrap, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(16, 0, 16, 8) };
     private readonly TextBox input = new() { PlaceholderText = DesktopResources.Get("AskAnything"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 96, MaxHeight = 240 };
     private readonly ToggleButton models = ToolbarControls.CreateModeButton(DesktopIcons.Create(Icon.Brain), DesktopResources.Get("Models"));
@@ -363,7 +365,8 @@ public sealed partial class ChatShell : UserControl
         Grid.SetColumn(account, 5); top.Children.Add(account);
         workspace.Children.Add(top);
         scroll.Content = transcript; Grid.SetRow(scroll, 1); workspace.Children.Add(scroll);
-        composer.Children.Add(welcome); composer.Children.Add(composerBadgeRow);
+        welcomeSlot.Children.Add(welcomeLoading); welcomeSlot.Children.Add(welcome);
+        composer.Children.Add(welcomeSlot); composer.Children.Add(composerBadgeRow);
         composer.Children.Add(input);
         composer.Children.Add(realtimePreview);
         var actions = new Grid { Name = "ComposerActions", ColumnSpacing = 4 };
@@ -400,21 +403,27 @@ public sealed partial class ChatShell : UserControl
     private async Task ReloadAccountAsync(CancellationToken ct, bool connectServices = true)
     {
         welcomeSpeech.Cancel();
-        await StopRealtimeAsync();
-        var ready = !session.Host.RequiresSignIn;
-        if (ready && connectServices) await StartVideoJobsAsync(ct);
-        UpdateAccountMenu();
-        current = new() { Service = Service };
-        input.Text = ""; ResetContext();
-        targets = []; TargetId = "";
-        rememberedSelections.Clear(); target.IsSuggestionListOpen = false;
-        aiModelTargets = null;
-        InvalidateCatalogs();
-        RenderTranscript();
-        await LoadLocalAgentsAsync(ct);
-        await LoadHistoryAsync(ct, connectServices && ready);
-        await DiscoverAsync(ct);
-        if (ready && activePage != DesktopPage.Chat) await LoadActiveOverviewAsync(ct);
+        welcomeRequest?.Cancel(); welcomeRequestKey = null;
+        welcomeDiscovering = true;
+        try
+        {
+            await StopRealtimeAsync();
+            var ready = !session.Host.RequiresSignIn;
+            if (ready && connectServices) await StartVideoJobsAsync(ct);
+            UpdateAccountMenu();
+            current = new() { Service = Service };
+            input.Text = ""; ResetContext();
+            targets = []; TargetId = "";
+            rememberedSelections.Clear(); target.IsSuggestionListOpen = false;
+            aiModelTargets = null;
+            InvalidateCatalogs();
+            RenderTranscript();
+            await LoadLocalAgentsAsync(ct);
+            await LoadHistoryAsync(ct, connectServices && ready);
+            await DiscoverAsync(ct);
+            if (ready && activePage != DesktopPage.Chat) await LoadActiveOverviewAsync(ct);
+        }
+        finally { welcomeDiscovering = false; RefreshWelcome(); }
     }
 
     private void UpdateMode(ServiceKind selected)
@@ -603,7 +612,8 @@ public sealed partial class ChatShell : UserControl
         var draft = realtime?.AgentVoice?.Draft;
         var empty = current.Messages.Count == 0 && draft is null;
         RefreshWelcome();
-        welcome.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        welcomeSlot.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        welcomeLoading.RefreshAnimation();
         scroll.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;
         Grid.SetRow(composer, empty ? 1 : 2);
         composer.VerticalAlignment = empty ? VerticalAlignment.Center : VerticalAlignment.Bottom;
@@ -911,7 +921,7 @@ public sealed partial class ChatShell : UserControl
         await runtimeWarmup;
         runtimeWarmupLifetime.Dispose();
         explorerConfirmation?.Hide(); CancelExplorerBatches();
-        appAgentLifetime.Cancel(); welcomeRequest?.Cancel(); welcomeSpeech.Dispose();
+        appAgentLifetime.Cancel(); welcomeRequest?.Cancel(); welcomeSpeech.Dispose(); SetWelcomeLoading(false);
         toolOutputDialog?.Hide();
         videoWorkLifetime.Cancel();
         videoLinkDialog?.Hide(); videoDeleteDialog?.Hide(); videoPreviewDialog?.ReleasePlayer(); videoPreviewDialog?.Hide();
