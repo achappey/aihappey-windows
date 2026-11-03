@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <DesktopProviderCatalogSource Condition="'$(DesktopProviderCatalogSource)' == ''">$(MSBuildThisFileDirectory)..\aihappey-chat\packages\aihappey-core\src\runtime\providers\catalog</DesktopProviderCatalogSource>
+    <DesktopProviderCatalogSource Condition="'$(DesktopProviderCatalogSource)' == ''">$(MSBuildThisFileDirectory)..\aihappey-providers\metadata\providers</DesktopProviderCatalogSource>
     <DesktopProviderCatalogSnapshot>$(MSBuildThisFileDirectory)Core\AIHappey.Desktop.Core\ProviderCatalog</DesktopProviderCatalogSnapshot>
     <!-- The upstream checkout is external to the project; Visual Studio must
          invoke MSBuild even when it thinks the desktop sources are unchanged. -->

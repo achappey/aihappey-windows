@@ -1,5 +1,5 @@
 param(
-    [string]$Source = (Join-Path $PSScriptRoot '../../aihappey-chat/packages/aihappey-core/src/runtime/providers/catalog'),
+    [string]$Source = (Join-Path $PSScriptRoot '../../aihappey-providers/metadata/providers'),
     [string]$Destination = (Join-Path $PSScriptRoot '../Core/AIHappey.Desktop.Core/ProviderCatalog'),
     [switch]$RequireSource,
     [switch]$Check,
@@ -47,9 +47,9 @@ function Read-Catalog([string]$Folder) {
 # A missing checkout is the only reason to allow an offline development snapshot.
 # An existing but incomplete/malformed source is always an error.
 if (-not (Test-Path $Source -PathType Container)) {
-    if ($RequireSource -or $Check) { throw "Provider source catalog is required: $Source. Restore the chat checkout or set DesktopProviderCatalogSource." }
+    if ($RequireSource -or $Check) { throw "Provider source catalog is required: $Source. Restore the providers checkout or set DesktopProviderCatalogSource." }
     $null = Read-Catalog $Destination
-    Write-Warning "Chat provider checkout is missing; using validated bundled snapshot: $Destination"
+    Write-Warning "Providers checkout is missing; using validated bundled snapshot: $Destination"
     exit 0
 }
 $catalog = Read-Catalog $Source
@@ -67,7 +67,7 @@ $changed = @($catalog.Keys | Where-Object {
 })
 $obsolete = @(if (Test-Path $Destination) { Get-ChildItem $Destination -File -Filter '*.json' | Where-Object { -not $catalog.ContainsKey($_.Name) } })
 if ($Check) {
-    if ($changed.Count -or $obsolete.Count) { throw 'Bundled provider catalog differs from chat. Build the desktop app before publishing (publishing without building cannot refresh embedded resources).' }
+    if ($changed.Count -or $obsolete.Count) { throw 'Bundled provider catalog differs from providers. Build the desktop app before publishing (publishing without building cannot refresh embedded resources).' }
     if ($BuildStamp -and (-not (Test-Path $BuildStamp -PathType Leaf) -or [IO.File]::ReadAllText($BuildStamp).Trim() -cne $fingerprint)) {
         throw 'The compiled desktop output has a different provider catalog fingerprint. Rebuild before publishing.'
     }

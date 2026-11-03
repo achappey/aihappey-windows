@@ -36,10 +36,6 @@ The application uses native Windows components and connects to the existing aiha
 - [aihappey-ai](https://github.com/achappey/aihappey-ai) - multi-provider AI runtime
 - [aihappey-agents](https://github.com/achappey/aihappey-agents) - agent and workflow runtime
 
-The only external compile-time project dependency of the Windows client and its protocol tests is the sibling [aihappey-vercel](https://github.com/achappey/aihappey-vercel) model repository. Agents source projects and the server's internal Unified models are not needed to compile the desktop solution. Agent documents already use the local JSON-preserving [DesktopAgent](Core/AIHappey.Desktop.Core/Agents.cs:9) contract; no server DTO projection is involved.
-
-This does not change the HeaderAuth runtime bundle: [publishing](publish.ps1:147) still builds and includes the AI and Agents services, and [ManagedLocalRuntime](Samples/AIHappey.Desktop.HeaderAuth/ManagedLocalRuntime.cs:57) launches them as separate owned processes. Building a complete bundle from source still requires those runtime repositories; compiling the Windows client does not. See the [dependency-boundary checks](Tests/README.md) for isolated-build verification.
-
 ## Related projects
 
 - [aihappey-chat](https://github.com/achappey/aihappey-chat) - browser-based AI client

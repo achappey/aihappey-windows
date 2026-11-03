@@ -4,6 +4,8 @@ const path = require('node:path');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const script = path.join(__dirname, 'sync-provider-catalog.ps1');
+assert.match(fs.readFileSync(script, 'utf8'), /aihappey-providers\/metadata\/providers/);
+assert.match(fs.readFileSync(path.join(__dirname, '../Directory.Build.targets'), 'utf8'), /aihappey-providers\\metadata\\providers/);
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'provider-sync-'));
 const source = path.join(root, 'source'), destination = path.join(root, 'snapshot');
 function invoke(args = [], succeeds = true, src = source) {
