@@ -155,8 +155,8 @@
     <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/ManagedLocalRuntime.cs" Link="Host/ManagedLocalRuntime.cs" />
     <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/OwnedProcessJob.cs" Link="Host/OwnedProcessJob.cs" />
     <ProjectReference Include="../../../aihappey-vercel/AIHappey.Vercel.csproj" />
-    <PackageReference Include="PdfPig" Version="0.1.17-alpha-202611020029-95f4f" />
-    <PackageReference Include="ModelContextProtocol" Version="2.3.0" />
+    <PackageReference Include="PdfPig" Version="0.1.17-alpha-202611030024-c46d2" />
+    <PackageReference Include="ModelContextProtocol" Version="2.3.1" />
     <PackageReference Include="System.Data.OleDb" Version="11.0.0-rc.3.26522.148" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="11.0.0-rc.3.26522.148" />
