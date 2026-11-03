@@ -38,10 +38,12 @@ public sealed partial class ChatShell
     {
         if (target.ModelMetadata is not { ValueKind: JsonValueKind.Object } metadata) return null;
         if (metadata.TryGetProperty("agent", out var embedded) && embedded.ValueKind == JsonValueKind.Object) metadata = embedded;
+        if (!metadata.TryGetProperty("instructions", out _)) return null;
         return new DesktopAgent(JsonNode.Parse(metadata.GetRawText())!.AsObject());
     }
     private bool RealtimeAgentSupported(ChatTarget target)
     {
+        if (target.RemoteAgentId is not null) return target.Tags.Contains("real-time");
         var id = DesktopAgent.Text(RealtimeAgentDefinition(target)?.Transcription?["id"]);
         return (aiModelTargets ?? []).Any(model => model.Id == id && model.ModelType == "transcription" && RealtimeTranscriptionConfiguration.Supports(model));
     }
@@ -80,8 +82,9 @@ public sealed partial class ChatShell
         ct.ThrowIfCancellationRequested(); if (closing || partition != session.HistoryPartition) return;
         var local = DesktopAgentTargets.Project(localAgents.Select(agent => agent.CatalogItem()));
         realtimeAgents = local.Concat(remote.Select(model => model with { Id = "remote:" + model.Id, RemoteAgentId = model.Id }))
-            .Where(target => RealtimeAgentDefinition(target)?.Transcription is { } transcription
-                && !string.IsNullOrWhiteSpace(DesktopAgent.Text(transcription["id"]))).ToArray();
+            .Where(target => target.RemoteAgentId is not null ? target.Tags.Contains("real-time")
+                : RealtimeAgentDefinition(target)?.Transcription is { } transcription
+                    && !string.IsNullOrWhiteSpace(DesktopAgent.Text(transcription["id"]))).ToArray();
         realtimeAgent.Configure(true, false, new HashSet<string>(realtimeAgents.Where(item => favorites.Contains(
             $"Agent:{(item.LocalAgentName is null ? "Backend" : "Local")}:{item.LocalAgentName ?? item.RemoteAgentId}")).Select(item => item.Id)), false, "");
         realtimeAgent.ItemsSource = realtimeAgents;
@@ -112,7 +115,14 @@ public sealed partial class ChatShell
             {
                 await RunAsync(async ct =>
                 {
-                    var agent = RealtimeAgentDefinition(selected)!.Clone(); var preferences = session.Settings.Chat.Clone();
+                    var agent = selected.RemoteAgentId is { } remoteId
+                        ? new DesktopAgent(JsonNode.Parse((await catalogClient.AgentDefinitionAsync(remoteId, ct)).GetRawText())!.AsObject())
+                        : RealtimeAgentDefinition(selected)?.Clone() ?? throw new GatewayException(DesktopResources.Get("AgentUnavailable"));
+                    var transcriptionId = DesktopAgent.Text(agent.Transcription?["id"]);
+                    if (!(aiModelTargets ?? []).Any(model => model.Id == transcriptionId && model.ModelType == "transcription" && RealtimeTranscriptionConfiguration.Supports(model)))
+                        throw new GatewayException(DesktopResources.Get("AgentRealtimeUnsupported"));
+                    if (closing || partition != session.HistoryPartition) throw new OperationCanceledException(ct);
+                    var preferences = session.Settings.Chat.Clone();
                     if (preferences.PluginEnabled(DesktopLocalTools.SkillSearch)) await LoadRuntimeSkillsAsync(ct);
                     var snapshot = CaptureSkillRuntime(preferences, agentToolsOnly: true);
                     var request = DesktopAgentRequests.Build([selected.Id], realtimeAgents, localAgents, new AgentWorkflowPreferences { Type = "sequential" });

@@ -48,7 +48,7 @@ public sealed class AgentWorkflowDialog : ContentDialog
                 if (ordered.Count > 1) draft.Validate(models);
                 var validated = DesktopAgentRequests.Build(ordered.Select(t => t.Id), ordered,
                     ordered.Where(t => t.LocalAgentName is not null && t.ModelMetadata.HasValue)
-                        .Select(t => new DesktopAgent(JsonNode.Parse(t.ModelMetadata!.Value.GetRawText())!.AsObject())).ToArray(), draft);
+                        .Select(t => new DesktopAgent(JsonNode.Parse(t.ModelMetadata!.Value.GetRawText())!.AsObject())).ToArray(), draft, requireRemoteDefinitions: false);
                 if (SaveAsync is not null) await SaveAsync(draft.Clone(), ordered.Select(t => t.Id).ToArray());
             }
             catch (Exception exception)

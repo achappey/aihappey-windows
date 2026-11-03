@@ -522,7 +522,8 @@ public sealed partial class ChatShell : UserControl
                 // Favorite routing chooses one agent; manual team workflows are a distinct mode.
                 if (!favoriteRouter && resolved.Length > 1) workflow.Validate(aiModelTargets ?? []);
                 else workflow.Type = "sequential";
-                agentRequest = DesktopAgentRequests.Build(resolved, targets, localAgents, workflow);
+                agentRequest = await DesktopAgentRequests.BuildAsync(resolved, targets, localAgents, workflow,
+                    (id, token) => catalogClient.AgentDefinitionAsync(id, token), ct);
             }
             var wireTarget = Service == ServiceKind.Agents ? agentTarget.RemoteAgentId ?? selected : selected;
             activeConversationTools = null;

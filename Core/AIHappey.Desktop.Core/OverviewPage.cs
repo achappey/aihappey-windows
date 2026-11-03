@@ -44,6 +44,7 @@ internal sealed class OverviewPage : UserControl
     public Action<CatalogItem, Button>? EditRequested { get; set; }
     public Action<CatalogItem>? DeleteRequested { get; set; }
     public Action<CatalogItem>? PluginRequested { get; set; }
+    public Func<CatalogItem, CancellationToken, Task<System.Text.Json.JsonElement>>? LoadAgentDefinition { get; set; }
     public Func<DataPackageView, Task>? ImportRequested { get; set; }
 
     public OverviewPage(CatalogKind kind)
@@ -247,11 +248,14 @@ internal sealed class OverviewPage : UserControl
         if (icon is not null) header.Children.Add(icon);
         var labels = new StackPanel { Spacing = 6 };
         labels.Children.Add(new TextBlock { Text = item.Name, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, MaxLines = 2, TextTrimming = TextTrimming.CharacterEllipsis });
-        var badgeText = item.Kind == CatalogKind.Agent ? item.Model : item.Version;
+        var badgeText = item.Kind == CatalogKind.Agent ? item.Owner?.Trim() : item.Version;
         if (!string.IsNullOrWhiteSpace(badgeText))
         {
-            var badge = new Border { HorizontalAlignment = HorizontalAlignment.Left,
-                Child = new TextBlock { Text = badgeText, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis } };
+            var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+            if (item.Kind == CatalogKind.Agent) content.Children.Add(DesktopIcons.Create(Icon.PersonHeart, 14));
+            content.Children.Add(new TextBlock { Text = badgeText, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis });
+            var badge = new Border { Name = item.Kind == CatalogKind.Agent ? "AgentOwnerBadge" : "SkillVersionBadge", HorizontalAlignment = HorizontalAlignment.Left, Child = content };
+            if (item.Kind == CatalogKind.Agent) AutomationProperties.SetName(badge, DesktopResources.Get("AgentOwnedBy") + ": " + badgeText);
             ToolTipService.SetToolTip(badge, badgeText); NativeCardSurface.Badge(badge); labels.Children.Add(badge);
         }
         Grid.SetColumn(labels, 1); header.Children.Add(labels); grid.Children.Add(header);
@@ -275,7 +279,33 @@ internal sealed class OverviewPage : UserControl
         if (item.Kind == CatalogKind.Agent)
         { var chat = ActionButton(item, "StartChat", Icon.Chat); chat.Name = "CatalogStartChat"; chat.Click += (_, _) => ChatRequested?.Invoke(item); actions.Children.Add(chat);
           if (item.CanSaveAsPlugin)
-          { var plugin = ActionButton(item, "PluginFromAgent", Icon.PuzzlePiece); plugin.Name = "CatalogCreatePlugin"; plugin.Click += (_, _) => PluginRequested?.Invoke(item); actions.Children.Add(plugin); } }
+          { var plugin = ActionButton(item, "PluginFromAgent", Icon.PuzzlePiece); plugin.Name = "CatalogCreatePlugin"; plugin.Click += (_, _) => PluginRequested?.Invoke(item); actions.Children.Add(plugin); }
+          else if (item.Origin == CatalogOrigin.Backend && item.Definition is null && LoadAgentDefinition is not null)
+          {
+              var more = ActionButton(item, "Details", Icon.MoreHorizontal);
+              var menu = new MenuFlyout(); more.Flyout = menu;
+              CancellationTokenSource? opening = null;
+              menu.Opening += async (_, _) =>
+              {
+                  opening?.Cancel(); opening?.Dispose(); opening = new(); var token = opening.Token;
+                  menu.Items.Clear(); menu.Items.Add(new MenuFlyoutItem { Text = DesktopResources.Get("Loading"), IsEnabled = false });
+                  try
+                  {
+                      var definition = await LoadAgentDefinition(item, token); token.ThrowIfCancellationRequested();
+                      menu.Items.Clear();
+                      if ((item with { Definition = definition }).CanSaveAsPlugin)
+                      {
+                          var plugin = new MenuFlyoutItem { Text = DesktopResources.Get("PluginFromAgent"), Icon = DesktopIcons.Create(Icon.PuzzlePiece) };
+                          plugin.Click += (_, _) => PluginRequested?.Invoke(item); menu.Items.Add(plugin);
+                      }
+                      else menu.Items.Add(new MenuFlyoutItem { Text = DesktopResources.Get("PluginAgentEmpty"), IsEnabled = false });
+                  }
+                  catch (OperationCanceledException) { }
+                  catch (Exception error) { if (!token.IsCancellationRequested) { menu.Items.Clear(); menu.Items.Add(new MenuFlyoutItem { Text = error.Message, IsEnabled = false }); } }
+              };
+              menu.Closed += (_, _) => opening?.Cancel();
+              actions.Children.Add(more);
+          } }
         var footer = new Border { Child = actions, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
         NativeCardSurface.Divider(footer); Grid.SetRow(footer, 2); grid.Children.Add(footer);
         var card = new Border { Name = "CatalogCard", Tag = item, Child = grid };

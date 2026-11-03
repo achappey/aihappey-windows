@@ -27,6 +27,7 @@ public sealed partial class ChatShell
         agentsOverview.EditRequested = async (item, owner) => await EditAgentAsync(item, owner);
         agentsOverview.DeleteRequested = async item => await DeleteAgentAsync(item);
         agentsOverview.PluginRequested = async item => await ConvertAgentToPluginAsync(item);
+        agentsOverview.LoadAgentDefinition = (item, ct) => catalogClient.AgentDefinitionAsync(item.Id, ct);
     }
     private async Task LoadLocalAgentsAsync(CancellationToken ct)
     {
@@ -181,8 +182,8 @@ public sealed partial class ChatShell
             var partition = session.PluginPartition; await LoadPluginsAsync(ct);
             DesktopAgent agent;
             if (item.Origin == CatalogOrigin.Local) { await LoadLocalAgentsAsync(ct); agent = localAgents.FirstOrDefault(a => a.Name == item.Id)?.Clone() ?? throw new InvalidDataException(DesktopResources.Get("AgentUnavailable")); }
-            else agent = item.Definition is { } definition ? new DesktopAgent(System.Text.Json.Nodes.JsonNode.Parse(definition.GetRawText())!.AsObject())
-                : throw new InvalidDataException(DesktopResources.Get("AgentUnavailable"));
+            else agent = new DesktopAgent(System.Text.Json.Nodes.JsonNode.Parse(
+                (await catalogClient.AgentDefinitionAsync(item.Id, ct)).GetRawText())!.AsObject());
             var plugin = await DesktopAgentPluginSnapshots.ConvertAsync(agent, agentPlugins.Select(p => p.Id), session.PluginExtensionNamespace, SnapshotPluginSkillAsync, ct);
             if (!CurrentPluginPartition(partition)) throw new OperationCanceledException(ct);
             await pluginStore.SaveAsync(partition, plugin, false, ct); await LoadPluginsAsync(ct); Show(DesktopResources.Format("PluginAgentConverted", plugin.Id), InfoBarSeverity.Success);

@@ -396,12 +396,16 @@ public sealed partial class ChatShell
             ct.ThrowIfCancellationRequested();
             if (closing || session.HistoryPartition != partition) return;
             // Fully validate/stage before opening the chosen file for writing. Never extract or execute a skill archive.
-            var bytes = json ? Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item.Definition!.Value, new JsonSerializerOptions { WriteIndented = true }))
+            var definition = json ? item.Origin == CatalogOrigin.Backend
+                ? await catalogClient.AgentDefinitionAsync(item.Id, ct, refresh: true)
+                : item.Definition ?? throw new InvalidDataException(DesktopResources.Get("AgentUnavailable")) : (JsonElement?)null;
+            var bytes = json ? Encoding.UTF8.GetBytes(JsonSerializer.Serialize(definition!.Value, new JsonSerializerOptions { WriteIndented = true }))
                 : item.Origin == CatalogOrigin.Local
                     ? DesktopSkillPackages.Export(await localSkillStore.ReadAsync(partition,
                         localSkills.FirstOrDefault(s => s.Id == item.Id) ?? throw new InvalidDataException(DesktopResources.Get("SkillUnavailableHint")), ct))
                     : await catalogClient.DownloadSkillAsync(item.Id, version, ct);
             ct.ThrowIfCancellationRequested();
+            if (closing || session.HistoryPartition != partition) return;
             await using var output = await destination.OpenStreamForWriteAsync(); output.SetLength(0); await output.WriteAsync(bytes, ct);
             Show(json ? DesktopResources.Get("AgentDownloaded") : DesktopResources.Get("SkillDownloaded"), InfoBarSeverity.Success);
         });

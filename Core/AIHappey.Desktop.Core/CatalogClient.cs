@@ -6,11 +6,23 @@ public sealed class DesktopCatalogClient(DesktopChatClient requests, HttpClient 
 {
     public const int MaxDownloadBytes = 64 * 1024 * 1024;
     private const int MaxCatalogBytes = 8 * 1024 * 1024;
+    private const int MaxAgentCacheBytes = 32 * 1024 * 1024;
+    private readonly object agentDetailsGate = new();
+    private readonly Dictionary<string, AgentDetailEntry> agentDetails = new(StringComparer.Ordinal);
+    private string agentDetailScope = "";
+    private long agentDetailGeneration;
+    private sealed class AgentDetailEntry
+    {
+        public required Lazy<Task<JsonElement>> Value { get; init; }
+        public DateTimeOffset Expires { get; } = DateTimeOffset.UtcNow.AddMinutes(5);
+        public int Bytes { get; set; }
+    }
 
     public async Task<IReadOnlyList<CatalogItem>> ListAsync(CatalogKind kind, CancellationToken ct)
     {
         if (kind == CatalogKind.Agent)
         {
+            lock (agentDetailsGate) { agentDetails.Clear(); agentDetailGeneration++; }
             using var doc = await ReadAsync(ServiceKind.Agents, "v1/models", ct);
             return Data(doc.RootElement).EnumerateArray().Select(CatalogProjection.Agent).OfType<CatalogItem>()
                 .DistinctBy(item => item.Key).OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ToArray();
@@ -20,6 +32,82 @@ public sealed class DesktopCatalogClient(DesktopChatClient requests, HttpClient 
 
     public Task<IReadOnlyList<CatalogVersion>> VersionsAsync(string skillId, CancellationToken ct) =>
         PagesAsync(CatalogRoutes.Skill(skillId) + "/versions", CatalogProjection.Version, item => item.Id, ct);
+
+    public async Task<JsonElement> AgentDefinitionAsync(string id, CancellationToken ct, bool refresh = false)
+    {
+        if (string.IsNullOrWhiteSpace(id)) throw new GatewayException(DesktopResources.Get("AgentUnavailable"));
+        var partition = requests.AgentCatalogScope;
+        var request = await requests.RequestAsync(ServiceKind.Agents, HttpMethod.Get, "v1/models/" + Uri.EscapeDataString(id), ct);
+        if (partition != requests.AgentCatalogScope) { request.Dispose(); throw new OperationCanceledException(ct); }
+        var endpointPath = request.RequestUri!.AbsolutePath;
+        var modelsStart = endpointPath.IndexOf("/v1/models/", StringComparison.Ordinal);
+        var scope = McpValidation.Hash(partition + "|" + request.RequestUri.GetLeftPart(UriPartial.Authority)
+            + "|" + (modelsStart < 0 ? endpointPath : endpointPath[..modelsStart]) + "|" + request.Headers);
+        AgentDetailEntry entry;
+        long generation;
+        lock (agentDetailsGate)
+        {
+            if (agentDetailScope != scope)
+            {
+                agentDetails.Clear(); agentDetailScope = scope; agentDetailGeneration++;
+            }
+            generation = agentDetailGeneration;
+            if (agentDetails.TryGetValue(id, out var cached) && cached.Expires > DateTimeOffset.UtcNow && (!refresh || cached.Bytes == 0))
+            { request.Dispose(); entry = cached; }
+            else
+            {
+                AgentDetailEntry? created = null;
+                created = new() { Value = new(() => FetchAgentDefinitionAsync(request, id, created!, generation)) };
+                entry = created; agentDetails[id] = entry;
+            }
+        }
+        var value = await entry.Value.Value.WaitAsync(ct);
+        ct.ThrowIfCancellationRequested();
+        if (partition != requests.AgentCatalogScope) throw new OperationCanceledException(ct);
+        lock (agentDetailsGate) if (generation != agentDetailGeneration) throw new OperationCanceledException(ct);
+        return value.Clone();
+    }
+
+    private async Task<JsonElement> FetchAgentDefinitionAsync(HttpRequestMessage request, string id, AgentDetailEntry entry, long generation)
+    {
+        using (request)
+        using (var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2)))
+        try
+        {
+            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            await GatewayErrors.CheckResponseAsync(response, timeout.Token);
+            var bytes = await ReadBoundedAsync(response.Content, DesktopAgent.MaxDocumentBytes, timeout.Token);
+            using var document = JsonDocument.Parse(bytes);
+            var root = document.RootElement;
+            if (!string.Equals(CatalogProjection.Text(root, "id"), id, StringComparison.OrdinalIgnoreCase)
+                || !root.TryGetProperty("agent", out var agent) || agent.ValueKind != JsonValueKind.Object
+                || CatalogProjection.Text(agent, "name") is null || !agent.TryGetProperty("instructions", out var instructions)
+                || instructions.ValueKind != JsonValueKind.String)
+                throw new GatewayException(DesktopResources.Get("InvalidCatalogDocument"));
+            lock (agentDetailsGate)
+            {
+                entry.Bytes = bytes.Length;
+                if (generation == agentDetailGeneration)
+                {
+                    if (bytes.Length > MaxAgentCacheBytes) agentDetails.Remove(id);
+                    var size = agentDetails.Values.Sum(item => (long)item.Bytes);
+                    foreach (var key in agentDetails.Keys.ToArray())
+                    {
+                        if (size <= MaxAgentCacheBytes && agentDetails.Count <= 32) break;
+                        if (key != id && agentDetails[key].Bytes > 0) { size -= agentDetails[key].Bytes; agentDetails.Remove(key); }
+                    }
+                }
+            }
+            return agent.Clone();
+        }
+        catch (Exception error)
+        {
+            lock (agentDetailsGate)
+                if (agentDetails.TryGetValue(id, out var current) && ReferenceEquals(current, entry)) agentDetails.Remove(id);
+            if (error is JsonException) throw new GatewayException(DesktopResources.Get("InvalidCatalogDocument"));
+            throw;
+        }
+    }
 
     private async Task<IReadOnlyList<T>> PagesAsync<T>(string path, Func<JsonElement, T?> project, Func<T, string> key, CancellationToken ct) where T : class
     {

@@ -31,6 +31,8 @@ public sealed class GatewayException(string message) : Exception(message);
 
 public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
 {
+    internal string AgentCatalogScope => session.HistoryPartition + "|" + JsonSerializer.Serialize(session.Settings.Agents);
+
     public async Task<IReadOnlyList<ChatTarget>> ListAsync(ServiceKind service, CancellationToken ct)
     {
         using var request = await RequestAsync(service, HttpMethod.Get, "v1/models", ct);

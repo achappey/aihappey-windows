@@ -77,8 +77,30 @@ public sealed class AgentWorkflowPreferences
 
 public static class DesktopAgentRequests
 {
+    public static async Task<JsonObject> BuildAsync(IEnumerable<string> selected, IReadOnlyList<ChatTarget> targets,
+        IReadOnlyList<DesktopAgent> localAgents, AgentWorkflowPreferences workflow,
+        Func<string, CancellationToken, Task<JsonElement>> definition, CancellationToken ct)
+    {
+        var keys = selected.ToArray();
+        var entries = keys.Select(key => targets.FirstOrDefault(target => target.Id == DesktopAgentTargets.Restore(key, targets))
+            ?? throw new InvalidOperationException(DesktopResources.Get("AgentUnavailable"))).ToArray();
+        if (workflow.Type == "magentic" && entries.Any(target => target.LocalAgentName is not null)
+            && entries.Any(target => target.RemoteAgentId is not null))
+        {
+            var hydrated = targets.ToArray();
+            foreach (var entry in entries.Where(target => target.RemoteAgentId is not null))
+            {
+                var value = await definition(entry.RemoteAgentId!, ct); ct.ThrowIfCancellationRequested();
+                var index = Array.FindIndex(hydrated, target => target.Id == entry.Id);
+                hydrated[index] = entry with { ModelMetadata = value };
+            }
+            targets = hydrated;
+        }
+        return Build(keys, targets, localAgents, workflow);
+    }
+
     public static JsonObject Build(IEnumerable<string> selected, IReadOnlyList<ChatTarget> targets,
-        IReadOnlyList<DesktopAgent> localAgents, AgentWorkflowPreferences workflow)
+        IReadOnlyList<DesktopAgent> localAgents, AgentWorkflowPreferences workflow, bool requireRemoteDefinitions = true)
     {
         var keys = selected.Distinct(StringComparer.Ordinal).ToArray();
         var entries = keys.Select(key => targets.FirstOrDefault(t => t.Id == DesktopAgentTargets.Restore(key, targets))
@@ -103,7 +125,10 @@ public static class DesktopAgentRequests
             else if (mixedMagentic)
             {
                 if (entry.ModelMetadata is not { ValueKind: JsonValueKind.Object } definition)
-                    throw new InvalidOperationException(DesktopResources.Get("WorkflowRemoteDefinitionRequired"));
+                {
+                    if (requireRemoteDefinitions) throw new InvalidOperationException(DesktopResources.Get("WorkflowRemoteDefinitionRequired"));
+                    continue;
+                }
                 agents.Add(JsonNode.Parse(definition.GetRawText()));
             }
             else models.Add(entry.RemoteAgentId ?? throw new InvalidOperationException(DesktopResources.Get("AgentUnavailable")));
