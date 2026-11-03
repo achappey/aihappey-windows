@@ -8,8 +8,6 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
-using Windows.System;
-using Windows.UI.Core;
 
 namespace AIHappey.Desktop.Core;
 
@@ -207,14 +205,7 @@ public sealed partial class ChatShell : UserControl
             if (suppress || busy || chats.SelectedItem is not Conversation selected) return;
             await OpenConversationAsync(selected);
         };
-        input.KeyDown += async (_, args) =>
-        {
-            if (args.Key != VirtualKey.Enter) return;
-            var shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
-            if (shift) return;
-            args.Handled = true;
-            if (!busy) await SendAsync();
-        };
+        ComposerKeyboard.Attach(input, () => !busy, () => SendAsync());
         scroll.ViewChanged += (_, _) => followBottom = scroll.ScrollableHeight - scroll.VerticalOffset < 80;
         scroll.SizeChanged += (_, _) => SizeTranscript();
         SizeChanged += (_, args) =>

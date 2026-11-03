@@ -9,8 +9,6 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
-using Windows.System;
-using Windows.UI.Core;
 
 namespace AIHappey.Desktop.Core;
 
@@ -54,11 +52,7 @@ public sealed partial class VideosPage : UserControl
         Settings.Click += async (_, _) => { if (editable && !submitting && SettingsRequested is not null) await SettingsRequested(); };
         OpenFolder.Click += async (_, _) => { if (editable && FolderRequested is not null) await FolderRequested(); };
         Prompt.TextChanged += (_, _) => UpdateActions();
-        Prompt.KeyDown += async (_, args) =>
-        {
-            if (args.Key != VirtualKey.Enter || Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down)) return;
-            args.Handled = true; if (Send.IsEnabled && SendRequested is not null) await SendRequested();
-        };
+        ComposerKeyboard.Attach(Prompt, () => Send.IsEnabled, () => SendRequested?.Invoke() ?? Task.CompletedTask);
         Prompt.Paste += async (_, args) =>
         {
             if (!editable || submitting) return;

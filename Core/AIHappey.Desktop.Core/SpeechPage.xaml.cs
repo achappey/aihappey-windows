@@ -4,8 +4,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.System;
-using Windows.UI.Core;
 
 namespace AIHappey.Desktop.Core;
 
@@ -36,7 +34,8 @@ public sealed partial class SpeechPage : UserControl
         ToolbarControls.Label(Prompt, DesktopResources.Get("SpeechPromptPlaceholder")); ToolbarControls.Label(Settings, DesktopResources.Get("SpeechSettings")); ToolbarControls.Label(Import, DesktopResources.Get("SpeechImport"));
         ToolbarControls.Label(Dictate, DesktopResources.Get("SpeechDictate")); ToolbarControls.Label(Send, DesktopResources.Get("SpeechGenerate"));
         ControlAppearance.Stock(Prompt); foreach (var control in new Control[] { Send, Stop, OpenFolder }) ControlAppearance.Stock(control); ToolbarControls.Subtle(Settings); ToolbarControls.Subtle(Import); ToolbarControls.Subtle(Dictate);
-        Prompt.TextChanged += (_, _) => UpdateSend(); Prompt.KeyDown += async (_, args) => { if (args.Key != VirtualKey.Enter || Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down)) return; args.Handled = true; if (Send.IsEnabled && SendRequested is not null) await SendRequested(); };
+        Prompt.TextChanged += (_, _) => UpdateSend();
+        ComposerKeyboard.Attach(Prompt, () => Send.IsEnabled, () => SendRequested?.Invoke() ?? Task.CompletedTask);
         Send.Click += async (_, _) => { if (SendRequested is not null) await SendRequested(); }; Import.Click += async (_, _) => { if (ImportRequested is not null) await ImportRequested(); };
         Settings.Click += async (_, _) => { if (SettingsRequested is not null) await SettingsRequested(); }; OpenFolder.Click += async (_, _) => { if (FolderRequested is not null) await FolderRequested(); };
         Dictate.Click += async (_, _) => { if (DictationRequested is not null) await DictationRequested(); }; Stop.Click += (_, _) => StopRequested?.Invoke();
