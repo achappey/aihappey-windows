@@ -22,6 +22,12 @@ node Tests/check-usage-parity.cjs
 
 Focused core suites do not run unrelated prerequisites. The full core run aggregates failures across suites while retaining strict, fail-fast assertions within each suite. The usage snapshot mode produces only its JSON document; the parity checker builds it before execution. Runner regression checks validate failed-build refusal, focused selection, aggregate failure accounting, snapshot isolation, manifest coverage, and rejection of incomplete or failed UI reports.
 
+### Composer keyboard checks
+
+The `composer-keyboard` suite in the [native UI runner](run-ui-tests.ps1) exercises chat (both authentication hosts), images, video, and speech in both themes using real Windows keyboard input. It checks Enter-to-send, native Shift+Enter insertion and selection replacement, existing multiline drafts, and unavailable sends. Run it in an interactive desktop session with the test window in the foreground and no modifier keys held; the suite refuses to inject keys if those conditions are not met. Avoid typing or switching windows during the run. A failed focus/injection check is not evidence that keyboard behavior passed.
+
+For manual IME coverage, compose text with a Japanese or Chinese input method in each prompt. Enter must confirm the active composition without submitting; a subsequent Enter sends. Also verify multiline text paste and chat attachment paste shortcuts remain native.
+
 ## Client/runtime dependency boundary
 
 The [dependency check](check-dependency-boundary.cjs) runs automatically with the standalone checks. It follows desktop project and solution references (including Vercel's project references), rejects missing or server-side projects, and guards against server-model/mapper imports in desktop source. References used only to publish or launch the bundled runtimes are deliberately allowed.

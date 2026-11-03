@@ -18,6 +18,7 @@ public partial class App
             ["chat-files"] = CheckChatFilesAsync,
             ["context-search"] = CheckContextSearchAsync,
             ["composer-progress"] = async theme => { await CheckToolLayoutAndSkillProgressAsync(theme); await CheckComposerMetadataAsync(theme); },
+            ["composer-keyboard"] = CheckComposerKeyboardAsync,
             ["transcript"] = theme => BothHosts(CheckTranscriptAsync, theme),
             ["shell"] = theme => BothHosts(CheckShellAsync, theme),
             ["sidebar"] = theme => BothHosts(CheckSidebarAsync, theme),
