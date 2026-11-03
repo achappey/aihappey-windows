@@ -25,7 +25,8 @@ public sealed partial class ChatShell
         // Replace the history-list copy with the live chat so the latest text/count/timestamp is searchable.
         var snapshot = conversations.Where(conversation => conversation.Id != current.Id).ToList();
         if (current.Messages.Count > 0 || conversations.Any(conversation => conversation.Id == current.Id)) snapshot.Add(current);
-        var dialog = new ConversationSearchDialog(snapshot) { XamlRoot = XamlRoot };
+        var dialog = new ConversationSearchDialog(snapshot, session.UsesRemoteConversations
+            ? (query, ct) => history.SearchAsync(partition, query, snapshot, ct) : null) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog); searchDialog = dialog; historyDialogOpen = true;
         try { await dialog.ShowAsync(); }
         finally
@@ -40,15 +41,23 @@ public sealed partial class ChatShell
     private async Task OpenConversationAsync(Conversation selected)
     {
         if (busy || closing) return;
-        var same = current.Id == selected.Id;
-        if (!same) { current = selected; input.Text = ""; ResetContext(); }
-        ShowPage(DesktopPage.Chat); UpdateMode(current.Service); TargetId = current.Target;
-        RestoreConversationSelection();
-        suppress = true;
-        try { chats.SelectedItem = conversations.FirstOrDefault(conversation => conversation.Id == current.Id); }
-        finally { suppress = false; }
-        RenderTranscript();
-        await RunAsync(DiscoverAsync);
+        var partition = session.HistoryPartition;
+        await RunAsync(async ct =>
+        {
+            var same = current.Id == selected.Id;
+            var document = !same && selected.IsSummary ? await history.GetAsync(partition, selected.Id, ct) : selected;
+            if (document is null) throw new InvalidOperationException(DesktopResources.Get("ConversationNotFound"));
+            ct.ThrowIfCancellationRequested();
+            if (closing || session.HistoryPartition != partition) return;
+            if (!same) { current = document; input.Text = ""; ResetContext(); }
+            ShowPage(DesktopPage.Chat); UpdateMode(current.Service); TargetId = current.Target;
+            RestoreConversationSelection();
+            suppress = true;
+            try { chats.SelectedItem = conversations.FirstOrDefault(conversation => conversation.Id == current.Id); }
+            finally { suppress = false; }
+            RenderTranscript();
+            await DiscoverAsync(ct);
+        });
         if (!closing) input.Focus(FocusState.Programmatic);
     }
 }

@@ -17,7 +17,7 @@ public sealed partial class ChatShell : UserControl
     private readonly DesktopSession session;
     private readonly HttpClient http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = Timeout.InfiniteTimeSpan };
     private readonly DesktopChatClient client;
-    private readonly HistoryStore history;
+    private readonly DesktopConversationStorage history;
     private readonly SplitView split = new() { DisplayMode = SplitViewDisplayMode.CompactInline, IsPaneOpen = true, OpenPaneLength = 280, CompactPaneLength = 48 };
     private readonly Grid workspace = new();
     private readonly StackPanel transcript = new() { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 24, 0, 24) };
@@ -72,7 +72,7 @@ public sealed partial class ChatShell : UserControl
         this.session = session;
         client = new(session, http);
         appAgentClient = new DesktopAppAgentClient(session, client, http);
-        history = new(Path.Combine(session.DataDirectory, "conversations"));
+        history = new(session, http, new HistoryStore(Path.Combine(session.DataDirectory, "conversations")));
         conversationPinsStore = new(Path.Combine(session.DataDirectory, "conversation-pins"));
         catalogClient = new(client, http);
         catalogFavorites = new(Path.Combine(session.DataDirectory, "catalog-favorites"));
@@ -265,9 +265,15 @@ public sealed partial class ChatShell : UserControl
         var sidebarHeader = new Grid { ColumnSpacing = 8, Margin = new Thickness(0, 0, 0, 12) };
         sidebarHeader.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         sidebarHeader.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        sidebarHeader.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        sidebarHeader.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        sidebarHeader.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var appTitle = new TextBlock { Name = "AppTitle", Text = DesktopBranding.AppName, FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
         sidebarHeader.Children.Add(appTitle);
-        Grid.SetColumn(toggle, 1); sidebarHeader.Children.Add(toggle);
+        Grid.SetColumn(conversationStorageButton, 1); sidebarHeader.Children.Add(conversationStorageButton);
+        Grid.SetColumn(toggle, 2); sidebarHeader.Children.Add(toggle);
+        ToolbarControls.Subtle(conversationStorageButton);
+        conversationStorageButton.Click += async (_, _) => await SwitchConversationStorageAsync();
         nav.Children.Add(sidebarHeader);
         var newChatContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
         newChatContent.Children.Add(DesktopIcons.Create(Icon.Add));
@@ -288,6 +294,7 @@ public sealed partial class ChatShell : UserControl
             pageNavigation.Spacing = open ? 2 : 8;
             appTitle.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
             chats.Visibility = expandedPageNavigation.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+            UpdateConversationStorageButton();
             UpdateNavigationLayout();
         }
         split.RegisterPropertyChangedCallback(SplitView.IsPaneOpenProperty, (_, _) => UpdateSidebar());
@@ -399,6 +406,9 @@ public sealed partial class ChatShell : UserControl
         try
         {
             await StopRealtimeAsync();
+            history.ClearRemoteCaches();
+            conversations = []; conversationPins.Clear(); conversationPinsPartition = null; FilterHistory();
+            UpdateConversationStorageButton();
             var ready = !session.Host.RequiresSignIn;
             if (ready && connectServices) await StartVideoJobsAsync(ct);
             UpdateAccountMenu();
@@ -742,7 +752,12 @@ public sealed partial class ChatShell : UserControl
             var dialog = new ContentDialog { XamlRoot = XamlRoot, Title = DesktopResources.Get("RenameChat"), Content = title, PrimaryButtonText = DesktopResources.Get("Save"), CloseButtonText = DesktopResources.Get("Cancel") };
             SystemAppearance.PrepareDialog(dialog);
             if (await dialog.ShowAsync() != ContentDialogResult.Primary || string.IsNullOrWhiteSpace(title.Text)) return;
-            await RunAsync(async ct => { chat.Title = title.Text.Trim(); await history.SaveAsync(session.HistoryPartition, chat, ct); await LoadHistoryAsync(ct); });
+            await RunAsync(async ct =>
+            {
+                var document = chat.IsSummary ? await history.GetAsync(session.HistoryPartition, chat.Id, ct) : chat;
+                if (document is null) throw new InvalidOperationException(DesktopResources.Get("ConversationNotFound"));
+                document.Title = title.Text.Trim(); await history.SaveAsync(session.HistoryPartition, document, ct); await LoadHistoryAsync(ct);
+            });
         }
         finally { historyDialogOpen = false; }
     }
@@ -758,7 +773,7 @@ public sealed partial class ChatShell : UserControl
             if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
             await RunAsync(async ct =>
             {
-                history.Delete(session.HistoryPartition, selected.Id);
+                await history.DeleteAsync(session.HistoryPartition, selected.Id, ct);
                 await RemoveConversationPinAsync(session.HistoryPartition, selected.Id, ct);
                 if (current.Id == selected.Id)
                 {
@@ -775,13 +790,14 @@ public sealed partial class ChatShell : UserControl
 
     private async Task EditSettingsAsync()
     {
-        if (busy || closing || pendingProviderSettingsWrites > 0 || catalogDialog is not null || historyDialogOpen) return;
+        if (busy || closing || realtime is not null || pendingProviderSettingsWrites > 0 || catalogDialog is not null || historyDialogOpen) return;
         DiscardDictation();
         historyDialogOpen = true;
         try { await LoadLocalAgentsAsync(downloadLifetime.Token); }
         catch (Exception) { historyDialogOpen = false; Show(DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error); return; }
         var dialog = new SettingsDialog(session.Settings, session.Host.AllowLocal, session.ActiveLanguage, aiModelTargets,
-            ct => client.ListAsync(ServiceKind.Ai, ct), localAgents) { XamlRoot = XamlRoot };
+            ct => client.ListAsync(ServiceKind.Ai, ct), localAgents, session.Host is IDesktopConversationHost,
+            (session.Host as IDesktopConversationHost)?.ConversationsEndpoint is not null) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog);
         ContentDialogResult result;
         try { result = await dialog.ShowAsync(); }
@@ -800,8 +816,7 @@ public sealed partial class ChatShell : UserControl
                 await runtimeWarmup.WaitAsync(ct);
                 await StopVideoJobsAsync();
             }
-            await SettingsStore.SaveAsync(session.DataDirectory, next);
-            session.Settings = next;
+            await CommitConversationSettingsAsync(next, ct);
             ReconcileRememberedSelections();
             RenderTranscript();
             RefreshWelcome();
@@ -845,6 +860,7 @@ public sealed partial class ChatShell : UserControl
 
     private void SetBusy(bool value, bool inference)
     {
+        UpdateConversationStorageButton();
         if (value && (dictation is not null || dictationChanging)) DiscardDictation();
         ResetFileDrop();
         input.IsReadOnly = value && inference;

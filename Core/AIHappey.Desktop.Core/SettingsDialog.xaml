@@ -36,6 +36,10 @@
                     <NavigationViewItem.Icon><ic:FluentIcon Icon="PlugConnected" /></NavigationViewItem.Icon>
                     <TextBlock x:Uid="SettingsEndpoints" />
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="ConnectorsTab" Tag="connectors" x:Uid="SettingsConnectorsTab" Visibility="Collapsed">
+                    <NavigationViewItem.Icon><ic:FluentIcon Icon="PlugConnected" /></NavigationViewItem.Icon>
+                    <TextBlock x:Uid="SettingsConnectors" />
+                </NavigationViewItem>
                 <NavigationViewItem x:Name="AttachmentsTab" Tag="attachments" x:Uid="SettingsAttachmentsTab">
                     <NavigationViewItem.Icon><ic:FluentIcon Icon="Attach" /></NavigationViewItem.Icon>
                     <TextBlock x:Uid="SettingsAttachments" />
@@ -80,6 +84,10 @@
                     <TextBox x:Name="AgentsUrl" x:Uid="SettingsAgentsUrl" PlaceholderText="https://gateway.example.com/" />
                     <TextBlock x:Uid="SettingsConnectionsHint" TextWrapping="Wrap" />
                     <TextBlock x:Name="Validation" TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive" />
+                </StackPanel>
+                <StackPanel x:Name="ConnectorsPage" Spacing="16" Visibility="Collapsed">
+                    <ToggleSwitch x:Name="CloudConversations" x:Uid="SettingsCloudConversations" />
+                    <TextBlock x:Name="CloudUnavailable" x:Uid="SettingsCloudUnavailable" TextWrapping="Wrap" Visibility="Collapsed" />
                 </StackPanel>
                 <StackPanel x:Name="AttachmentsPage" Spacing="16" Visibility="Collapsed">
                     <ToggleSwitch x:Name="DocumentTextExtraction" x:Uid="SettingsExtraction" />

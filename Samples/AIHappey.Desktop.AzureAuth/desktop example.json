@@ -3,6 +3,8 @@
   "clientId": "",
   "aiUrl": "https://ai.aihappey.net/",
   "agentsUrl": "https://agents.aihappey.net/",
+  "conversationsUrl": "",
+  "conversationsScopes": [],
   "aiScopes": [],
   "agentsScopes": []
 }

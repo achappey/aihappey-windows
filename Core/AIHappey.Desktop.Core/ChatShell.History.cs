@@ -66,6 +66,19 @@ public sealed partial class ChatShell
         {
             try
             {
+                if (session.UsesRemoteConversations)
+                {
+                    var document = await history.GetAsync(partition, selected.Id, ct)
+                        ?? throw new InvalidOperationException(DesktopResources.Get("ConversationNotFound"));
+                    var picker = new Windows.Storage.Pickers.FileSavePicker { SuggestedFileName = "conversation-" + Guid.NewGuid().ToString("N") };
+                    picker.FileTypeChoices.Add("JSON", new[] { ".json" });
+                    WinRT.Interop.InitializeWithWindow.Initialize(picker,
+                        Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId));
+                    var destination = await picker.PickSaveFileAsync().AsTask(ct);
+                    if (destination is not null && !closing && partition == session.HistoryPartition)
+                        await FileIO.WriteTextAsync(destination, PortableConversations.Write(document)).AsTask(ct);
+                    return;
+                }
                 var file = await StorageFile.GetFileFromPathAsync(history.DocumentPath(partition, selected.Id)).AsTask(ct);
                 var folder = await file.GetParentAsync().AsTask(ct);
                 ct.ThrowIfCancellationRequested();

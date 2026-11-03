@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="SettingsConnectorsTab.AutomationProperties.Name" xml:space="preserve"><value>Connectors</value></data>
+  <data name="SettingsConnectors.Text" xml:space="preserve"><value>Connectors</value></data>
+  <data name="SettingsCloudConversations.Header" xml:space="preserve"><value>Cloud</value></data>
+  <data name="SettingsCloudConversations.AutomationProperties.Name" xml:space="preserve"><value>Cloud conversation storage</value></data>
+  <data name="SettingsCloudUnavailable.Text" xml:space="preserve"><value>Cloud conversations require a configured conversations URL and scopes.</value></data>
+  <data name="ConversationCloudUnavailable" xml:space="preserve"><value>Cloud conversation storage is not configured.</value></data>
+  <data name="ConversationCloudSignInRequired" xml:space="preserve"><value>Switch to local storage and back to Cloud to authorize conversation storage.</value></data>
+  <data name="ConversationStorageLocal" xml:space="preserve"><value>Storage: Local. Switch to Cloud.</value></data>
+  <data name="ConversationStorageCloud" xml:space="preserve"><value>Storage: Cloud. Switch to local.</value></data>
+  <data name="ConversationNotFound" xml:space="preserve"><value>The conversation no longer exists.</value></data>
   <data name="TranscriptionMistralStreamingDelay" xml:space="preserve"><value>Streaming delay (ms): 80–1200 or 2400; default 480</value></data>
   <data name="Chart" xml:space="preserve"><value>Chart</value></data>
   <data name="Code" xml:space="preserve"><value>Code</value></data>

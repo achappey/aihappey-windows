@@ -23,7 +23,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
 
     public SettingsDialog(DesktopSettings settings, bool allowLocal, string activeLanguage,
         IReadOnlyList<ChatTarget>? aiModels = null, Func<CancellationToken, Task<IReadOnlyList<ChatTarget>>>? loadAiModels = null,
-        IReadOnlyList<DesktopAgent>? appAgents = null)
+        IReadOnlyList<DesktopAgent>? appAgents = null, bool showCloudConnector = false, bool cloudAvailable = false)
     {
         this.allowLocal = allowLocal;
         originalSettings = settings.Clone();
@@ -35,6 +35,10 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         videoPreferences = settings.Videos.Clone();
         transcriptionPreferences = settings.Transcriptions.Clone();
         InitializeComponent();
+        ConnectorsTab.Visibility = showCloudConnector ? Visibility.Visible : Visibility.Collapsed;
+        CloudConversations.IsOn = settings.ConversationStorage.CloudEnabled;
+        CloudConversations.IsEnabled = cloudAvailable || CloudConversations.IsOn;
+        CloudUnavailable.Visibility = cloudAvailable ? Visibility.Collapsed : Visibility.Visible;
         ChatPage.Children.Remove(ToolOutputContentPanel);
         NativeSettingsSurface.Expander(ChatPage, "ToolOutputContentCard", DesktopResources.Get("SettingsToolOutputContent"), null, out var outputContent);
         outputContent.Children.Add(ToolOutputContentPanel);
@@ -99,13 +103,14 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
     private void TabChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         // Selection can fire while InitializeComponent is still creating the page controls.
-        if (GeneralPage is null || ChatPage is null || EndpointsPage is null || AttachmentsPage is null || ModelContextPage is null || ArtificialIntelligencePage is null || AppAgentsPage is null) return;
+        if (GeneralPage is null || ChatPage is null || EndpointsPage is null || AttachmentsPage is null || ModelContextPage is null || ArtificialIntelligencePage is null || AppAgentsPage is null || ConnectorsPage is null) return;
         GeneralPage.Visibility = ReferenceEquals(Tabs.SelectedItem, GeneralTab) ? Visibility.Visible : Visibility.Collapsed;
         ChatPage.Visibility = ReferenceEquals(Tabs.SelectedItem, ChatTab) ? Visibility.Visible : Visibility.Collapsed;
         ArtificialIntelligencePage.Visibility = ReferenceEquals(Tabs.SelectedItem, ArtificialIntelligenceTab) ? Visibility.Visible : Visibility.Collapsed;
         AppAgentsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, AppAgentsTab) ? Visibility.Visible : Visibility.Collapsed;
         EndpointsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, EndpointsTab) ? Visibility.Visible : Visibility.Collapsed;
         AttachmentsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, AttachmentsTab) ? Visibility.Visible : Visibility.Collapsed;
+        ConnectorsPage.Visibility = ReferenceEquals(Tabs.SelectedItem, ConnectorsTab) ? Visibility.Visible : Visibility.Collapsed;
         ModelContextPage.Visibility = ReferenceEquals(Tabs.SelectedItem, ModelContextTab) ? Visibility.Visible : Visibility.Collapsed;
         if (Layout.Width < 600) Tabs.IsPaneOpen = false;
         PageScroll.ChangeView(null, 0, null, true);
@@ -149,6 +154,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
                 EnableSkills = EnableMcpSkills.IsOn
             },
             Chat = chatPreferences.Clone(),
+            ConversationStorage = originalSettings.ConversationStorage.Clone(),
             Images = imagePreferences.Clone(),
             Videos = videoPreferences.Clone(),
             Transcriptions = transcriptionPreferences.Clone(),
@@ -159,6 +165,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
             SideInferenceAgentNames = appAgentPreferences.Clone(),
             AllowedToolList = allowedTools.ToList()
         };
+        next.ConversationStorage.CloudEnabled = CloudConversations.IsOn;
         try { next.Validate(allowLocal); }
         catch (InvalidOperationException error)
         {

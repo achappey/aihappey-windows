@@ -174,6 +174,7 @@ public sealed class ConversationConverter : JsonConverter<Conversation>
 
     public override void Write(Utf8JsonWriter writer, Conversation value, JsonSerializerOptions options)
     {
+        if (value.IsSummary) throw new InvalidOperationException("A conversation summary cannot be saved as a document.");
         var metadata = value.Metadata.ToDictionary(p => p.Key, p => p.Value);
         metadata["name"] = value.Title;
         var desktop = metadata.TryGetValue(PortableConversations.DesktopMetadata, out var hints) ? PortableConversations.Object(hints) : new();

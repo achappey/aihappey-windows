@@ -8,7 +8,7 @@ using Microsoft.UI.Xaml.Controls;
 namespace AIHappey_Desktop_AzureAuth;
 
 /// <summary>Public-client OAuth and encrypted token cache live in this host, never in Core.</summary>
-public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDesktopHost
+public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDesktopHost, IDesktopConversationHost
 {
     private readonly string cachePath = Path.Combine(DesktopPaths.ProfileDirectory("AzureAuth"), "tokens.bin");
     private static readonly byte[] Entropy = "AIHappey.Desktop.AzureAuth.v1"u8.ToArray();
@@ -22,6 +22,7 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
     public void ApplySettingsPolicy(DesktopSettings settings) => config.ApplySettingsPolicy(settings);
     public string AccountLabel => account?.Username ?? DesktopResources.Get("SignIn");
     public string HistoryIdentity => account?.HomeAccountId.Identifier ?? "signed-out";
+    public Uri? ConversationsEndpoint => config.ConversationsEndpoint;
     public DesktopUserContext? UserContext => account is null ? null : userContext
         ?? new(account.Username, Id: account.HomeAccountId.ObjectId, TenantId: account.HomeAccountId.TenantId);
 
@@ -99,6 +100,32 @@ public sealed class EntraAuthentication(EnterpriseConfiguration config) : IDeskt
             requiresSignIn = true;
             throw new InvalidOperationException(DesktopResources.Get("InteractiveSignInRequired"));
         }
+        catch (MsalException) { throw new InvalidOperationException(DesktopResources.Get("TokenAcquisitionFailed")); }
+    }
+
+    public async Task AuthenticateConversationsAsync(HttpRequestMessage request, bool interactive, CancellationToken cancellationToken)
+    {
+        await InitializeAsync(cancellationToken);
+        config.ValidateConversationsDestination(request.RequestUri);
+        var activeAccount = account;
+        if (activeAccount is null || requiresSignIn) throw new InvalidOperationException(DesktopResources.Get("EnterpriseSignInRequired"));
+        try
+        {
+            AuthenticationResult result;
+            try { result = await app!.AcquireTokenSilent(config.ConversationsScopes, activeAccount).ExecuteAsync(cancellationToken); }
+            catch (MsalUiRequiredException)
+            {
+                if (!interactive) throw new InvalidOperationException(DesktopResources.Get("ConversationCloudSignInRequired"));
+                result = await app!.AcquireTokenInteractive(config.ConversationsScopes).WithAccount(activeAccount)
+                    .WithUseEmbeddedWebView(false).ExecuteAsync(cancellationToken);
+            }
+            if (result.Account.HomeAccountId.Identifier != activeAccount.HomeAccountId.Identifier
+                || account?.HomeAccountId.Identifier != activeAccount.HomeAccountId.Identifier)
+                throw new InvalidOperationException(DesktopResources.Get("SameEnterpriseAccount"));
+            cancellationToken.ThrowIfCancellationRequested();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+        }
+        catch (MsalClientException e) when (e.ErrorCode == "authentication_canceled") { throw new OperationCanceledException(cancellationToken); }
         catch (MsalException) { throw new InvalidOperationException(DesktopResources.Get("TokenAcquisitionFailed")); }
     }
 

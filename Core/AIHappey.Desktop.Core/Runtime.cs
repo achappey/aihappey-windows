@@ -16,6 +16,8 @@ public sealed class DesktopSettings
     public bool ConvertAttachmentsToText { get; set; } = true;
     public string? Language { get; set; }
     public ChatPreferences Chat { get; set; } = new();
+    private ConversationStoragePreferences conversationStorage = new();
+    public ConversationStoragePreferences ConversationStorage { get => conversationStorage; set => conversationStorage = value ?? new(); }
     private AgentWorkflowPreferences agentWorkflow = new();
     public AgentWorkflowPreferences AgentWorkflow { get => agentWorkflow; set => agentWorkflow = value ?? new(); }
     private NavigationPreferences navigation = new();
@@ -55,6 +57,7 @@ public sealed class DesktopSettings
         Ai = new() { Location = Ai.Location, RemoteUrl = Ai.RemoteUrl },
         Agents = new() { Location = Agents.Location, RemoteUrl = Agents.RemoteUrl },
         Language = Language, ConvertAttachmentsToText = ConvertAttachmentsToText,
+        ConversationStorage = ConversationStorage.Clone(),
         Chat = Chat.Clone(), Images = Images.Clone(), Videos = Videos.Clone(), Transcriptions = Transcriptions.Clone(), Speech = Speech.Clone(), Realtime = Realtime.Clone(), AiModels = AiModels.Clone(), ModelContext = ModelContext.Clone(),
         SideInferenceAgentNames = SideInferenceAgentNames.Clone(),
         AgentWorkflow = AgentWorkflow.Clone(),
@@ -176,7 +179,12 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
             { Mcp = mcp ?? Mcp?.Capture() ?? McpTurnSnapshot.Empty });
     }
     public string DataDirectory => DesktopPaths.ProfileDirectory(Host.ProfileId);
-    public string HistoryPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity,
+    public bool UsesRemoteConversations => Settings.ConversationStorage.CloudEnabled && Settings.ConversationStorage.Selected == "remote"
+        && Host is IDesktopConversationHost { ConversationsEndpoint: not null };
+    public string RemoteHistoryPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity, "remote-conversations",
+        (Host as IDesktopConversationHost)?.ConversationsEndpoint?.AbsoluteUri.TrimEnd('/') ?? "unconfigured");
+    public string HistoryPartition => UsesRemoteConversations ? RemoteHistoryPartition : LocalHistoryPartition;
+    public string LocalHistoryPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity,
         Settings.Ai.Location.ToString(), Settings.Ai.Location == RuntimeLocation.Remote ? Settings.Ai.RemoteUrl.TrimEnd('/') : "managed-ai",
         Settings.Agents.Location.ToString(), Settings.Agents.Location == RuntimeLocation.Remote ? Settings.Agents.RemoteUrl.TrimEnd('/') : "managed-agents");
     public async ValueTask DisposeAsync() { if (Mcp is not null) await Mcp.DisposeAsync(); await Runtime.DisposeAsync(); }

@@ -18,6 +18,9 @@ public sealed class Conversation
     public Dictionary<string, object> Metadata { get; set; } = [];
     public Dictionary<string, JsonElement> Extra { get; set; } = [];
     public List<ConversationMessage> Messages { get; set; } = [];
+    // Sidebar records are deliberately not portable documents and must be loaded before writing.
+    public bool IsSummary { get; set; }
+    public int MessageCount { get; set; }
     public override string ToString() => Title;
 }
 

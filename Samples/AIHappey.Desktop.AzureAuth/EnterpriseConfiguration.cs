@@ -11,6 +11,20 @@ public sealed class EnterpriseConfiguration
     public string AgentsUrl { get; set; } = "";
     public string[] AiScopes { get; set; } = [];
     public string[] AgentsScopes { get; set; } = [];
+    public string ConversationsUrl { get; set; } = "";
+    public string[] ConversationsScopes { get; set; } = [];
+    public Uri? ConversationsEndpoint => string.IsNullOrWhiteSpace(ConversationsUrl) || ConversationsScopes.Length == 0
+        ? null : DesktopSettings.RemoteUri(ConversationsUrl);
+
+    public void ValidateConversationsDestination(Uri? destination)
+    {
+        var allowed = ConversationsEndpoint;
+        // The collection itself has no trailing slash; child routes must stay below its path boundary.
+        if (allowed is null || destination is null || !string.IsNullOrEmpty(destination.UserInfo)
+            || !string.IsNullOrEmpty(destination.Fragment)
+            || !(allowed.IsBaseOf(destination) || destination.GetLeftPart(UriPartial.Path) == allowed.AbsoluteUri.TrimEnd('/')))
+            throw new InvalidOperationException(DesktopResources.Get("EnterpriseDestinationRejected"));
+    }
     public string? ChatbotInstructions { get; set; }
     public Dictionary<string, string[]>? DefaultProvidersByType { get; set; }
 

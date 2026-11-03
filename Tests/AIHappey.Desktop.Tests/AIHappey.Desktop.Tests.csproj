@@ -22,6 +22,9 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/MistralChatConfig.cs" Link="Core/MistralChatConfig.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ChatMessagePresentation.cs" Link="Core/ChatMessagePresentation.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Runtime.cs" Link="Core/Runtime.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ConversationStoragePreferences.cs" Link="Core/ConversationStoragePreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RemoteConversationStore.cs" Link="Core/RemoteConversationStore.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/DesktopConversationStorage.cs" Link="Core/DesktopConversationStorage.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimePreferences.cs" Link="Core/RealtimePreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeSession.cs" Link="Core/RealtimeSession.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTokenClient.cs" Link="Core/RealtimeTokenClient.cs" />

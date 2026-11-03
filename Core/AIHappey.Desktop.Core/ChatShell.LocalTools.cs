@@ -53,10 +53,11 @@ public sealed partial class ChatShell
         RegisterAuthoringPlugins(snapshot, preferences, partition);
         if (preferences.PluginEnabled(DesktopLocalTools.Conversations))
         {
-            var tools = new LocalConversationTools(history, partition, documentExtractor,
+            var localPartition = session.LocalHistoryPartition;
+            var tools = new LocalConversationTools(history.Local, localPartition, documentExtractor,
                 () => !closing && session.HistoryPartition == partition,
                 async (_, ct) => await LoadHistoryAsync(ct));
-            snapshot.ConversationTools = tools;
+            if (!session.UsesRemoteConversations) snapshot.ConversationTools = tools;
             DesktopLocalTools.Register(snapshot, DesktopLocalTools.Conversations, tools.CallAsync);
         }
         if (preferences.PluginEnabled(DesktopLocalTools.ArtificialIntelligence))
@@ -166,7 +167,8 @@ public sealed partial class ChatShell
     private Task SaveTurnHistoryAsync(string partition, Conversation conversation, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        return activeConversationTools is { } tools ? tools.SaveAsync(conversation, ct) : history.SaveAsync(partition, conversation, ct);
+        return partition == session.LocalHistoryPartition && activeConversationTools is { } tools
+            ? tools.SaveAsync(conversation, ct) : history.SaveAsync(partition, conversation, ct);
     }
     private bool NeedsSkillCatalog(ChatPreferences preferences) => preferences.PluginEnabled(DesktopLocalTools.SkillSearch)
         || preferences.EnabledSkillIds.Any(id => !id.StartsWith("mcp:", StringComparison.Ordinal));

@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="SettingsConnectorsTab.AutomationProperties.Name" xml:space="preserve"><value>Connectoren</value></data>
+  <data name="SettingsConnectors.Text" xml:space="preserve"><value>Connectoren</value></data>
+  <data name="SettingsCloudConversations.Header" xml:space="preserve"><value>Cloud</value></data>
+  <data name="SettingsCloudConversations.AutomationProperties.Name" xml:space="preserve"><value>Gesprekken opslaan in de cloud</value></data>
+  <data name="SettingsCloudUnavailable.Text" xml:space="preserve"><value>Voor cloudgesprekken moeten een gesprekken-URL en scopes zijn ingesteld.</value></data>
+  <data name="ConversationCloudUnavailable" xml:space="preserve"><value>Cloudopslag voor gesprekken is niet ingesteld.</value></data>
+  <data name="ConversationCloudSignInRequired" xml:space="preserve"><value>Wissel naar lokale opslag en terug naar Cloud om toestemming te geven voor gespreksopslag.</value></data>
+  <data name="ConversationStorageLocal" xml:space="preserve"><value>Opslag: Lokaal. Wissel naar Cloud.</value></data>
+  <data name="ConversationStorageCloud" xml:space="preserve"><value>Opslag: Cloud. Wissel naar lokaal.</value></data>
+  <data name="ConversationNotFound" xml:space="preserve"><value>Het gesprek bestaat niet meer.</value></data>
   <data name="TranscriptionMistralStreamingDelay" xml:space="preserve"><value>Streamingvertraging (ms): 80–1200 of 2400; standaard 480</value></data>
   <data name="Chart" xml:space="preserve"><value>Grafiek</value></data>
   <data name="Code" xml:space="preserve"><value>Code</value></data>

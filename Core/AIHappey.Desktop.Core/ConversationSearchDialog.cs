@@ -8,6 +8,7 @@ namespace AIHappey.Desktop.Core;
 internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialog
 {
     private readonly IReadOnlyList<Conversation> conversations;
+    private readonly Func<string, CancellationToken, Task<IReadOnlyList<ConversationSearchHit>>>? search;
     private readonly Grid layout = new() { RowSpacing = 12 };
     private readonly TextBox query = new() { Name = "ConversationSearchQuery", PlaceholderText = DesktopResources.Get("SearchConversationsPlaceholder"), CornerRadius = new CornerRadius(8) };
     private readonly StackPanel results = new() { Name = "ConversationSearchResults", Spacing = 8 };
@@ -17,9 +18,11 @@ internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialo
     private bool closed;
     public Conversation? SelectedConversation { get; private set; }
 
-    public ConversationSearchDialog(IReadOnlyList<Conversation> conversations)
+    public ConversationSearchDialog(IReadOnlyList<Conversation> conversations,
+        Func<string, CancellationToken, Task<IReadOnlyList<ConversationSearchHit>>>? search = null)
     {
         this.conversations = conversations;
+        this.search = search;
         Name = "ConversationSearchDialog"; Title = DesktopResources.Get("SearchChats"); CloseButtonText = DesktopResources.Get("Close");
         DefaultButton = ContentDialogButton.None;
         HorizontalAlignment = HorizontalAlignment.Center; VerticalAlignment = VerticalAlignment.Center;
@@ -56,10 +59,11 @@ internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialo
         try
         {
             if (text.Length != 0) await Task.Delay(200, cancellation.Token);
-            var hits = ConversationSearch.Find(conversations, text, cancellation.Token);
+            var hits = search is null ? ConversationSearch.Find(conversations, text, cancellation.Token) : await search(text, cancellation.Token);
             if (!closed && pending == cancellation) { Render(hits, text); viewer.ChangeView(null, 0, null, true); }
         }
         catch (OperationCanceledException) { /* Replaced query/closed modal never renders stale results. */ }
+        catch (Exception) { if (!closed && pending == cancellation) status.Text = DesktopResources.Get("OperationFailed"); }
         finally { if (pending == cancellation) pending = null; }
     }
 
@@ -73,7 +77,8 @@ internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialo
             var conversation = hit.Conversation;
             var content = new StackPanel { Spacing = 8 };
             content.Children.Add(new TextBlock { Text = conversation.Title, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
-            var summary = new TextBlock { Text = DesktopResources.Format(conversation.Messages.Count == 1 ? "MessageSummaryOne" : "MessageSummary", conversation.Messages.Count, conversation.Updated.ToLocalTime()), TextWrapping = TextWrapping.Wrap };
+            var count = conversation.IsSummary ? conversation.MessageCount : conversation.Messages.Count;
+            var summary = new TextBlock { Text = DesktopResources.Format(count == 1 ? "MessageSummaryOne" : "MessageSummary", count, conversation.Updated.ToLocalTime()), TextWrapping = TextWrapping.Wrap };
             NativeCardSurface.Secondary(summary, true); content.Children.Add(summary);
             if (hit.Snippet is not null) content.Children.Add(new TextBlock { Text = hit.Snippet, TextWrapping = TextWrapping.Wrap, MaxLines = 3, TextTrimming = TextTrimming.CharacterEllipsis });
             var open = new Button { Name = "OpenSearchConversation", Tag = conversation.Id, Content = DesktopIcons.Create(Icon.Chat, 18), Width = 36, Height = 36, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };

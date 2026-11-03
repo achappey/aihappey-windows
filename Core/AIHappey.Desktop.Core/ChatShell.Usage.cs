@@ -15,7 +15,7 @@ public sealed partial class ChatShell
             // no history writes, and no cached snapshot crossing an account/endpoint boundary.
             var snapshot = await Task.Run(async () =>
             {
-                var saved = await history.ListAsync(partition, ct);
+                var saved = await history.LoadAllAsync(partition, ct);
                 var providers = ProviderCatalog.All.ToDictionary(p => p.Key, p => p.Value.Name, StringComparer.Ordinal);
                 return UsageAnalytics.Build(saved, providers, ct: ct);
             }, ct);
