@@ -1,0 +1,221 @@
+name: desktop-latest
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-latest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-pack:
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: aihappey-windows
+
+    steps:
+      - name: Checkout Desktop
+        uses: actions/checkout@v4
+        with:
+          path: aihappey-windows
+
+      - name: Checkout AI Gateway
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-ai
+          path: aihappey-ai
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Checkout Agents
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-agents
+          path: aihappey-agents
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Checkout Responses
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-responses
+          path: aihappey-responses
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Checkout Vercel
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-vercel
+          path: aihappey-vercel
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Checkout OpenAI
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-openai
+          path: aihappey-openai
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Checkout Messages
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-messages
+          path: aihappey-messages
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Checkout Interactions
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-interactions
+          path: aihappey-interactions
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Checkout ChatCompletions
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-chatcompletions
+          path: aihappey-chatcompletions
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Checkout Unified
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-unified
+          path: aihappey-unified
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Checkout Providers
+        uses: actions/checkout@v4
+        with:
+          repository: achappey/aihappey-providers
+          path: aihappey-providers
+          token: ${{ secrets.CROSS_REPO_TOKEN || github.token }}
+
+      - name: Setup .NET 11 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: preview
+
+      - name: Build HeaderAuth desktop with embedded runtimes
+        run: |
+          & .\publish.ps1 `
+            -HostName HeaderAuth `
+            -Configuration Release `
+            -Distribution Portable
+
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Desktop HeaderAuth publish failed.'
+          }
+
+      # Providers JSON is embedded in AIHappey.Desktop.Core.dll by
+      # Directory.Build.targets, not shipped as separate JSON files.
+      # Verify that the published fingerprint matches the current providers checkout.
+      - name: Verify published provider catalog
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\Tests\sync-provider-catalog.ps1 `
+            -RequireSource `
+            -Check `
+            -BuildStamp '.\artifacts\Release\HeaderAuth\ProviderCatalog.sha256'
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Published provider catalog verification failed.'
+          }
+
+      - name: Validate and stage ZIP
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zips = @(Get-ChildItem -LiteralPath '.\Releases' -Filter '*-win-x64.zip' -File)
+          if ($zips.Count -ne 1) {
+            throw "Expected exactly one portable release ZIP, found $($zips.Count)."
+          }
+
+          Add-Type -AssemblyName System.IO.Compression
+          $archive = [IO.Compression.ZipFile]::OpenRead($zips[0].FullName)
+          try {
+            $entries = @($archive.Entries | ForEach-Object { $_.FullName.Replace('\', '/') })
+            foreach ($required in @(
+              'aihappey.exe',
+              'release-metadata.json',
+              'ProviderCatalog.sha256',
+              'runtimes/ai/AIHappey.Windows.exe',
+              'runtimes/ai/AIHappey.Windows.dll',
+              'runtimes/agents/AgentHappey.Windows.exe',
+              'runtimes/agents/AgentHappey.Windows.dll',
+              'runtimes/agents/Agents/OpenAIAgent/Agent.json'
+            )) {
+              if ($entries -notcontains $required) {
+                throw "Missing required ZIP entry: $required"
+              }
+            }
+          }
+          finally {
+            $archive.Dispose()
+          }
+
+          New-Item -ItemType Directory -Force -Path '.\dist' | Out-Null
+          Copy-Item -LiteralPath $zips[0].FullName `
+            -Destination '.\dist\aihappey-desktop-headerauth-win-x64.zip' -Force
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-headerauth-win-x64
+          path: aihappey-windows/dist/aihappey-desktop-headerauth-win-x64.zip
+          if-no-files-found: error
+
+  release-latest:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-test-pack
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Desktop
+        uses: actions/checkout@v4
+
+      - name: Download desktop artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-headerauth-win-x64
+          path: ./artifacts
+
+      - name: Update latest release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $asset = (Resolve-Path '.\artifacts\aihappey-desktop-headerauth-win-x64.zip').Path
+
+          git tag -f latest
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to set latest tag.' }
+          git push origin refs/tags/latest --force
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to push latest tag.' }
+
+          gh release view latest --json name *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload latest $asset --clobber
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to update release asset.' }
+            gh release edit latest `
+              --title 'Latest Windows Desktop (HeaderAuth)' `
+              --notes 'Latest portable Windows x64 desktop build from main, including AI Gateway and Agents runtimes.' `
+              --latest
+          }
+          else {
+            gh release create latest $asset `
+              --title 'Latest Windows Desktop (HeaderAuth)' `
+              --notes 'Latest portable Windows x64 desktop build from main, including AI Gateway and Agents runtimes.' `
+              --latest `
+              --verify-tag
+          }
+
+          if ($LASTEXITCODE -ne 0) { throw 'Desktop latest release update failed.' }
