@@ -25,7 +25,11 @@ public partial class App
         };
         foreach (var child in children) foreach (var item in ProviderControls(child)) yield return item;
     }
-    private static object ProviderForm(ChatSettingsDialog dialog) => typeof(ChatSettingsDialog).GetField("providerForm", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(dialog)!;
+    private static object ProviderForm(ChatSettingsDialog dialog, string? provider = null)
+    {
+        var forms = (System.Collections.IDictionary)typeof(ChatSettingsDialog).GetField("providerForms", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(dialog)!;
+        return provider is null ? forms.Values.Cast<object>().First() : forms[provider]!;
+    }
     private static FrameworkElement ProviderView(object form) => (FrameworkElement)form.GetType().GetProperty("View")!.GetValue(form)!;
     private static bool ProviderValid(object form) => (bool)form.GetType().GetProperty("IsValid")!.GetValue(form)!;
     private static string ProviderLabel(string key) => DesktopResources.Get("ChatForm_" + key.Replace('.', '_'));

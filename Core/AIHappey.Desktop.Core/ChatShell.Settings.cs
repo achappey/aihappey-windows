@@ -23,9 +23,12 @@ public sealed partial class ChatShell
         var selected = targets.FirstOrDefault(t => t.Id == target.Text.Trim());
         var provider = isRealtime ? RealtimeConfiguration.Provider(realtime?.Model ?? realtimeTarget.Text)
             : selected is null ? null : ChatPreferences.ResolveProvider(Service, selected.Id, selected.ProviderKey);
+        var providers = isRealtime ? null : target.Selection.Ids.Select(id =>
+            ChatPreferences.ResolveProvider(Service, id, targets.FirstOrDefault(model => model.Id == id)?.ProviderKey))
+            .OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         var dialog = new ChatSettingsDialog(session.Settings.Chat, provider, LoadSkillSelectionAsync, PrefetchSkillAsync, agentPlugins,
             AvailableChatTools, isRealtime ? ServiceKind.Ai : Service,
-            isRealtime ? session.Settings.Realtime : null, realtime is not null, aiModelTargets, AgentTargetsAsync) { XamlRoot = XamlRoot };
+            isRealtime ? session.Settings.Realtime : null, realtime is not null, aiModelTargets, AgentTargetsAsync, providers) { XamlRoot = XamlRoot };
         chatSettingsDialog = dialog;
         async Task SaveAsync(ChatPreferences preferences, RealtimePreferences? realtimePreferences)
         {

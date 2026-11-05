@@ -9,7 +9,7 @@ internal static class AgentRegressionTests
     public static async Task RunAsync(Action<bool, string> check, string root)
     {
         AgentOverviewRegressionTests.Run(check);
-        CheckSharedProviders(check);
+        CheckModelProviders(check);
         CheckOptionalContract(check);
         var optionalSelection = new ChatSelection(); optionalSelection.Replace(["provider/model"]);
         optionalSelection.Toggle("provider/model", multiple: false, allowEmpty: true);
@@ -210,7 +210,7 @@ internal static class AgentRegressionTests
                 "agent request serialization retains optional-field presence without injecting SDK defaults: " + optional);
         }
     }
-    private static void CheckSharedProviders(Action<bool, string> check)
+    private static void CheckModelProviders(Action<bool, string> check)
     {
         var agent = DesktopAgent.Parse("""
             {"name":"Shared","description":"D","instructions":"I","models":[
@@ -220,38 +220,49 @@ internal static class AgentRegressionTests
               {"id":"router/one","type":"decision","providerMetadata":{"opaque":7},"providerHeaders":{"X-Router":"keep"}}]}
             """);
         var original = agent.Definition.DeepClone();
-        var groups = AgentProviderSettings.Groups(agent);
-        check(groups.Select(group => group.Provider).SequenceEqual(["openai", "anthropic", "router"]) && groups[0].Models.Count == 2,
-            "agent settings have one ordered group per provider, independent of model count and provider casing");
+        var groups = AgentProviderSettings.ForModels(agent);
+        check(groups.Select(group => group.Provider).SequenceEqual(["openai", "openai", "anthropic", "router"])
+            && groups.Select(group => group.ModelId).SequenceEqual(agent.ModelIds),
+            "agent settings have one independent editor per model with case-insensitive provider grouping");
         var shared = groups[0];
         // A native form may project aliases/defaults differently from the stored document.
         var canonical = OpenAIChatConfig.Canonical(shared.Metadata);
         shared.Baseline(canonical, shared.Headers); shared.Commit(canonical, shared.Headers);
-        check(JsonNode.DeepEquals(agent.Definition, original), "opening and committing an unedited shared form preserves differing imported model settings exactly");
+        check(JsonNode.DeepEquals(agent.Definition, original), "opening and committing an unedited model form preserves differing imported model settings exactly");
         var edited = (JsonObject)canonical.DeepClone(); edited["reasoning"]!["effort"] = "high";
         var headers = (JsonObject)shared.Headers.DeepClone(); headers["X-Shared"] = "new";
         shared.Commit(edited, headers);
-        check(agent.Models.Take(2).All(model => DesktopAgent.Text(model["providerMetadata"]?["reasoning"]?["effort"]) == "high"
-            && DesktopAgent.Text(model["providerHeaders"]?["X-Shared"]) == "new"), "shared provider edits reach every matching model");
+        check(DesktopAgent.Text(agent.Models[0]["providerMetadata"]?["reasoning"]?["effort"]) == "high"
+            && DesktopAgent.Text(agent.Models[0]["providerHeaders"]?["X-Shared"]) == "new"
+            && JsonNode.DeepEquals(agent.Models[1], original["models"]?[1]), "editing one model never broadcasts to another model from the same provider");
         check(agent.Models[0]["providerMetadata"]?["reasoning"]?["opaque"]?.ToJsonString() == "1"
             && agent.Models[1]["providerMetadata"]?["reasoning"]?["opaque"]?.ToJsonString() == "2"
             && agent.Models[0]["providerMetadata"]?["one"] is not null && agent.Models[1]["providerMetadata"]?["two"] is not null
             && agent.Models[0]["providerHeaders"]?["X-One"] is not null && agent.Models[1]["providerHeaders"]?["X-Two"] is not null
-            && agent.Models[1]["options"]?["keep"]?.ToJsonString() == "7", "shared edits preserve each model's unedited metadata, headers and options");
+            && agent.Models[1]["options"]?["keep"]?.ToJsonString() == "7", "model edits preserve unedited metadata, headers and options");
         check(JsonNode.DeepEquals(agent.Models[2], original["models"]?[2]) && JsonNode.DeepEquals(agent.Models[3], original["models"]?[3]),
-            "shared edits never affect a different provider or its routing decision");
+            "model edits never affect a different provider or its routing decision");
+        var second = groups[1];
+        var secondCanonical = OpenAIChatConfig.Canonical(second.Metadata);
+        second.Baseline(secondCanonical, second.Headers);
+        var secondEdited = (JsonObject)secondCanonical.DeepClone(); secondEdited["reasoning"]!["effort"] = "low";
+        second.Commit(secondEdited, second.Headers);
+        check(DesktopAgent.Text(agent.Models[0]["providerMetadata"]?["reasoning"]?["effort"]) == "high"
+            && DesktopAgent.Text(agent.Models[1]["providerMetadata"]?["reasoning"]?["effort"]) == "low", "two models of the same provider retain independently edited values");
         var once = agent.Definition.DeepClone(); shared.Commit(edited, headers);
-        check(JsonNode.DeepEquals(agent.Definition, once), "repeated provider commits are idempotent");
+        check(JsonNode.DeepEquals(agent.Definition, once), "repeated model commits are idempotent");
         headers.Remove("X-Shared"); shared.Commit(edited, headers);
-        check(agent.Models.Take(2).All(model => model["providerHeaders"]?["X-Shared"] is null)
+        check(agent.Models[0]["providerHeaders"]?["X-Shared"] is null && DesktopAgent.Text(agent.Models[1]["providerHeaders"]?["X-Shared"]) == "different"
             && agent.Models[0]["providerHeaders"]?["X-One"] is not null && agent.Models[1]["providerHeaders"]?["X-Two"] is not null,
-            "removing a shared header retains unrelated per-model headers");
+            "removing a model header retains every other model's headers");
+        var retained = agent.Models.Select(model => model.DeepClone()).ToArray();
         agent.SelectModels(agent.Models.Select(model => (DesktopAgent.Text(model["id"]), (string?)DesktopAgent.Text(model["type"]))).Append(("openai/new", "language")));
-        foreach (var group in groups) group.InitializeNewModels(agent.Models);
-        check(JsonNode.DeepEquals(agent.Models.Last()["providerMetadata"], agent.Models[0]["providerMetadata"])
-            && JsonNode.DeepEquals(agent.Models.Last()["providerHeaders"], agent.Models[0]["providerHeaders"]), "new same-provider models inherit the shared configuration");
-        check(JsonNode.DeepEquals(DesktopAgent.Parse(agent.Definition.ToJsonString()).Definition, agent.Definition), "shared provider configuration survives export/import");
-        check(AgentProviderSettings.Groups(DesktopAgent.Empty()).Count == 0, "an empty model selection creates no spurious provider tab");
+        check(agent.Models.Take(retained.Length).Select((model, index) => JsonNode.DeepEquals(model, retained[index])).All(equal => equal),
+            "adding a same-provider model retains all existing model settings");
+        check(!JsonNode.DeepEquals(agent.Models.Last()["providerMetadata"], agent.Models[0]["providerMetadata"])
+            && agent.Models.Last()["providerHeaders"] is null, "new models use their own defaults rather than copying another model's edits");
+        check(JsonNode.DeepEquals(DesktopAgent.Parse(agent.Definition.ToJsonString()).Definition, agent.Definition), "independent model configuration survives export/import");
+        check(AgentProviderSettings.ForModels(DesktopAgent.Empty()).Count == 0, "an empty model selection creates no spurious provider tab");
     }
 
     private sealed class AgentRequestHandler : HttpMessageHandler

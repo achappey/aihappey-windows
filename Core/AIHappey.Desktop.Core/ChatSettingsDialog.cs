@@ -8,6 +8,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
 {
     private ChatPreferences draft;
     private readonly string? provider;
+    private readonly IReadOnlyList<string> providers;
     private readonly Grid layout = new() { RowSpacing = 16 };
     private readonly NavigationView tabs = new() { Name = "ChatSettingsTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
         IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
@@ -19,14 +20,15 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private ChatToolSettingsView? toolSettings;
     private readonly Func<ChatPreferences, IReadOnlyList<ChatToolOption>> availableTools;
     private readonly bool modelChat;
-    private IChatProviderForm? providerForm;
+    private readonly Dictionary<string, IChatProviderForm> providerForms = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, NavigationViewItem> providerTabs = new(StringComparer.OrdinalIgnoreCase);
     private readonly RealtimeSettingsForm? realtimeForm;
     private SkillsSettingsView? skillsView;
     private readonly Func<CancellationToken, Task<DesktopSkillSelection>>? loadSkills;
     private readonly Func<string, CancellationToken, Task>? prefetchSkill;
     private Action? selectSkillsTab;
     private Action? selectToolsTab;
-    private Action? selectGeneralTab, selectProviderTab;
+    private Action? selectGeneralTab, selectRealtimeTab;
     private Action? selectPluginsTab;
     private readonly IReadOnlyList<DesktopAgentPlugin> plugins;
     public ChatPreferences? Result { get; private set; }
@@ -46,7 +48,8 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         Func<string, CancellationToken, Task>? prefetchSkill = null, IReadOnlyList<DesktopAgentPlugin>? plugins = null,
         Func<ChatPreferences, IReadOnlyList<ChatToolOption>>? availableTools = null, ServiceKind service = ServiceKind.Ai,
         RealtimePreferences? realtimePreferences = null, bool realtimeReadOnly = false,
-        IReadOnlyList<ChatTarget>? liveModels = null, Func<CancellationToken, Task<IReadOnlyList<ChatTarget>>>? liveAgents = null)
+        IReadOnlyList<ChatTarget>? liveModels = null, Func<CancellationToken, Task<IReadOnlyList<ChatTarget>>>? liveAgents = null,
+        IReadOnlyList<string>? providers = null)
     {
         this.loadSkills = loadSkills; this.prefetchSkill = prefetchSkill;
         this.plugins = plugins ?? [];
@@ -54,6 +57,8 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         this.availableTools = availableTools ?? (draft => McpTurnSnapshot.Empty.SettingsTools(draft,
             draft.EnabledSkillIds.Count > 0, this.plugins.Any(plugin => draft.EnabledAgentPluginIds.Contains(plugin.Id))));
         Name = "ChatSettingsDialog"; this.provider = provider; draft = preferences.Clone();
+        this.providers = (providers ?? (provider is null ? [] : new[] { provider }))
+            .Where(key => !string.IsNullOrWhiteSpace(key)).Select(key => key.Trim().ToLowerInvariant()).Distinct().ToArray();
         if (realtimePreferences is not null && provider is "openai" or "google")
             realtimeForm = new(realtimePreferences, provider, realtimeReadOnly, liveModels, liveAgents);
         Title = DesktopResources.Get("ChatSettings"); CloseButtonText = DesktopResources.Get("Close");
@@ -95,7 +100,10 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         tokens.TextChanged += (_, _) => tokenError.Visibility = ChatPreferences.TryTokenLimit(tokens.Text, out _) ? Visibility.Collapsed : Visibility.Visible;
         toolSettings = modelChat ? new ChatToolSettingsView(draft, availableTools) : null;
         if (toolSettings is not null) general.Children.Add(toolSettings);
-        providerForm = realtimeForm is null ? ChatProviderForms.Create(provider, draft) : null;
+        providerForms.Clear(); providerTabs.Clear();
+        if (realtimeForm is null)
+            foreach (var key in providers)
+                if (ChatProviderForms.Create(key, draft) is { } form) providerForms.Add(key, form);
         NavigationViewItem Tab(string name, string label, FrameworkElement view)
         {
             var tab = new NavigationViewItem { Name = name, Content = label, Tag = view };
@@ -109,13 +117,15 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         var pluginsView = new PluginsSettingsView(plugins, draft.EnabledAgentPluginIds);
         var pluginsTab = Tab("ChatPluginsTab", DesktopResources.Get("PluginsTitle"), pluginsView);
         selectPluginsTab = () => tabs.SelectedItem = pluginsTab;
-        selectProviderTab = null;
-        if (providerForm is not null || realtimeForm is not null)
+        selectRealtimeTab = null;
+        if (realtimeForm is not null)
         {
             var providerTab = Tab("ChatProviderTab", provider?.ToLowerInvariant() switch { "openai" => "OpenAI", "google" => "Google", "mistral" => "Mistral", "anthropic" => "Anthropic", "deepseek" => "DeepSeek", _ => provider ?? "" },
-                (FrameworkElement?)realtimeForm ?? providerForm!.View);
-            selectProviderTab = () => tabs.SelectedItem = providerTab;
+                realtimeForm);
+            selectRealtimeTab = () => tabs.SelectedItem = providerTab;
         }
+        else foreach (var (key, form) in providerForms)
+            providerTabs[key] = Tab(providerForms.Count == 1 ? "ChatProviderTab" : "ChatProviderTab_" + key, ProviderCatalog.Get(key).Name, form.View);
         selectGeneralTab = () => tabs.SelectedItem = generalTab;
         selectSkillsTab = () => tabs.SelectedItem = skillsTab;
         selectToolsTab = () => tabs.SelectedItem = toolsTab;
@@ -125,7 +135,8 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private async void CommitOnClose(ContentDialog sender, ContentDialogClosingEventArgs args)
     {
         if (DiscardOnShutdown) return;
-        if (!ChatPreferences.TryTokenLimit(tokens.Text, out var limit) || toolSettings?.IsValid == false || providerForm?.IsValid == false || realtimeForm?.IsValid == false)
+        var invalidProvider = providerForms.FirstOrDefault(pair => !pair.Value.IsValid);
+        if (!ChatPreferences.TryTokenLimit(tokens.Text, out var limit) || toolSettings?.IsValid == false || invalidProvider.Value is not null || realtimeForm?.IsValid == false)
         {
             args.Cancel = true; validation.Text = DesktopResources.Get("ChatSettingsInvalid"); validation.Visibility = Visibility.Visible;
             if (!ChatPreferences.TryTokenLimit(tokens.Text, out _))
@@ -133,13 +144,16 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
                 selectGeneralTab?.Invoke(); layout.UpdateLayout(); tokens.Focus(FocusState.Programmatic); tokens.StartBringIntoView();
             }
             else if (toolSettings?.IsValid == false) { selectGeneralTab?.Invoke(); layout.UpdateLayout(); toolSettings.FocusInvalid(); }
-            else { selectProviderTab?.Invoke(); layout.UpdateLayout(); providerForm?.FocusInvalid(); realtimeForm?.FocusInvalid(); }
+            else if (invalidProvider.Value is not null)
+            { tabs.SelectedItem = providerTabs[invalidProvider.Key]; layout.UpdateLayout(); invalidProvider.Value.FocusInvalid(); }
+            else { selectRealtimeTab?.Invoke(); layout.UpdateLayout(); realtimeForm?.FocusInvalid(); }
             return;
         }
         var deferral = args.GetDeferral();
         try
         {
-            draft.MaxOutputTokens = limit; providerForm?.Commit(draft);
+            draft.MaxOutputTokens = limit;
+            foreach (var form in providerForms.Values) form.Commit(draft);
             if (modelChat) draft.NormalizeTools();
             var realtime = realtimeForm?.Result;
             if (realtime is not null && SaveWithRealtimeAsync is not null) await SaveWithRealtimeAsync(draft.Clone(), realtime.Clone());

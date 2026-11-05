@@ -180,7 +180,6 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
                 .Concat(selected.Where(id => !draft.ModelIds.Contains(id))
                     .Select(id => (id, modelOptions.FirstOrDefault(option => option.Id == id)?.ModelType ?? "language"))).ToArray();
             draft.SelectModels(next);
-            foreach (var editor in providerEditors) editor.Settings.InitializeNewModels(draft.Models);
             RefreshDecision(); BuildProviders(); fields.Refresh();
         };
         decision.SelectionChanged += () =>
@@ -193,7 +192,6 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
                     configuration["type"] is null ? null : DesktopAgent.Text(configuration["type"])))
                 .Concat(selected.Where(id => !draft.ModelIds.Contains(id)).Select(id => (id, (string?)"decision"))).ToArray();
             draft.SelectModels(next);
-            foreach (var editor in providerEditors) editor.Settings.InitializeNewModels(draft.Models);
             RefreshDecision(); BuildProviders(); fields.Refresh();
         };
         var instructionsSection = NativeSettingsSurface.Expander(panel, "AgentInstructionsSection", ChatSettingsFields.L("agent.instructions"), null, out var instructionsBody);
