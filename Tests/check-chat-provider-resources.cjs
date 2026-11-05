@@ -49,6 +49,8 @@ for (const lang of ['en', 'nl']) {
   for (const provider of ['parallel', 'exa']) required.push('google.interactions.retrieval.' + provider + '.title');
   required.push('google.interactions.retrieval.apiKey');
   for (const name of required) assert.ok(resources.get(key(name))?.trim(), `${lang}: missing native form label ${name}`);
+  for (const value of ['auto', 'low', 'medium', 'high', 'xhigh', 'max', 'transparent', 'opaque'])
+    assert.ok(resources.get('ImageOption_' + value)?.trim(), `${lang}: missing standalone image option label ${value}`);
   assert.ok(!resources.get(key('anthropic.outputConfig.effort')).includes('{{'), `${lang}: slider header must not expose web interpolation syntax`);
   console.log(`${lang}: ${Object.keys(labels).length} OpenAI/Anthropic/Google/Mistral labels match the browser; all native provider-form headers exist.`);
 }

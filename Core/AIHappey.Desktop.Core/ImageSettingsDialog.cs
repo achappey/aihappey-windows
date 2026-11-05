@@ -49,7 +49,7 @@ public sealed class OpenAIImageSettingsForm : IImageProviderForm
         })
         {
             var select = fields.Select(general, label, () => model.String(field, "auto"), choices,
-                value => model.Optional(field, value), label: value => DesktopResources.Get("ImageOption_" + value));
+                value => model.Optional(field, value), label: value => choices.Contains(value) ? DesktopResources.Get("ImageOption_" + value) : value);
             select.Name = "ImageOpenAI" + field;
         }
         OpenAIImageFormatCards.Output(general, fields, model, "");

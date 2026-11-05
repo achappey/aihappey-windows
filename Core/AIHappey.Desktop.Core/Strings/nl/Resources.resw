@@ -863,6 +863,8 @@
   <data name="ImageOption_low" xml:space="preserve"><value>Laag</value></data>
   <data name="ImageOption_medium" xml:space="preserve"><value>Gemiddeld</value></data>
   <data name="ImageOption_high" xml:space="preserve"><value>Hoog</value></data>
+  <data name="ImageOption_xhigh" xml:space="preserve"><value>Extra hoog</value></data>
+  <data name="ImageOption_max" xml:space="preserve"><value>Maximaal</value></data>
   <data name="ImageOption_transparent" xml:space="preserve"><value>Transparant</value></data>
   <data name="ImageOption_opaque" xml:space="preserve"><value>Dekkend</value></data>
   <data name="ImageAttachFiles" xml:space="preserve"><value>Afbeeldingen toevoegen</value></data>
