@@ -135,6 +135,7 @@ public partial class App
             page.SetModelAvailable(true); page.SetItems([saved]); await Task.Delay(250); page.UpdateLayout();
             await CheckTranscriptionRealtimeTabsAsync(page, saved, "Transcription tabs / " + theme);
             await CheckMediaPageWidthsAsync(page, "Transcription tabs / " + theme);
+            await CheckTranscriptionSettingsAsync(root, theme);
         }
         finally { root.Children.Clear(); window.Content = null; }
     }

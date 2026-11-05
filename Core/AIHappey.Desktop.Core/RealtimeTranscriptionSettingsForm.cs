@@ -83,7 +83,7 @@ public sealed class RealtimeTranscriptionSettingsForm : ITranscriptionProviderFo
     }
     private void Number(StackPanel panel, string label, JsonObject target, string key, double fallback, double min, double max, double step)
     {
-        var field = new NumberBox { Name = "Realtime" + provider + key, Header = DesktopResources.Get(label), Value = target[key]?.GetValue<double>() ?? fallback,
+        var field = new NumberBox { Name = "Realtime" + provider + key, Header = DesktopResources.Get(label), Value = RealtimeTranscriptionConfiguration.TryNumber(target[key], out var value) ? value : fallback,
             Minimum = min, Maximum = max, SmallChange = step, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact };
         ControlAppearance.Stock(field); ToolbarControls.Label(field, DesktopResources.Get(label)); panel.Children.Add(field);
         commits.Add(() => { if (!double.IsFinite(field.Value) || field.Value < min || field.Value > max) throw new ArgumentException(); target[key] = step >= 1 ? JsonValue.Create((int)field.Value) : JsonValue.Create(field.Value); });

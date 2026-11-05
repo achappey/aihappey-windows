@@ -23,9 +23,12 @@ for (const [, section] of form.matchAll(/Section\("([^"]+)"\)/g)) {
 }
 // Form helpers resolve their label arguments dynamically. Checking only literal
 // DesktopResources.Get calls misses runtime failures such as RealtimeSectionLive.
-for (const [, key] of form.matchAll(/(?:Choice|Toggle|Number|Input)\(\w+,\s*"([^"]+)"\s*,/g)) {
-  assert(en.has(key), `Missing English realtime control ${key}`);
-  assert(nl.has(key), `Missing Dutch realtime control ${key}`);
+for (const file of ['RealtimeSettingsForm.cs', 'RealtimeTranscriptionSettingsForm.cs']) {
+  const source = fs.readFileSync(path.join(core, file), 'utf8');
+  for (const [, key] of source.matchAll(/(?:Choice|Toggle|Number|Input|Text)\(\w+,\s*"([^"]+)"\s*,/g)) {
+    assert(en.has(key), `${file}: missing English realtime control ${key}`);
+    assert(nl.has(key), `${file}: missing Dutch realtime control ${key}`);
+  }
 }
 for (const type of ['web_search', 'code_interpreter', 'file_search']) {
   assert(en.has('LiveTool_' + type), `Missing English Live tool ${type}`);

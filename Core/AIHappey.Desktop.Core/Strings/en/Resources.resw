@@ -959,6 +959,7 @@
   <data name="TranscriptionRealtimeSaveFailed" xml:space="preserve"><value>Could not save the live transcript. The confirmed text is still shown here; copy it before leaving this page.</value></data>
   <data name="TranscriptionRealtimeNoise" xml:space="preserve"><value>Microphone noise reduction</value></data>
   <data name="TranscriptionRealtimeTokenSeconds" xml:space="preserve"><value>Credential lifetime (seconds)</value></data>
+  <data name="TranscriptionDiarization" xml:space="preserve"><value>Identify speakers</value></data>
   <data name="TranscriptionRealtimeMode" xml:space="preserve"><value>Transcription mode</value></data>
   <data name="TranscriptionRealtimeNewSessionExpiry" xml:space="preserve"><value>New session expiry</value></data>
   <data name="TranscriptionRealtimeCodeSwitching" xml:space="preserve"><value>Allow language switching</value></data>

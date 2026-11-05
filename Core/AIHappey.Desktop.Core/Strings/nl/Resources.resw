@@ -955,6 +955,7 @@
   <data name="TranscriptionRealtimeSaveFailed" xml:space="preserve"><value>Het live transcript kon niet worden opgeslagen. De bevestigde tekst staat hier nog; kopieer deze voordat u deze pagina verlaat.</value></data>
   <data name="TranscriptionRealtimeNoise" xml:space="preserve"><value>Ruisonderdrukking microfoon</value></data>
   <data name="TranscriptionRealtimeTokenSeconds" xml:space="preserve"><value>Geldigheidsduur toegangstoken (seconden)</value></data>
+  <data name="TranscriptionDiarization" xml:space="preserve"><value>Sprekers herkennen</value></data>
   <data name="TranscriptionRealtimeMode" xml:space="preserve"><value>Transcriptiemodus</value></data>
   <data name="TranscriptionRealtimeNewSessionExpiry" xml:space="preserve"><value>Verlooptijd nieuwe sessie</value></data>
   <data name="TranscriptionRealtimeCodeSwitching" xml:space="preserve"><value>Wisselen van taal toestaan</value></data>

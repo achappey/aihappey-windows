@@ -80,7 +80,7 @@ public partial class App
             var dialog = new ImageSettingsDialog(preferences, "openai", directory) { XamlRoot = page.XamlRoot, RequestedTheme = theme, SaveAsync = p => { saved = p; return Task.CompletedTask; } };
             SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(140); dialog.UpdateLayout();
             Check(Descendants(dialog).OfType<ToggleButton>().Any(t => t.Name == "ImageProviderTab" && t.Content.ToString() == "OpenAI"), context + ": OpenAI provider tab for OpenAI selection");
-            Check(!Descendants(dialog).Any(element => element.Name == "ImageOpenAIMarkupField"), context + ": markup is not part of generic image settings");
+            Check(!Descendants(dialog).OfType<FrameworkElement>().Any(element => element.Name == "ImageOpenAIMarkupField"), context + ": markup is not part of generic image settings");
             Check(!Descendants(dialog).OfType<FrameworkElement>().Any(e => e.Name is "ImageStorageCard" or "ImageStoragePath" or "ImageChooseFolder" or "ImageDefaultFolder"),
                 context + ": generation settings no longer contain storage controls");
             var outputSection = Descendants(dialog).OfType<SettingsExpander>().Single(section => section.Name == "ImageOutputCard");
@@ -99,7 +99,7 @@ public partial class App
             var outputFormat = Descendants(generalCard).OfType<ComboBox>().Single(box => box.Header?.ToString() == DesktopResources.Get("ChatForm_openai_imageOutputFormat"));
             Check(outputFormat.SelectedItem is ComboBoxItem { Tag: "" } defaultOption
                 && defaultOption.Content?.ToString() == DesktopResources.Get("ChatForm_default"), context + ": Default output format resolves from packaged native resources");
-            Check(Descendants(generalCard).Any(element => element.Name == "ImageOpenAIMarkupField"), context + ": markup upload belongs to the OpenAI provider card");
+            Check(Descendants(generalCard).OfType<FrameworkElement>().Any(element => element.Name == "ImageOpenAIMarkupField"), context + ": markup upload belongs to the OpenAI provider card");
             var gifCard = Descendants(dialog).OfType<SettingsExpander>().Single(card => card.Name == "OpenAI_ImageGIF");
             gifCard.IsExpanded = true;
             var svgCard = Descendants(dialog).OfType<SettingsExpander>().Single(card => card.Name == "OpenAI_ImageSVG");

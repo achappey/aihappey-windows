@@ -37,6 +37,7 @@ internal static class MistralTranscriptionTests
             try { _ = RealtimeTranscriptionConfiguration.MistralSession(new() { ["target_streaming_delay_ms"] = delay }); check(false, "Mistral invalid delay rejected"); }
             catch (ArgumentException) { check(true, "Mistral rejects undocumented delay " + delay); }
         }
+        CheckNumericSettings(check);
         check(!RealtimeTranscriptionConfiguration.IsMistralModel("mistral/voxtral-mini-transcribe-3") && !RealtimeTranscriptionConfiguration.IsMistralModel("mistral/voxtral-mini-tts-3-0"), "Mistral batch and TTS models cannot open transcription WebSockets");
         var transcript = new RealtimeTranscriptionTranscript("mistral");
         foreach (var text in new[] { "  Hello", " world", ".\n" }) transcript.Apply(new() { ["type"] = "transcription.text.delta", ["text"] = text }, 1);
@@ -72,6 +73,55 @@ internal static class MistralTranscriptionTests
         failedSocket.Push(new() { ["type"] = "error", ["error"] = new JsonObject { ["message"] = "rt_secret" } });
         try { await failedStart; check(false, "native Mistral rejected setup"); }
         catch (RealtimeFailureException error) { check(!failedInput.Subscribed && !error.ToString().Contains("rt_secret"), "native Mistral setup errors are credential-safe and never start capture"); }
+    }
+
+    private static void CheckNumericSettings(Action<bool, string> check)
+    {
+        // Parsing fixtures alone hides the CLR-number mismatch seen after the native form saves.
+        foreach (var (name, value) in new (string, JsonNode?)[]
+        {
+            ("int", JsonValue.Create(80)), ("long", JsonValue.Create(80L)),
+            ("double", JsonValue.Create(80d)), ("float", JsonValue.Create(80f)), ("decimal", JsonValue.Create(80m)),
+            ("uint", JsonValue.Create(80U)), ("ulong", JsonValue.Create(80UL)),
+            ("short", JsonValue.Create((short)80)), ("ushort", JsonValue.Create((ushort)80)),
+            ("byte", JsonValue.Create((byte)80)), ("sbyte", JsonValue.Create((sbyte)80)),
+            ("parsed integer", JsonNode.Parse("80")), ("parsed decimal", JsonNode.Parse("80.0")), ("parsed exponent", JsonNode.Parse("8e1"))
+        })
+        {
+            var original = new RealtimeTranscriptionPreferences { ProviderOptions = new()
+                { ["mistral"] = new JsonObject { ["target_streaming_delay_ms"] = value, ["future"] = new JsonObject { ["keep"] = true } } } };
+            foreach (var preferences in new[] { original, original.Clone() })
+            {
+                preferences.Validate();
+                var options = preferences.ProviderOptions["mistral"]!.AsObject();
+                var session = RealtimeTranscriptionConfiguration.MistralSession(options);
+                check(session["target_streaming_delay_ms"]!.GetValue<int>() == 80 && options["future"]!["keep"]!.GetValue<bool>(),
+                    "Mistral validates native and cloned " + name + " settings without altering unknown options");
+            }
+        }
+        foreach (var options in new[] { new JsonObject(), new JsonObject { ["target_streaming_delay_ms"] = null } })
+            check(RealtimeTranscriptionConfiguration.MistralSession(options)["target_streaming_delay_ms"]!.GetValue<int>() == 480,
+                "Mistral missing or null delay retains the default");
+        foreach (var (name, value) in new (string, JsonNode?)[]
+        {
+            ("fractional double", JsonValue.Create(480.5)), ("fractional float", JsonValue.Create(480.5f)),
+            ("fractional decimal", JsonValue.Create(480.5m)), ("parsed fraction", JsonNode.Parse("480.5")),
+            ("numeric string", JsonValue.Create("480")), ("parsed numeric string", JsonNode.Parse("\"480\"")),
+            ("boolean", JsonValue.Create(true)), ("array", new JsonArray(480)), ("object", new JsonObject()),
+            ("NaN", JsonValue.Create(double.NaN)), ("positive infinity", JsonValue.Create(double.PositiveInfinity)),
+            ("negative infinity", JsonValue.Create(double.NegativeInfinity)), ("float NaN", JsonValue.Create(float.NaN)),
+            ("float infinity", JsonValue.Create(float.PositiveInfinity)), ("parsed overflow", JsonNode.Parse("1e400")),
+            ("large unsigned integer", JsonValue.Create(ulong.MaxValue)), ("large decimal", JsonValue.Create(decimal.MaxValue))
+        })
+        {
+            var options = new JsonObject { ["target_streaming_delay_ms"] = value };
+            try { _ = RealtimeTranscriptionConfiguration.MistralSession(options); check(false, "Mistral must reject " + name); }
+            catch (ArgumentException error)
+            {
+                check(error.Message == "Mistral streaming delay must be an integer from 80 to 1200, or 2400 ms.",
+                    "Mistral rejects " + name + " with the explicit delay validation error");
+            }
+        }
     }
 
     private sealed class Input : ITranscriptionAudioInput

@@ -18,6 +18,26 @@ public sealed class RealtimeTranscriptionPreferences
 
 public static class RealtimeTranscriptionConfiguration
 {
+    internal static bool TryNumber(JsonNode? node, out double number)
+    {
+        number = default;
+        if (node is not JsonValue value) return false;
+        // Parsed JSON supports numeric conversion; in-memory values retain their CLR type.
+        if (value.TryGetValue<double>(out number)) return double.IsFinite(number);
+        if (value.TryGetValue<int>(out var intValue)) number = intValue;
+        else if (value.TryGetValue<long>(out var longValue)) number = longValue;
+        else if (value.TryGetValue<decimal>(out var decimalValue)) number = (double)decimalValue;
+        else if (value.TryGetValue<float>(out var floatValue)) number = floatValue;
+        else if (value.TryGetValue<uint>(out var uintValue)) number = uintValue;
+        else if (value.TryGetValue<ulong>(out var ulongValue)) number = ulongValue;
+        else if (value.TryGetValue<short>(out var shortValue)) number = shortValue;
+        else if (value.TryGetValue<ushort>(out var ushortValue)) number = ushortValue;
+        else if (value.TryGetValue<byte>(out var byteValue)) number = byteValue;
+        else if (value.TryGetValue<sbyte>(out var sbyteValue)) number = sbyteValue;
+        else return false;
+        return double.IsFinite(number);
+    }
+
     public static bool Supports(ChatTarget? model) => model is not null && model.Tags.Contains("real-time")
         && (RealtimeConfiguration.Provider(model.Id) is "openai" or "google" or "gladia"
             || model.Id is "smallestai/pulse" or "smallestai/pulse-2"
@@ -34,8 +54,9 @@ public static class RealtimeTranscriptionConfiguration
 
     public static JsonObject MistralSession(JsonObject options)
     {
-        var delay = options["target_streaming_delay_ms"]?.GetValue<double>() ?? 480;
-        if (!double.IsFinite(delay) || delay != Math.Truncate(delay) || !((delay >= 80 && delay <= 1200) || delay == 2400))
+        var delay = 480d;
+        if ((options["target_streaming_delay_ms"] is { } value && !TryNumber(value, out delay))
+            || delay != Math.Truncate(delay) || !((delay >= 80 && delay <= 1200) || delay == 2400))
             throw new ArgumentException("Mistral streaming delay must be an integer from 80 to 1200, or 2400 ms.");
         var session = new JsonObject { ["audio_format"] = new JsonObject { ["encoding"] = "pcm_s16le", ["sample_rate"] = 16000 }, ["target_streaming_delay_ms"] = (int)delay };
         if (options["language"]?.ToString() is { Length: > 0 } language)
