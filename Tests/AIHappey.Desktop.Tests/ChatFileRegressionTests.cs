@@ -12,6 +12,54 @@ internal static class ChatFileRegressionTests
         await HistoryAsync(check, root);
         await FramingAsync(check);
         await FilesAsync(check, root);
+        await SyntheticToolsAsync(check, root);
+    }
+
+    private static async Task SyntheticToolsAsync(Action<bool, string> check, string root)
+    {
+        // Same MCP envelope used by the Responses/web regressions, received through
+        // desktop's ordinary API-chat boundary after the shared gateway mapping.
+        var result = JsonSerializer.Deserialize<JsonElement>("""
+            {"content":[{"type":"resource","resource":{"uri":"file:///report.docx","mimeType":"application/octet-stream","blob":"AAEC/w=="}}],
+             "structuredContent":{"filename":"report.docx","file_id":"file_1","media_type":"application/octet-stream","data_url":"data:application/octet-stream;base64,AAEC/w=="},
+             "isError":false,"future":{"keep":true},"_meta":{"existing":true,"aihappey/gateway":{"provider":"openai","providerMetadata":{"openai":{"container_id":"cntr_1"}}}}}
+            """);
+        var events = new[]
+        {
+            JsonSerializer.Serialize(new { type = "tool-input-available", toolCallId = "download_1", toolName = "download_file", providerExecuted = true,
+                input = new { file_id = "file_1" }, providerMetadata = new { openai = new { name = "download_file", gateway_synthetic = true } } }),
+            JsonSerializer.Serialize(new { type = "tool-output-available", toolCallId = "download_1", providerExecuted = true, output = result }),
+            JsonSerializer.Serialize(new { type = "file", mediaType = "application/octet-stream", url = "data:application/octet-stream;base64,AAEC/w==",
+                providerMetadata = new { openai = new { filename = "report.docx", file_id = "file_1" } } }),
+            "{\"type\":\"finish\"}"
+        };
+        var calls = 0;
+        async IAsyncEnumerable<StreamEvent> Stream()
+        {
+            calls++;
+            foreach (var payload in events) yield return StreamEvent.Parse(payload);
+            await Task.CompletedTask;
+        }
+        var output = new ConversationMessage { Message = new UIMessage { Id = "synthetic-answer", Role = Role.assistant }, Status = "streaming" };
+        var conversation = new Conversation { Messages = [output] };
+        await DesktopChatTurn.RunAsync(conversation, output, (_, _) => Stream(),
+            (_, _) => throw new Exception("Provider tools must not request client approval"), (_, _) => Task.CompletedTask,
+            McpTurnSnapshot.Empty, "en", default);
+        var tool = PortableConversations.Element(output.Message.Parts.Single(PortableConversations.IsTool));
+        check(calls == 1 && output.Status == "complete" && tool.GetProperty("providerExecuted").GetBoolean(),
+            "synthetic tools: gateway download stays provider-executed without continuation");
+        check(JsonElement.DeepEquals(result, tool.GetProperty("output")),
+            "synthetic tools: full MCP content, structured content, metadata and future fields preserved");
+        var store = new HistoryStore(Path.Combine(root, "synthetic")); var partition = HistoryStore.Partition("synthetic");
+        await store.SaveAsync(partition, conversation);
+        var restored = (await store.GetAsync(partition, conversation.Id))!;
+        var restoredTool = PortableConversations.Element(restored.Messages[0].Message.Parts.Single(PortableConversations.IsTool));
+        check(JsonElement.DeepEquals(result, restoredTool.GetProperty("output")) && PortableConversations.CanReplay(restored.Messages[0]),
+            "synthetic tools: MCP result survives history reload and remains replayable");
+        var files = MessageDetails.Project(restored.Messages).SelectMany(row => row.Attachments).ToArray();
+        check(files.Any(file => file.Name == "report.docx" && AttachmentDownloads.CanDownload(file)
+            && AttachmentDownloads.EmbeddedBytes(file)!.SequenceEqual(new byte[] { 0, 1, 2, 255 })),
+            "synthetic tools: restored generated document downloads with exact original bytes");
     }
 
     private static async Task HistoryAsync(Action<bool, string> check, string root)
