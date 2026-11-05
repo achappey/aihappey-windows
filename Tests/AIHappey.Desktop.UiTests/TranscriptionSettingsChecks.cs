@@ -2,7 +2,6 @@ using System.Text.Json.Nodes;
 using AIHappey.Desktop.Core;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AIHappey.Desktop.UiTests;
 
@@ -57,10 +56,13 @@ public partial class App
             var forms = Field<List<ITranscriptionProviderForm>>(dialog, "forms");
             Check(forms.Count == 6 && forms.OfType<RealtimeTranscriptionSettingsForm>().Count() == 5,
                 context + ": modal constructs batch settings and all five realtime providers");
-            var tabs = Field<StackPanel>(dialog, "tabs").Children.OfType<ToggleButton>().ToArray();
+            await CheckMediaSettingsTabsAsync(dialog, ["TranscriptionProviderTab_openai", "TranscriptionRealtimeTab_openai",
+                "TranscriptionRealtimeTab_google", "TranscriptionRealtimeTab_gladia", "TranscriptionRealtimeTab_smallestai", "TranscriptionRealtimeTab_mistral"], context);
+            var navigation = Field<NavigationView>(dialog, "tabs");
+            var tabs = navigation.MenuItems.OfType<NavigationViewItem>().ToArray();
             for (var i = 0; i < forms.Count; i++)
             {
-                Toggle(tabs[i]); await Task.Delay(40);
+                navigation.SelectedItem = tabs[i]; await Task.Delay(40);
                 Check(ReferenceEquals(Field<ScrollViewer>(dialog, "page").Content, forms[i].View), context + ": provider tab opens " + forms[i].Title);
             }
             var numbers = TranscriptionNumbers(dialog);
@@ -94,13 +96,32 @@ public partial class App
             Check(expected.All(item => numbers[item.Name].Value == item.Changed), context + ": saved in-memory settings reopen without a JSON round-trip");
             InvokeButton(Descendants(reopen).OfType<Button>().Single(button => button.Name == "PrimaryButton")); await Task.Delay(80);
             numbers = TranscriptionNumbers(reopen);
-            Check(expected.All(item => numbers[item.Name].Value == item.Default), context + ": restore defaults rebuilds all numeric controls safely");
+            var navigation = Field<NavigationView>(reopen, "tabs");
+            Check(expected.All(item => numbers[item.Name].Value == item.Default)
+                && navigation.SelectedItem == navigation.MenuItems[0]
+                && ReferenceEquals(Field<ScrollViewer>(reopen, "page").Content, Field<List<ITranscriptionProviderForm>>(reopen, "forms")[0].View),
+                context + ": restore defaults rebuilds controls and selects the first native tab safely");
             InvokeButton(Descendants(reopen).OfType<Button>().Single(button => button.Name == "CloseButton")); await shown;
             Check(reset is not null && reset.SkipDictateWarning
                 && reset.Realtime.ProviderOptions["mistral"]!["target_streaming_delay_ms"]!.GetValue<int>() == 480,
                 context + ": restored defaults save successfully and retain the dictate warning preference");
         }
         finally { reopen.DiscardOnShutdown = true; reopen.Hide(); await shown; }
+
+        foreach (var unsupported in new[] { Array.Empty<string>(), new[] { "other" } })
+        {
+            var empty = new TranscriptionSettingsDialog(original, unsupported) { XamlRoot = root.XamlRoot, RequestedTheme = theme };
+            shown = empty.ShowAsync();
+            try
+            {
+                await Task.Delay(80);
+                var navigation = Field<NavigationView>(empty, "tabs");
+                Check(navigation.MenuItems.Count == 0 && navigation.SelectedItem is null
+                    && Field<ScrollViewer>(empty, "page").Content is TextBlock message
+                    && message.Text == DesktopResources.Get("TranscriptionNoProviderSettings"), context + ": no supported providers retains the empty-settings message");
+            }
+            finally { empty.DiscardOnShutdown = true; empty.Hide(); await shown; }
+        }
 
         foreach (var (name, value) in new (string, JsonNode?)[]
         {

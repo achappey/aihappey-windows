@@ -4,7 +4,6 @@ using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -74,7 +73,9 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
     private ImagePreferences draft;
     private readonly string? provider;
     private readonly Grid layout = new() { RowSpacing = 16 };
-    private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
+    private readonly NavigationView tabs = new() { Name = "ImageSettingsTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock validation = new() { Name = "ImageSettingsValidation", TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private readonly string maskDirectory;
@@ -98,6 +99,11 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        tabs.SelectionChanged += (_, _) =>
+        {
+            if (tabs.SelectedItem is not NavigationViewItem { Tag: FrameworkElement view }) return;
+            page.Content = view; page.ChangeView(null, 0, null, true);
+        };
         layout.Children.Add(tabs); Grid.SetRow(page, 1); layout.Children.Add(page); Grid.SetRow(validation, 2); layout.Children.Add(validation); Content = layout;
         AutomationProperties.SetLiveSetting(validation, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Assertive);
         PrimaryButtonClick += (_, args) =>
@@ -184,7 +190,7 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
     }
     private void Build()
     {
-        validation.Visibility = Visibility.Collapsed; tabs.Children.Clear(); sections.Clear();
+        page.Content = null; validation.Visibility = Visibility.Collapsed; tabs.MenuItems.Clear(); sections.Clear();
         var general = new StackPanel { Spacing = 16 };
         size = new(Section(general, "ImageSize"), "ImageSize", "ImageSize", draft.Size, ImagePreferences.SizePresets, 'x');
         aspect = new(Section(general, "ImageAspectRatio"), "ImageAspectRatio", "ImageAspectRatio", draft.AspectRatio, ImagePreferences.AspectPresets, ':');
@@ -224,16 +230,17 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
         maskRow.Children.Add(pickMask); maskRow.Children.Add(clearMask); other.Children.Add(maskRow); other.Children.Add(maskName); other.Children.Add(preview);
         foreach (var control in new Control[] { batch, seed, count, pickMask, clearMask }) ControlAppearance.Stock(control);
         providerForm = ImageProviderForms.Create(provider, draft);
-        var generalTab = new ToggleButton { Name = "ImageGeneralTab", Content = DesktopResources.Get("General"), IsChecked = true }; tabs.Children.Add(generalTab); ControlAppearance.Stock(generalTab);
-        ToggleButton? providerTab = null;
-        if (providerForm is not null)
+        NavigationViewItem Tab(string name, string label, FrameworkElement view)
         {
-            providerTab = new() { Name = "ImageProviderTab", Content = providerForm.Title }; tabs.Children.Add(providerTab); ControlAppearance.Stock(providerTab);
-            providerTab.Click += (_, _) => { generalTab.IsChecked = false; providerTab.IsChecked = true; page.Content = providerForm.View; page.ChangeView(null, 0, null); };
+            var tab = new NavigationViewItem { Name = name, Content = label, Tag = view };
+            AutomationProperties.SetAutomationId(tab, name); AutomationProperties.SetName(tab, label);
+            tabs.MenuItems.Add(tab); return tab;
         }
-        showGeneral = () => { generalTab.IsChecked = true; if (providerTab is not null) providerTab.IsChecked = false; page.Content = general; };
-        generalTab.Click += (_, _) => { showGeneral(); page.ChangeView(null, 0, null); };
-        page.Content = general;
+        var generalTab = Tab("ImageGeneralTab", DesktopResources.Get("General"), general);
+        if (providerForm is not null)
+            Tab("ImageProviderTab", providerForm.Title, providerForm.View);
+        showGeneral = () => tabs.SelectedItem = generalTab;
+        showGeneral();
     }
     private bool IsOwnedMask(string path) => Path.GetFullPath(path).StartsWith(Path.GetFullPath(maskDirectory) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     private void InitializePicker(object picker) => WinRT.Interop.InitializeWithWindow.Initialize(picker, Microsoft.UI.Win32Interop.GetWindowFromWindowId(XamlRoot.ContentIslandEnvironment.AppWindowId));
@@ -278,6 +285,12 @@ public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog
         finally { deferral.Complete(); }
     }
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => SizeToRoot();
+    protected override void OnApplyTemplate()
+    {
+        // Bound native top-navigation overflow before the first measure.
+        if (XamlRoot is not null) SizeToRoot();
+        base.OnApplyTemplate();
+    }
     void IResponsiveDialog.SizeToRoot() => SizeToRoot();
-    private void SizeToRoot() { layout.Width = Math.Max(0, Math.Min(820, XamlRoot.Size.Width - 96)); layout.Height = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240)); }
+    private void SizeToRoot() { layout.Width = Math.Max(0, Math.Min(820, XamlRoot.Size.Width - 96)); layout.MaxHeight = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240)); }
 }

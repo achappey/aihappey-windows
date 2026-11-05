@@ -2,6 +2,6 @@
   "startup", "charts", "chat-files", "context-search", "composer-progress", "composer-keyboard", "transcript",
   "shell", "sidebar", "streaming-attachments", "icons", "overview-tabs", "usage", "providers",
   "agents", "mcp-presentation", "elicitation", "ai-models", "skills", "local-tools", "images",
-  "media-libraries", "transcription-tabs", "videos", "realtime", "explorer", "chat-skills-settings", "settings-appearance",
+  "media-libraries", "media-settings-tabs", "transcription-tabs", "videos", "realtime", "explorer", "chat-skills-settings", "settings-appearance",
   "chat-settings-scrolling", "chat-provider-forms", "tool-output"
 ]

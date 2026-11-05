@@ -2,7 +2,6 @@ using System.Text.Json.Nodes;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AIHappey.Desktop.Core;
 
@@ -154,7 +153,9 @@ public sealed class SpeechSettingsDialog : ContentDialog, IResponsiveDialog
     private SpeechPreferences draft;
     private readonly string? provider;
     private readonly Grid layout = new() { RowSpacing = 12 };
-    private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
+    private readonly NavigationView tabs = new() { Name = "SpeechSettingsTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock validation = new() { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private GeneralSpeechSettingsForm general = null!;
@@ -175,6 +176,11 @@ public sealed class SpeechSettingsDialog : ContentDialog, IResponsiveDialog
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        tabs.SelectionChanged += (_, _) =>
+        {
+            if (tabs.SelectedItem is not NavigationViewItem { Tag: FrameworkElement view }) return;
+            page.Content = view; page.ChangeView(null, 0, null, true);
+        };
         layout.Children.Add(tabs);
         Grid.SetRow(page, 1); layout.Children.Add(page);
         Grid.SetRow(validation, 2); layout.Children.Add(validation);
@@ -189,26 +195,21 @@ public sealed class SpeechSettingsDialog : ContentDialog, IResponsiveDialog
 
     private void Build()
     {
-        tabs.Children.Clear();
+        page.Content = null; tabs.MenuItems.Clear();
         validation.Visibility = Visibility.Collapsed;
         general = new(draft);
         providerForm = provider is null ? null : SpeechProviderForms.Create(provider, draft);
-        AddTab(DesktopResources.Get("General"), general.View, true);
-        if (providerForm is not null) AddTab(providerForm.Title, providerForm.View, false);
-        page.Content = general.View;
+        var generalTab = AddTab("SpeechGeneralTab", DesktopResources.Get("General"), general.View);
+        if (providerForm is not null) AddTab("SpeechProviderTab", providerForm.Title, providerForm.View);
+        tabs.SelectedItem = generalTab;
     }
 
-    private void AddTab(string title, FrameworkElement view, bool selected)
+    private NavigationViewItem AddTab(string name, string title, FrameworkElement view)
     {
-        var tab = new ToggleButton { Content = title, IsChecked = selected };
-        ControlAppearance.Stock(tab);
-        tabs.Children.Add(tab);
-        tab.Click += (_, _) =>
-        {
-            foreach (var other in tabs.Children.OfType<ToggleButton>()) other.IsChecked = other == tab;
-            page.Content = view;
-            page.ChangeView(null, 0, null);
-        };
+        var tab = new NavigationViewItem { Name = name, Content = title, Tag = view };
+        AutomationProperties.SetAutomationId(tab, name); AutomationProperties.SetName(tab, title);
+        tabs.MenuItems.Add(tab);
+        return tab;
     }
 
     private async void Save(ContentDialog sender, ContentDialogClosingEventArgs args)
@@ -232,10 +233,16 @@ public sealed class SpeechSettingsDialog : ContentDialog, IResponsiveDialog
     }
 
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => SizeToRoot();
+    protected override void OnApplyTemplate()
+    {
+        // Bound native top-navigation overflow before the first measure.
+        if (XamlRoot is not null) SizeToRoot();
+        base.OnApplyTemplate();
+    }
     void IResponsiveDialog.SizeToRoot() => SizeToRoot();
     private void SizeToRoot()
     {
         layout.Width = Math.Max(0, Math.Min(820, XamlRoot.Size.Width - 96));
-        layout.Height = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240));
+        layout.MaxHeight = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240));
     }
 }

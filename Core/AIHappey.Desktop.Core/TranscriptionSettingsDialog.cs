@@ -2,7 +2,6 @@ using System.Text.Json.Nodes;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AIHappey.Desktop.Core;
 
@@ -71,7 +70,9 @@ public sealed class TranscriptionSettingsDialog : ContentDialog, IResponsiveDial
     private TranscriptionPreferences draft;
     private readonly string[] providers;
     private readonly Grid layout = new() { RowSpacing = 12 };
-    private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
+    private readonly NavigationView tabs = new() { Name = "TranscriptionSettingsTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly ScrollViewer page = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly TextBlock validation = new() { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
     private readonly List<ITranscriptionProviderForm> forms = [];
@@ -83,6 +84,11 @@ public sealed class TranscriptionSettingsDialog : ContentDialog, IResponsiveDial
         Title = DesktopResources.Get("TranscriptionSettings"); CloseButtonText = DesktopResources.Get("Close"); PrimaryButtonText = DesktopResources.Get("ChatRestoreDefaults");
         Resources["ContentDialogMaxWidth"] = 920d; Resources["ContentDialogMinWidth"] = 0d;
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto }); layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) }); layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        tabs.SelectionChanged += (_, _) =>
+        {
+            if (tabs.SelectedItem is not NavigationViewItem { Tag: FrameworkElement view }) return;
+            page.Content = view; page.ChangeView(null, 0, null, true);
+        };
         layout.Children.Add(tabs); Grid.SetRow(page, 1); layout.Children.Add(page); Grid.SetRow(validation, 2); layout.Children.Add(validation); Content = layout;
         AutomationProperties.SetLiveSetting(validation, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Assertive);
         PrimaryButtonClick += (_, args) => { args.Cancel = true; draft = new() { SkipDictateWarning = draft.SkipDictateWarning }; Build(); };
@@ -99,21 +105,29 @@ public sealed class TranscriptionSettingsDialog : ContentDialog, IResponsiveDial
     }
     private void Build()
     {
-        forms.Clear(); tabs.Children.Clear(); validation.Visibility = Visibility.Collapsed;
-        void Add(ITranscriptionProviderForm form)
+        page.Content = null; forms.Clear(); tabs.MenuItems.Clear(); validation.Visibility = Visibility.Collapsed;
+        void Add(string name, ITranscriptionProviderForm form)
         {
             forms.Add(form);
-            var tab = new ToggleButton { Content = form.Title, IsChecked = forms.Count == 1 }; ControlAppearance.Stock(tab); tabs.Children.Add(tab);
-            tab.Click += (_, _) => { foreach (var other in tabs.Children.OfType<ToggleButton>()) other.IsChecked = other == tab; page.Content = form.View; page.ChangeView(null, 0, null); };
+            var tab = new NavigationViewItem { Name = name, Content = form.Title, Tag = form.View };
+            AutomationProperties.SetAutomationId(tab, name); AutomationProperties.SetName(tab, form.Title);
+            tabs.MenuItems.Add(tab);
         }
         foreach (var provider in providers)
         {
-            if (TranscriptionProviderForms.Create(provider, draft) is { } form) Add(form);
-            if (provider is "openai" or "google" or "gladia" or "smallestai" or "mistral") Add(new RealtimeTranscriptionSettingsForm(provider, draft.Realtime));
+            if (TranscriptionProviderForms.Create(provider, draft) is { } form) Add("TranscriptionProviderTab_" + provider, form);
+            if (provider is "openai" or "google" or "gladia" or "smallestai" or "mistral") Add("TranscriptionRealtimeTab_" + provider, new RealtimeTranscriptionSettingsForm(provider, draft.Realtime));
         }
-        page.Content = forms.FirstOrDefault()?.View ?? (object)new TextBlock { Text = DesktopResources.Get("TranscriptionNoProviderSettings"), TextWrapping = TextWrapping.Wrap };
+        if (tabs.MenuItems.Count > 0) tabs.SelectedItem = tabs.MenuItems[0];
+        else page.Content = new TextBlock { Text = DesktopResources.Get("TranscriptionNoProviderSettings"), TextWrapping = TextWrapping.Wrap };
     }
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => SizeToRoot();
+    protected override void OnApplyTemplate()
+    {
+        // Bound native top-navigation overflow before the first measure.
+        if (XamlRoot is not null) SizeToRoot();
+        base.OnApplyTemplate();
+    }
     void IResponsiveDialog.SizeToRoot() => SizeToRoot();
-    private void SizeToRoot() { layout.Width = Math.Max(0, Math.Min(820, XamlRoot.Size.Width - 96)); layout.Height = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240)); }
+    private void SizeToRoot() { layout.Width = Math.Max(0, Math.Min(820, XamlRoot.Size.Width - 96)); layout.MaxHeight = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240)); }
 }

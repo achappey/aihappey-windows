@@ -6,7 +6,6 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Automation.Provider;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 
@@ -79,7 +78,9 @@ public partial class App
             var preferences = new ImagePreferences { StorageRoot = directory }; preferences.ProviderOptions["openai"]["future"] = new JsonObject { ["keep"] = true };
             var dialog = new ImageSettingsDialog(preferences, "openai", directory) { XamlRoot = page.XamlRoot, RequestedTheme = theme, SaveAsync = p => { saved = p; return Task.CompletedTask; } };
             SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(140); dialog.UpdateLayout();
-            Check(Descendants(dialog).OfType<ToggleButton>().Any(t => t.Name == "ImageProviderTab" && t.Content.ToString() == "OpenAI"), context + ": OpenAI provider tab for OpenAI selection");
+            await CheckMediaSettingsTabsAsync(dialog, ["ImageGeneralTab", "ImageProviderTab"], context);
+            var navigation = Field<NavigationView>(dialog, "tabs");
+            Check(navigation.MenuItems.OfType<NavigationViewItem>().Any(t => t.Name == "ImageProviderTab" && t.Content.ToString() == "OpenAI"), context + ": OpenAI provider tab for OpenAI selection");
             Check(!Descendants(dialog).OfType<FrameworkElement>().Any(element => element.Name == "ImageOpenAIMarkupField"), context + ": markup is not part of generic image settings");
             Check(!Descendants(dialog).OfType<FrameworkElement>().Any(e => e.Name is "ImageStorageCard" or "ImageStoragePath" or "ImageChooseFolder" or "ImageDefaultFolder"),
                 context + ": generation settings no longer contain storage controls");
@@ -89,8 +90,8 @@ public partial class App
             var batch = Descendants(dialog).OfType<TextBox>().Single(t => t.Name == "ImageBatchLimit"); batch.Text = "0";
             InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await Task.Delay(100);
             Check(shown.Status == Windows.Foundation.AsyncStatus.Started && saved is null, context + ": invalid batch size blocks save/close"); batch.Text = "2";
-            var providerTab = Descendants(dialog).OfType<ToggleButton>().Single(t => t.Name == "ImageProviderTab");
-            ((IToggleProvider)new ToggleButtonAutomationPeer(providerTab).GetPattern(PatternInterface.Toggle)).Toggle(); await Task.Delay(80);
+            var providerTab = navigation.MenuItems.OfType<NavigationViewItem>().Single(t => t.Name == "ImageProviderTab");
+            ((ISelectionItemProvider)new NavigationViewItemAutomationPeer(providerTab).GetPattern(PatternInterface.SelectionItem)).Select(); await Task.Delay(80);
             var generalCard = Descendants(dialog).OfType<SettingsExpander>().Single(card => card.Name == "OpenAI_ImageGeneral");
             generalCard.IsExpanded = true; await Task.Delay(60); dialog.UpdateLayout();
             Check(Descendants(dialog).OfType<SettingsExpander>().Any(card => card.Name == "OpenAI_ImageGIF")
@@ -113,7 +114,8 @@ public partial class App
             Descendants(dialog).OfType<ComboBox>().Single(c => c.Name == "ImageOpenAIquality").SelectedIndex = 3;
             outputSection.IsExpanded = false; batch.Text = "0";
             InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await Task.Delay(100);
-            Check(shown.Status == Windows.Foundation.AsyncStatus.Started && saved is null && outputSection.IsExpanded && providerTab.IsChecked == false
+            Check(shown.Status == Windows.Foundation.AsyncStatus.Started && saved is null && outputSection.IsExpanded && !providerTab.IsSelected
+                && navigation.SelectedItem is NavigationViewItem { Name: "ImageGeneralTab" }
                 && batch.FocusState != FocusState.Unfocused && count.Value == 3,
                 context + ": invalid hidden output switches back to General, expands and focuses its field without losing tab edits");
             batch.Text = "2";
@@ -128,7 +130,9 @@ public partial class App
             {
                 dialog = new ImageSettingsDialog(preferences, provider, directory) { XamlRoot = page.XamlRoot, RequestedTheme = theme };
                 shown = dialog.ShowAsync(); await Task.Delay(90);
-                Check(!Descendants(dialog).OfType<ToggleButton>().Any(t => t.Name == "ImageProviderTab"), context + ": no OpenAI form for " + (provider ?? "no model")); dialog.DiscardOnShutdown = true; dialog.Hide(); await shown;
+                Check(Field<NavigationView>(dialog, "tabs").MenuItems.Count == 1
+                    && Field<NavigationView>(dialog, "tabs").SelectedItem is NavigationViewItem { Name: "ImageGeneralTab" },
+                    context + ": only native General tab for " + (provider ?? "no model")); dialog.DiscardOnShutdown = true; dialog.Hide(); await shown;
             }
             var failure = new ImageSettingsDialog(preferences, "openai", directory) { XamlRoot = page.XamlRoot, SaveAsync = _ => throw new IOException("blocked") };
             shown = failure.ShowAsync(); await Task.Delay(90); InvokeButton(Descendants(failure).OfType<Button>().Single(b => b.Name == "CloseButton")); await Task.Delay(90);
@@ -240,7 +244,9 @@ public partial class App
         Check(saved?.Size == roundTrip.Size && saved.AspectRatio == roundTrip.AspectRatio, context + ": reopening and closing preserves custom dimensions");
         saved = null; dialog = Create(original); shown = dialog.ShowAsync(); await Task.Delay(90);
         InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "PrimaryButton")); await Task.Delay(60);
-        Check(Descendants(dialog).OfType<SettingsExpander>().All(section => !section.IsExpanded)
+        Check(Field<NavigationView>(dialog, "tabs").SelectedItem is NavigationViewItem { Name: "ImageGeneralTab" }
+            && ReferenceEquals(Field<ScrollViewer>(dialog, "page").Content, ((NavigationViewItem)Field<NavigationView>(dialog, "tabs").SelectedItem).Tag)
+            && Descendants(dialog).OfType<SettingsExpander>().All(section => !section.IsExpanded)
             && new[] { "ImageSizeWidth", "ImageSizeHeight", "ImageAspectRatioWidth", "ImageAspectRatioHeight" }.All(name => !Input(dialog, name).IsEnabled && Input(dialog, name).Text == ""),
             context + ": Restore defaults rebuilds cleared, disabled dimension inputs");
         Close(dialog); await shown;
