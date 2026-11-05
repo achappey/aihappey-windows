@@ -103,14 +103,14 @@ internal sealed class ChatSettingsFields
         return box;
     }
 
-    public ComboBox Select(Panel parent, string key, Func<string> read, IEnumerable<string> options, Action<string> write, Func<bool>? enabled = null, bool inherit = false, Func<string, string>? label = null)
+    public ComboBox Select(Panel parent, string key, Func<string> read, IEnumerable<string> options, Action<string> write, Func<bool>? enabled = null, bool inherit = false, Func<string, string>? label = null, string? inheritLabel = null)
     {
         var values = options.ToList();
         if (inherit && !values.Contains("")) values.Insert(0, "");
         var selected = read();
         if (selected.Length > 0 && !values.Contains(selected)) values.Add(selected); // Future provider values survive round trips.
         var box = new ComboBox { Header = L(key), HorizontalAlignment = HorizontalAlignment.Stretch };
-        foreach (var value in values) box.Items.Add(new ComboBoxItem { Tag = value, Content = value.Length == 0 ? L("inherit") : label?.Invoke(value) ?? value });
+        foreach (var value in values) box.Items.Add(new ComboBoxItem { Tag = value, Content = value.Length == 0 ? inheritLabel ?? L("inherit") : label?.Invoke(value) ?? value });
         void Update() => box.SelectedItem = box.Items.OfType<ComboBoxItem>().FirstOrDefault(item => (string)item.Tag == read());
         Update(); ControlAppearance.Stock(box); AutomationProperties.SetName(box, L(key)); parent.Children.Add(box);
         Enabled(box, enabled); refresh.Add(Update);

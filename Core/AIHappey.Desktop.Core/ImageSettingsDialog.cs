@@ -31,32 +31,42 @@ public static class ImageProviderForms
 
 public sealed class OpenAIImageSettingsForm : IImageProviderForm
 {
-    private readonly JsonObject config;
+    private readonly OpenAIChatConfig model;
+    private readonly ChatSettingsFields fields = new();
+    private readonly OpenAIImageMarkupField markup;
     public string Title => "OpenAI";
     public FrameworkElement View { get; }
     public OpenAIImageSettingsForm(JsonObject config)
     {
-        this.config = config;
+        model = new(config);
         var panel = new StackPanel { Name = "OpenAIImageForm", Spacing = 16 };
+        NativeSettingsSurface.Expander(panel, "OpenAI_ImageGeneral", DesktopResources.Get("General"), null, out var general);
         foreach (var (field, label, choices) in new[]
         {
-            ("quality", "ImageQuality", new[] { "auto", "low", "medium", "high" }),
-            ("background", "ImageBackground", new[] { "auto", "transparent", "opaque" }),
-            ("moderation", "ImageModeration", new[] { "auto", "low" })
+            ("quality", "quality", new[] { "auto", "low", "medium", "high", "xhigh", "max" }),
+            ("background", "background", new[] { "auto", "transparent", "opaque" }),
+            ("moderation", "moderation", new[] { "auto", "low" })
         })
         {
-            var select = new ComboBox { Name = "ImageOpenAI" + field, Header = DesktopResources.Get(label), HorizontalAlignment = HorizontalAlignment.Stretch };
-            foreach (var choice in choices) select.Items.Add(new ComboBoxItem { Content = DesktopResources.Get("ImageOption_" + choice), Tag = choice });
-            // Never erase future provider values merely by opening the form.
-            var selected = OpenAIChatConfig.Text(config[field]) ?? "auto";
-            if (!choices.Contains(selected)) select.Items.Add(new ComboBoxItem { Content = selected, Tag = selected });
-            select.SelectedItem = select.Items.Cast<ComboBoxItem>().First(i => (string)i.Tag == selected);
-            select.SelectionChanged += (_, _) => this.config[field] = (string)((ComboBoxItem)select.SelectedItem).Tag;
-            ControlAppearance.Stock(select); AutomationProperties.SetName(select, DesktopResources.Get(label)); panel.Children.Add(select);
+            var select = fields.Select(general, label, () => model.String(field, "auto"), choices,
+                value => model.Optional(field, value), label: value => DesktopResources.Get("ImageOption_" + value));
+            select.Name = "ImageOpenAI" + field;
         }
+        OpenAIImageFormatCards.Output(general, fields, model, "");
+        markup = new(model.Root); general.Children.Add(markup.View);
+        OpenAIImageFormatCards.Add(panel, fields, model, "");
         View = panel;
     }
-    public void Commit(ImagePreferences preferences) => preferences.ProviderOptions["openai"] = (JsonObject)config.DeepClone();
+    public void Commit(ImagePreferences preferences)
+    {
+        if (markup.IsLoading) throw new InvalidOperationException(ChatSettingsFields.L("openai.imageMarkupLoading"));
+        if (!fields.IsValid)
+        {
+            fields.FirstInvalid?.Focus(FocusState.Programmatic);
+            throw new InvalidOperationException(DesktopResources.Get("ImageSettingsInvalid"));
+        }
+        preferences.ProviderOptions["openai"] = (JsonObject)model.Root.DeepClone();
+    }
 }
 
 public sealed class ImageSettingsDialog : ContentDialog, IResponsiveDialog

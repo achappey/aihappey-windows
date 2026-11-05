@@ -2073,5 +2073,16 @@ Speaker: {1}</value></data>
   <data name="SkillGitHubMissingManifest" xml:space="preserve"><value>The selected folder does not contain SKILL.md.</value></data>
   <data name="SkillGitHubInvalidSkill" xml:space="preserve"><value>The selected folder is not a valid Agent Skill.</value></data>
   <data name="SkillGitHubUnsafePath" xml:space="preserve"><value>The skill contains unsafe or conflicting paths, symbolic links, or submodules.</value></data>
-  <data name="ChatForm_openai_applyPatch" xml:space="preserve"><value>Apply patch</value></data>
+  <data name="ChatForm_openai_applyPatch" xml:space="preserve"><value>Text editor</value></data>
+  <data name="ChatForm_openai_imageOutputFormat" xml:space="preserve"><value>Output format</value></data>
+  <data name="ChatForm_openai_imageComplexity" xml:space="preserve"><value>Complexity</value></data>
+  <data name="ChatForm_openai_imageFrameCount" xml:space="preserve"><value>Frame count</value></data>
+  <data name="ChatForm_openai_imageFrameDuration" xml:space="preserve"><value>Frame duration (ms)</value></data>
+  <data name="ChatForm_openai_imageSvgModel" xml:space="preserve"><value>SVG author model</value></data>
+  <data name="ChatForm_openai_imageSvg" xml:space="preserve"><value>SVG</value></data>
+  <data name="ChatForm_openai_imageMarkup" xml:space="preserve"><value>Markup</value></data>
+  <data name="ChatForm_openai_imageMarkupHint" xml:space="preserve"><value>Select or drop a transparent PNG overlay matching the first input image. OpenAI edits only; cannot be combined with a mask.</value></data>
+  <data name="ChatForm_openai_imageMarkupFailed" xml:space="preserve"><value>Could not load or save image markup.</value></data>
+  <data name="ChatForm_default" xml:space="preserve"><value>Default</value></data>
+  <data name="ChatForm_openai_imageMarkupLoading" xml:space="preserve"><value>Wait for the image markup upload to finish.</value></data>
 </root>

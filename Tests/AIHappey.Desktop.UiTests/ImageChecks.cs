@@ -80,6 +80,7 @@ public partial class App
             var dialog = new ImageSettingsDialog(preferences, "openai", directory) { XamlRoot = page.XamlRoot, RequestedTheme = theme, SaveAsync = p => { saved = p; return Task.CompletedTask; } };
             SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(140); dialog.UpdateLayout();
             Check(Descendants(dialog).OfType<ToggleButton>().Any(t => t.Name == "ImageProviderTab" && t.Content.ToString() == "OpenAI"), context + ": OpenAI provider tab for OpenAI selection");
+            Check(!Descendants(dialog).Any(element => element.Name == "ImageOpenAIMarkupField"), context + ": markup is not part of generic image settings");
             Check(!Descendants(dialog).OfType<FrameworkElement>().Any(e => e.Name is "ImageStorageCard" or "ImageStoragePath" or "ImageChooseFolder" or "ImageDefaultFolder"),
                 context + ": generation settings no longer contain storage controls");
             var outputSection = Descendants(dialog).OfType<SettingsExpander>().Single(section => section.Name == "ImageOutputCard");
@@ -90,7 +91,25 @@ public partial class App
             Check(shown.Status == Windows.Foundation.AsyncStatus.Started && saved is null, context + ": invalid batch size blocks save/close"); batch.Text = "2";
             var providerTab = Descendants(dialog).OfType<ToggleButton>().Single(t => t.Name == "ImageProviderTab");
             ((IToggleProvider)new ToggleButtonAutomationPeer(providerTab).GetPattern(PatternInterface.Toggle)).Toggle(); await Task.Delay(80);
+            var generalCard = Descendants(dialog).OfType<SettingsExpander>().Single(card => card.Name == "OpenAI_ImageGeneral");
+            generalCard.IsExpanded = true; await Task.Delay(60); dialog.UpdateLayout();
+            Check(Descendants(dialog).OfType<SettingsExpander>().Any(card => card.Name == "OpenAI_ImageGIF")
+                && Descendants(dialog).OfType<SettingsExpander>().Any(card => card.Name == "OpenAI_ImageSVG"), context + ": separate General, GIF and SVG provider cards");
             Check(Descendants(dialog).OfType<ComboBox>().Count(c => c.Name.StartsWith("ImageOpenAI")) == 3, context + ": all three OpenAI image settings rendered");
+            var outputFormat = Descendants(generalCard).OfType<ComboBox>().Single(box => box.Header?.ToString() == DesktopResources.Get("ChatForm_openai_imageOutputFormat"));
+            Check(outputFormat.SelectedItem is ComboBoxItem { Tag: "" } defaultOption
+                && defaultOption.Content?.ToString() == DesktopResources.Get("ChatForm_default"), context + ": Default output format resolves from packaged native resources");
+            Check(Descendants(generalCard).Any(element => element.Name == "ImageOpenAIMarkupField"), context + ": markup upload belongs to the OpenAI provider card");
+            var gifCard = Descendants(dialog).OfType<SettingsExpander>().Single(card => card.Name == "OpenAI_ImageGIF");
+            gifCard.IsExpanded = true;
+            var svgCard = Descendants(dialog).OfType<SettingsExpander>().Single(card => card.Name == "OpenAI_ImageSVG");
+            svgCard.IsExpanded = true; await Task.Delay(60); dialog.UpdateLayout();
+            Check(!Descendants(gifCard).OfType<ToggleSwitch>().Any() && Descendants(svgCard).OfType<ToggleSwitch>().Count() == 1,
+                context + ": only SVG has a card toggle");
+            var gifInputs = Descendants(gifCard).OfType<TextBox>().ToArray();
+            gifInputs[0].Text = "12"; gifInputs[1].Text = "2500"; gifInputs[0].Text = "";
+            var svgToggle = Descendants(svgCard).OfType<ToggleSwitch>().Single(); svgToggle.IsOn = true;
+            Descendants(svgCard).OfType<TextBox>().Single().Text = "author"; svgToggle.IsOn = false;
             Descendants(dialog).OfType<ComboBox>().Single(c => c.Name == "ImageOpenAIquality").SelectedIndex = 3;
             outputSection.IsExpanded = false; batch.Text = "0";
             InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await Task.Delay(100);
@@ -101,6 +120,9 @@ public partial class App
             InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
             Check(saved?.N == 3 && saved.MaxImagesPerCall == 2 && saved.ProviderOptions["openai"]["quality"]!.GetValue<string>() == "high"
                 && saved.ProviderOptions["openai"]["future"]!["keep"]!.GetValue<bool>() && saved.StorageRoot == directory && preferences.N == 1, context + ": saved image settings are independent and preserve storage and unknown provider fields");
+            Check(saved!.ProviderOptions["openai"]["frame_duration_ms"]!.GetValue<double>() == 2500
+                && !saved.ProviderOptions["openai"].ContainsKey("frame_count") && !saved.ProviderOptions["openai"].ContainsKey("svg"),
+                context + ": blank GIF input and SVG toggle off omit settings independently");
             await CheckImageDimensionSettingsAsync(page.XamlRoot, theme, directory);
             foreach (var provider in new string?[] { "other", null })
             {

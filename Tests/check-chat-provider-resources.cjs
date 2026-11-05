@@ -16,7 +16,7 @@ const key = value => 'ChatForm_' + value.replace(/\./g, '_');
 for (const lang of ['en', 'nl']) {
   const browser = path.join(root, 'aihappey-chat/packages/aihappey-i18n/src/locales', lang);
   const browserProviders = JSON.parse(fs.readFileSync(path.join(browser, 'providers.json'), 'utf8'));
-  const labels = Object.assign({}, ...['anthropic', 'google', 'mistral'].map(name => flatten(browserProviders[name], name)));
+  const labels = Object.assign({}, ...['openai', 'anthropic', 'google', 'mistral'].map(name => flatten(browserProviders[name], name)));
   const xml = fs.readFileSync(path.join(core, 'Strings', lang, 'Resources.resw'), 'utf8');
   const resources = new Map([...xml.matchAll(/<data name="([^"]+)"[^>]*>\s*<value>([\s\S]*?)<\/value>\s*<\/data>/g)].map(m => [m[1], decode(m[2])]));
   for (const [name, text] of Object.entries(labels))
@@ -36,6 +36,9 @@ for (const lang of ['en', 'nl']) {
     for (const match of source.matchAll(/\bG\("([^"]+)"\)/g)) required.push('google.' + match[1]);
   }
   // These names are composed from constants and therefore are not found by literal-call scans.
+  required.push('default', 'openai.imageOutputFormat', 'openai.imageComplexity', 'openai.imageFrameCount',
+    'openai.imageFrameDuration', 'openai.imageSvg', 'openai.imageSvgModel', 'openai.imageMarkup',
+    'openai.imageMarkupHint', 'openai.imageMarkupFailed', 'openai.imageMarkupLoading');
   for (const type of ['web_search', 'image_search', 'enterprise_web_search']) required.push('google.' + type);
   for (const type of ['text', 'audio', 'image', 'video']) required.push('google.interactions.responseFormat.types.' + type);
   for (const type of ['repository', 'gcs', 'inline']) required.push('google.environment.sourceTypes.' + type);
@@ -47,5 +50,5 @@ for (const lang of ['en', 'nl']) {
   required.push('google.interactions.retrieval.apiKey');
   for (const name of required) assert.ok(resources.get(key(name))?.trim(), `${lang}: missing native form label ${name}`);
   assert.ok(!resources.get(key('anthropic.outputConfig.effort')).includes('{{'), `${lang}: slider header must not expose web interpolation syntax`);
-  console.log(`${lang}: ${Object.keys(labels).length} Anthropic/Google/Mistral labels match the browser; all native provider-form headers exist.`);
+  console.log(`${lang}: ${Object.keys(labels).length} OpenAI/Anthropic/Google/Mistral labels match the browser; all native provider-form headers exist.`);
 }

@@ -28,6 +28,36 @@ internal static class ImageRegressionTests
             && body.GetProperty("providerOptions").GetProperty("openai").GetProperty("future").GetProperty("keep").GetBoolean()
             && !body.TryGetProperty("providerMetadata", out _), "catalog provider takes priority over alias prefix, options are scoped, unknown fields retained");
         var otherModel = model with { ProviderKey = "other" };
+        var formats = preferences.Clone();
+        formats.ProviderOptions["openai"]["output_format"] = "jpeg";
+        formats.ProviderOptions["openai"]["complexity"] = "high";
+        formats.ProviderOptions["openai"]["frame_count"] = 12;
+        formats.ProviderOptions["openai"]["frame_duration_ms"] = 2500;
+        formats.ProviderOptions["openai"]["svg"] = System.Text.Json.Nodes.JsonNode.Parse("""{"model":"author","reasoning":{"effort":"max"},"future":true}""");
+        formats.ProviderOptions["openai"]["markup"] = new System.Text.Json.Nodes.JsonObject { ["image_url"] = "data:image/png;base64," + Png };
+        var editRequest = formats.Request(model, "edit", [file], null, 1);
+        var edit = editRequest.ProviderOptions!["openai"];
+        check(edit.GetProperty("markup").GetProperty("image_url").GetString() == "data:image/png;base64," + Png
+            && edit.GetProperty("output_format").GetString() == "jpeg" && edit.GetProperty("frame_count").GetInt32() == 12
+            && edit.GetProperty("frame_duration_ms").GetInt32() == 2500 && edit.GetProperty("svg").GetProperty("reasoning").GetProperty("effort").GetString() == "max",
+            "OpenAI edit overlay is a base64 data URL and GIF/SVG settings pass through without compatibility filtering");
+        var wireEdit = JsonSerializer.SerializeToElement(editRequest, JsonSerializerOptions.Web);
+        var roundTrip = JsonSerializer.Deserialize<ImageRequest>(wireEdit.GetRawText(), JsonSerializerOptions.Web)!;
+        check(!wireEdit.TryGetProperty("markup", out _) && !wireEdit.TryGetProperty("markupPath", out _)
+            && roundTrip.ProviderOptions!["openai"].GetProperty("markup").GetProperty("image_url").GetString() == "data:image/png;base64," + Png,
+            "unchanged Vercel image contract round-trips markup only inside OpenAI provider options");
+        var optionsClone = formats.Clone(); optionsClone.ProviderOptions["openai"].Remove("markup");
+        check(formats.ProviderOptions["openai"].ContainsKey("markup") && !optionsClone.ProviderOptions["openai"].ContainsKey("markup")
+            && !formats.Request(otherModel, "edit", [file], null, 1).ProviderOptions!["other"].TryGetProperty("markup", out _),
+            "markup provider options deep clone and never leak to other providers");
+        var chat = OpenAIChatConfig.Canonical(System.Text.Json.Nodes.JsonNode.Parse("""{"tools":[{"type":"image_generation","model":"gpt-image-2.6-flare","input_fidelity":"high","svg":{"model":"author"},"future":42}]}""")!.AsObject());
+        check(chat["tools"]![0]!["input_fidelity"] is null && chat["tools"]![0]!["future"]!.GetValue<int>() == 42
+            && chat["tools"]![0]!["svg"]!["model"]!.GetValue<string>() == "author", "legacy chat input fidelity is omitted while future image properties survive");
+        check(OpenAIChatConfig.SectionDefault("image_generation")["model"]!.GetValue<string>() == "gpt-image-2.5-sunburst"
+            && OpenAIChatConfig.SectionDefault("image_generation")["input_fidelity"] is null, "image tool enable defaults match the current application default");
+        check(OpenAIChatConfig.ImageModels.SequenceEqual(["gpt-image-2.6-sunburst", "gpt-image-2.6-flare", "gpt-image-2.5-sunburst", "gpt-image-2.5-flare", "gpt-image-2"])
+            && !OpenAIChatConfig.ImageModels.Any(id => id.StartsWith("gpt-image-1", StringComparison.Ordinal)),
+            "Windows image-model choices match browser and exclude every GPT Image 1-family model");
         check(preferences.Request(otherModel, "x", [], null, 1).ProviderOptions!.Keys.SequenceEqual(["other"]), "non-OpenAI generation does not send OpenAI settings");
         check(new ImagePreferences().N == 1 && new ImagePreferences().ProviderOptions["openai"]["moderation"]!.GetValue<string>() == "auto"
             && DesktopBranding.AppName == "Image regression app"

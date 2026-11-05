@@ -207,6 +207,7 @@ public sealed class OpenAIChatConfig
 {
     public static readonly string[] ToolTypes = ["web_search", "image_generation", "code_interpreter", "file_search", "shell", "apply_patch", "programmatic_tool_calling", "tool_search"];
     public static readonly string[] Efforts = ["none", "minimal", "low", "medium", "high", "xhigh", "max"];
+    public static readonly string[] ImageModels = ["gpt-image-2.6-sunburst", "gpt-image-2.6-flare", "gpt-image-2.5-sunburst", "gpt-image-2.5-flare", "gpt-image-2"];
     public JsonObject Root { get; }
     public Dictionary<string, string> Headers { get; }
     public OpenAIChatConfig(JsonObject config, Dictionary<string, string>? headers = null)
@@ -227,7 +228,7 @@ public sealed class OpenAIChatConfig
     {
         "reasoning" => """{"effort":"medium","context":"auto","mode":"standard","summary":"auto"}""",
         "web_search" => """{"search_context_size":"medium"}""",
-        "image_generation" => """{"model":"gpt-image-1.5","action":"auto","size":"auto","quality":"auto","input_fidelity":"low","background":"auto","moderation":"auto","output_compression":100,"partial_images":3}""",
+        "image_generation" => """{"model":"gpt-image-2.5-sunburst","action":"auto","size":"auto","quality":"auto","background":"auto","moderation":"auto","output_compression":100,"partial_images":3}""",
         "code_interpreter" => """{"container":{"type":"auto"}}""",
         "shell" => """{"type":"shell","environment":{"type":"container_auto"}}""",
         "apply_patch" => """{"type":"apply_patch"}""",
@@ -253,7 +254,11 @@ public sealed class OpenAIChatConfig
             var tool = tools?.OfType<JsonObject>().FirstOrDefault(t => Text(t["type"]) == type)
                 ?? tools?.OfType<JsonObject>().FirstOrDefault(t => Matches(Text(t["type"]), type)) ?? config[type] as JsonObject;
             if (tool is null) next.Remove(type);
-            else { next[type] = tool.DeepClone(); next[type]!["type"] ??= type; }
+            else
+            {
+                next[type] = tool.DeepClone(); next[type]!["type"] ??= type;
+                if (type == "image_generation") next[type]!.AsObject().Remove("input_fidelity");
+            }
         }
         return next;
     }
@@ -271,7 +276,12 @@ public sealed class OpenAIChatConfig
                 if (Text(tool["type"]) is { Length: > 0 } candidate && !ToolTypes.Any(type => Matches(candidate, type))) tools.Add(tool.DeepClone());
         foreach (var type in ToolTypes)
         {
-            if (view[type] is JsonObject tool) { var copy = (JsonObject)tool.DeepClone(); copy["type"] ??= type; tools.Add(copy); }
+            if (view[type] is JsonObject tool)
+            {
+                var copy = (JsonObject)tool.DeepClone(); copy["type"] ??= type;
+                if (type == "image_generation") copy.Remove("input_fidelity");
+                tools.Add(copy);
+            }
             view.Remove(type);
         }
         view.Remove("tools");
@@ -372,7 +382,7 @@ public sealed class OpenAIChatConfig
     public void ImageModel(string value)
     {
         Set("image_generation/model", JsonValue.Create(value));
-        if (value.StartsWith("gpt-image-2", StringComparison.Ordinal)) Set("image_generation/input_fidelity", null, true);
+        Set("image_generation/input_fidelity", null, true);
     }
     public void ShellEnvironment(string type)
     {

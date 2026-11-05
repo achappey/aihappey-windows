@@ -2068,5 +2068,16 @@ Luidspreker: {1}</value></data>
   <data name="SkillGitHubMissingManifest" xml:space="preserve"><value>De geselecteerde map bevat geen SKILL.md.</value></data>
   <data name="SkillGitHubInvalidSkill" xml:space="preserve"><value>De geselecteerde map is geen geldige Agent Skill.</value></data>
   <data name="SkillGitHubUnsafePath" xml:space="preserve"><value>De skill bevat onveilige of conflicterende paden, symbolische koppelingen of submodules.</value></data>
-  <data name="ChatForm_openai_applyPatch" xml:space="preserve"><value>Patch toepassen</value></data>
+  <data name="ChatForm_openai_applyPatch" xml:space="preserve"><value>Tekstbewerker</value></data>
+  <data name="ChatForm_openai_imageOutputFormat" xml:space="preserve"><value>Uitvoerformaat</value></data>
+  <data name="ChatForm_openai_imageComplexity" xml:space="preserve"><value>Complexiteit</value></data>
+  <data name="ChatForm_openai_imageFrameCount" xml:space="preserve"><value>Aantal frames</value></data>
+  <data name="ChatForm_openai_imageFrameDuration" xml:space="preserve"><value>Frameduur (ms)</value></data>
+  <data name="ChatForm_openai_imageSvgModel" xml:space="preserve"><value>Model voor SVG-opmaak</value></data>
+  <data name="ChatForm_openai_imageSvg" xml:space="preserve"><value>SVG</value></data>
+  <data name="ChatForm_openai_imageMarkup" xml:space="preserve"><value>Markeringen</value></data>
+  <data name="ChatForm_openai_imageMarkupHint" xml:space="preserve"><value>Selecteer of sleep een transparante PNG-overlay met dezelfde afmetingen als de eerste invoerafbeelding. Alleen voor OpenAI-bewerkingen; niet te combineren met een masker.</value></data>
+  <data name="ChatForm_openai_imageMarkupFailed" xml:space="preserve"><value>De afbeeldingsmarkeringen konden niet worden geladen of opgeslagen.</value></data>
+  <data name="ChatForm_default" xml:space="preserve"><value>Standaard</value></data>
+  <data name="ChatForm_openai_imageMarkupLoading" xml:space="preserve"><value>Wacht tot de afbeeldingsmarkeringen zijn geladen.</value></data>
 </root>

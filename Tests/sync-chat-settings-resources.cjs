@@ -14,6 +14,7 @@ const flatten = (value, prefix = '', result = {}) => {
 };
 const escape = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const common = ['reasoning', 'reasoningEffort', 'reasoningSummary', 'reasoningContext', 'reasoningMode', 'webSearch', 'searchContextSize', 'country', 'region', 'city', 'timezone', 'image_generation', 'model', 'partial_images', 'quality', 'input_fidelity', 'moderation', 'background', 'size', 'code_execution', 'other', 'parallelToolCalls', 'add', 'delete', 'save', 'cancel', 'enabled', 'toolChoice', 'maxToolCalls', 'stopTools', 'none', 'auto', 'required', 'low', 'medium', 'high', 'xhigh', 'max', 'maxOutputTokens', 'budget', 'mode', 'webFetch', 'providerDefault'];
+common.push('default');
 const custom = {
   en: {
     General: 'General', ChatSettings: 'Chat settings', ChatMaxOutputTokens: 'Maximum output tokens', ChatOptional: 'Optional', ChatRestoreDefaults: 'Restore defaults',

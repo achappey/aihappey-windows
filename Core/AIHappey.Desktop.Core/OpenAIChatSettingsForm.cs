@@ -150,13 +150,13 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
     }
     private void ImageGeneration()
     {
+        if (model.String("image_generation/model").StartsWith("gpt-image-1", StringComparison.Ordinal)) model.ImageModel("gpt-image-2.5-sunburst");
         var body = Section("image_generation", "image_generation"); var (left, right) = Pair(body);
-        fields.Select(left, "model", () => model.String("image_generation/model", "gpt-image-1.5"),
-            ["chatgpt-image-latest", "gpt-image-2.5-sunburst", "gpt-image-2.5-flare", "gpt-image-2", "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini"], model.ImageModel, On("image_generation"));
+        fields.Select(left, "model", () => model.String("image_generation/model", "gpt-image-2.5-sunburst"),
+            OpenAIChatConfig.ImageModels, model.ImageModel, On("image_generation"));
         Slider(right, "partial_images", "image_generation/partial_images", "image_generation", 0, 3, 0);
-        (left, right) = Pair(body);
-        Select(left, "quality", "image_generation/quality", ["auto", "low", "medium", "high", "xhigh", "max"], "image_generation");
-        Select(right, "input_fidelity", "image_generation/input_fidelity", ["low", "high"], "image_generation", enabled: () => model.Enabled("image_generation") && !model.String("image_generation/model").StartsWith("gpt-image-2", StringComparison.Ordinal));
+        Select(body, "quality", "image_generation/quality", ["auto", "low", "medium", "high", "xhigh", "max"], "image_generation");
+        OpenAIImageFormatCards.Output(body, fields, model, "image_generation/", On("image_generation"));
         (left, right) = Pair(body);
         Select(left, "openai.action", "image_generation/action", ["auto", "generate", "edit"], "image_generation", "auto");
         Select(right, "moderation", "image_generation/moderation", ["auto", "low"], "image_generation", "auto");
@@ -164,6 +164,8 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
         Select(left, "background", "image_generation/background", ["auto", "transparent", "opaque"], "image_generation");
         Select(right, "size", "image_generation/size", ["auto", "1024x1024", "1024x1536", "1536x1024"], "image_generation");
         Slider(body, "openai.output_compression", "image_generation/output_compression", "image_generation", 0, 100, 100);
+        OpenAIImageFormatCards.Frames(body, fields, model, "image_generation/", On("image_generation"));
+        OpenAIImageFormatCards.Svg(cards, fields, model, "image_generation/", On("image_generation"));
     }
     private void ToolSearch()
     {
