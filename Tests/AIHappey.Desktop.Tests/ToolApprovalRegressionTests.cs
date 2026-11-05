@@ -15,7 +15,7 @@ internal static class ToolApprovalRegressionTests
         ? [Input, Approval, Output, Finish] : [Input, Output, Approval, Finish];
     private const string Input = """{"type":"tool-input-available","toolCallId":"call","toolName":"search","title":"Friendly title","input":{"q":"test"},"providerExecuted":false,"providerMetadata":{"test":{"keep":true}}}""";
     private const string Output = """{"type":"tool-output-available","toolCallId":"call","output":{"content":[{"type":"text","text":"result"}],"structuredContent":{"value":42}},"providerExecuted":false}""";
-    private const string Approval = """{"type":"tool-approval-request","toolCallId":"call","approvalId":"approval"}""";
+    private const string Approval = """{"type":"tool-approval-request","toolCallId":"call","approvalId":"approval","signature":"v1.fixture-signature","reason":"Review this request","approvalDescriptor":{"label":"Search"},"inputSchemaInput":{"q":"test"}}""";
     private const string Finish = """{"type":"finish","messageMetadata":{"usage":{"totalTokens":17}}}""";
 
     public static async Task RunAsync(Action<bool, string> check, string root)
@@ -27,6 +27,10 @@ internal static class ToolApprovalRegressionTests
             var pending = DesktopToolApprovals.Pending(reply.Message).Single();
             check(assembler.Finished && assembler.ApprovalRequired && reply.Status == "approval required" && DesktopToolApprovals.HasOutput(pending.Part), "approval/output ordering preserves pending state: " + reverse);
             check(pending.ToolName == "search" && pending.Title == "Friendly title" && pending.Part.TryGetProperty("callProviderMetadata", out _), "approval uses canonical name and retains title/provider fields");
+            check(pending.Part.GetProperty("approval").GetProperty("signature").GetString() == "v1.fixture-signature"
+                && pending.Part.GetProperty("approval").GetProperty("requestReason").GetString() == "Review this request"
+                && pending.Part.GetProperty("approval").TryGetProperty("descriptor", out _)
+                && pending.Part.GetProperty("approval").TryGetProperty("inputSchemaInput", out _), "signed request metadata survives stream assembly in both output orderings");
             check(DesktopToolApprovals.Respond(reply.Message, pending, new(true, " search ")) && !DesktopToolApprovals.Respond(reply.Message, pending, new(false)), "approval response is idempotent");
             reply.Status = "complete";
             var raw = PortableConversations.Element(reply.Message.Parts.Single());
@@ -34,6 +38,8 @@ internal static class ToolApprovalRegressionTests
             check(PortableConversations.CanReplay(reply), "completed approved output replays");
             var restored = PortableConversations.Read(PortableConversations.Write(Conversation(ServiceKind.Ai, reply)));
             check(PortableConversations.CanReplay(restored.Messages.Last()), "approval history round trips");
+            var restoredApproval = PortableConversations.Element(restored.Messages.Last().Message.Parts.Single()).GetProperty("approval");
+            check(restoredApproval.GetProperty("signature").GetString() == "v1.fixture-signature" && !restoredApproval.GetProperty("isAutomatic").GetBoolean(), "manual signature and explicit automatic=false survive history round trip");
             assembler.Continue(); assembler.Apply(StreamEvent.Parse(Approval));
             check(!assembler.ApprovalRequired, "duplicate approval chunk does not reset an answered decision");
         }
@@ -41,10 +47,10 @@ internal static class ToolApprovalRegressionTests
         var settings = new DesktopSettings { AllowedToolList = ["search", "search"] };
         var policy = new DesktopToolApprovalPolicy();
         var named = new PendingToolApproval("p", "c", "search", "Friendly title", Json("{}"));
-        check(policy.Automatic(named, settings)?.Reason == "search" && settings.AllowedToolList.Count == 1, "per-tool allowlist deduplicates exact names");
+        check(policy.Automatic(named, settings) is { Reason: "search", IsAutomatic: true } && settings.AllowedToolList.Count == 1, "per-tool allowlist deduplicates exact names and marks rule-driven decisions automatic");
         check(policy.Automatic(named with { ToolName = "Search" }, settings) is null && policy.Automatic(named with { ToolName = "Friendly title" }, settings) is null, "allowlist does not match case variants or titles");
         policy.ApproveAll = true;
-        check(policy.Automatic(named, settings)?.Reason == "BRRR", "allow-all matches browser reason");
+        check(policy.Automatic(named, settings) is { Reason: "BRRR", IsAutomatic: true }, "allow-all matches browser reason and marks rule-driven decisions automatic");
         await SettingsStore.SaveAsync(Path.Combine(root, "approval-settings"), settings);
         var loaded = await SettingsStore.LoadAsync(Path.Combine(root, "approval-settings"), new());
         check(loaded.AllowedToolList.SequenceEqual(new[] { "search" }) && !new DesktopToolApprovalPolicy().ApproveAll, "per-tool rules persist but allow-all does not");
@@ -54,7 +60,7 @@ internal static class ToolApprovalRegressionTests
         check(JsonSerializer.Deserialize<DesktopSettings>("{\"allowedToolList\":null}", JsonSerializerOptions.Web)!.AllowedToolList.Count == 0, "null allowlist is safe");
 
         foreach (var service in new[] { ServiceKind.Ai, ServiceKind.Agents })
-        foreach (var decision in new[] { new ToolApprovalDecision(true), new(false, "not trusted"), new(true, "search"), new(true, "BRRR") })
+        foreach (var decision in new[] { new ToolApprovalDecision(true), new(false, "not trusted"), new(true, "search", ToolApprovalMode.ThisTool), new(true, "BRRR", ToolApprovalMode.AllTools), new(true, "search", IsAutomatic: true), new(true, "BRRR", IsAutomatic: true) })
         {
             using var handler = new ApprovalHandler(); using var http = new HttpClient(handler);
             var session = new DesktopSession(new Host(), new RemoteRuntimeResolver(), RemoteSettings());
@@ -75,6 +81,8 @@ internal static class ToolApprovalRegressionTests
             check(tool.GetProperty("state").GetString() == "approval-responded" && tool.GetProperty("approval").GetProperty("approved").GetBoolean() == decision.Approved
                 && tool.GetProperty("approval").GetProperty("id").GetString() == "approval" && tool.TryGetProperty("output", out _), "continuation wire decision and existing output preserved");
             check(decision.Reason is null ? !tool.GetProperty("approval").TryGetProperty("reason", out _) : tool.GetProperty("approval").GetProperty("reason").GetString() == decision.Reason, "continuation wire reason matches browser");
+            check(tool.GetProperty("approval").GetProperty("signature").GetString() == "v1.fixture-signature"
+                && tool.GetProperty("approval").GetProperty("isAutomatic").GetBoolean() == decision.IsAutomatic, "continuation echoes signature and distinguishes rules from manual automatic-mode selection");
             check(PortableConversations.CanReplay(reply), "final approved/denied assistant history replays");
             await session.DisposeAsync();
         }

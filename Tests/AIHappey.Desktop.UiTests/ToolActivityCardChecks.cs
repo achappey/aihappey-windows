@@ -30,12 +30,23 @@ public partial class App
         var provider = Card("""{"type":"tool-wire-name","toolCallId":"provider","providerExecuted":true,"providerId":" OpenAI/model ","state":"input-available","input":{}}""");
         var unknown = Card("""{"type":"tool-wire-name","toolCallId":"unknown","providerExecuted":true,"providerId":"missing-provider","state":"output-error","errorText":"Fixture error"}""");
         var client = Card("""{"type":"tool-missing-tool","toolCallId":"client","providerExecuted":false,"providerId":"openai","state":"input-streaming","inputText":"partial"}""");
+        var signed = Card("""{"type":"tool-search","toolCallId":"signed","state":"approval-responded","input":{},"approval":{"id":"signed","approved":true,"isAutomatic":true,"signature":"v1.full-signature-fixture"}}""");
+        var pendingSigned = Card("""{"type":"dynamic-tool","toolName":"search","toolCallId":"pending-signed","state":"approval-requested","input":{},"approval":{"id":"pending-signed","signature":"v1.pending-signature-fixture"}}""");
         var content = new StackPanel { Spacing = 12 };
-        foreach (var card in new[] { local, provider, unknown, client }) content.Children.Add(card);
+        foreach (var card in new[] { local, provider, unknown, client, signed, pendingSigned }) content.Children.Add(card);
         body.Children.Clear(); body.Children.Add(new ScrollViewer { Content = content });
         try
         {
             await Task.Delay(150); shell.UpdateLayout();
+            var signatureBadge = Descendants(signed).OfType<Border>().Single(b => b.Name == "ConversationToolSignature");
+            Check(AutomationProperties.GetName(signatureBadge) == DesktopResources.Get("ToolApprovalSignatureAttached")
+                && ToolTipService.GetToolTip(signatureBadge) is TextBlock signatureTooltip && signatureTooltip.Text.Contains("v1.full-signature-fixture")
+                && Descendants(signed).OfType<Border>().Any(b => b.Name == "ConversationToolAutomatic"),
+                context + ": signed automatic approvals display independent accessible badges and full signature tooltip");
+            Check(Descendants(pendingSigned).OfType<Border>().Any(b => b.Name == "ConversationToolSignature")
+                && !Descendants(pendingSigned).OfType<Border>().Any(b => b.Name == "ConversationToolAutomatic")
+                && !Descendants(local).OfType<Border>().Any(b => b.Name == "ConversationToolSignature"),
+                context + ": pending signed dynamic approvals show a lock without claiming a decision or verification");
             var artwork = Descendants(local).OfType<UserControl>().Single(c => c.Name == "McpServerIcon");
             var icons = Field<IReadOnlyList<McpIcon>>(artwork, "icons");
             Check(icons.Count == 2 && icons[0].Source.EndsWith("tool.png")

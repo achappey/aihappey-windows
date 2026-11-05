@@ -66,6 +66,7 @@
   <data name="Deny" xml:space="preserve"><value>Deny</value></data>
   <data name="DenyReason" xml:space="preserve"><value>Reason (optional)</value></data>
   <data name="Automatic" xml:space="preserve"><value>Automatic</value></data>
+  <data name="ToolApprovalSignatureAttached" xml:space="preserve"><value>Gateway signature attached</value></data>
   <data name="AutomaticApprovalHint" xml:space="preserve"><value>Automatically allow this tool, or choose all tools from the menu</value></data>
   <data name="AutoApproveTool" xml:space="preserve"><value>Auto-approve {0}</value></data>
   <data name="AutoApproveAll" xml:space="preserve"><value>All tools (BRRR)</value></data>

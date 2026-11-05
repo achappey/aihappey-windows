@@ -145,6 +145,10 @@ public sealed class MessageAssembler(ConversationMessage output)
                 if (part["approval"] is JsonObject previous && previous["id"]?.ToString() == approvalId
                     && previous["approved"] is not null) break;
                 part["approval"] = new JsonObject { ["id"] = approvalId };
+                foreach (var field in new[] { "signature", "isAutomatic", "inputSchemaInput" })
+                    if (raw[field] is not null) part["approval"]![field] = raw[field]!.DeepClone();
+                if (raw["approvalDescriptor"] is not null) part["approval"]!["descriptor"] = raw["approvalDescriptor"]!.DeepClone();
+                if (raw["reason"] is not null) part["approval"]!["requestReason"] = raw["reason"]!.DeepClone();
                 part["state"] = "approval-requested"; break;
         }
         if (pendingApproval && eventType != "tool-approval-request") part["state"] = "approval-requested";

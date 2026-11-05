@@ -5,7 +5,7 @@ using AIHappey.Vercel.Models;
 namespace AIHappey.Desktop.Core;
 
 public enum ToolApprovalMode { Once, ThisTool, AllTools }
-public sealed record ToolApprovalDecision(bool Approved, string? Reason = null, ToolApprovalMode Mode = ToolApprovalMode.Once);
+public sealed record ToolApprovalDecision(bool Approved, string? Reason = null, ToolApprovalMode Mode = ToolApprovalMode.Once, bool IsAutomatic = false);
 public sealed record PendingToolApproval(string Id, string ToolCallId, string ToolName, string Title, JsonElement Part);
 
 /// <summary>Approval is a history mutation, not another execution of a tool result.</summary>
@@ -42,6 +42,7 @@ public static class DesktopToolApprovals
             if (node["state"]?.ToString() != "approval-requested" || node["approval"] is not JsonObject approval
                 || approval["id"]?.ToString() != pending.Id || node["toolCallId"]?.ToString() != pending.ToolCallId) continue;
             approval["approved"] = decision.Approved;
+            approval["isAutomatic"] = decision.IsAutomatic;
             var reason = decision.Reason?.Trim();
             if (string.IsNullOrEmpty(reason)) approval.Remove("reason"); else approval["reason"] = reason;
             node["state"] = "approval-responded";
@@ -63,7 +64,7 @@ public sealed class DesktopToolApprovalPolicy
 {
     public bool ApproveAll { get; set; }
     public ToolApprovalDecision? Automatic(PendingToolApproval pending, DesktopSettings settings) => ApproveAll
-        ? new(true, "BRRR")
+        ? new(true, "BRRR", IsAutomatic: true)
         : pending.ToolName.Length > 0 && settings.AllowedToolList.Contains(pending.ToolName, StringComparer.Ordinal)
-            ? new(true, pending.ToolName) : null;
+            ? new(true, pending.ToolName, IsAutomatic: true) : null;
 }

@@ -127,6 +127,27 @@ public sealed partial class ChatShell
         var stateText = new TextBlock { Name = "ConversationToolState", Text = DesktopResources.Get(ConversationActivityProjection.ToolStateResourceKey(raw)),
             TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
         NativeCardSurface.Secondary(stateText, metadata: true); metadata.Children.Add(stateText);
+        if (raw.TryGetProperty("approval", out var approval) && approval.ValueKind == JsonValueKind.Object)
+        {
+            if (approval.TryGetProperty("isAutomatic", out var automatic) && automatic.ValueKind == JsonValueKind.True
+                && DesktopToolApprovals.Approved(raw) is not null)
+            {
+                var badge = new Border { Name = "ConversationToolAutomatic", Child = new TextBlock { Text = DesktopResources.Get("Automatic") },
+                    Padding = new Thickness(6, 1, 6, 1), VerticalAlignment = VerticalAlignment.Center };
+                NativeCardSurface.Badge(badge); ToolbarControls.Label(badge, DesktopResources.Get("Automatic")); metadata.Children.Add(badge);
+            }
+            if (PortableConversations.String(approval, "signature") is { } signature && !string.IsNullOrWhiteSpace(signature))
+            {
+                var badge = new Border { Name = "ConversationToolSignature", Child = new FontIcon { Glyph = "\uE72E", FontSize = 12 },
+                    Padding = new Thickness(6, 3, 6, 3), VerticalAlignment = VerticalAlignment.Center };
+                NativeCardSurface.Badge(badge);
+                var label = DesktopResources.Get("ToolApprovalSignatureAttached");
+                AutomationProperties.SetName(badge, label);
+                AutomationProperties.SetHelpText(badge, signature);
+                ToolTipService.SetToolTip(badge, new TextBlock { Text = label + "\n" + signature, TextWrapping = TextWrapping.Wrap, MaxWidth = 520, IsTextSelectionEnabled = true });
+                metadata.Children.Add(badge);
+            }
+        }
         if (ConversationActivityProjection.ToolOutputSize(raw) is { } size)
         {
             var sizeText = new TextBlock { Text = size }; NativeCardSurface.Secondary(sizeText, metadata: true);

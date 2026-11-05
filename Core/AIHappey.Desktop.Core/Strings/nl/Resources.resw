@@ -66,6 +66,7 @@
   <data name="Deny" xml:space="preserve"><value>Weigeren</value></data>
   <data name="DenyReason" xml:space="preserve"><value>Reden (optioneel)</value></data>
   <data name="Automatic" xml:space="preserve"><value>Automatisch</value></data>
+  <data name="ToolApprovalSignatureAttached" xml:space="preserve"><value>Gatewayhandtekening bijgevoegd</value></data>
   <data name="AutomaticApprovalHint" xml:space="preserve"><value>Deze tool automatisch toestaan, of alle tools kiezen via het menu</value></data>
   <data name="AutoApproveTool" xml:space="preserve"><value>{0} automatisch goedkeuren</value></data>
   <data name="AutoApproveAll" xml:space="preserve"><value>Alle tools (BRRR)</value></data>
