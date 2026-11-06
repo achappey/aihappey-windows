@@ -28,6 +28,7 @@ public partial class App
             ["usage"] = CheckUsageAsync,
             ["providers"] = CheckProvidersAsync,
             ["agents"] = CheckAgentsAsync,
+            ["agent-context"] = theme => BothHosts(CheckAgentContextBadgesAsync, theme),
             ["mcp-presentation"] = CheckMcpPresentationAsync,
             ["elicitation"] = CheckElicitationAsync,
             ["ai-models"] = CheckAiModelsAsync,
