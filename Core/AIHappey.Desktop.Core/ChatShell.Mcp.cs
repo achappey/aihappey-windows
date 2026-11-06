@@ -77,7 +77,7 @@ public sealed partial class ChatShell
             var tag = new Border { Name = "McpConnectedBadge", Child = content, Padding = new Thickness(10, 2, 4, 2), CornerRadius = new CornerRadius(16) };
             ControlAppearance.TokenBadge(tag); ToolbarControls.Label(tag, displayName + " · " + DesktopResources.Format("McpToolsCount", view.Discovery?.Tools.Count ?? 0)); mcpTags.Children.Add(tag);
         }
-        mcpTagScroll.Visibility = servers.Length > 0 && Service == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
+        mcpTagScroll.Visibility = servers.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateComposerBadgeRow();
         manageMcp.Visibility = Service == ServiceKind.Ai ? Visibility.Visible : Visibility.Collapsed;
         UpdateResourceMenu();

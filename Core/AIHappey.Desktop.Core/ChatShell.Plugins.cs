@@ -178,9 +178,13 @@ public sealed partial class ChatShell
     }
     private void RenderPluginTags()
     {
-        if (Service != ServiceKind.Ai) return;
+        // Agents use plugin MCP tools, not the package's files or selected skill context.
+        var agentMcpPluginIds = Service == ServiceKind.Agents
+            ? AgentPluginRuntime.Servers(EnabledPlugins(session.Settings.Chat), session.PluginExtensionNamespace)
+                .Select(server => server.PluginId).ToHashSet(StringComparer.Ordinal) : null;
         foreach (var id in session.Settings.Chat.EnabledAgentPluginIds)
         {
+            if (agentMcpPluginIds is not null && !agentMcpPluginIds.Contains(id)) continue;
             var panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 }; panel.Children.Add(DesktopIcons.Create(Icon.PuzzlePiece, 14)); panel.Children.Add(new TextBlock { Text = id, VerticalAlignment = VerticalAlignment.Center });
             var remove = new Button { Name = "DisableAgentPlugin", Content = DesktopIcons.Create(Icon.Dismiss, 10), Tag = id, Padding = new Thickness(2), IsEnabled = !busy }; ToolbarControls.Subtle(remove); ToolbarControls.Label(remove, DesktopResources.Format("PluginDisable", id));
             remove.Click += async (_, _) => await RunAsync(async ct => { var next = session.Settings.Clone(); next.Chat.EnabledAgentPluginIds.RemoveAll(p => p == id); await SettingsStore.SaveAsync(session.DataDirectory, next); session.Settings = next; await LoadPluginsAsync(ct); }); panel.Children.Add(remove);

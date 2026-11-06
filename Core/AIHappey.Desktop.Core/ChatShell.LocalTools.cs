@@ -8,7 +8,6 @@ public sealed partial class ChatShell
 {
     private void RenderLocalPluginTags()
     {
-        if (Service != ServiceKind.Ai) return;
         var plugins = DesktopLocalTools.Plugins.ToDictionary(p => p.Id, StringComparer.Ordinal);
         foreach (var id in session.Settings.Chat.ActivePlugins.Distinct(StringComparer.Ordinal))
         {
