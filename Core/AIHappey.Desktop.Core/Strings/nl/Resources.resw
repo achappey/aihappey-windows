@@ -1541,6 +1541,7 @@
   <data name="RoutingInvalidResponse" xml:space="preserve"><value>De beslissing bevat geen geldige keuze uit de aangeboden kandidaten. Er is geen chatverzoek verzonden.</value></data>
   <data name="RoutingContextChanged" xml:space="preserve"><value>De routeringscontext of configuratie is gewijzigd. Verstuur het verzoek opnieuw.</value></data>
   <data name="AgentWorkflow" xml:space="preserve"><value>Agentwerkstroom</value></data>
+  <data name="AgentSettings" xml:space="preserve"><value>Agentinstellingen</value></data>
   <data name="WorkflowInvalid" xml:space="preserve"><value>Controleer het werkstroomtype en de numerieke limieten.</value></data>
   <data name="WorkflowRemoteDefinitionRequired" xml:space="preserve"><value>Een gemengde Magentic-werkstroom vereist de volledige configuratie van elke externe agent.</value></data>
   <data name="Workflow_concurrent" xml:space="preserve"><value>Gelijktijdig</value></data>

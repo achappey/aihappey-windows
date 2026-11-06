@@ -2,7 +2,6 @@ using FluentIcons.Common;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AIHappey.Desktop.Core;
 
@@ -19,10 +18,14 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
     private readonly CancellationTokenSource lifetime = new();
     private readonly Grid layout = new() { Name = "ContextSearchLayout", RowSpacing = 12 };
     private readonly TextBox search = new() { Name = "ContextSearchQuery", PlaceholderText = DesktopResources.Get("SearchPlaceholder") };
-    private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
-    private readonly Dictionary<string, ToggleButton> tabButtons = [];
-    private readonly Dictionary<string, TextBlock> tabLabels = [];
+    private readonly NavigationView tabs = new() { Name = "ContextSearchTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
+    private readonly Dictionary<string, NavigationViewItem> tabItems = [];
+    private readonly Dictionary<string, string> tabLabels = [];
     private readonly OverviewCardsPanel cards = new() { Name = "ContextSearchCards" };
+    private readonly StackPanel rows = new() { Name = "ContextSearchRows", Spacing = 12 };
+    private readonly HashSet<string> expanded = [];
     private readonly ScrollViewer viewer = new() { HorizontalScrollMode = ScrollMode.Disabled,
         HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
     private readonly StackPanel body = new() { Spacing = 12 };
@@ -53,22 +56,22 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
         Resources["ContentDialogMaxWidth"] = 920d; Resources["ContentDialogMinWidth"] = 0d;
         for (var row = 0; row < 5; row++) layout.RowDefinitions.Add(new() { Height = row == 3 ? new GridLength(1, GridUnitType.Star) : GridLength.Auto });
         ControlAppearance.Stock(search); ToolbarControls.Label(search, DesktopResources.Get("Search")); layout.Children.Add(search);
-        var navigation = new ScrollViewer { Content = tabs, HorizontalScrollMode = ScrollMode.Enabled,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
-        Grid.SetRow(navigation, 1); layout.Children.Add(navigation);
+        Grid.SetRow(tabs, 1); layout.Children.Add(tabs);
         foreach (var (key, label, icon) in new[] { ("tools", "Tools", Icon.Toolbox), ("skills", "Skills", Icon.Star),
             ("plugins", "PluginsTitle", Icon.PuzzlePiece), ("catalog", "McpTitle", Icon.Connector) })
         {
-            var button = new ToggleButton { Name = "ContextSearchTab_" + key, Tag = label };
-            ControlAppearance.Stock(button); tabButtons.Add(key, button); tabs.Children.Add(button);
-            button.Click += (_, _) => { tab = key; Render(); viewer.ChangeView(null, 0, null, true); };
-            var heading = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-            var labelText = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
-            heading.Children.Add(DesktopIcons.Create(icon)); heading.Children.Add(labelText);
-            button.Content = heading; tabLabels.Add(key, labelText);
+            var item = new NavigationViewItem { Name = "ContextSearchTab_" + key, Tag = key, Icon = DesktopIcons.Create(icon) };
+            AutomationProperties.SetAutomationId(item, item.Name);
+            tabItems.Add(key, item); tabLabels.Add(key, label); tabs.MenuItems.Add(item);
         }
+        tabs.SelectionChanged += (_, _) =>
+        {
+            if (tabs.SelectedItem is not NavigationViewItem { Tag: string key } || tab == key) return;
+            tab = key; Render(); viewer.ChangeView(null, 0, null, true);
+        };
+        tabs.SelectedItem = tabItems[tab];
         AutomationProperties.SetName(progress, DesktopResources.Get("Loading")); Grid.SetRow(progress, 2); layout.Children.Add(progress);
-        body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cards); body.Children.Add(more);
+        body.Children.Add(status); body.Children.Add(retry); body.Children.Add(cards); body.Children.Add(rows); body.Children.Add(more);
         viewer.Content = body; Grid.SetRow(viewer, 3); layout.Children.Add(viewer);
         Grid.SetRow(error, 4); layout.Children.Add(error); Content = layout;
         AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
@@ -132,47 +135,79 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
         var servers = catalog.Items.Where(s => Matches(s.Id, s.Name, s.Description, s.Version, s.Url, s.RegistryUrl))
             .OrderBy(s => s.Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
         var counts = new Dictionary<string, int> { ["tools"] = tools.Length, ["skills"] = skillItems.Length, ["plugins"] = pluginItems.Length, ["catalog"] = servers.Length };
-        foreach (var (key, button) in tabButtons)
+        foreach (var (key, item) in tabItems)
         {
-            tabLabels[key].Text = DesktopResources.Get((string)button.Tag) + $" ({counts[key]})";
-            AutomationProperties.SetName(button, tabLabels[key].Text);
-            button.IsChecked = key == tab;
+            item.Content = DesktopResources.Get(tabLabels[key]) + $" ({counts[key]})";
+            AutomationProperties.SetName(item, (string)item.Content);
         }
-        cards.Children.Clear();
+        cards.Children.Clear(); rows.Children.Clear();
+        cards.Visibility = tab is "tools" or "plugins" ? Visibility.Visible : Visibility.Collapsed;
+        rows.Visibility = tab is "skills" or "catalog" ? Visibility.Visible : Visibility.Collapsed;
         if (tab == "tools") foreach (var tool in tools)
             ToggleCard(tool.Id, DesktopResources.Get(tool.ResourceKey), null, null, draft.PluginEnabled(tool.Id),
                 enabled => { Set(draft.ActivePlugins, tool.Id, enabled); return Task.CompletedTask; }, "ContextToolToggle");
         if (tab == "skills") foreach (var skill in skillItems)
-            ToggleCard(skill.Id, skill.Label, skill.Description, skill.Version, draft.EnabledSkillIds.Contains(skill.Id), async enabled =>
-            {
-                Set(draft.EnabledSkillIds, skill.Id, enabled);
-                if (enabled && skill.Origin == "remote")
-                {
-                    try { await prefetch(skill.Id, lifetime.Token); }
-                    catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
-                    catch { if (!closed && !discard) ShowError(DesktopResources.Get("SkillPrefetchFailed")); }
-                }
-            }, "ContextSkillToggle");
+            SkillRow(skill);
         if (tab == "plugins") foreach (var plugin in pluginItems)
             ToggleCard(plugin.Id, plugin.Id, plugin.Description,
                 string.Join(" · ", new[] { DesktopAgent.Text(plugin.Manifest["version"]), plugin.Author,
                     DesktopResources.Format("PluginCounts", plugin.Skills().Count, (plugin.Mcp?["mcpServers"] as System.Text.Json.Nodes.JsonObject)?.Count ?? 0, plugin.Diagnostics.Count) }.Where(v => v.Length > 0)),
                 draft.EnabledAgentPluginIds.Contains(plugin.Id), enabled => { Set(draft.EnabledAgentPluginIds, plugin.Id, enabled); return Task.CompletedTask; }, "ContextPluginToggle");
-        if (tab == "catalog") foreach (var server in servers.Take(visible)) CatalogCard(server);
+        if (tab == "catalog") foreach (var server in servers.Take(visible)) CatalogRow(server);
         var loading = tab == "skills" && skillsLoading || tab == "catalog" && catalogLoading;
         var warning = tab == "skills" ? skillWarning : tab == "catalog" ? catalogWarning : null;
-        status.Text = warning ?? (cards.Children.Count == 0 && !loading ? DesktopResources.Get("NoResults") : "");
+        status.Text = warning ?? (cards.Children.Count + rows.Children.Count == 0 && !loading ? DesktopResources.Get("NoResults") : "");
         status.Visibility = status.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         retry.Visibility = warning is not null && !loading ? Visibility.Visible : Visibility.Collapsed;
         more.Visibility = tab == "catalog" && servers.Length > visible ? Visibility.Visible : Visibility.Collapsed;
         progress.IsIndeterminate = loading || pending || saving;
         progress.Visibility = progress.IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
         SetEditable(!pending && !saving);
-        if (!string.IsNullOrEmpty(focusedId) && !pending && !saving) DispatcherQueue.TryEnqueue(() =>
+        if (!string.IsNullOrEmpty(focusedId) && !pending && !saving) RestoreFocus(focusedId);
+    }
+    private void RestoreFocus(string id) => DispatcherQueue.TryEnqueue(() =>
+    {
+        if (closed || discard || pending || saving) return;
+        // The replacement settings row must have its native header template before its
+        // toggle can receive focus; dispatcher callbacks can run before the layout pass.
+        layout.UpdateLayout();
+        ControlAppearance.Descendants(body).OfType<Control>().FirstOrDefault(control => AutomationProperties.GetAutomationId(control) == id)?.Focus(FocusState.Programmatic);
+    });
+    private StackPanel Expander(string key, string name, string id, string title, ToggleSwitch toggle, string? description, string? version)
+    {
+        var expander = NativeSettingsSurface.Expander(rows, name, title, toggle, out var content);
+        expander.Tag = id; AutomationProperties.SetAutomationId(expander, name + "_" + id);
+        expander.IsExpanded = expanded.Contains(key);
+        expander.Expanded += (_, _) => expanded.Add(key);
+        expander.Collapsed += (_, _) => expanded.Remove(key);
+        if (!string.IsNullOrWhiteSpace(version))
+        { var label = new TextBlock { Text = version, TextWrapping = TextWrapping.Wrap }; NativeCardSurface.Secondary(label, true); content.Children.Add(label); }
+        if (!string.IsNullOrWhiteSpace(description))
+        { var text = new TextBlock { Text = description, TextWrapping = TextWrapping.Wrap }; NativeCardSurface.Secondary(text); content.Children.Add(text); }
+        return content;
+    }
+    private static ToggleSwitch RowToggle(string name, string id, string title, bool enabled)
+    {
+        var toggle = new ToggleSwitch { Name = name, Tag = id, IsOn = enabled, OnContent = "", OffContent = "", MinWidth = 0,
+            HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
+        ControlAppearance.Stock(toggle); ToolbarControls.Label(toggle, title); AutomationProperties.SetAutomationId(toggle, name + "_" + id);
+        return toggle;
+    }
+    private void SkillRow(DesktopSkill skill)
+    {
+        var toggle = RowToggle("ContextSkillToggle", skill.Id, skill.Label, draft.EnabledSkillIds.Contains(skill.Id));
+        Expander("skills/" + skill.Id, "ContextSkillRow", skill.Id, skill.Label, toggle, skill.Description, skill.Version);
+        toggle.Toggled += async (_, _) =>
         {
-            if (!closed && !discard)
-                ControlAppearance.Descendants(cards).OfType<Control>().FirstOrDefault(control => AutomationProperties.GetAutomationId(control) == focusedId)?.Focus(FocusState.Programmatic);
-        });
+            if (closed || discard || pending || saving) return;
+            Set(draft.EnabledSkillIds, skill.Id, toggle.IsOn);
+            if (toggle.IsOn && skill.Origin == "remote")
+            {
+                try { await prefetch(skill.Id, lifetime.Token); }
+                catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+                catch { if (!closed && !discard) ShowError(DesktopResources.Get("SkillPrefetchFailed")); }
+            }
+        };
     }
     private static void Set(List<string> values, string id, bool enabled)
     {
@@ -202,38 +237,45 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
         { var text = new TextBlock { Text = description, TextWrapping = TextWrapping.Wrap, MaxLines = 4, TextTrimming = TextTrimming.CharacterEllipsis }; NativeCardSurface.Secondary(text); ToolTipService.SetToolTip(text, description); content.Children.Add(text); }
         return content;
     }
-    private void CatalogCard(McpCatalogItem item)
+    private void CatalogRow(McpCatalogItem item)
     {
         var existing = Installed(item);
-        var button = new Button { Name = existing is null ? "ContextCatalogInstall" : "ContextCatalogRemove",
-            Tag = item.Id, Content = DesktopResources.Get(existing is null ? "McpInstall" : "McpRemove"), IsEnabled = existing?.PluginId is null };
-        ControlAppearance.Stock(button); ToolbarControls.Label(button, DesktopResources.Format("ActionForItem", button.Content, item.Name));
-        var content = CardContent(item.Name, item.Description, item.Version, new McpServerIcon(item.Icons, 32));
-        content.Children.Add(button);
+        var toggle = RowToggle("ContextCatalogToggle", item.Id,
+            DesktopResources.Format("ActionForItem", DesktopResources.Get(existing is null ? "McpInstall" : "McpRemove"), item.Name), existing is not null);
+        toggle.IsEnabled = existing?.PluginId is null;
+        var content = Expander("catalog/" + item.Id, "ContextCatalogRow", item.Id, item.Name, toggle, item.Description, item.Version);
+        content.Children.Add(new McpServerIcon(item.Icons, 32));
         if (existing is not null && existing.PluginId is null)
         {
-            var configure = new Button { Name = "ContextCatalogConfigure", Content = DesktopIcons.Create(Icon.Edit) };
+            var configure = new Button { Name = "ContextCatalogConfigure", Tag = item.Id, Content = DesktopIcons.Create(Icon.Edit) };
             ControlAppearance.Stock(configure); ToolbarControls.Label(configure, DesktopResources.Format("ActionForItem", DesktopResources.Get("Edit"), item.Name));
+            AutomationProperties.SetAutomationId(configure, "ContextCatalogConfigure_" + item.Id);
             configure.Click += (_, _) =>
             {
+                if (pending || saving || closed || discard) return;
                 ServerConfigurationRequested = existing.Clone();
                 if (existing.Url == item.Url) { ServerConfigurationRequested.HeaderDefinitions = item.HeaderDefinitions.ToArray(); ServerConfigurationRequested.OAuthManaged = item.OAuthManaged; }
                 Hide();
             };
             content.Children.Add(configure);
         }
-        var card = new Border { Name = "ContextCatalogCard", Tag = item.Id, Child = content, Padding = new Thickness(16) };
-        NativeCardSurface.Card(card); cards.Children.Add(card);
-        button.Click += async (_, _) =>
+        var syncing = false;
+        void ResetToggle()
         {
-            if (pending || saving || closed || discard) return;
-            if (existing is null && McpHeaderConfiguration.RequiresConfiguration(item))
-            { ServerConfigurationRequested = item.CreateServer(); Hide(); return; }
+            syncing = true; toggle.IsOn = existing is not null; syncing = false;
+        }
+        toggle.Toggled += async (_, _) =>
+        {
+            if (syncing) return;
+            if (pending || saving || closed || discard || existing?.PluginId is not null) { ResetToggle(); return; }
+            var install = toggle.IsOn;
+            if (install && McpHeaderConfiguration.RequiresConfiguration(item))
+            { ResetToggle(); ServerConfigurationRequested = item.CreateServer(); Hide(); return; }
             pending = true; error.Visibility = Visibility.Collapsed; Render();
             try
             {
-                await changeServer(item, existing is null, lifetime.Token); lifetime.Token.ThrowIfCancellationRequested();
-                if (existing is null) CatalogInstallHappened = true;
+                await changeServer(item, install, lifetime.Token); lifetime.Token.ThrowIfCancellationRequested();
+                if (install) CatalogInstallHappened = true;
             }
             catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
             catch (Exception e) { if (!closed && !discard) ShowError(DesktopMcpManager.SafeError(e)); }
@@ -243,11 +285,7 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
                 if (!closed && !discard)
                 {
                     Render();
-                    DispatcherQueue.TryEnqueue(() =>
-                    {
-                        if (!closed && !discard)
-                            (ControlAppearance.Descendants(cards).OfType<Button>().FirstOrDefault(b => Equals(b.Tag, item.Id)) as Control ?? search).Focus(FocusState.Programmatic);
-                    });
+                    RestoreFocus("ContextCatalogToggle_" + item.Id);
                 }
             }
         };
@@ -255,7 +293,7 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
     private void SetEditable(bool value)
     {
         search.IsEnabled = viewer.IsEnabled = value;
-        foreach (var button in tabButtons.Values) button.IsEnabled = value;
+        tabs.IsEnabled = value;
         IsPrimaryButtonEnabled = IsSecondaryButtonEnabled = value;
     }
     private void ShowError(string text) { error.Text = text; error.Visibility = Visibility.Visible; }
@@ -271,10 +309,15 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
         finally { saving = false; if (!closed && !discard) Render(); deferral.Complete(); }
     }
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => SizeToRoot();
+    protected override void OnApplyTemplate()
+    {
+        if (XamlRoot is not null) SizeToRoot();
+        base.OnApplyTemplate();
+    }
     void IResponsiveDialog.SizeToRoot() => SizeToRoot();
     private void SizeToRoot()
     {
         layout.Width = Math.Max(0, Math.Min(820, XamlRoot.Size.Width - 96));
-        layout.Height = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240));
+        layout.MaxHeight = Math.Max(0, Math.Min(680, XamlRoot.Size.Height - 240));
     }
 }

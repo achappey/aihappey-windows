@@ -1546,6 +1546,7 @@
   <data name="RoutingInvalidResponse" xml:space="preserve"><value>The decision did not return a valid selection from the offered candidates. No chat request was sent.</value></data>
   <data name="RoutingContextChanged" xml:space="preserve"><value>The routing context or configuration changed. Send the request again.</value></data>
   <data name="AgentWorkflow" xml:space="preserve"><value>Agent workflow</value></data>
+  <data name="AgentSettings" xml:space="preserve"><value>Agent settings</value></data>
   <data name="WorkflowInvalid" xml:space="preserve"><value>Check the workflow type and numeric limits.</value></data>
   <data name="WorkflowRemoteDefinitionRequired" xml:space="preserve"><value>A mixed Magentic workflow requires the full configuration of every remote agent.</value></data>
   <data name="Workflow_concurrent" xml:space="preserve"><value>Concurrent</value></data>

@@ -22,6 +22,7 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>CS8305</NoWarn>
     <DefaultLanguage>en</DefaultLanguage>
   </PropertyGroup>
   <ItemGroup>
