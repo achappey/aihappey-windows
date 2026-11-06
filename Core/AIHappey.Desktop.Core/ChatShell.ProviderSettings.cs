@@ -111,7 +111,7 @@ public sealed partial class ChatShell
             finally { historyDialogOpen = false; }
             // Credentials are changed without treating this as an identity change or deleting the current draft.
             var partition = session.HistoryPartition;
-            var available = await client.ListAsync(ServiceKind.Ai, ct);
+            var available = await AiModelsAsync(ct, fresh: true);
             ct.ThrowIfCancellationRequested(); if (closing || partition != session.HistoryPartition) return;
             aiModelTargets = available;
             if (Service == ServiceKind.Ai) targets = available;

@@ -43,7 +43,7 @@ public sealed partial class ChatShell
         if (Service == ServiceKind.Agents && aiModelTargets is null)
         {
             // Agent discovery/manual execution remains useful when the optional AI routing service is unavailable.
-            try { aiModelTargets = await client.ListAsync(ServiceKind.Ai, ct); }
+            try { aiModelTargets = await AiModelsAsync(ct); }
             catch (Exception error) when (error is not OperationCanceledException) { aiModelTargets = []; }
         }
     }

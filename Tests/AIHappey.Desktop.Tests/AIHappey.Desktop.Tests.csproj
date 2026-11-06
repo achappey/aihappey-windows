@@ -59,6 +59,8 @@
     <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/HeaderConfiguration.cs" Link="Host/HeaderConfiguration.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ModelOverviewCatalog.cs" Link="Core/ModelOverviewCatalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ModelProviders.cs" Link="Core/ModelProviders.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ModelCatalog.cs" Link="Core/ModelCatalog.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/ModelCatalogStore.cs" Link="Core/ModelCatalogStore.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ProviderCatalog.cs" Link="Core/ProviderCatalog.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ModelContextPreferences.cs" Link="Core/ModelContextPreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Elicitation.cs" Link="Core/Elicitation.cs" />

@@ -49,6 +49,7 @@ internal static class RegressionSuites
             ["composer-attachments"] = () => ComposerAttachmentRegressionTests.RunAsync(check, reject, Session()),
             ["catalog"] = () => CatalogRegressionTests.RunAsync(check, reject, Data("catalog"), Session()),
             ["ai-models"] = () => AiModelRegressionTests.RunAsync(check, Data("ai-models"), Session()),
+            ["model-cache"] = () => ModelCatalogRegressionTests.RunAsync(check, Data("model-cache")),
             ["boundaries"] = boundaries,
         };
         if (args.SequenceEqual(["--list-suites"]))

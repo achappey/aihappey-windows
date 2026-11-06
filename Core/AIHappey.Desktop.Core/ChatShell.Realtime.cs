@@ -103,7 +103,7 @@ public sealed partial class ChatShell
     private async Task LoadRealtimeAsync(CancellationToken ct, bool useCache = false)
     {
         var partition = session.HistoryPartition;
-        var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
+        var available = await AiModelsAsync(ct);
         if (closing || partition != session.HistoryPartition) return;
         aiModelTargets = available;
         await LoadModelFavoritesAsync(ct);

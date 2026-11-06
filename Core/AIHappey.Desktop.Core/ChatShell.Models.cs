@@ -36,7 +36,7 @@ public sealed partial class ChatShell
             modelFilters.IsChecked = open;
             if (!open && activePage == DesktopPage.Models && modelFilters.IsLoaded) modelFilters.Focus(FocusState.Programmatic);
         };
-        modelsOverview.RetryRequested = async () => await RunAsync(ct => LoadModelsOverviewAsync(ct));
+        modelsOverview.RetryRequested = async () => await RunAsync(ct => LoadModelsOverviewAsync(ct, fresh: true));
         modelsOverview.CancelRequested = () => operation?.Cancel();
         modelsOverview.CopyRequested = model =>
         {
@@ -58,23 +58,29 @@ public sealed partial class ChatShell
     private bool CanUseModelOverview => activePage == DesktopPage.Models && initialized && !busy && !closing
         && !downloading && !historyDialogOpen && catalogDialog is null;
 
-    private async Task LoadModelsOverviewAsync(CancellationToken ct, bool useCache = false)
+    private async Task LoadModelsOverviewAsync(CancellationToken ct, bool useCache = false, bool fresh = false)
     {
         var partition = session.HistoryPartition;
-        modelsOverview.Loading();
+        if (aiModelTargets is null) modelsOverview.Loading();
         try
         {
             var saved = modelFavoritesPartition == partition ? modelFavorites : await modelFavoritesStore.LoadAsync(partition, ct);
-            var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
+            var available = await AiModelsAsync(ct, fresh);
             ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != partition) return;
             aiModelTargets = available; modelFavorites = saved; modelFavoritesPartition = partition;
             modelsOverview.SetItems(ProviderPreferences.Filter(available, session.Settings), saved);
             if (Service == ServiceKind.Ai) { targets = available; UpdateTargetSuggestions(); }
         }
-        catch (OperationCanceledException) { modelsOverview.Error(DesktopResources.Get("CatalogCanceled")); throw; }
+        catch (OperationCanceledException)
+        {
+            if (aiModelTargets is null) modelsOverview.Error(DesktopResources.Get("CatalogCanceled"));
+            throw;
+        }
         catch (Exception error)
         {
-            modelsOverview.Error(error is GatewayException or InvalidOperationException ? error.Message : DesktopResources.Get("AiModelsLoadFailed")); throw;
+            if (aiModelTargets is null)
+                modelsOverview.Error(error is GatewayException or InvalidOperationException ? error.Message : DesktopResources.Get("AiModelsLoadFailed"));
+            throw;
         }
     }
     private void InvalidateModelsOverview()
@@ -93,7 +99,7 @@ public sealed partial class ChatShell
         {
             var partition = session.HistoryPartition;
             // Revalidate against current discovery, not against a label or a stale card from a previous endpoint.
-            var available = await client.ListAsync(ServiceKind.Ai, ct);
+            var available = await AiModelsAsync(ct, fresh: true);
             ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != partition) return;
             var selected = available.FirstOrDefault(m => m.Id == requested.Id && m.ModelType == requested.ModelType
                 && (!fromProviders || ModelOverviewCatalog.ProviderKey(m) == ModelOverviewCatalog.ProviderKey(requested)))

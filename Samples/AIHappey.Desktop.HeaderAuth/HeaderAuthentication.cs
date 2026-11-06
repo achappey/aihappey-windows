@@ -16,6 +16,11 @@ public sealed class HeaderAuthentication : IDesktopHost
     public bool HasProviderApiKeys => true;
     public string AccountLabel => DesktopResources.Get("ApiKeys");
     public string HistoryIdentity => "public-user";
+    public string ModelCatalogCredentialScope => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(
+        (headers ?? []).OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(pair => new[] { pair.Key.ToLowerInvariant(), pair.Value }))));
+
+    public Task InitializeAsync(CancellationToken cancellationToken) => LoadAsync(cancellationToken);
 
     public async Task AuthenticateAsync(HttpRequestMessage request, ServiceKind service, CancellationToken cancellationToken)
     {

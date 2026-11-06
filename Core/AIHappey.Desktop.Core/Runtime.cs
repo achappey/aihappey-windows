@@ -95,6 +95,8 @@ public interface IDesktopHost
     bool AllowLocal { get; }
     string AccountLabel { get; }
     string HistoryIdentity { get; }
+    /// <summary>Stable, non-secret fingerprint of catalog-affecting credentials. Never a rotating access token.</summary>
+    string ModelCatalogCredentialScope => "";
     /// <summary>Whether interactive sign-in is needed before calling protected services. Read after initialization.</summary>
     bool RequiresSignIn => false;
     bool HasProviderApiKeys => false;
@@ -141,6 +143,9 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     /// <summary>Sample-owned seeds; saved preferences, including empty lists, always win.</summary>
     public IReadOnlyDictionary<string, string[]>? DefaultProvidersByType { get; set; }
     public string AgentPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
+    public string ModelCatalogScope => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity,
+        Settings.Ai.Location.ToString(), Settings.Ai.Location == RuntimeLocation.Remote ? Settings.Ai.RemoteUrl.TrimEnd('/') : "managed-ai",
+        Host.ModelCatalogCredentialScope);
     public string PluginPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
     public string PluginExtensionNamespace { get; set; } = AgentPluginPackages.DefaultNamespace;
     public ISystemContextComposer ContextComposer { get; set; } = new DesktopSystemContextComposer();

@@ -53,7 +53,7 @@ public sealed partial class ChatShell
         var saved = await store.ListAsync(ct);
         if (closing || partition != TranscriptionLibraryStore.Partition(session)) return;
         transcriptionLibrary = store; libraryTranscriptions = saved; transcriptionsPage.SetItems(saved, pendingTranscriptions);
-        var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
+        var available = await AiModelsAsync(ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != TranscriptionLibraryStore.Partition(session)) return;
         aiModelTargets = available; transcriptionModels = AiModelCatalog.OfType(available, "transcription");
         await LoadModelFavoritesAsync(ct);

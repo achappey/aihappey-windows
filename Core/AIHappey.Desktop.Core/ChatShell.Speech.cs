@@ -31,7 +31,7 @@ public sealed partial class ChatShell
     {
         var partition = SpeechLibraryStore.Partition(session); if (speechPartition != partition) { InvalidateSpeech(); speechPartition = partition; }
         speechLibrary = new(SpeechRoot, partition); librarySpeech = await speechLibrary.ListAsync(ct); speechPage.SetItems(librarySpeech, pendingSpeech);
-        var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct); ct.ThrowIfCancellationRequested(); if (closing || partition != SpeechLibraryStore.Partition(session)) return;
+        var available = await AiModelsAsync(ct); ct.ThrowIfCancellationRequested(); if (closing || partition != SpeechLibraryStore.Partition(session)) return;
         aiModelTargets = available; speechModels = AiModelCatalog.OfType(available, "speech");
         await LoadSelectionCatalogsAsync(ct);
         if (SelectedSpeechModel is null) speechTarget.Text = InitialModel(speechModels, "speech", "openai/gpt-4o-mini-tts");

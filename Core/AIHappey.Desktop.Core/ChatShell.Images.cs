@@ -54,7 +54,7 @@ public sealed partial class ChatShell
         if (imagePartition != partition) { InvalidateImages(); imagePartition = partition; }
         // Load the on-disk library first; it remains usable if model discovery fails/offline.
         await ReloadImageLibraryAsync(ct);
-        var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
+        var available = await AiModelsAsync(ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != ImageLibraryStore.Partition(session)) return;
         aiModelTargets = available; imageModels = AiModelCatalog.OfType(available, "image");
         await LoadSelectionCatalogsAsync(ct);

@@ -33,6 +33,16 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
 {
     internal string AgentCatalogScope => session.HistoryPartition + "|" + JsonSerializer.Serialize(session.Settings.Agents);
 
+    internal async Task<JsonElement> ReadAiModelsAsync(CancellationToken ct)
+    {
+        using var request = await RequestAsync(ServiceKind.Ai, HttpMethod.Get, "v1/models", ct);
+        using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+        await GatewayErrors.CheckResponseAsync(response, ct);
+        using var document = JsonDocument.Parse(await DesktopCatalogClient.ReadBoundedAsync(response.Content, DesktopModelCatalogStore.MaxBytes, ct));
+        if (!DesktopModelCatalogStore.ValidResponse(document.RootElement)) throw new GatewayException(DesktopResources.Get("InvalidModelCatalog"));
+        return document.RootElement.Clone();
+    }
+
     public async Task<IReadOnlyList<ChatTarget>> ListAsync(ServiceKind service, CancellationToken ct)
     {
         using var request = await RequestAsync(service, HttpMethod.Get, "v1/models", ct);

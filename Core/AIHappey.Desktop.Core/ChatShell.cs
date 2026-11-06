@@ -478,7 +478,7 @@ public sealed partial class ChatShell : UserControl
         var routerSelected = target.Selection.FavoriteRouter;
         await LoadSelectionCatalogsAsync(ct);
         targets = Service == ServiceKind.Agents ? await AgentTargetsAsync(ct)
-            : await Task.Run(() => client.ListAsync(Service, ct), ct);
+            : await AiModelsAsync(ct);
         if (Service == ServiceKind.Agents) target.SetSelection(selection.Select(id => DesktopAgentTargets.Restore(id, targets)), routerSelected);
         if (Service == ServiceKind.Ai) aiModelTargets = targets;
         UpdateAccountMenu();
@@ -796,7 +796,7 @@ public sealed partial class ChatShell : UserControl
         try { await LoadLocalAgentsAsync(downloadLifetime.Token); }
         catch (Exception) { historyDialogOpen = false; Show(DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error); return; }
         var dialog = new SettingsDialog(session.Settings, session.Host.AllowLocal, session.ActiveLanguage, aiModelTargets,
-            ct => client.ListAsync(ServiceKind.Ai, ct), localAgents, session.Host is IDesktopConversationHost,
+            ct => AiModelsAsync(ct, fresh: true), localAgents, session.Host is IDesktopConversationHost,
             (session.Host as IDesktopConversationHost)?.ConversationsEndpoint is not null) { XamlRoot = XamlRoot };
         SystemAppearance.PrepareDialog(dialog);
         ContentDialogResult result;
@@ -920,6 +920,7 @@ public sealed partial class ChatShell : UserControl
     public async Task ShutdownAsync()
     {
         closing = true; operation?.Cancel(); downloadLifetime.Cancel();
+        modelCatalog?.Dispose(); modelCatalog = null;
         await StopRealtimeTranscriptionAsync();
         DiscardDictation(); await dictationCleanup;
         Microsoft.Win32.SystemEvents.PowerModeChanged -= RealtimePowerChanged;

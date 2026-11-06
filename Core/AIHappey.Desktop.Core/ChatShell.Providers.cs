@@ -48,7 +48,7 @@ public sealed partial class ChatShell
         {
             using var discovery = CancellationTokenSource.CreateLinkedTokenSource(ct);
             discovery.CancelAfter(TimeSpan.FromSeconds(15));
-            var available = await client.ListAsync(ServiceKind.Ai, discovery.Token);
+            var available = await AiModelsAsync(discovery.Token);
             ct.ThrowIfCancellationRequested(); if (closing || session.HistoryPartition != partition) return;
             aiModelTargets = available; providersOverview.SetItems(ProviderCatalog.All.Values, saved, available);
         }

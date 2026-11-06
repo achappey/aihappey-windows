@@ -73,7 +73,7 @@ public sealed partial class ChatShell
     {
         var partition = ImageLibraryStore.Partition(session); if (videoPartition != partition) { InvalidateVideos(); videoPartition = partition; }
         await StartVideoJobsAsync(ct); await ReloadVideoLibraryAsync(ct);
-        var available = useCache && aiModelTargets is not null ? aiModelTargets : await client.ListAsync(ServiceKind.Ai, ct);
+        var available = await AiModelsAsync(ct);
         ct.ThrowIfCancellationRequested(); if (closing || partition != ImageLibraryStore.Partition(session)) return;
         aiModelTargets = available; videoModels = AiModelCatalog.OfType(available, "video");
         await LoadSelectionCatalogsAsync(ct);
