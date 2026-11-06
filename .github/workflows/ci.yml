@@ -206,14 +206,14 @@ jobs:
             gh release upload latest $asset --clobber
             if ($LASTEXITCODE -ne 0) { throw 'Failed to update release asset.' }
             gh release edit latest `
-              --title 'Latest Windows Desktop (HeaderAuth)' `
-              --notes 'Latest portable Windows x64 desktop build from main, including AI Gateway and Agents runtimes.' `
+              --title 'Latest Windows build' `
+              --notes 'Latest portable Windows x64 desktop build from main, including Gateway and Agent runtimes.' `
               --latest
           }
           else {
             gh release create latest $asset `
-              --title 'Latest Windows Desktop (HeaderAuth)' `
-              --notes 'Latest portable Windows x64 desktop build from main, including AI Gateway and Agents runtimes.' `
+              --title 'Latest Windows build' `
+              --notes 'Latest portable Windows x64 desktop build from main, including AI Gateway and Agent runtimes.' `
               --latest `
               --verify-tag
           }
