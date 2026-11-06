@@ -38,96 +38,96 @@ public partial class App
         SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(120);
         try
         {
-        TextBox Query() => Descendants(dialog).OfType<TextBox>().Single(t => t.Name == "ContextSearchQuery");
-        var navigation = Descendants(dialog).OfType<NavigationView>().Single(t => t.Name == "ContextSearchTabs");
-        void Tab(string name) => SelectNativeTab(navigation, name);
-        ToggleSwitch[] Toggles(string name) => Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == name).ToArray();
-        SettingsExpander[] Rows(string name) => Descendants(dialog).OfType<SettingsExpander>().Where(e => e.Name == name).ToArray();
-        ToggleSwitch CatalogToggle() => (ToggleSwitch)Rows("ContextCatalogRow").Single().Content;
-        Button Button(string name) => Descendants(dialog).OfType<Button>().Single(b => b.Name == name);
-        var tabs = navigation.MenuItems.OfType<NavigationViewItem>().ToArray();
-        Check(tabs.Length == 4 && ReferenceEquals(navigation.SelectedItem, tabs[0]) && tabs.All(t => t.Icon is not null)
-            && navigation.PaneDisplayMode == NavigationViewPaneDisplayMode.Top,
-            context + ": four exclusive native tabs start with Tools");
-        Check(Query().TransformToVisual(dialog).TransformPoint(new()).Y < tabs[0].TransformToVisual(dialog).TransformPoint(new()).Y,
-            context + ": single accessible search field above navigation");
-        var tool = Toggles("ContextToolToggle").First(); var toolId = (string)tool.Tag; tool.IsOn = true;
-        Query().Text = "no-matching-result"; await Task.Delay(40);
-        Check(Toggles("ContextToolToggle").Length == 0 && tabs.All(t => AutomationProperties.GetName(t).EndsWith("(0)")), context + ": query filters every tab and updates counts");
-        Query().Text = DesktopLocalTools.Plugins.Single(p => p.Id == toolId).Tools[0].GetProperty("name").GetString()!; await Task.Delay(40);
-        Check(Toggles("ContextToolToggle").Any(t => (string)t.Tag == toolId && t.IsOn), context + ": tool-definition search retains hidden selection");
-        Query().Text = ""; Tab("skills"); await Task.Delay(40);
-        var indicator = Descendants(dialog).OfType<ProgressBar>().Single(p => p.Name == "ContextSearchProgress");
-        Check(indicator.IsIndeterminate && indicator.Visibility == Visibility.Visible, context + ": skills load uses accessible native progress bar");
-        var description = string.Join(" ", Enumerable.Repeat("Complete remote skill description.", 30));
-        skillLoad.SetResult(new([new("provider/sample", "Sample", description, "remote", "2"), new("local", "Local", "On disk", "local")], new HashSet<string>(), "API"));
-        await Task.Delay(80);
-        Check(Rows("ContextSkillRow").Length == 2 && Rows("ContextSkillRow").All(e => !e.IsExpanded && e.Content is ToggleSwitch)
-            && !Descendants(dialog).OfType<Border>().Any(b => b.Name == "ContextSearchCard"), context + ": skills use initially collapsed native rows with header toggles");
-        var skillRow = Rows("ContextSkillRow").Single(e => e.Tag as string == "provider/sample"); skillRow.IsExpanded = true; await Task.Delay(80);
-        Check(Descendants(skillRow).OfType<TextBlock>().Any(t => t.Text == description && t.MaxLines == 0)
-            && Descendants(skillRow).OfType<TextBlock>().Any(t => t.Text == "2"), context + ": expanded skill shows complete description and version");
-        Toggles("ContextSkillToggle").Single(t => (string)t.Tag == "provider/sample").IsOn = true; await Task.Delay(40);
-        Check(prefetches == 1 && !indicator.IsIndeterminate && Descendants(dialog).OfType<TextBlock>().Single(t => t.Name == "ContextSearchError").Text == DesktopResources.Get("SkillPrefetchFailed"),
-            context + ": failed prefetch stops loading, retains selection and gives safe feedback");
-        Tab("plugins"); Query().Text = "keyword"; await Task.Delay(40);
-        Check(Toggles("ContextPluginToggle").Length == 1, context + ": plugin metadata is searchable");
-        Toggles("ContextPluginToggle").Single().IsOn = true;
-        Query().Text = ""; Tab("catalog"); await Task.Delay(40);
-        Check(indicator.IsIndeterminate, context + ": independent catalog request displays progress");
-        catalogLoad.SetResult(new(servers, ["https://offline.example"])); await Task.Delay(80);
-        Check(Rows("ContextCatalogRow").Length == 20 && Rows("ContextCatalogRow").All(e => !e.IsExpanded && e.Content is ToggleSwitch) && Button("ContextSearchMore").Visibility == Visibility.Visible
-            && Button("ContextSearchRetry").Visibility == Visibility.Visible, context + ": partial catalog retains paginated results with retry");
-        InvokeButton(Button("ContextSearchMore")); await Task.Delay(50);
-        Check(Rows("ContextCatalogRow").Length == 25, context + ": Show more reveals next catalog page");
-        Query().Text = "https://server1.example/mcp";
-        await WaitForSkillUiAsync(() => Field<StackPanel>(dialog, "rows").Children.Count == 1); dialog.UpdateLayout();
-        Check(Rows("ContextCatalogRow").Length == 1, context + ": endpoint query selects one catalog row");
-        Check(CatalogToggle().IsOn && !CatalogToggle().IsEnabled, context + ": plugin-owned server is installed but cannot be removed independently");
-        Query().Text = "Server 0";
-        await WaitForSkillUiAsync(() => Field<StackPanel>(dialog, "rows").Children.OfType<SettingsExpander>().SingleOrDefault()?.Tag as string == servers[0].Id); dialog.UpdateLayout();
-        Check(CatalogToggle().Tag as string == servers[0].Id && CatalogToggle().IsOn, context + ": endpoint match recognizes manually installed server");
-        Rows("ContextCatalogRow").Single().IsExpanded = true; await Task.Delay(80);
-        Check(Button("ContextCatalogConfigure").Tag as string == servers[0].Id, context + ": installed server keeps configuration action in expanded details");
-        failMutation = false; CatalogToggle().IsOn = false; await Task.Delay(100);
-        Check(installed.Count == 1 && !dialog.CatalogInstallHappened && !CatalogToggle().IsOn && Rows("ContextCatalogRow").Single().IsExpanded,
-            context + ": removal resets header toggle, retains expansion, and does not trigger post-close server management");
-        failMutation = true; CatalogToggle().IsOn = true; await Task.Delay(100);
-        Check(installed.Count == 1 && !CatalogToggle().IsOn && !Descendants(dialog).OfType<TextBlock>().Single(t => t.Name == "ContextSearchError").Text.Contains("private disk"), context + ": catalog action failures roll back the switch and are sanitized and retryable");
-        failMutation = false; mutationGate = new(); CatalogToggle().IsOn = true;
-        await WaitForSkillUiAsync(() => Field<bool>(dialog, "pending"));
-        InvokeButton(Button("CloseButton")); await Task.Delay(40);
-        Check(shown.Status == Windows.Foundation.AsyncStatus.Started && !Query().IsEnabled && !navigation.IsEnabled && saved is null,
-            context + ": pending catalog mutation blocks editing and close without saving");
-        mutationGate.SetResult();
-        await WaitForSkillUiAsync(() => installed.Count == 2 && !Field<bool>(dialog, "pending")); dialog.UpdateLayout();
-        Check(dialog.CatalogInstallHappened && CatalogToggle().IsOn && CatalogToggle().IsEnabled,
-            context + ": successful installation updates toggle and requests server management on close");
-        await WaitForSkillUiAsync(() => Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root.XamlRoot) is ToggleSwitch { Name: "ContextCatalogToggle" });
-        Check(true, context + ": successful installation restores header-toggle focus");
-        InvokeButton(Button("ContextSearchRetry")); await Task.Delay(60);
-        Check(catalogLoads == 2 && Button("ContextSearchRetry").Visibility == Visibility.Collapsed, context + ": retry clears partial-registry warning");
-        Query().Text = ""; Tab("skills"); await Task.Delay(50);
-        Check(Toggles("ContextSkillToggle").Single(t => (string)t.Tag == "provider/sample").IsOn && original.ActivePlugins.Count == 0 && original.EnabledSkillIds.SequenceEqual(["unavailable"]),
-            context + ": tab changes preserve isolated draft and unavailable selections");
-        Check(Rows("ContextSkillRow").Single(e => e.Tag as string == "provider/sample").IsExpanded, context + ": tab changes preserve skill expansion");
-        Query().Text = "no-matching-result"; await Task.Delay(40); Query().Text = ""; await Task.Delay(40);
-        Check(Rows("ContextSkillRow").Single(e => e.Tag as string == "provider/sample").IsExpanded, context + ": filtering preserves expansion");
-        window.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(500 * scale), (int)(900 * scale))); await Task.Delay(180); dialog.UpdateLayout();
-        Check(Descendants(dialog).OfType<ScrollViewer>().Where(s => s.HorizontalScrollMode == ScrollMode.Disabled).All(s => s.ScrollableWidth < 1)
-            && Toggles("ContextSkillToggle").All(t => Within(t, dialog)), context + ": narrow dialog has no horizontal card overflow or clipped switches");
-        Check(navigation.ActualWidth <= ((FrameworkElement)dialog.Content).ActualWidth + 1
-            && ReferenceEquals(navigation.SelectedItem, tabs[1]), context + ": native tab overflow fits narrow dialog and retains selection");
-        window.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(500 * scale), (int)(600 * scale))); await Task.Delay(180); dialog.UpdateLayout();
-        var contentViewer = Field<ScrollViewer>(dialog, "viewer");
-        Check(contentViewer.TransformToVisual(dialog).TransformPoint(new()).Y + contentViewer.ActualHeight <= Button("CloseButton").TransformToVisual(dialog).TransformPoint(new()).Y
-            && contentViewer.ScrollableHeight > 0, context + ": expanded content scrolls above footer in short window");
-        InvokeButton(Button("CloseButton")); await Task.Delay(80);
-        Check(shown.Status == Windows.Foundation.AsyncStatus.Started && dialog.Result is null && saved is null && Query().IsEnabled,
-            context + ": save failure retains editable draft and keeps dialog open");
-        failSave = false; InvokeButton(Button("CloseButton")); await shown;
-        Check(saved is not null && saved.ActivePlugins.Contains(toolId) && saved.EnabledSkillIds.SequenceEqual(["unavailable", "provider/sample"])
-            && saved.EnabledAgentPluginIds.SequenceEqual(["unavailable-plugin", plugin.Id]) && !indicator.IsIndeterminate, context + ": close saves complete unfiltered draft and stops progress");
+            TextBox Query() => Descendants(dialog).OfType<TextBox>().Single(t => t.Name == "ContextSearchQuery");
+            var navigation = Descendants(dialog).OfType<NavigationView>().Single(t => t.Name == "ContextSearchTabs");
+            void Tab(string name) => SelectNativeTab(navigation, name);
+            ToggleSwitch[] Toggles(string name) => Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == name).ToArray();
+            SettingsExpander[] Rows(string name) => Descendants(dialog).OfType<SettingsExpander>().Where(e => e.Name == name).ToArray();
+            ToggleSwitch CatalogToggle() => (ToggleSwitch)Rows("ContextCatalogRow").Single().Content;
+            Button Button(string name) => Descendants(dialog).OfType<Button>().Single(b => b.Name == name);
+            var tabs = navigation.MenuItems.OfType<NavigationViewItem>().ToArray();
+            Check(tabs.Length == 4 && ReferenceEquals(navigation.SelectedItem, tabs[0]) && tabs.All(t => t.Icon is not null)
+                && navigation.PaneDisplayMode == NavigationViewPaneDisplayMode.Top,
+                context + ": four exclusive native tabs start with Tools");
+            Check(Query().TransformToVisual(dialog).TransformPoint(new()).Y < tabs[0].TransformToVisual(dialog).TransformPoint(new()).Y,
+                context + ": single accessible search field above navigation");
+            var tool = Toggles("ContextToolToggle").First(); var toolId = (string)tool.Tag; tool.IsOn = true;
+            Query().Text = "no-matching-result"; await Task.Delay(40);
+            Check(Toggles("ContextToolToggle").Length == 0 && tabs.All(t => AutomationProperties.GetName(t).EndsWith("(0)")), context + ": query filters every tab and updates counts");
+            Query().Text = DesktopLocalTools.Plugins.Single(p => p.Id == toolId).Tools[0].GetProperty("name").GetString()!; await Task.Delay(40);
+            Check(Toggles("ContextToolToggle").Any(t => (string)t.Tag == toolId && t.IsOn), context + ": tool-definition search retains hidden selection");
+            Query().Text = ""; Tab("skills"); await Task.Delay(40);
+            var indicator = Descendants(dialog).OfType<ProgressBar>().Single(p => p.Name == "ContextSearchProgress");
+            Check(indicator.IsIndeterminate && indicator.Visibility == Visibility.Visible, context + ": skills load uses accessible native progress bar");
+            var description = string.Join(" ", Enumerable.Repeat("Complete remote skill description.", 30));
+            skillLoad.SetResult(new([new("provider/sample", "Sample", description, "remote", "2"), new("local", "Local", "On disk", "local")], new HashSet<string>(), "API"));
+            await Task.Delay(80);
+            Check(Rows("ContextSkillRow").Length == 2 && Rows("ContextSkillRow").All(e => !e.IsExpanded && e.Content is ToggleSwitch)
+                && !Descendants(dialog).OfType<Border>().Any(b => b.Name == "ContextSearchCard"), context + ": skills use initially collapsed native rows with header toggles");
+            var skillRow = Rows("ContextSkillRow").Single(e => e.Tag as string == "provider/sample"); skillRow.IsExpanded = true; await Task.Delay(80);
+            Check(Descendants(skillRow).OfType<TextBlock>().Any(t => t.Text == description && t.MaxLines == 0)
+                && Descendants(skillRow).OfType<TextBlock>().Any(t => t.Text == "2"), context + ": expanded skill shows complete description and version");
+            Toggles("ContextSkillToggle").Single(t => (string)t.Tag == "provider/sample").IsOn = true; await Task.Delay(40);
+            Check(prefetches == 1 && !indicator.IsIndeterminate && Descendants(dialog).OfType<TextBlock>().Single(t => t.Name == "ContextSearchError").Text == DesktopResources.Get("SkillPrefetchFailed"),
+                context + ": failed prefetch stops loading, retains selection and gives safe feedback");
+            Tab("plugins"); Query().Text = "keyword"; await Task.Delay(40);
+            Check(Toggles("ContextPluginToggle").Length == 1, context + ": plugin metadata is searchable");
+            Toggles("ContextPluginToggle").Single().IsOn = true;
+            Query().Text = ""; Tab("catalog"); await Task.Delay(40);
+            Check(indicator.IsIndeterminate, context + ": independent catalog request displays progress");
+            catalogLoad.SetResult(new(servers, ["https://offline.example"])); await Task.Delay(80);
+            Check(Rows("ContextCatalogRow").Length == 20 && Rows("ContextCatalogRow").All(e => !e.IsExpanded && e.Content is ToggleSwitch) && Button("ContextSearchMore").Visibility == Visibility.Visible
+                && Button("ContextSearchRetry").Visibility == Visibility.Visible, context + ": partial catalog retains paginated results with retry");
+            InvokeButton(Button("ContextSearchMore")); await Task.Delay(50);
+            Check(Rows("ContextCatalogRow").Length == 25, context + ": Show more reveals next catalog page");
+            Query().Text = "https://server1.example/mcp";
+            await WaitForSkillUiAsync(() => Field<StackPanel>(dialog, "rows").Children.Count == 1); dialog.UpdateLayout();
+            Check(Rows("ContextCatalogRow").Length == 1, context + ": endpoint query selects one catalog row");
+            Check(CatalogToggle().IsOn && !CatalogToggle().IsEnabled, context + ": plugin-owned server is installed but cannot be removed independently");
+            Query().Text = "Server 0";
+            await WaitForSkillUiAsync(() => Field<StackPanel>(dialog, "rows").Children.OfType<SettingsExpander>().SingleOrDefault()?.Tag as string == servers[0].Id); dialog.UpdateLayout();
+            Check(CatalogToggle().Tag as string == servers[0].Id && CatalogToggle().IsOn, context + ": endpoint match recognizes manually installed server");
+            Rows("ContextCatalogRow").Single().IsExpanded = true; await Task.Delay(80);
+            Check(Button("ContextCatalogConfigure").Tag as string == servers[0].Id, context + ": installed server keeps configuration action in expanded details");
+            failMutation = false; CatalogToggle().IsOn = false; await Task.Delay(100);
+            Check(installed.Count == 1 && !dialog.CatalogInstallHappened && !CatalogToggle().IsOn && Rows("ContextCatalogRow").Single().IsExpanded,
+                context + ": removal resets header toggle, retains expansion, and does not trigger post-close server management");
+            failMutation = true; CatalogToggle().IsOn = true; await Task.Delay(100);
+            Check(installed.Count == 1 && !CatalogToggle().IsOn && !Descendants(dialog).OfType<TextBlock>().Single(t => t.Name == "ContextSearchError").Text.Contains("private disk"), context + ": catalog action failures roll back the switch and are sanitized and retryable");
+            failMutation = false; mutationGate = new(); CatalogToggle().IsOn = true;
+            await WaitForSkillUiAsync(() => Field<bool>(dialog, "pending"));
+            InvokeButton(Button("CloseButton")); await Task.Delay(40);
+            Check(shown.Status == Windows.Foundation.AsyncStatus.Started && !Query().IsEnabled && !navigation.IsEnabled && saved is null,
+                context + ": pending catalog mutation blocks editing and close without saving");
+            mutationGate.SetResult();
+            await WaitForSkillUiAsync(() => installed.Count == 2 && !Field<bool>(dialog, "pending")); dialog.UpdateLayout();
+            Check(dialog.CatalogInstallHappened && CatalogToggle().IsOn && CatalogToggle().IsEnabled,
+                context + ": successful installation updates toggle and requests server management on close");
+            await WaitForSkillUiAsync(() => Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root.XamlRoot) is ToggleSwitch { Name: "ContextCatalogToggle" });
+            Check(true, context + ": successful installation restores header-toggle focus");
+            InvokeButton(Button("ContextSearchRetry")); await Task.Delay(60);
+            Check(catalogLoads == 2 && Button("ContextSearchRetry").Visibility == Visibility.Collapsed, context + ": retry clears partial-registry warning");
+            Query().Text = ""; Tab("skills"); await Task.Delay(50);
+            Check(Toggles("ContextSkillToggle").Single(t => (string)t.Tag == "provider/sample").IsOn && original.ActivePlugins.Count == 0 && original.EnabledSkillIds.SequenceEqual(["unavailable"]),
+                context + ": tab changes preserve isolated draft and unavailable selections");
+            Check(Rows("ContextSkillRow").Single(e => e.Tag as string == "provider/sample").IsExpanded, context + ": tab changes preserve skill expansion");
+            Query().Text = "no-matching-result"; await Task.Delay(40); Query().Text = ""; await Task.Delay(40);
+            Check(Rows("ContextSkillRow").Single(e => e.Tag as string == "provider/sample").IsExpanded, context + ": filtering preserves expansion");
+            window.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(500 * scale), (int)(900 * scale))); await Task.Delay(180); dialog.UpdateLayout();
+            Check(Descendants(dialog).OfType<ScrollViewer>().Where(s => s.HorizontalScrollMode == ScrollMode.Disabled).All(s => s.ScrollableWidth < 1)
+                && Toggles("ContextSkillToggle").All(t => Within(t, dialog)), context + ": narrow dialog has no horizontal card overflow or clipped switches");
+            Check(navigation.ActualWidth <= ((FrameworkElement)dialog.Content).ActualWidth + 1
+                && ReferenceEquals(navigation.SelectedItem, tabs[1]), context + ": native tab overflow fits narrow dialog and retains selection");
+            window.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(500 * scale), (int)(600 * scale))); await Task.Delay(180); dialog.UpdateLayout();
+            var contentViewer = Field<ScrollViewer>(dialog, "viewer");
+            Check(contentViewer.TransformToVisual(dialog).TransformPoint(new()).Y + contentViewer.ActualHeight <= Button("CloseButton").TransformToVisual(dialog).TransformPoint(new()).Y
+                && contentViewer.ScrollableHeight > 0, context + ": expanded content scrolls above footer in short window");
+            InvokeButton(Button("CloseButton")); await Task.Delay(80);
+            Check(shown.Status == Windows.Foundation.AsyncStatus.Started && dialog.Result is null && saved is null && Query().IsEnabled,
+                context + ": save failure retains editable draft and keeps dialog open");
+            failSave = false; InvokeButton(Button("CloseButton")); await shown;
+            Check(saved is not null && saved.ActivePlugins.Contains(toolId) && saved.EnabledSkillIds.SequenceEqual(["unavailable", "provider/sample"])
+                && saved.EnabledAgentPluginIds.SequenceEqual(["unavailable-plugin", plugin.Id]) && !indicator.IsIndeterminate, context + ": close saves complete unfiltered draft and stops progress");
         }
         finally { if (shown.Status == Windows.Foundation.AsyncStatus.Started) { dialog.Shutdown(); await shown; } }
 
