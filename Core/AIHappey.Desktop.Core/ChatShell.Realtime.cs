@@ -75,10 +75,10 @@ public sealed partial class ChatShell
         realtimeTarget.TextChanged += (_, args) =>
         {
             if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
-                realtimeTarget.ItemsSource = PickerModels(realtimeModels).Where(m => m.Id.Contains(realtimeTarget.Text, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(realtimeTarget.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
+                realtimeTarget.ItemsSource = PickerChoices(realtimeModels).Where(m => m.Id.Contains(realtimeTarget.Text, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(realtimeTarget.Text, StringComparison.OrdinalIgnoreCase)).ToArray();
             UpdateRealtimeControls();
         };
-        realtimeTarget.GotFocus += (_, _) => { realtimeTarget.ItemsSource = PickerModels(realtimeModels); realtimeTarget.IsSuggestionListOpen = true; };
+        realtimeTarget.GotFocus += (_, _) => { realtimeTarget.ItemsSource = PickerChoices(realtimeModels); realtimeTarget.IsSuggestionListOpen = true; };
         realtimeTarget.SuggestionChosen += (_, args) => realtimeTarget.Text = ((ChatTarget)args.SelectedItem).Id;
         realtimeMute.Click += async (_, _) =>
         {
@@ -111,7 +111,7 @@ public sealed partial class ChatShell
         realtimeModels = ProviderPreferences.Filter(AiModelCatalog.OfType(available, "audio"), session.Settings).Where(m => RealtimeConfiguration.Supported(m.Id)).ToArray();
         if (!realtimeModels.Any(m => m.Id == realtimeTarget.Text))
             realtimeTarget.Text = new[] { session.Settings.AiModels.AudioModel, session.Settings.Realtime.Model, "openai/gpt-realtime-2" }.FirstOrDefault(id => realtimeModels.Any(m => m.Id == id)) ?? realtimeModels.FirstOrDefault()?.Id ?? "";
-        realtimeTarget.ItemsSource = PickerModels(realtimeModels); UpdateRealtimeControls();
+        realtimeTarget.ItemsSource = PickerChoices(realtimeModels); UpdateRealtimeControls();
         if (realtimeModels.Count == 0) Show(DesktopResources.Get("RealtimeNoModels"), InfoBarSeverity.Warning);
     }
     private void UpdateRealtimeControls()

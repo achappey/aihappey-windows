@@ -157,7 +157,7 @@ public sealed partial class ChatShell
                 agentMode ? null : AiModelCatalog.NewChatModel(PickerModels(targets), session.Settings.AiModels));
         }
         target.Configure(agentMode, agentMode || decision is not null, favoriteIds,
-            decision is not null && (!agentMode || visible.Count(t => favoriteIds.Contains(t.Id)) >= 2), routerAgent?.Name ?? "");
+            decision is not null && (!agentMode || visible.Count(t => favoriteIds.Contains(t.Id)) >= 2), routerAgent?.Name ?? "", session.Settings.AiModels.ShowVoiceModels);
         target.ItemsSource = visible;
         UpdateModelFavorites();
     }

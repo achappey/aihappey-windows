@@ -14,6 +14,7 @@ public sealed class AiModelSettingsView : NavigationView
     private IReadOnlyList<ChatTarget>? catalog;
     private readonly DesktopSettings? providerSettings;
     private IReadOnlyList<ChatTarget> VisibleModels => providerSettings is null ? catalog ?? [] : ProviderPreferences.Filter(catalog ?? [], providerSettings);
+    private IReadOnlyList<ChatTarget> ChoiceModels => AiModelCatalog.PickerChoices(VisibleModels, draft.ShowVoiceModels);
 
     public AiModelSettingsView(AiModelPreferences draft, IReadOnlyList<ChatTarget>? catalog = null, UIElement? imageSettings = null, UIElement? videoSettings = null,
         DesktopSettings? providerSettings = null)
@@ -44,7 +45,7 @@ public sealed class AiModelSettingsView : NavigationView
             var state = new TextBlock { TextWrapping = TextWrapping.Wrap };
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(state, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
             states.Add(type, state); page.Children.Add(state);
-            void Search(string query) => picker.ItemsSource = AiModelCatalog.OfType(VisibleModels, type)
+            void Search(string query) => picker.ItemsSource = AiModelCatalog.OfType(ChoiceModels, type)
                 .Where(x => string.IsNullOrWhiteSpace(query) || x.Label.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)
                     || x.Id.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
             void Choose(ChatTarget selected)
@@ -62,7 +63,7 @@ public sealed class AiModelSettingsView : NavigationView
             picker.QuerySubmitted += (_, args) =>
             {
                 var selected = args.ChosenSuggestion as ChatTarget
-                    ?? AiModelCatalog.OfType(VisibleModels, type).FirstOrDefault(x => x.Id == picker.Text.Trim());
+                    ?? AiModelCatalog.OfType(ChoiceModels, type).FirstOrDefault(x => x.Id == picker.Text.Trim());
                 if (selected is not null) Choose(selected);
                 else { Search(picker.Text); picker.IsSuggestionListOpen = true; }
             };
@@ -90,6 +91,17 @@ public sealed class AiModelSettingsView : NavigationView
                 page.Children.Add(toggle);
             }
             if (type == "image" && imageSettings is not null) page.Children.Add(imageSettings);
+            if (type == "speech")
+            {
+                var voices = new ToggleSwitch { Name = "AiShowVoiceModels", Header = DesktopResources.Get("AiVoiceModels"), IsOn = draft.ShowVoiceModels };
+                ToolbarControls.Label(voices, DesktopResources.Get("AiVoiceModels"));
+                voices.Toggled += (_, _) =>
+                {
+                    draft.ShowVoiceModels = voices.IsOn;
+                    if (this.catalog is not null) SetCatalog(this.catalog);
+                };
+                page.Children.Add(voices);
+            }
             if (type == "video" && videoSettings is not null) page.Children.Add(videoSettings);
         }
         SelectionChanged += (_, _) =>
@@ -108,7 +120,7 @@ public sealed class AiModelSettingsView : NavigationView
         foreach (var type in AiModelCatalog.Types)
         {
             pickers[type].IsEnabled = true;
-            pickers[type].ItemsSource = AiModelCatalog.OfType(VisibleModels, type).Take(100).ToArray();
+            pickers[type].ItemsSource = AiModelCatalog.OfType(ChoiceModels, type).Take(100).ToArray();
             pickers[type].Text = DisplayDefault(type);
             UpdateState(type);
         }

@@ -31,6 +31,6 @@ public sealed partial class ChatShell
         if (activePage == DesktopPage.Providers && providerFavoritesPartition == session.HistoryPartition)
             providersOverview.SetItems(ProviderCatalog.All.Values, providerFavorites, available);
         // RefreshProviderFiltering preserves active drafts and valid explicit selections.
-        realtimeTarget.ItemsSource = PickerModels(realtimeModels); UpdateRealtimeControls();
+        realtimeTarget.ItemsSource = PickerChoices(realtimeModels); UpdateRealtimeControls();
     }
 }

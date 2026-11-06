@@ -814,6 +814,7 @@
   <data name="AiChatWith_image" xml:space="preserve"><value>Chat met beeldmodellen</value></data>
   <data name="AiChatWith_video" xml:space="preserve"><value>Chat met videomodellen</value></data>
   <data name="AiChatWith_speech" xml:space="preserve"><value>Chat met spraakmodellen</value></data>
+  <data name="AiVoiceModels" xml:space="preserve"><value>Stemmodellen</value></data>
   <data name="AiChatWith_transcription" xml:space="preserve"><value>Chat met transcriptiemodellen</value></data>
   <data name="AiModelsLoading" xml:space="preserve"><value>Modellen laden</value></data>
   <data name="AiModelsLoadFailed" xml:space="preserve"><value>Modellen konden niet worden geladen. Open de instellingen opnieuw om het nogmaals te proberen. Opgeslagen standaardmodellen zijn behouden.</value></data>

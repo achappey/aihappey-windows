@@ -81,7 +81,7 @@ public sealed partial class ChatShell
         if (!PrimitiveRoutingAvailable)
             picker.Selection.UseManualSelection(available, false, fallback: InitialModel(models, type));
         var favoriteIds = new HashSet<string>(available.Where(m => modelFavorites.Contains(ModelOverviewCatalog.FavoriteKey(m))).Select(m => m.Id));
-        picker.Configure(false, PrimitiveRoutingAvailable, favoriteIds, PrimitiveRoutingAvailable, "");
+        picker.Configure(false, PrimitiveRoutingAvailable, favoriteIds, PrimitiveRoutingAvailable, "", session.Settings.AiModels.ShowVoiceModels);
         picker.ItemsSource = available;
         UpdateModelFavorites();
     }

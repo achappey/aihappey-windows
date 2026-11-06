@@ -23,7 +23,7 @@ public sealed partial class AgentEditDialog
                 .Concat(id.Length > 0 ? new[] { new ChatTarget(id, id) { ModelType = type } } : []).DistinctBy(m => m.Id).ToArray();
             var picker = new ChatTargetPicker { Name = "AgentAudioModel_" + type, AllowEmptySelection = true,
                 PlaceholderText = DesktopResources.Get("SelectModel"), HorizontalAlignment = HorizontalAlignment.Stretch, ItemsSource = options };
-            picker.Configure(false, false, new HashSet<string>(), false, ""); picker.SetSelection(id.Length > 0 ? [id] : []);
+            picker.Configure(false, false, new HashSet<string>(), false, "", session.Settings.AiModels.ShowVoiceModels); picker.SetSelection(id.Length > 0 ? [id] : []);
             var label = new TextBlock { Text = ChatSettingsFields.L("model") };
             body.Children.Add(label);
             ToolbarControls.Label(picker, label.Text); AutomationProperties.SetLabeledBy(picker, label); body.Children.Add(picker);

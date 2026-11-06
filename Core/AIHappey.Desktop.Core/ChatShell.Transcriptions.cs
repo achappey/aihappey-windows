@@ -37,7 +37,7 @@ public sealed partial class ChatShell
         transcriptionsPage.StopRequested = () => operation?.Cancel(); transcriptionsPage.FilesDropped = DropTranscriptionFilesAsync;
         transcriptionsPage.FolderRequested = OpenTranscriptionsFolderAsync; transcriptionsPage.ViewRequested = ViewTranscriptionAsync; transcriptionsPage.DeleteRequested = DeleteTranscriptionAsync;
     }
-    private void TranscriptionModelSuggestions(string query = "") => transcriptionTarget.ItemsSource = PickerModels(transcriptionModels).Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
+    private void TranscriptionModelSuggestions(string query = "") => transcriptionTarget.ItemsSource = PickerChoices(transcriptionModels).Where(m => string.IsNullOrWhiteSpace(query) || m.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || m.Label.Contains(query, StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
     private void InvalidateTranscriptions()
     {
         transcriptionRealtimeCleanup = StopRealtimeTranscriptionAsync(); transcriptionsPage.SetRealtime("idle");

@@ -27,6 +27,8 @@ public sealed class ChatTargetPicker : Button
     private bool multiple;
     private bool agentMode;
     private bool routerAvailable;
+    private bool showVoiceModels = true;
+    private IReadOnlyList<ChatTarget> ChoiceItems => agentMode ? items : AiModelCatalog.PickerChoices(items, showVoiceModels);
     private string routerLabel = "";
     private string placeholder = "";
     public ChatSelection Selection { get; } = new();
@@ -89,7 +91,7 @@ public sealed class ChatTargetPicker : Button
         };
         allFavorites.Click += (_, _) =>
         {
-            Selection.FavoriteRouter = false; Selection.Replace(items.Where(i => favorites.Contains(i.Id)).Select(i => i.Id));
+            Selection.FavoriteRouter = false; Selection.Replace(ChoiceItems.Where(i => favorites.Contains(i.Id)).Select(i => i.Id));
             SyncSelectedRows(); UpdateSummary(); SelectionChanged?.Invoke();
         };
         router.Click += (_, _) =>
@@ -100,9 +102,10 @@ public sealed class ChatTargetPicker : Button
         IsEnabledChanged += (_, _) => { if (!IsEnabled) popup.Hide(); };
         Unloaded += (_, _) => popup.Hide();
     }
-    public void Configure(bool agents, bool multiselect, IReadOnlySet<string> favoriteIds, bool canRoute, string routeLabel)
+    public void Configure(bool agents, bool multiselect, IReadOnlySet<string> favoriteIds, bool canRoute, string routeLabel, bool showVoiceModels = true)
     {
         agentMode = agents; multiple = multiselect; favorites = favoriteIds; routerAvailable = canRoute; routerLabel = routeLabel;
+        this.showVoiceModels = showVoiceModels;
         // Changing native selection mode can raise SelectionChanged. It must not edit the canonical IDs.
         updating = true;
         try
@@ -134,7 +137,7 @@ public sealed class ChatTargetPicker : Button
                 || item.Id.Contains(query, StringComparison.OrdinalIgnoreCase) || item.Tags.Any(tag => tag.Contains(query, StringComparison.CurrentCultureIgnoreCase))
                 || (agentMode && item.OwnedBy?.Contains(query, StringComparison.CurrentCultureIgnoreCase) == true)
                 || (item.ProviderKey is { } key && ProviderCatalog.Get(key).Name.Contains(query, StringComparison.CurrentCultureIgnoreCase));
-            var visible = items.Where(Matches).ToArray(); var next = new List<TargetGroup>();
+            var visible = ChoiceItems.Where(Matches).ToArray(); var next = new List<TargetGroup>();
             void Add(string key, IEnumerable<ChatTarget> values)
             { var rows = values.ToArray(); if (rows.Length > 0) next.Add(new(key, rows)); }
             Add(DesktopResources.Get("Favorites"), visible.Where(i => favorites.Contains(i.Id)));
@@ -155,7 +158,7 @@ public sealed class ChatTargetPicker : Button
             groups = next;
             list.ItemsSource = new CollectionViewSource { IsSourceGrouped = true, Source = next }.View;
             empty.Visibility = visible.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
-            allFavorites.Visibility = !agentMode && multiple && routerAvailable && items.Any(i => favorites.Contains(i.Id)) ? Visibility.Visible : Visibility.Collapsed;
+            allFavorites.Visibility = !agentMode && multiple && routerAvailable && ChoiceItems.Any(i => favorites.Contains(i.Id)) ? Visibility.Visible : Visibility.Collapsed;
             router.Content = routerLabel; router.Visibility = agentMode && routerAvailable ? Visibility.Visible : Visibility.Collapsed;
             SyncSelectedRows(); UpdateSummary();
         }

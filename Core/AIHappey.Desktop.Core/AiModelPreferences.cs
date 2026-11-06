@@ -18,6 +18,7 @@ public sealed class AiModelPreferences
     public bool ChatWithImageModels { get; set; }
     public bool ChatWithVideoModels { get; set; }
     public bool ChatWithSpeechModels { get; set; }
+    public bool ShowVoiceModels { get; set; } = true;
     public bool ChatWithTranscriptionModels { get; set; }
     public AiModelPreferences Clone() => (AiModelPreferences)MemberwiseClone();
 
@@ -119,6 +120,9 @@ public static class AiModelCatalog
     // OrderByDescending is stable: equal/missing dates keep the gateway's order, as in the browser.
     public static IReadOnlyList<ChatTarget> NewestFirst(IEnumerable<ChatTarget> items) => items.OrderByDescending(x => x.Created ?? 0).ToArray();
     public static IReadOnlyList<ChatTarget> OfType(IEnumerable<ChatTarget> items, string type) => NewestFirst(items.Where(x => x.ModelType == type));
+    // Filter choices, never the catalog used to resolve saved defaults or explicit selections.
+    public static IReadOnlyList<ChatTarget> PickerChoices(IEnumerable<ChatTarget> items, bool showVoiceModels) =>
+        items.Where(item => showVoiceModels || !item.Tags.Any(tag => string.Equals(tag.Trim(), "voice", StringComparison.OrdinalIgnoreCase))).ToArray();
     public static IReadOnlyList<ChatTarget> ChatSuggestions(IEnumerable<ChatTarget> items, AiModelPreferences preferences, string query = "") =>
         NewestFirst(items.Where(x => preferences.AllowsChat(x.ModelType ?? ResolveType(x.Id, null)))
             .Where(x => string.IsNullOrWhiteSpace(query) || x.Label.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)

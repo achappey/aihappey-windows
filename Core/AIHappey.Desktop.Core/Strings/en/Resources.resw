@@ -818,6 +818,7 @@
   <data name="AiChatWith_image" xml:space="preserve"><value>Chat with image models</value></data>
   <data name="AiChatWith_video" xml:space="preserve"><value>Chat with video models</value></data>
   <data name="AiChatWith_speech" xml:space="preserve"><value>Chat with speech models</value></data>
+  <data name="AiVoiceModels" xml:space="preserve"><value>Voice models</value></data>
   <data name="AiChatWith_transcription" xml:space="preserve"><value>Chat with transcription models</value></data>
   <data name="AiModelsLoading" xml:space="preserve"><value>Loading models</value></data>
   <data name="AiModelsLoadFailed" xml:space="preserve"><value>Models could not be loaded. Reopen settings to try again. Saved defaults have been retained.</value></data>

@@ -138,7 +138,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         modelField.Children.Add(modelLabel);
         var model = new ChatTargetPicker { Name = "AgentModels", PlaceholderText = DesktopResources.Get("SelectModel"),
             AllowEmptySelection = true, HorizontalAlignment = HorizontalAlignment.Stretch, ItemsSource = modelOptions };
-        model.Configure(agents: false, multiselect: true, favoriteIds: new HashSet<string>(), canRoute: false, routeLabel: "");
+        model.Configure(agents: false, multiselect: true, favoriteIds: new HashSet<string>(), canRoute: false, routeLabel: "", showVoiceModels: session.Settings.AiModels.ShowVoiceModels);
         AutomationProperties.SetName(model, DesktopResources.Get("AgentModels"));
         AutomationProperties.SetLabeledBy(model, modelLabel);
         AutomationProperties.SetIsRequiredForForm(model, true);
@@ -147,7 +147,7 @@ public sealed partial class AgentEditDialog : ContentDialog, IResponsiveDialog
         var decisionLabel = new TextBlock { Text = DesktopResources.Get("AgentDecisionModel") + " *" };
         var decision = new ChatTargetPicker { Name = "AgentDecisionModel", PlaceholderText = DesktopResources.Get("SelectModel"),
             AllowEmptySelection = true, HorizontalAlignment = HorizontalAlignment.Stretch, ItemsSource = decisionOptions };
-        decision.Configure(agents: false, multiselect: false, favoriteIds: new HashSet<string>(), canRoute: false, routeLabel: "");
+        decision.Configure(agents: false, multiselect: false, favoriteIds: new HashSet<string>(), canRoute: false, routeLabel: "", showVoiceModels: session.Settings.AiModels.ShowVoiceModels);
         AutomationProperties.SetName(decision, DesktopResources.Get("AgentDecisionModel"));
         AutomationProperties.SetLabeledBy(decision, decisionLabel);
         AutomationProperties.SetIsRequiredForForm(decision, true);

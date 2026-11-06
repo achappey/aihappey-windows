@@ -14,6 +14,7 @@ public sealed partial class ChatShell
     private bool CanEditProviders => initialized && !busy && !closing && !historyDialogOpen && catalogDialog is null && !downloading;
     private IReadOnlyList<ChatTarget> PickerModels(IEnumerable<ChatTarget> models) => ProviderPreferences.Filter(models,
         session.Settings, modelFavoritesPartition == session.HistoryPartition ? modelFavorites : null);
+    private IReadOnlyList<ChatTarget> PickerChoices(IEnumerable<ChatTarget> models) => AiModelCatalog.PickerChoices(PickerModels(models), session.Settings.AiModels.ShowVoiceModels);
     private string InitialModel(IEnumerable<ChatTarget> models, string type, string? fallback = null)
     {
         var visible = PickerModels(models);
@@ -81,6 +82,7 @@ public sealed partial class ChatShell
     {
         UpdateDictationAvailability();
         UpdateTargetSuggestions(); ImageModelSuggestions(); VideoModelSuggestions(); TranscriptionModelSuggestions(); SpeechModelSuggestions();
+        realtimeTarget.ItemsSource = PickerChoices(realtimeModels);
         if (aiModelTargets is not null) modelsOverview.SetItems(ProviderPreferences.Filter(aiModelTargets, session.Settings), modelFavorites);
         // Keep valid explicit selections and drafts. Only fill previously empty pickers from enabled providers.
         if (Service == ServiceKind.Ai && TargetId.Length == 0) SelectNewChatModel();
