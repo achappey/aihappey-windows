@@ -2099,4 +2099,11 @@ Speaker: {1}</value></data>
   <data name="ChatForm_toolConfiguration_namespace" xml:space="preserve"><value>Namespace</value></data>
   <data name="ChatForm_toolConfiguration_empty" xml:space="preserve"><value>No tools are currently attached.</value></data>
   <data name="ChatForm_toolConfiguration_select" xml:space="preserve"><value>Select...</value></data>
+  <data name="ChatGateway" xml:space="preserve"><value>Gateway</value></data>
+  <data name="ChatDirect" xml:space="preserve"><value>Direct</value></data>
+  <data name="DirectChatUnavailable" xml:space="preserve"><value>Direct access is unavailable for this model. Configure its provider API key or choose Gateway.</value></data>
+  <data name="NativeChatAttachmentUnsupported" xml:space="preserve"><value>This attachment cannot be sent to the selected endpoint. Convert it to text or choose a compatible endpoint.</value></data>
+  <data name="NativeChatStreamIncomplete" xml:space="preserve"><value>The endpoint stream ended without a complete response. The partial reply was retained; no inference request was retried.</value></data>
+  <data name="NativeChatToolsUnsupported" xml:space="preserve"><value>This endpoint requested a tool that is not supported in basic chat. Choose Gateway (/api/chat) for tool-enabled conversations.</value></data>
+  <data name="NativeChatBasicOnly" xml:space="preserve"><value>This endpoint supports basic streaming chat. Tool execution is currently available only through Gateway (/api/chat).</value></data>
 </root>

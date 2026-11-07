@@ -29,8 +29,11 @@ public sealed record ChatTarget(string Id, string Label)
 
 public sealed class GatewayException(string message) : Exception(message);
 
-public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
+public sealed class DesktopChatClient(DesktopSession session, HttpClient http, HttpClient? directHttp = null)
 {
+    // Separate transport: no gateway defaults, cookies, redirects, or inference retries.
+    private static readonly HttpClient directTransport = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
+        { Timeout = Timeout.InfiniteTimeSpan };
     internal string AgentCatalogScope => session.HistoryPartition + "|" + JsonSerializer.Serialize(session.Settings.Agents);
 
     internal async Task<JsonElement> ReadAiModelsAsync(CancellationToken ct)
@@ -61,10 +64,19 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
     public async IAsyncEnumerable<StreamEvent> StreamAsync(ServiceKind service, string target, string conversationId,
         List<UIMessage> messages, [EnumeratorCancellation] CancellationToken ct, ChatPreferences? preferences = null, string? providerKey = null,
         UIMessage? systemContext = null, McpTurnSnapshot? mcp = null, DesktopAgent? localAgent = null,
-        System.Text.Json.Nodes.JsonObject? agentRequest = null)
+        System.Text.Json.Nodes.JsonObject? agentRequest = null, DesktopChatRoute? route = null)
     {
         var snapshot = (preferences ?? session.Settings.Chat).Clone();
         providerKey = ChatPreferences.ResolveProvider(service, target, providerKey);
+        if (service == ServiceKind.Ai)
+        {
+            route ??= DesktopChatRoutes.Resolve(session.Host, snapshot, new(target, target) { ProviderKey = providerKey });
+            if (route.IsNative)
+            {
+                await foreach (var item in StreamNativeAsync(route, messages, snapshot, systemContext, ct)) yield return item;
+                yield break;
+            }
+        }
         using var request = await RequestAsync(service, HttpMethod.Post, "api/chat", ct);
         var requestMessages = DesktopSystemContext.RequestMessages(service, messages,
             service == ServiceKind.Ai ? systemContext ?? session.CaptureSystemContext() : null);
@@ -112,6 +124,43 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
         }
     }
 
+    private async IAsyncEnumerable<StreamEvent> StreamNativeAsync(DesktopChatRoute route, List<UIMessage> messages,
+        ChatPreferences preferences, UIMessage? systemContext, [EnumeratorCancellation] CancellationToken ct)
+    {
+        var body = NativeChatRequests.Build(route, preferences, DesktopSystemContext.RequestMessages(ServiceKind.Ai, messages,
+            systemContext ?? session.CaptureSystemContext()));
+        using var request = route.IsDirect ? new HttpRequestMessage(HttpMethod.Post, route.DirectUrl)
+            : await RequestAsync(ServiceKind.Ai, HttpMethod.Post, route.Endpoint.TrimStart('/'), ct);
+        preferences.ApplyHeaders(request, route.ProviderKey);
+        if (route.IsDirect)
+        {
+            if (!session.Host.SupportsDirectChat || route.ProviderKey is null)
+                throw new InvalidOperationException(DesktopResources.Get("DirectChatUnavailable"));
+            await session.Host.AuthenticateDirectChatAsync(request, route.ProviderKey, route.Endpoint, ct);
+        }
+        else
+        {
+            request.Headers.Remove("X-AIHappey-Debug");
+            if (preferences.ApiDebugEnabled) request.Headers.Add("X-AIHappey-Debug", "true");
+        }
+        request.Headers.Accept.ParseAdd("text/event-stream");
+        request.Content = JsonContent.Create(body, options: PortableConversations.Json);
+        using var response = await (route.IsDirect ? directHttp ?? directTransport : http)
+            .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+        await GatewayErrors.CheckResponseAsync(response, ct);
+        if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")
+            throw new GatewayException(DesktopResources.Get("ChatStreamRequired"));
+        await using var stream = await response.Content.ReadAsStreamAsync(ct);
+        var mapper = new NativeChatStream(route);
+        await foreach (var frame in SseReader.ReadEventsAsync(stream, ct))
+        {
+            if (frame.Data == "[DONE]") break;
+            foreach (var item in mapper.Apply(frame.Data, frame.Event)) yield return item;
+        }
+        // A bare EOF or [DONE] is not evidence of a successful native response.
+        mapper.CheckComplete();
+    }
+
     public static object LocalAgentRequest(DesktopAgent agent, string conversationId, List<UIMessage> messages)
     {
         agent.Validate();
@@ -149,11 +198,18 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http)
 
 public static class SseReader
 {
+    public sealed record Frame(string Data, string? Event);
     // A 64 MiB downloadable file needs ~86 MiB of base64 text, plus JSON/tool metadata.
     // Bound allocation while framing, not after ReadLineAsync has allocated an unbounded line.
     public const int MaximumEventCharacters = 96 * 1024 * 1024;
 
     public static async IAsyncEnumerable<string> ReadAsync(Stream stream, [EnumeratorCancellation] CancellationToken ct = default,
+        int maximumEventCharacters = MaximumEventCharacters)
+    {
+        await foreach (var frame in ReadEventsAsync(stream, ct, maximumEventCharacters)) yield return frame.Data;
+    }
+
+    public static async IAsyncEnumerable<Frame> ReadEventsAsync(Stream stream, [EnumeratorCancellation] CancellationToken ct = default,
         int maximumEventCharacters = MaximumEventCharacters)
     {
         if (maximumEventCharacters <= 0 || maximumEventCharacters > MaximumEventCharacters)
@@ -163,13 +219,15 @@ public static class SseReader
         var line = new StringBuilder();
         var buffer = new char[8192];
         var skipLf = false;
-        string? ConsumeLine()
+        string? eventName = null;
+        Frame? ConsumeLine()
         {
             if (line.Length == 0)
             {
-                if (data.Length == 0) return null;
-                var payload = data.ToString(0, data.Length - 1); // Remove only the framing newline.
+                if (data.Length == 0) { eventName = null; return null; }
+                var payload = new Frame(data.ToString(0, data.Length - 1), eventName); // Remove only the framing newline.
                 data.Clear();
+                eventName = null;
                 return payload;
             }
             if (line.Length >= 5 && line[0] == 'd' && line[1] == 'a' && line[2] == 't' && line[3] == 'a' && line[4] == ':')
@@ -179,6 +237,8 @@ public static class SseReader
                 if ((long)data.Length + length > maximumEventCharacters) throw SizeError(maximumEventCharacters);
                 data.Append(line, start, length).Append('\n');
             }
+            else if (line.ToString().StartsWith("event:", StringComparison.Ordinal))
+                eventName = line.ToString(6, line.Length - 6).TrimStart(' ');
             line.Clear();
             return null;
         }
@@ -205,7 +265,7 @@ public static class SseReader
             }
         }
         if (line.Length > 0) ConsumeLine();
-        if (data.Length > 0) yield return data.ToString(0, data.Length - 1);
+        if (data.Length > 0) yield return new Frame(data.ToString(0, data.Length - 1), eventName);
     }
 
     private static GatewayException SizeError(int limit) => new(DesktopResources.Format("StreamSizeLimit", limit));

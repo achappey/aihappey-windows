@@ -33,6 +33,7 @@ public sealed partial class ChatShell
             ControlAppearance.Native(keys); keys.Click += async (_, _) => await EditProviderApiKeysAsync();
             providerSettings.Items.Add(keys); providerSettings.Items.Add(new MenuFlyoutSeparator());
         }
+        BuildChatEndpointMenu();
         var groups = ProviderPreferences.Groups(aiModelTargets ?? []);
         // Match the browser's user-facing order, not the catalog/settings tab order.
         foreach (var type in new[] { "language", "image", "audio", "transcription", "speech", "decision", "reranking", "video", "embedding" })

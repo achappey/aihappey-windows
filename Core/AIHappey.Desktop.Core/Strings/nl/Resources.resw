@@ -2094,4 +2094,11 @@ Luidspreker: {1}</value></data>
   <data name="ChatForm_toolConfiguration_namespace" xml:space="preserve"><value>Namespace</value></data>
   <data name="ChatForm_toolConfiguration_empty" xml:space="preserve"><value>Er zijn momenteel geen tools gekoppeld.</value></data>
   <data name="ChatForm_toolConfiguration_select" xml:space="preserve"><value>Selecteren...</value></data>
+  <data name="ChatGateway" xml:space="preserve"><value>Gateway</value></data>
+  <data name="ChatDirect" xml:space="preserve"><value>Direct</value></data>
+  <data name="DirectChatUnavailable" xml:space="preserve"><value>Directe toegang is niet beschikbaar voor dit model. Configureer de API-sleutel van de provider of kies Gateway.</value></data>
+  <data name="NativeChatAttachmentUnsupported" xml:space="preserve"><value>Deze bijlage kan niet naar het geselecteerde eindpunt worden verzonden. Converteer deze naar tekst of kies een compatibel eindpunt.</value></data>
+  <data name="NativeChatStreamIncomplete" xml:space="preserve"><value>De stream is gestopt zonder een volledig antwoord. Het gedeeltelijke antwoord is bewaard; er is geen nieuw verzoek uitgevoerd.</value></data>
+  <data name="NativeChatToolsUnsupported" xml:space="preserve"><value>Dit eindpunt heeft een tool aangevraagd die niet wordt ondersteund in basischat. Kies Gateway (/api/chat) voor gesprekken met tools.</value></data>
+  <data name="NativeChatBasicOnly" xml:space="preserve"><value>Dit eindpunt ondersteunt basischat met streaming. Tooluitvoering is momenteel alleen beschikbaar via Gateway (/api/chat).</value></data>
 </root>

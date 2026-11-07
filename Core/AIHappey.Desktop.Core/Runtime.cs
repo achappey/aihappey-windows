@@ -100,6 +100,11 @@ public interface IDesktopHost
     /// <summary>Whether interactive sign-in is needed before calling protected services. Read after initialization.</summary>
     bool RequiresSignIn => false;
     bool HasProviderApiKeys => false;
+    // Direct access is an explicit host capability, never inferred from sign-in state.
+    bool SupportsDirectChat => false;
+    bool HasDirectChatCredential(string providerKey) => false;
+    Task AuthenticateDirectChatAsync(HttpRequestMessage request, string providerKey, string endpoint,
+        CancellationToken cancellationToken) => throw new InvalidOperationException(DesktopResources.Get("DirectChatUnavailable"));
     Task ManageProviderApiKeysAsync(object xamlRoot, Func<IReadOnlyDictionary<string, bool>, Task> savePreferences,
         CancellationToken cancellationToken) => Task.CompletedTask;
     DesktopUserContext? UserContext => null;

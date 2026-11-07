@@ -17,6 +17,10 @@ public sealed record CatalogProvider
     public IReadOnlyList<string> InferenceRegions { get; init; } = [];
     public IReadOnlyList<ModelProviderIcon> Icons { get; init; } = [];
     public ProviderUrls Urls { get; init; } = new();
+    // Read routing metadata without removing it from the existing extensible catalog contract.
+    [JsonIgnore] public string? DirectApiBaseUrl => AdditionalMetadata?.GetValueOrDefault("apiBaseUrl") is { ValueKind: JsonValueKind.String } value ? value.GetString() : null;
+    [JsonIgnore] public IReadOnlyList<string> DirectChatEndpoints => AdditionalMetadata?.GetValueOrDefault("chatEndpoints") is { ValueKind: JsonValueKind.Array } value
+        ? value.EnumerateArray().Where(item => item.ValueKind == JsonValueKind.String).Select(item => item.GetString()!).ToArray() : Array.Empty<string>();
     // Keep metadata unknown to this UI (including future schema additions).
     [JsonExtensionData] public Dictionary<string, JsonElement>? AdditionalMetadata { get; init; }
 }

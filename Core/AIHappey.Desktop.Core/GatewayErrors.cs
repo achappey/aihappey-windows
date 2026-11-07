@@ -67,7 +67,7 @@ public static class GatewayErrors
             }
         }
         catch (OperationCanceledException) { throw; }
-        catch (Exception error) when (error is IOException or HttpRequestException) { }
+        catch (Exception error) when (error is IOException or HttpRequestException or JsonException) { }
         if (message is not null) throw new GatewayException($"HTTP {(int)response.StatusCode}: {message}");
         DesktopChatClient.CheckResponse(response);
     }

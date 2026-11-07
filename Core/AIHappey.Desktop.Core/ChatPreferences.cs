@@ -10,6 +10,9 @@ namespace AIHappey.Desktop.Core;
 /// Provider objects retain their native wire shape, including fields unknown to this UI.</summary>
 public sealed class ChatPreferences
 {
+    private string endpointMode = "gateway", endpoint = "/api/chat";
+    public string EndpointMode { get => endpointMode; set => endpointMode = value == "direct" ? "direct" : "gateway"; }
+    public string Endpoint { get => endpoint; set => endpoint = DesktopChatRoutes.IsSupported(value) ? value : "/api/chat"; }
     public bool ShowTokens { get; set; }
     public bool ShowMetrics { get; set; }
     public bool ShowProviderLogo { get; set; } = true;
@@ -79,6 +82,7 @@ public sealed class ChatPreferences
 
     public ChatPreferences Clone() => new()
     {
+        EndpointMode = EndpointMode, Endpoint = Endpoint,
         ShowTokens = ShowTokens,
         ShowMetrics = ShowMetrics,
         ShowProviderLogo = ShowProviderLogo,
@@ -102,6 +106,7 @@ public sealed class ChatPreferences
     // Inference reset must not reset app-wide choices owned by user settings.
     internal ChatPreferences InferenceDefaults() => new()
     {
+        EndpointMode = EndpointMode, Endpoint = Endpoint,
         ShowTokens = ShowTokens, ShowMetrics = ShowMetrics, ShowProviderLogo = ShowProviderLogo, ApiDebugEnabled = ApiDebugEnabled,
         Dictate = Dictate,
         ToolOutputContentSettings = ToolOutputContentSettings.Clone()

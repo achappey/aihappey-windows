@@ -14,6 +14,14 @@ public sealed class HeaderAuthentication : IDesktopHost
     public string ProfileId => "HeaderAuth";
     public bool AllowLocal => true;
     public bool HasProviderApiKeys => true;
+    public bool SupportsDirectChat => true;
+    public bool HasDirectChatCredential(string providerKey) => headers is not null
+        && DesktopDirectChatAuthentication.Credential(headers, providerKey) is not null;
+    public async Task AuthenticateDirectChatAsync(HttpRequestMessage request, string providerKey, string endpoint, CancellationToken cancellationToken)
+    {
+        await LoadAsync(cancellationToken);
+        DesktopDirectChatAuthentication.Apply(request, headers!, providerKey, endpoint);
+    }
     public string AccountLabel => DesktopResources.Get("ApiKeys");
     public string HistoryIdentity => "public-user";
     public string ModelCatalogCredentialScope => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(

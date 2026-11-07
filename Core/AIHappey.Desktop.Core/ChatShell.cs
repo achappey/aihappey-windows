@@ -498,7 +498,7 @@ public sealed partial class ChatShell : UserControl
     {
         if (activePage == DesktopPage.Realtime) { await SendRealtimeAsync(selectedPrompt); return; }
         await realtimeCleanup;
-        if (busy || closing || historyDialogOpen || catalogDialog is not null || dictation is not null || dictationChanging || composerDictation is not null
+        if (busy || closing || pendingProviderSettingsWrites > 0 || historyDialogOpen || catalogDialog is not null || dictation is not null || dictationChanging || composerDictation is not null
             || selectedPrompt is null && string.IsNullOrWhiteSpace(input.Text) && contextAttachments.Count == 0 && selectedResources.Count == 0) return;
         UpdateTargetSuggestions();
         var selected = TargetId;
@@ -525,6 +525,7 @@ public sealed partial class ChatShell : UserControl
             selected = resolved[0];
             var agentTarget = targets.First(t => t.Id == selected);
             selectedProvider = agentTarget.ProviderKey;
+            var chatRoute = Service == ServiceKind.Ai ? DesktopChatRoutes.Resolve(session.Host, inferencePreferences, agentTarget) : null;
             System.Text.Json.Nodes.JsonObject? agentRequest = null;
             if (Service == ServiceKind.Agents)
             {
@@ -537,23 +538,27 @@ public sealed partial class ChatShell : UserControl
             }
             var wireTarget = Service == ServiceKind.Agents ? agentTarget.RemoteAgentId ?? selected : selected;
             activeConversationTools = null;
-            if (Service == ServiceKind.Ai ? NeedsSkillCatalog(inferencePreferences)
+            if (Service == ServiceKind.Ai ? chatRoute?.IsNative != true && NeedsSkillCatalog(inferencePreferences)
                 : inferencePreferences.PluginEnabled(DesktopLocalTools.SkillSearch))
                 await LoadRuntimeSkillsAsync(ct);
-            var mcpTurn = CaptureSkillRuntime(inferencePreferences, agentToolsOnly: Service == ServiceKind.Agents);
-            if (Service == ServiceKind.Ai && ChatPreferences.ResolveProvider(ServiceKind.Ai, selected, selectedProvider) == "openai"
+            var mcpTurn = chatRoute?.IsNative == true ? McpTurnSnapshot.Empty : CaptureSkillRuntime(inferencePreferences, agentToolsOnly: Service == ServiceKind.Agents);
+            if (Service == ServiceKind.Ai && chatRoute?.IsNative != true && ChatPreferences.ResolveProvider(ServiceKind.Ai, selected, selectedProvider) == "openai"
                 && OpenAIApplyPatchTools.Enabled(inferencePreferences))
             {
                 var patches = new OpenAIApplyPatchTools(isCurrent: () => !closing && session.HistoryPartition == partition);
                 mcpTurn.AddNative(OpenAIApplyPatchTools.ToolName, patches.CallAsync);
             }
-            if (Service == ServiceKind.Ai)
+            if (Service == ServiceKind.Ai && chatRoute?.IsNative != true)
                 AnthropicTextEditorTools.Register(mcpTurn, inferencePreferences,
                     ChatPreferences.ResolveProvider(ServiceKind.Ai, selected, selectedProvider),
                     () => !closing && session.HistoryPartition == partition);
             activeConversationTools = mcpTurn.ConversationTools;
             activeMcpTurn = mcpTurn;
             var systemContext = Service == ServiceKind.Ai ? CaptureSystemContext(inferencePreferences, mcpTurn) : null;
+            // Validate projection before committing the turn or clearing its composer draft.
+            if (chatRoute?.IsNative == true)
+                _ = NativeChatRequests.Build(chatRoute, inferencePreferences, DesktopSystemContext.RequestMessages(ServiceKind.Ai,
+                    current.Messages.Where(PortableConversations.CanReplay).Select(m => m.Message).Append(prepared.Message).ToList(), systemContext));
             if (selectedPrompt is not null && !selectedPrompt.Entry.IsCurrent())
                 throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
             current.Service = Service; current.Target = selected;
@@ -581,7 +586,7 @@ public sealed partial class ChatShell : UserControl
             {
                 await DesktopChatTurn.RunAsync(current, output,
                     (messages, token) => client.StreamAsync(current.Service, wireTarget, current.Id, messages, token,
-                        inferencePreferences, selectedProvider, systemContext, mcpTurn, agentRequest: agentRequest), ApproveToolAsync,
+                        inferencePreferences, selectedProvider, systemContext, mcpTurn, agentRequest: agentRequest, route: chatRoute), ApproveToolAsync,
                     async (force, token) =>
                 {
                     if (force || watch.Elapsed - renderAt > TimeSpan.FromMilliseconds(100))

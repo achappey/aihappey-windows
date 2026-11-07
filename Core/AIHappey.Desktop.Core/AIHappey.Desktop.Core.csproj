@@ -35,6 +35,9 @@
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="11.0.0-rc.3.26522.148" />
     <ProjectReference Include="..\..\..\aihappey-vercel\AIHappey.Vercel.csproj" />
+    <ProjectReference Include="..\..\..\aihappey-responses\AIHappey.Responses.csproj" />
+    <ProjectReference Include="..\..\..\aihappey-messages\AIHappey.Messages.csproj" />
+    <ProjectReference Include="..\..\..\aihappey-chatcompletions\AIHappey.ChatCompletions.csproj" />
   </ItemGroup>
   <Import Project="DocumentExtraction.Packages.props" />
   <Target Name="VerifyFishAudioTransportAssets" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
