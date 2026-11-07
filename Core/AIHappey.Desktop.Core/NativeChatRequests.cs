@@ -14,86 +14,46 @@ public static class NativeChatRequests
     private static readonly JsonSerializerOptions json = new(JsonSerializerDefaults.Web)
         { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
-    public static JsonObject Build(DesktopChatRoute route, ChatPreferences preferences, IReadOnlyList<UIMessage> messages)
+    public static JsonObject Build(DesktopChatRoute route, ChatPreferences preferences, IReadOnlyList<UIMessage> messages,
+        McpTurnSnapshot? mcp = null)
     {
         if (preferences.MaxOutputTokens is < 1) throw new InvalidOperationException(DesktopResources.Get("ChatTokensInvalid"));
         var body = new JsonObject();
-        // Only compatible inference settings cross protocols; never leak native tools, service-side state,
-        // provider credential bags, or arbitrary gateway execution options into another endpoint.
+        // Only compatible inference settings cross protocols. Tool declarations are projected separately;
+        // service-side state, credential bags and gateway execution options never cross this boundary.
         var fields = route.Endpoint switch
         {
-            "/v1/responses" => new[] { "temperature", "top_p", "reasoning", "text", "service_tier", "include", "metadata", "prompt_cache_key", "prompt_cache_retention" },
-            "/v1/messages" => ["temperature", "top_p", "top_k", "thinking", "output_config", "stop_sequences", "service_tier", "metadata", "max_tokens"],
-            _ => ["temperature", "top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "reasoning_effort", "response_format", "service_tier", "metadata", "max_completion_tokens"]
+            "/v1/responses" => new[] { "temperature", "top_p", "reasoning", "text", "service_tier", "include", "metadata", "prompt_cache_key", "prompt_cache_retention", "parallel_tool_calls", "max_tool_calls", "tool_choice" },
+            "/v1/messages" => ["temperature", "top_p", "top_k", "thinking", "output_config", "stop_sequences", "service_tier", "metadata", "max_tokens", "tool_choice", "mcp_servers", "container"],
+            _ => ["temperature", "top_p", "frequency_penalty", "presence_penalty", "seed", "stop", "reasoning_effort", "response_format", "service_tier", "metadata", "max_completion_tokens", "parallel_tool_calls", "tool_choice", "web_search_options"]
         };
         if (route.ProviderKey is { } provider && preferences.ProviderMetadata.TryGetValue(provider, out var config))
             foreach (var field in fields)
                 if (config[field] is { } value) body[field] = value.DeepClone();
         body["model"] = route.Model;
         body["stream"] = true;
+        NativeChatTools.Declarations(body, route, preferences, messages, mcp);
+        // Output-content settings operate on a deep request copy, never the stored conversation.
+        var portable = new JsonObject { ["messages"] = JsonSerializer.SerializeToNode(messages, PortableConversations.Json) };
+        preferences.ToolOutputContentSettings.ApplyToRequest(portable);
+        messages = portable["messages"]!.Deserialize<List<UIMessage>>(PortableConversations.Json)!;
         var system = string.Join("\n\n", messages.Where(m => m.Role == Role.system).Select(Text).Where(t => t.Length > 0));
         if (route.Endpoint == "/v1/responses")
         {
             body["store"] = false;
             if (system.Length > 0) body["instructions"] = system;
             if (preferences.MaxOutputTokens is { } limit) body["max_output_tokens"] = limit;
-            var input = new JsonArray();
-            foreach (var message in messages.Where(m => m.Role != Role.system))
-            {
-                var assistant = message.Role == Role.assistant;
-                foreach (var part in message.Parts)
-                {
-                    var raw = PortableConversations.Node(part);
-                    var metadata = Metadata(raw, route.ProviderKey);
-                    if (assistant && part.Type == "reasoning" && metadata?["encrypted_content"] is { } encrypted)
-                    {
-                        var reasoning = new JsonObject { ["type"] = "reasoning", ["encrypted_content"] = encrypted.DeepClone(),
-                            ["summary"] = metadata["summary"]?.DeepClone() ?? new JsonArray() };
-                        if (metadata["id"] is { } id) reasoning["id"] = id.DeepClone();
-                        // Several summary parts may describe the same opaque native reasoning item.
-                        if (!input.OfType<JsonObject>().Any(item => item["type"]?.ToString() == "reasoning"
-                            && reasoning["id"] is not null && item["id"]?.ToString() == reasoning["id"]?.ToString())) input.Add(reasoning);
-                    }
-                    else if (part.Type == "text" && PortableConversations.Text(part) is { Length: > 0 } text)
-                    {
-                        var item = new JsonObject { ["type"] = "message", ["role"] = assistant ? "assistant" : "user",
-                            ["content"] = new JsonArray(new JsonObject { ["type"] = assistant ? "output_text" : "input_text", ["text"] = text }) };
-                        if (assistant && metadata?["phase"] is { } phase) item["phase"] = phase.DeepClone();
-                        input.Add(item);
-                    }
-                    else if (!assistant && part.Type == "file")
-                        input.Add(new JsonObject { ["type"] = "message", ["role"] = "user", ["content"] = new JsonArray(File(raw, route.Endpoint)) });
-                }
-            }
-            body["input"] = input;
+            var include = body["include"] as JsonArray ?? new JsonArray();
+            if (!include.Any(value => value?.ToString() == "reasoning.encrypted_content")) include.Add("reasoning.encrypted_content");
+            body["include"] = include.DeepClone();
+            body["input"] = NativeChatHistory.Responses(messages, route);
             return Contract<ResponseRequest>(body);
         }
-        var mapped = new JsonArray();
         if (route.Endpoint == "/v1/messages")
         {
             if (system.Length > 0) body["system"] = system;
             body["max_tokens"] = preferences.MaxOutputTokens ?? body["max_tokens"]?.GetValue<int>() ?? 1024;
-            foreach (var message in messages.Where(m => m.Role != Role.system))
-            {
-                var blocks = new JsonArray();
-                foreach (var part in message.Parts)
-                {
-                    var raw = PortableConversations.Node(part);
-                    var metadata = Metadata(raw, route.ProviderKey);
-                    if (part.Type == "text" && PortableConversations.Text(part) is { Length: > 0 } text)
-                        blocks.Add(new JsonObject { ["type"] = "text", ["text"] = text });
-                    else if (message.Role == Role.assistant && part.Type == "reasoning" && metadata is not null)
-                    {
-                        if (metadata["type"]?.ToString() == "redacted_thinking" && metadata["data"] is { } data)
-                            blocks.Add(new JsonObject { ["type"] = "redacted_thinking", ["data"] = data.DeepClone() });
-                        else if (metadata["signature"] is { } signature)
-                            blocks.Add(new JsonObject { ["type"] = "thinking", ["thinking"] = PortableConversations.Text(part), ["signature"] = signature.DeepClone() });
-                    }
-                    else if (message.Role == Role.user && part.Type == "file") blocks.Add(File(raw, route.Endpoint));
-                }
-                if (blocks.Count > 0) mapped.Add(new JsonObject { ["role"] = message.Role == Role.assistant ? "assistant" : "user", ["content"] = blocks });
-            }
-            body["messages"] = mapped;
+            body["messages"] = NativeChatHistory.Messages(messages, route);
             return Contract<MessagesRequest>(body, MessagesJson.Default);
         }
         if (preferences.MaxOutputTokens is { } max)
@@ -101,17 +61,7 @@ public static class NativeChatRequests
             body.Remove("max_completion_tokens");
             body["max_tokens"] = max;
         }
-        foreach (var message in messages)
-        {
-            var content = new JsonArray();
-            foreach (var part in message.Parts)
-                if (part.Type == "text" && PortableConversations.Text(part) is { Length: > 0 } text)
-                    content.Add(new JsonObject { ["type"] = "text", ["text"] = text });
-                else if (message.Role == Role.user && part.Type == "file") content.Add(File(PortableConversations.Node(part), route.Endpoint));
-            if (content.Count > 0) mapped.Add(new JsonObject { ["role"] = message.Role.ToString(),
-                ["content"] = content.Count == 1 && content[0]?["type"]?.ToString() == "text" ? JsonValue.Create(content[0]!["text"]!.ToString()) : content });
-        }
-        body["messages"] = mapped;
+        body["messages"] = NativeChatHistory.Completions(messages, route);
         return Contract<ChatCompletionOptions>(body);
     }
     private static JsonObject Contract<T>(JsonObject body, JsonSerializerOptions? options = null)
@@ -123,9 +73,7 @@ public static class NativeChatRequests
         return result;
     }
     private static string Text(UIMessage message) => string.Join("\n", message.Parts.Where(p => p.Type == "text").Select(PortableConversations.Text));
-    private static JsonObject? Metadata(JsonObject part, string? provider) => provider is null ? null : part["providerMetadata"]?[provider] as JsonObject;
-
-    private static JsonObject File(JsonObject part, string endpoint)
+    internal static JsonObject File(JsonObject part, string endpoint)
     {
         var url = part["url"]?.ToString() ?? "";
         var media = part["mediaType"]?.ToString() ?? "application/octet-stream";

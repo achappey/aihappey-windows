@@ -8,12 +8,13 @@ using AIHappey.Responses.Streaming;
 namespace AIHappey.Desktop.Core;
 
 /// <summary>Per-response reducer. Only portable UI events leave this boundary, never native SSE packets.</summary>
-public sealed class NativeChatStream(DesktopChatRoute route)
+public sealed partial class NativeChatStream(DesktopChatRoute route)
 {
     private sealed class Block(string kind)
     {
         public string Kind = kind;
         public string Text = "";
+        public string Id = Guid.NewGuid().ToString("N");
         public bool Closed;
         public JsonObject Metadata = new();
     }
@@ -97,7 +98,8 @@ public sealed class NativeChatStream(DesktopChatRoute route)
         else if (type == "content_block_start" && raw["content_block"] is JsonObject block)
         {
             var kind = block["type"]?.ToString();
-            if (kind is not ("text" or "thinking" or "redacted_thinking")) UnsupportedTool();
+            if (kind is not ("text" or "thinking" or "redacted_thinking"))
+            { MessageToolStart(index, block, result); return; }
             messageBlocks[index] = kind!;
             Add(id, kind == "text" ? "text" : "reasoning", block[kind == "text" ? "text" : "thinking"]?.ToString() ?? "", false, result);
             var meta = blocks[id].Metadata;
@@ -109,8 +111,13 @@ public sealed class NativeChatStream(DesktopChatRoute route)
         }
         else if (type == "content_block_delta" && raw["delta"] is JsonObject delta)
         {
+            if (messageTools.TryGetValue(index, out var tool))
+            {
+                if (delta["type"]?.ToString() != "input_json_delta") throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
+                ToolDelta(tool, delta["partial_json"]?.ToString() ?? "", result); return;
+            }
             if (!messageBlocks.TryGetValue(index, out var kind)) throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
-            if (delta["type"]?.ToString() == "signature_delta") blocks[id].Metadata["signature"] = delta["signature"]?.DeepClone();
+            if (delta["type"]?.ToString() == "signature_delta") blocks[id].Metadata["signature"] = (blocks[id].Metadata["signature"]?.ToString() ?? "") + delta["signature"]?.ToString();
             else if (delta["type"]?.ToString() == "citations_delta")
             {
                 var citations = blocks[id].Metadata["citations"] as JsonArray ?? new JsonArray();
@@ -120,16 +127,20 @@ public sealed class NativeChatStream(DesktopChatRoute route)
             }
             else Add(id, kind == "text" ? "text" : "reasoning", delta[kind == "text" ? "text" : "thinking"]?.ToString() ?? "", false, result);
         }
-        else if (type == "content_block_stop") Close(id, result);
+        else if (type == "content_block_stop")
+        {
+            if (messageTools.TryGetValue(index, out var tool)) { MessageToolStop(tool, result); closedMessageTools.Add(index); }
+            else Close(id, result);
+        }
         else if (type == "message_delta")
         {
             if (raw["delta"] is JsonObject stopDelta) Copy(stopDelta, providerStreamMetadata, "stop_reason", "stop_sequence", "container");
             reason = raw["delta"]?["stop_reason"]?.ToString() switch { "max_tokens" => "length", "tool_use" => "tool-calls", _ => "stop" };
-            if (reason == "tool-calls") UnsupportedTool();
+            nativeContinuation = raw["delta"]?["stop_reason"]?.ToString() == "pause_turn";
         }
         else if (type == "message_stop")
         {
-            if (messageBlocks.Keys.Any(key => !blocks["messages-" + key].Closed))
+            if (messageBlocks.Keys.Any(key => !blocks["messages-" + key].Closed) || messageTools.Keys.Any(key => !closedMessageTools.Contains(key)))
                 throw new GatewayException(DesktopResources.Get("NativeChatStreamIncomplete"));
             Finish(result);
         }
@@ -141,12 +152,14 @@ public sealed class NativeChatStream(DesktopChatRoute route)
         {
             model = response["model"]?.ToString() ?? model;
             RememberUsage(response["usage"]);
+            Copy(response, providerStreamMetadata, "id");
         }
         if (type == "response.incomplete")
             throw new GatewayException(DesktopResources.Get("NativeChatStreamIncomplete"));
         if (type is "response.output_item.added" or "response.output_item.done")
         {
-            if (raw["item"] is JsonObject item) ResponseItem(item, raw["output_index"]?.ToString() ?? "0", result);
+            if (raw["item"] is JsonObject item) ResponseItem(item, raw["output_index"]?.ToString() ?? "0", result,
+                type == "response.output_item.done");
         }
         else if (type is "response.output_text.delta" or "response.refusal.delta" or "response.reasoning_summary_text.delta" or "response.reasoning_text.delta"
             or "response.output_text.done" or "response.refusal.done" or "response.reasoning_summary_text.done" or "response.reasoning_text.done")
@@ -169,22 +182,31 @@ public sealed class NativeChatStream(DesktopChatRoute route)
                 throw new GatewayException(DesktopResources.Get("NativeChatStreamIncomplete"));
             if (completedResponse?["output"] is JsonArray output)
                 for (var i = 0; i < output.Count; i++)
-                    if (output[i] is JsonObject item) ResponseItem(item, i.ToString(System.Globalization.CultureInfo.InvariantCulture), result);
+                    if (output[i] is JsonObject item) ResponseItem(item, i.ToString(System.Globalization.CultureInfo.InvariantCulture), result, true);
+            if (nativeTools.Values.Distinct().Any(tool => !tool.Complete)) throw new GatewayException(DesktopResources.Get("NativeChatStreamIncomplete"));
             Finish(result);
         }
         else if (type == "response.output_text.annotation.added" && raw["annotation"] is JsonObject annotation) Source(annotation, result);
-        else if (type.Contains("function_call", StringComparison.Ordinal) || type.Contains("tool_call", StringComparison.Ordinal)) UnsupportedTool();
+        else if (type is "response.function_call_arguments.delta" or "response.custom_tool_call_input.delta"
+            or "response.function_call_arguments.done" or "response.custom_tool_call_input.done")
+        {
+            var key = raw["item_id"]?.ToString() ?? raw["output_index"]?.ToString() ?? "";
+            if (!nativeTools.TryGetValue(key, out var tool)) throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
+            if (type.EndsWith(".delta", StringComparison.Ordinal)) ToolDelta(tool, raw["delta"]?.ToString() ?? "", result);
+            else if (!tool.Complete) tool.Arguments = raw["arguments"]?.ToString() ?? raw["input"]?.ToString() ?? tool.Arguments;
+        }
     }
 
-    private void ResponseItem(JsonObject item, string index, List<StreamEvent> result)
+    private void ResponseItem(JsonObject item, string index, List<StreamEvent> result, bool complete = false)
     {
         var type = item["type"]?.ToString();
-        if (type is not ("message" or "reasoning")) UnsupportedTool();
+        if (type is not ("message" or "reasoning")) { ResponseTool(item, index, complete, result); return; }
         var id = item["id"]?.ToString() ?? index;
         var metadata = responseItems.GetValueOrDefault(id) ?? new JsonObject();
         Copy(item, metadata, "id", "phase", "summary", "encrypted_content");
         metadata["item_id"] = id;
         metadata["output_index"] = int.Parse(index, System.Globalization.CultureInfo.InvariantCulture);
+        if (providerStreamMetadata["id"] is { } responseId) metadata["response_id"] = responseId.DeepClone();
         responseItems[id] = metadata;
         var content = item[type == "reasoning" ? "summary" : "content"] as JsonArray;
         if (content is not null)
@@ -203,7 +225,7 @@ public sealed class NativeChatStream(DesktopChatRoute route)
         {
             Copy(metadata, pair.Value.Metadata, "id", "item_id", "phase", "summary", "encrypted_content", "output_index");
             // Metadata can arrive in output_item.done after text/reasoning end.
-            result.Add(Event(pair.Value.Kind + (pair.Value.Closed ? "-end" : "-start"), ("id", JsonValue.Create(pair.Key)), ("providerMetadata", ProviderMetadata(pair.Value))));
+            result.Add(Event(pair.Value.Kind + (pair.Value.Closed ? "-end" : "-start"), ("id", JsonValue.Create(pair.Value.Id)), ("providerMetadata", ProviderMetadata(pair.Value))));
         }
     }
 
@@ -215,9 +237,13 @@ public sealed class NativeChatStream(DesktopChatRoute route)
             if (choice["index"]?.GetValue<int>() is > 0) continue; // Basic chat deliberately requests one choice.
             RememberUsage(choice["usage"] ?? choice["delta"]?["usage"]);
             var delta = choice["delta"] as JsonObject;
-            if (delta?["tool_calls"] is JsonArray { Count: > 0 } || delta?["function_call"] is not null) UnsupportedTool();
+            CompletionTools(delta, result);
             var reasoning = delta?["reasoning_content"]?.ToString() ?? delta?["reasoning"]?.ToString();
-            if (!string.IsNullOrEmpty(reasoning)) Add("completion-reasoning", "reasoning", reasoning, false, result);
+            if (!string.IsNullOrEmpty(reasoning))
+            {
+                Add("completion-reasoning", "reasoning", reasoning, false, result);
+                blocks["completion-reasoning"].Metadata["reasoning_field"] = delta?["reasoning_content"] is not null ? "reasoning_content" : "reasoning";
+            }
             if (delta?["content"] is JsonValue text && text.TryGetValue<string>(out var value) && value.Length > 0)
                 Add("completion-text", "text", value, false, result);
             if (delta?["refusal"] is JsonValue refusal && refusal.TryGetValue<string>(out var refused) && refused.Length > 0)
@@ -225,7 +251,8 @@ public sealed class NativeChatStream(DesktopChatRoute route)
             if (choice["finish_reason"] is { } finish)
             {
                 reason = finish.ToString();
-                if (reason is "tool_calls" or "function_call") UnsupportedTool();
+                if (reason is "tool_calls" or "function_call") reason = "tool-calls";
+                foreach (var tool in completionTools.Values) CompleteTool(tool, result);
                 Finish(result);
             }
         }
@@ -236,7 +263,7 @@ public sealed class NativeChatStream(DesktopChatRoute route)
         if (!blocks.TryGetValue(id, out var block))
         {
             block = new(kind); blocks.Add(id, block);
-            result.Add(Event(kind + "-start", ("id", JsonValue.Create(id))));
+            result.Add(Event(kind + "-start", ("id", JsonValue.Create(block.Id))));
         }
         var delta = snapshot ? text.StartsWith(block.Text, StringComparison.Ordinal) ? text[block.Text.Length..] : "" : text;
         if (block.Closed && delta.Length > 0) throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
@@ -244,21 +271,22 @@ public sealed class NativeChatStream(DesktopChatRoute route)
         {
             firstToken ??= watch.Elapsed.TotalSeconds;
             block.Text += delta;
-            result.Add(Event(kind + "-delta", ("id", JsonValue.Create(id)), ("delta", JsonValue.Create(delta))));
+            result.Add(Event(kind + "-delta", ("id", JsonValue.Create(block.Id)), ("delta", JsonValue.Create(delta))));
         }
     }
     private void Close(string id, List<StreamEvent> result)
     {
         if (!blocks.TryGetValue(id, out var block) || block.Closed) return;
         block.Closed = true;
-        result.Add(Event(block.Kind + "-end", ("id", JsonValue.Create(id)), ("providerMetadata", ProviderMetadata(block))));
+        result.Add(Event(block.Kind + "-end", ("id", JsonValue.Create(block.Id)), ("providerMetadata", ProviderMetadata(block))));
     }
     private void Finish(List<StreamEvent> result)
     {
         if (finished) return;
         foreach (var id in blocks.Keys) Close(id, result);
         result.Add(Event("finish-step"));
-        result.Add(Event("finish", ("finishReason", JsonValue.Create(reason)), ("messageMetadata", MessageMetadata())));
+        result.Add(Event("finish", ("finishReason", JsonValue.Create(reason)), ("messageMetadata", MessageMetadata()),
+            ("nativeContinuation", JsonValue.Create(nativeContinuation))));
         finished = true;
     }
     private JsonObject? ProviderMetadata(Block block) => route.ProviderKey is null || block.Metadata.Count == 0 ? null

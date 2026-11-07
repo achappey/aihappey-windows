@@ -21,8 +21,11 @@ public static class DesktopChatTurn
             while (true)
             {
                 ct.ThrowIfCancellationRequested();
+                var nativeContinuation = false;
                 await foreach (var item in stream(messages, ct))
                 {
+                    if (item.Type == "finish" && item.Raw.TryGetProperty("nativeContinuation", out var continuation))
+                        nativeContinuation = continuation.ValueKind == System.Text.Json.JsonValueKind.True;
                     if (TransientConversationData.IsTransient(item)) onTransientData?.Invoke(item);
                     else assembler.Apply(item);
                     await changed(assembler.Finished, ct);
@@ -56,7 +59,7 @@ public static class DesktopChatTurn
                     output.Status = assembler.ApprovalRequired ? "approval required" : "complete";
                     await changed(true, ct); // Persist each decision before requesting continuation.
                 }
-                if (calls == 0 && decisions == 0) break;
+                if (calls == 0 && decisions == 0 && !nativeContinuation) break;
                 messages = conversation.Messages.Where(x => x != output && PortableConversations.CanReplay(x)).Select(x => x.Message).Append(output.Message).ToList();
                 assembler.Continue();
             }

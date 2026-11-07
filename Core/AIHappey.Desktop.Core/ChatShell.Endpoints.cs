@@ -52,7 +52,6 @@ public sealed partial class ChatShell
             next.Chat.EndpointMode = mode; next.Chat.Endpoint = path;
             await SettingsStore.SaveAsync(session.DataDirectory, next);
             session.Settings = next;
-            if (path != "/api/chat") Show(DesktopResources.Get("NativeChatBasicOnly"), InfoBarSeverity.Informational);
         }
         catch { if (!closing) Show(DesktopResources.Get("OperationFailed"), InfoBarSeverity.Error); }
         finally { pendingProviderSettingsWrites--; providerSettingsWrite.Release(); }

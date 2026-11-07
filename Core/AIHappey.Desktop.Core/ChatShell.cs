@@ -538,17 +538,17 @@ public sealed partial class ChatShell : UserControl
             }
             var wireTarget = Service == ServiceKind.Agents ? agentTarget.RemoteAgentId ?? selected : selected;
             activeConversationTools = null;
-            if (Service == ServiceKind.Ai ? chatRoute?.IsNative != true && NeedsSkillCatalog(inferencePreferences)
+            if (Service == ServiceKind.Ai ? NeedsSkillCatalog(inferencePreferences)
                 : inferencePreferences.PluginEnabled(DesktopLocalTools.SkillSearch))
                 await LoadRuntimeSkillsAsync(ct);
-            var mcpTurn = chatRoute?.IsNative == true ? McpTurnSnapshot.Empty : CaptureSkillRuntime(inferencePreferences, agentToolsOnly: Service == ServiceKind.Agents);
-            if (Service == ServiceKind.Ai && chatRoute?.IsNative != true && ChatPreferences.ResolveProvider(ServiceKind.Ai, selected, selectedProvider) == "openai"
+            var mcpTurn = CaptureSkillRuntime(inferencePreferences, agentToolsOnly: Service == ServiceKind.Agents);
+            if (Service == ServiceKind.Ai && (chatRoute?.IsNative != true || chatRoute.Endpoint == "/v1/responses") && ChatPreferences.ResolveProvider(ServiceKind.Ai, selected, selectedProvider) == "openai"
                 && OpenAIApplyPatchTools.Enabled(inferencePreferences))
             {
                 var patches = new OpenAIApplyPatchTools(isCurrent: () => !closing && session.HistoryPartition == partition);
                 mcpTurn.AddNative(OpenAIApplyPatchTools.ToolName, patches.CallAsync);
             }
-            if (Service == ServiceKind.Ai && chatRoute?.IsNative != true)
+            if (Service == ServiceKind.Ai && (chatRoute?.IsNative != true || chatRoute.Endpoint == "/v1/messages"))
                 AnthropicTextEditorTools.Register(mcpTurn, inferencePreferences,
                     ChatPreferences.ResolveProvider(ServiceKind.Ai, selected, selectedProvider),
                     () => !closing && session.HistoryPartition == partition);
@@ -558,7 +558,7 @@ public sealed partial class ChatShell : UserControl
             // Validate projection before committing the turn or clearing its composer draft.
             if (chatRoute?.IsNative == true)
                 _ = NativeChatRequests.Build(chatRoute, inferencePreferences, DesktopSystemContext.RequestMessages(ServiceKind.Ai,
-                    current.Messages.Where(PortableConversations.CanReplay).Select(m => m.Message).Append(prepared.Message).ToList(), systemContext));
+                    current.Messages.Where(PortableConversations.CanReplay).Select(m => m.Message).Append(prepared.Message).ToList(), systemContext), mcpTurn);
             if (selectedPrompt is not null && !selectedPrompt.Entry.IsCurrent())
                 throw new InvalidOperationException(DesktopResources.Get("McpDisconnected"));
             current.Service = Service; current.Target = selected;

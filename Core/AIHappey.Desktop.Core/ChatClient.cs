@@ -73,7 +73,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http, H
             route ??= DesktopChatRoutes.Resolve(session.Host, snapshot, new(target, target) { ProviderKey = providerKey });
             if (route.IsNative)
             {
-                await foreach (var item in StreamNativeAsync(route, messages, snapshot, systemContext, ct)) yield return item;
+                await foreach (var item in StreamNativeAsync(route, messages, snapshot, systemContext, mcp ?? session.Mcp?.Capture(), ct)) yield return item;
                 yield break;
             }
         }
@@ -125,10 +125,10 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http, H
     }
 
     private async IAsyncEnumerable<StreamEvent> StreamNativeAsync(DesktopChatRoute route, List<UIMessage> messages,
-        ChatPreferences preferences, UIMessage? systemContext, [EnumeratorCancellation] CancellationToken ct)
+        ChatPreferences preferences, UIMessage? systemContext, McpTurnSnapshot? mcp, [EnumeratorCancellation] CancellationToken ct)
     {
         var body = NativeChatRequests.Build(route, preferences, DesktopSystemContext.RequestMessages(ServiceKind.Ai, messages,
-            systemContext ?? session.CaptureSystemContext()));
+            systemContext ?? session.CaptureSystemContext()), mcp);
         using var request = route.IsDirect ? new HttpRequestMessage(HttpMethod.Post, route.DirectUrl)
             : await RequestAsync(ServiceKind.Ai, HttpMethod.Post, route.Endpoint.TrimStart('/'), ct);
         preferences.ApplyHeaders(request, route.ProviderKey);
