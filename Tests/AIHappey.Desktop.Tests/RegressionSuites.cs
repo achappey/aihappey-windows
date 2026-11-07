@@ -27,6 +27,7 @@ internal static class RegressionSuites
             // Includes chat-tool settings, tool-output content, and provider forms.
             ["chat-settings"] = () => ChatSettingsRegressionTests.RunAsync(check, Data("chat-settings")),
             ["chat-debug"] = () => ChatDebugRegressionTests.RunAsync(check, Data("chat-debug")),
+            ["chat-endpoints"] = () => ChatEndpointRegressionTests.RunAsync(check, Data("chat-endpoints")),
             ["chat-files"] = () => ChatFileRegressionTests.RunAsync(check, Data("chat-files")),
             ["chat-errors"] = () => ChatErrorRegressionTests.RunAsync(check, Data("chat-errors")),
             ["providers"] = () => ProviderRegressionTests.RunAsync(check, Data("providers")),

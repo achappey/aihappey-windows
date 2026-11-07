@@ -3,6 +3,8 @@ const path = require('node:path');
 const assert = require('node:assert/strict');
 const repo = path.resolve(__dirname, '..');
 const vercel = path.resolve(repo, '../aihappey-vercel/AIHappey.Vercel.csproj');
+const protocolModels = new Set([vercel, ...['responses/AIHappey.Responses', 'messages/AIHappey.Messages',
+    'chatcompletions/AIHappey.ChatCompletions'].map(name => path.resolve(repo, '../aihappey-' + name + '.csproj'))]);
 const excluded = new Set(['.git', '.vs', 'bin', 'obj', 'artifacts', 'Releases', 'node_modules']);
 
 function* files(directory) {
@@ -24,7 +26,7 @@ function checkReferences(file) {
     for (const match of source.matchAll(/<(?:ProjectReference|Project)\b[^>]*\b(?:Include|Path)="([^"]+\.(?:csproj|slnx))"/gi)) {
         const target = path.resolve(path.dirname(file), match[1].replace(/[\\/]/g, path.sep));
         const local = path.relative(repo, target);
-        assert.ok(target === vercel || (!local.startsWith('..' + path.sep) && !path.isAbsolute(local)),
+        assert.ok(protocolModels.has(target) || (!local.startsWith('..' + path.sep) && !path.isAbsolute(local)),
             `${file}: unexpected external compile-time dependency ${match[1]}`);
         assert.ok(fs.existsSync(target), `${file}: missing project ${match[1]}`);
         checkReferences(target);
@@ -47,4 +49,4 @@ for (const relative of ['Core/AIHappey.Desktop.Core/AIHappey.Desktop.Core.csproj
     assert.match(source, /aihappey-vercel\/AIHappey\.Vercel\.csproj/, `${relative}: retain the separate Vercel model project`);
 }
 // Runtime publishing references are deliberately outside this compile-time check.
-console.log('Desktop dependency boundary: local projects and separate Vercel models only; no Agents or Unified coupling.');
+console.log('Desktop dependency boundary: local projects and standalone protocol models only; no Agents or Unified coupling.');

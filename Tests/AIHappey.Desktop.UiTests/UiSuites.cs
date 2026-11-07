@@ -27,6 +27,7 @@ public partial class App
             ["overview-tabs"] = CheckOverviewTabsAsync,
             ["usage"] = CheckUsageAsync,
             ["providers"] = CheckProvidersAsync,
+            ["chat-endpoints"] = CheckEndpointMenusAsync,
             ["agents"] = CheckAgentsAsync,
             ["agent-context"] = theme => BothHosts(CheckAgentContextBadgesAsync, theme),
             ["mcp-presentation"] = CheckMcpPresentationAsync,

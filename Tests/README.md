@@ -22,6 +22,24 @@ node Tests/check-usage-parity.cjs
 
 Focused core suites do not run unrelated prerequisites. The full core run aggregates failures across suites while retaining strict, fail-fast assertions within each suite. The usage snapshot mode produces only its JSON document; the parity checker builds it before execution. Runner regression checks validate failed-build refusal, focused selection, aggregate failure accounting, snapshot isolation, manifest coverage, and rejection of incomplete or failed UI reports.
 
+### Model-chat endpoints
+
+The independent core and native UI suites are both named `chat-endpoints`:
+
+```powershell
+dotnet run --project Tests/AIHappey.Desktop.Tests -- --chat-endpoints-only
+powershell -NoProfile -ExecutionPolicy Bypass -File Tests/run-ui-tests.ps1 -Suite chat-endpoints
+```
+
+The [protocol regression suite](AIHappey.Desktop.Tests/ChatEndpointRegressionTests.cs) uses
+deterministic native Responses, Messages, and Chat Completions packets and fake HTTP transports.
+It covers gateway/direct routing, credential isolation, native request shapes, text/reasoning/source
+parts, signatures/encrypted reasoning, late usage and cost metadata, attachments, incomplete streams,
+errors, cancellation, no retries, and portable mixed-endpoint conversation storage/replay.
+The [native menu suite](AIHappey.Desktop.UiTests/ChatEndpointChecks.cs) independently checks both
+host capabilities and themes, browser-equivalent ordering, checked states, persistence, model/key
+changes, busy/Agents gating, and preserving drafts and the current conversation.
+
 ### Model-chat tool configuration
 
 Tool configuration is session-only, just like the browser. Closing chat settings commits the isolated draft in memory; Restore defaults clears it, and restarting the app does not reload it. Agent-owned and realtime tool settings are outside this feature. Calling methods and search are raw endpoint options, not an execution/approval policy or a guarantee of provider support.
@@ -42,11 +60,11 @@ For manual IME coverage, compose text with a Japanese or Chinese input method in
 
 ## Client/runtime dependency boundary
 
-The [dependency check](check-dependency-boundary.cjs) runs automatically with the standalone checks. It follows desktop project and solution references (including Vercel's project references), rejects missing or server-side projects, and guards against server-model/mapper imports in desktop source. References used only to publish or launch the bundled runtimes are deliberately allowed.
+The [dependency check](check-dependency-boundary.cjs) runs automatically with the standalone checks. It follows desktop project and solution references, permits only the standalone Vercel, Responses, Messages, and Chat Completions protocol projects outside the desktop repository, rejects missing or server-side projects, and guards against Unified/server-mapper imports in desktop source. References used only to publish or launch the bundled runtimes are deliberately allowed.
 
 The audit found no desktop use of Agents Common types or extension methods and no public desktop signatures exposing them. The existing [agent tests](AIHappey.Desktop.Tests/AgentRegressionTests.cs) cover JSON round-trips, nested unknown properties, omitted versus null/empty fields, storage, and complete inline HTTP request payloads. [Chat-error tests](AIHappey.Desktop.Tests/ChatErrorRegressionTests.cs) use the public Vercel wire models, not Unified. The three backend error-mapping assertions now live in the AI repository's backend test project instead of creating a desktop compile-time dependency.
 
-To verify compilation without the Agents source repository, make a fresh sibling layout containing only this desktop repository and the separate Vercel repository. Do not copy previous build/intermediate directories or runtime binaries. On Windows with the required SDKs and package feeds, run from the desktop repository:
+To verify compilation without the Agents source repository, make a fresh sibling layout containing this desktop repository and the separate Vercel, Responses, Messages, and Chat Completions repositories. Do not copy previous build/intermediate directories or runtime binaries. On Windows with the required SDKs and package feeds, run from the desktop repository:
 
 ```powershell
 dotnet build AIHappey.Desktop.slnx -c Debug
