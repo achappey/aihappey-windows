@@ -33,6 +33,9 @@ public sealed class ChatPreferences
     }
     private ChatToolPolicy toolAnnotations = new();
     public ChatToolPolicy ToolAnnotations { get => toolAnnotations; set => toolAnnotations = value ?? new(); }
+    // Match the browser: retained by in-memory clones, deliberately excluded from disk/history serialization.
+    [JsonIgnore] public Dictionary<string, ChatToolRequestOptions> ToolRequestConfig { get; set; } = new(StringComparer.Ordinal);
+    [JsonIgnore] public bool UseToolNamespaces { get; set; }
     [JsonIgnore] public bool CanRequireTools => MaxToolCalls is > 0 || StopTools.Count > 0;
     [JsonIgnore] public string? NormalizedToolChoice => ToolChoice switch
     {
@@ -87,6 +90,8 @@ public sealed class ChatPreferences
         MaxToolCalls = MaxToolCalls is > 0 ? MaxToolCalls : null,
         StopTools = StopTools.ToList(),
         ToolAnnotations = ToolAnnotations.Clone(),
+        ToolRequestConfig = ToolRequestConfig.ToDictionary(p => p.Key, p => p.Value.Clone(), StringComparer.Ordinal),
+        UseToolNamespaces = UseToolNamespaces,
         ActivePlugins = ActivePlugins.ToList(),
         EnabledSkillIds = EnabledSkillIds.ToList(),
         EnabledAgentPluginIds = EnabledAgentPluginIds.ToList(),
@@ -136,7 +141,8 @@ public sealed class ChatPreferences
         body.Remove("toolChoice"); body.Remove("maxToolCalls"); body.Remove("stopTools"); body.Remove("toolAnnotations");
         if (choice is not null) body["toolChoice"] = choice;
         if (MaxToolCalls is > 0) body["maxToolCalls"] = MaxToolCalls.Value;
-        if (mcp is not null) body["tools"] = new JsonArray(mcp.Tools.Where(ToolAnnotations.Allows).Select(t => JsonNode.Parse(t.GetRawText())).ToArray());
+        if (mcp is not null) ChatToolConfiguration.ApplyToRequest(body, mcp.Tools.Where(ToolAnnotations.Allows), this,
+            ResolveProvider(ServiceKind.Ai, target, providerKey), mcp.SourceForTool);
         ToolOutputContentSettings.ApplyToRequest(body);
         return body;
     }

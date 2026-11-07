@@ -18,8 +18,10 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private TextBox tokens = null!;
     private StackPanel general = null!;
     private ChatToolSettingsView? toolSettings;
+    private ChatToolConfigurationView? toolConfiguration;
     private readonly Func<ChatPreferences, IReadOnlyList<ChatToolOption>> availableTools;
     private readonly bool modelChat;
+    private readonly bool configureClientTools;
     private readonly Dictionary<string, IChatProviderForm> providerForms = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, NavigationViewItem> providerTabs = new(StringComparer.OrdinalIgnoreCase);
     private readonly RealtimeSettingsForm? realtimeForm;
@@ -28,6 +30,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     private readonly Func<string, CancellationToken, Task>? prefetchSkill;
     private Action? selectSkillsTab;
     private Action? selectToolsTab;
+    private Action? selectToolConfigurationTab;
     private Action? selectGeneralTab, selectRealtimeTab;
     private Action? selectPluginsTab;
     private readonly IReadOnlyList<DesktopAgentPlugin> plugins;
@@ -40,8 +43,13 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
     public void CancelSkillLoading() => skillsView?.Dispose();
     public void ShowSkillsTab() => selectSkillsTab?.Invoke();
     public void ShowToolsTab() => selectToolsTab?.Invoke();
+    public void ShowToolConfigurationTab() => selectToolConfigurationTab?.Invoke();
     public void ShowPluginsTab() => selectPluginsTab?.Invoke();
-    public void RefreshAvailableTools() => toolSettings?.RefreshAvailableTools();
+    public void RefreshAvailableTools()
+    {
+        toolSettings?.RefreshAvailableTools();
+        toolConfiguration?.RefreshAvailableTools();
+    }
 
     public ChatSettingsDialog(ChatPreferences preferences, string? provider,
         Func<CancellationToken, Task<DesktopSkillSelection>>? loadSkills = null,
@@ -54,6 +62,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         this.loadSkills = loadSkills; this.prefetchSkill = prefetchSkill;
         this.plugins = plugins ?? [];
         modelChat = service == ServiceKind.Ai;
+        configureClientTools = modelChat && realtimePreferences is null;
         this.availableTools = availableTools ?? (draft => McpTurnSnapshot.Empty.SettingsTools(draft,
             draft.EnabledSkillIds.Count > 0, this.plugins.Any(plugin => draft.EnabledAgentPluginIds.Contains(plugin.Id))));
         Name = "ChatSettingsDialog"; this.provider = provider; draft = preferences.Clone();
@@ -70,7 +79,7 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         tabs.SelectionChanged += (_, _) =>
         {
             if (tabs.SelectedItem is not NavigationViewItem { Tag: FrameworkElement view }) return;
-            if (ReferenceEquals(view, general)) RefreshAvailableTools();
+            if (ReferenceEquals(view, general) || ReferenceEquals(view, toolConfiguration)) RefreshAvailableTools();
             page.Content = view; page.ChangeView(null, 0, null, true);
         };
         layout.Children.Add(tabs); Grid.SetRow(page, 1); layout.Children.Add(page);
@@ -113,6 +122,13 @@ public sealed class ChatSettingsDialog : ContentDialog, IResponsiveDialog
         var generalTab = Tab("ChatGeneralTab", DesktopResources.Get("General"), general);
         var toolsView = new LocalToolsSettingsView(draft);
         var toolsTab = Tab("ChatToolsTab", DesktopResources.Get("Tools"), toolsView);
+        toolConfiguration = configureClientTools ? new ChatToolConfigurationView(draft, availableTools) : null;
+        selectToolConfigurationTab = null;
+        if (toolConfiguration is not null)
+        {
+            var configurationTab = Tab("ChatToolConfigurationTab", ChatSettingsFields.L("toolConfiguration.title"), toolConfiguration);
+            selectToolConfigurationTab = () => tabs.SelectedItem = configurationTab;
+        }
         var skillsTab = Tab("ChatSkillsTab", DesktopResources.Get("Skills"), skillsView);
         var pluginsView = new PluginsSettingsView(plugins, draft.EnabledAgentPluginIds);
         var pluginsTab = Tab("ChatPluginsTab", DesktopResources.Get("PluginsTitle"), pluginsView);

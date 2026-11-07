@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace AIHappey.Desktop.Core;
 
-public sealed record ChatToolOption(string Name, string Label);
+public sealed record ChatToolOption(string Name, string Label, ChatToolSource? Source = null);
 
 public sealed class McpTurnSnapshot
 {
@@ -12,6 +12,7 @@ public sealed class McpTurnSnapshot
     private readonly Dictionary<string, Route> routes = new(StringComparer.Ordinal);
     // Presentation metadata follows the same aliases as execution, but stays off the wire.
     private readonly Dictionary<string, IReadOnlyList<McpIcon>> toolIcons = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ChatToolSource> toolSources = new(StringComparer.Ordinal);
     private readonly List<JsonElement> tools = [];
     private readonly List<JsonElement> context = [];
     private readonly List<McpResourceEntry> resources = [];
@@ -61,7 +62,17 @@ public sealed class McpTurnSnapshot
                 var tool = new JsonObject { ["name"] = name, ["inputSchema"] = JsonNode.Parse(schema.GetRawText()) };
                 foreach (var field in new[] { "description", "title", "outputSchema", "annotations" })
                     if (candidate.Tool.TryGetProperty(field, out var value)) tool[field] = JsonNode.Parse(value.GetRawText());
-                if (server.Server.PluginSettings is { } settings) tool["requestOptions"] = JsonNode.Parse(settings.GetRawText());
+                var sourceName = server.Server.PluginId is not null ? server.Server.Name
+                    : CatalogProjection.Text(server.Discovery.ServerInfo, "name") ?? server.Server.Name;
+                var settings = server.Server.PluginSettings;
+                // Keep the existing snapshot contract for plugin/realtime consumers. Model chat
+                // unwraps these defaults into browser-compatible request fields at its boundary.
+                if (settings is { } legacyOptions) tool["requestOptions"] = JsonNode.Parse(legacyOptions.GetRawText());
+                var forcedNamespace = settings is { ValueKind: JsonValueKind.Object } options
+                    && options.TryGetProperty("namespace", out var flag) && flag.ValueKind == JsonValueKind.True;
+                result.toolSources.Add(name, new("mcp", server.Server.Id, sourceName,
+                    server.Server.PluginId is { } pluginId ? $"MCP tools provided by Agent Plugin {pluginId}." : server.Server.Description,
+                    ChatToolRequestOptions.Read(settings), forcedNamespace));
                 result.tools.Add(JsonSerializer.SerializeToElement(tool));
                 result.routes.Add(name, new(candidate.Name, candidate.Call));
                 var icons = McpIcons.Read(candidate.Tool);
@@ -109,6 +120,7 @@ public sealed class McpTurnSnapshot
 
     public bool Contains(string name) => routes.ContainsKey(name);
     public string OriginalToolName(string name) => routes.TryGetValue(name, out var route) ? route.OriginalName : name;
+    public ChatToolSource SourceForTool(string name) => toolSources.GetValueOrDefault(name) ?? ChatToolSource.ForLocal(name);
     public IReadOnlyList<McpIcon> IconsForTool(string name) => toolIcons.TryGetValue(name, out var icons) ? icons
         : McpIcons.Read(tools.FirstOrDefault(tool => CatalogProjection.Text(tool, "name") == name));
 
@@ -125,7 +137,7 @@ public sealed class McpTurnSnapshot
             {
                 var name = CatalogProjection.Text(tool, "name")!;
                 var original = OriginalToolName(name);
-                return new ChatToolOption(name, original == name ? name : original + " (" + name + ")");
+                return new ChatToolOption(name, original == name ? name : original + " (" + name + ")", SourceForTool(name));
             }).OrderBy(tool => tool.Label, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
@@ -137,7 +149,7 @@ public sealed class McpTurnSnapshot
         var blocked = tools.Where(tool => !policy.Allows(tool)).Select(tool => CatalogProjection.Text(tool, "name")!)
             .ToHashSet(StringComparer.Ordinal);
         tools.RemoveAll(tool => blocked.Contains(CatalogProjection.Text(tool, "name")!));
-        foreach (var name in blocked) { routes.Remove(name); toolIcons.Remove(name); }
+        foreach (var name in blocked) { routes.Remove(name); toolIcons.Remove(name); toolSources.Remove(name); }
         for (var index = 0; index < context.Count; index++)
         {
             if (JsonNode.Parse(context[index].GetRawText()) is not JsonObject block || block["tools"] is not JsonArray declarations) continue;

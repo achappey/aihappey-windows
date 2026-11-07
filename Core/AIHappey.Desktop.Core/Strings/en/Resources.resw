@@ -2091,4 +2091,12 @@ Speaker: {1}</value></data>
   <data name="ChatForm_openai_imageMarkupFailed" xml:space="preserve"><value>Could not load or save image markup.</value></data>
   <data name="ChatForm_default" xml:space="preserve"><value>Default</value></data>
   <data name="ChatForm_openai_imageMarkupLoading" xml:space="preserve"><value>Wait for the image markup upload to finish.</value></data>
+  <data name="ChatForm_toolConfiguration_title" xml:space="preserve"><value>Tool configuration</value></data>
+  <data name="ChatForm_toolConfiguration_useNamespaces" xml:space="preserve"><value>Use namespaces</value></data>
+  <data name="ChatForm_toolConfiguration_allTools" xml:space="preserve"><value>All tools</value></data>
+  <data name="ChatForm_toolConfiguration_allowedCallers" xml:space="preserve"><value>Allowed callers</value></data>
+  <data name="ChatForm_toolConfiguration_deferLoading" xml:space="preserve"><value>Search</value></data>
+  <data name="ChatForm_toolConfiguration_namespace" xml:space="preserve"><value>Namespace</value></data>
+  <data name="ChatForm_toolConfiguration_empty" xml:space="preserve"><value>No tools are currently attached.</value></data>
+  <data name="ChatForm_toolConfiguration_select" xml:space="preserve"><value>Select...</value></data>
 </root>
