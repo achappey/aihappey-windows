@@ -123,7 +123,7 @@ public sealed class MessageAssembler(ConversationMessage output)
             part["type"] = raw["dynamic"]?.ToString() == "true" ? "dynamic-tool" : "tool-" + name;
             if (part["type"]?.ToString() == "dynamic-tool") part["toolName"] = name; else part.Remove("toolName");
         }
-        foreach (var key in new[] { "title", "providerExecuted", "preliminary" })
+        foreach (var key in new[] { "title", "providerExecuted", "providerId", "preliminary" })
             if (raw[key] is not null) part[key] = raw[key]!.DeepClone();
         if (raw["providerMetadata"] is not null)
             part[eventType.StartsWith("tool-output", StringComparison.Ordinal) ? "resultProviderMetadata" : "callProviderMetadata"] = raw["providerMetadata"]!.DeepClone();

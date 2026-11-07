@@ -5,6 +5,7 @@ namespace AIHappey.Desktop.Core;
 /// <summary>Immutable turn destination. Conversation model IDs and storage partitions stay canonical.</summary>
 public sealed record DesktopChatRoute(string Endpoint, string Model, string? ProviderKey, Uri? DirectUrl = null)
 {
+    public string CanonicalModel { get; init; } = Model;
     public bool IsDirect => DirectUrl is not null;
     public bool IsNative => Endpoint != "/api/chat";
 }
@@ -39,7 +40,7 @@ public static class DesktopChatRoutes
         var path = PreferredDirectEndpoint(provider, preferences.Endpoint);
         var localId = !string.IsNullOrWhiteSpace(model.ProviderModelId) ? model.ProviderModelId
             : model.Id.StartsWith(provider + "/", StringComparison.OrdinalIgnoreCase) ? model.Id[(provider!.Length + 1)..] : model.Id;
-        return new(path, localId, provider, DirectUrl(provider!, path));
+        return new(path, localId, provider, DirectUrl(provider!, path)) { CanonicalModel = model.Id };
     }
     public static Uri DirectUrl(string providerKey, string endpoint)
     {

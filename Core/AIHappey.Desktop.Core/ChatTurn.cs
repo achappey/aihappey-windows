@@ -22,6 +22,7 @@ public static class DesktopChatTurn
             {
                 ct.ThrowIfCancellationRequested();
                 var nativeContinuation = false;
+                var partsBefore = output.Message.Parts.Count;
                 await foreach (var item in stream(messages, ct))
                 {
                     if (item.Type == "finish" && item.Raw.TryGetProperty("nativeContinuation", out var continuation))
@@ -38,6 +39,8 @@ public static class DesktopChatTurn
                     break; // An incomplete/failed transport must not silently approve or retry inference.
                 }
                 if (output.Status is not "complete" and not "approval required") break;
+                if (nativeContinuation && !output.Message.Parts.Skip(partsBefore).Any(part => part.Type != "step-start"))
+                    throw new GatewayException(DesktopResources.Get("NativeChatStreamIncomplete"));
                 // Execute captured client routes first. Keep approval-requested with the result so the refreshed
                 // pending part passed to the dialog contains both input and output, just like Agents results.
                 var calls = await DesktopMcpToolExecution.ExecutePendingAsync(output,

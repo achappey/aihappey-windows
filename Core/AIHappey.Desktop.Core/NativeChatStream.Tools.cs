@@ -13,11 +13,14 @@ public sealed partial class NativeChatStream
         public JsonNode? Input;
         public JsonObject Metadata = new();
         public JsonObject? Result;
+        public bool HasRemoteOutput, Preliminary;
+        public JsonNode? RemoteOutput;
     }
     private readonly Dictionary<string, Tool> nativeTools = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Tool> messageTools = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Tool> completionTools = new(StringComparer.Ordinal);
     private readonly HashSet<string> closedMessageTools = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (JsonObject Item, string Index, bool Complete)> pendingResponseResults = new(StringComparer.Ordinal);
     private bool nativeContinuation;
 
     private JsonObject? ToolMetadata(JsonObject metadata) => route.ProviderKey is null ? null
@@ -28,7 +31,7 @@ public sealed partial class NativeChatStream
         if (tool.Started || tool.Id.Length == 0 || tool.Name.Length == 0) return;
         tool.Started = true;
         result.Add(Event("tool-input-start", ("toolCallId", JsonValue.Create(tool.Id)), ("toolName", JsonValue.Create(tool.Name)),
-            ("providerExecuted", JsonValue.Create(tool.Provider)), ("providerMetadata", ToolMetadata(tool.Metadata))));
+            ("providerExecuted", JsonValue.Create(tool.Provider)), ("providerId", tool.Provider ? JsonValue.Create(route.ProviderKey) : null), ("providerMetadata", ToolMetadata(tool.Metadata))));
     }
 
     private void ToolDelta(Tool tool, string delta, List<StreamEvent> result)
@@ -57,7 +60,7 @@ public sealed partial class NativeChatStream
         }
         tool.Input = input;
         result.Add(Event("tool-input-available", ("toolCallId", JsonValue.Create(tool.Id)), ("toolName", JsonValue.Create(tool.Name)),
-            ("input", input?.DeepClone()), ("providerExecuted", JsonValue.Create(tool.Provider)), ("providerMetadata", ToolMetadata(tool.Metadata))));
+            ("input", input?.DeepClone()), ("providerExecuted", JsonValue.Create(tool.Provider)), ("providerId", tool.Provider ? JsonValue.Create(route.ProviderKey) : null), ("providerMetadata", ToolMetadata(tool.Metadata))));
         if (!tool.Provider)
             result.Add(Event("tool-approval-request", ("toolCallId", JsonValue.Create(tool.Id)), ("approvalId", JsonValue.Create(tool.Id))));
         tool.Complete = true;
@@ -72,7 +75,7 @@ public sealed partial class NativeChatStream
             ? new JsonObject { ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = text }) }
             : new JsonObject { ["content"] = new JsonArray(), ["structuredContent"] = output?.DeepClone() ?? new JsonObject() };
         result.Add(Event(error is null ? "tool-output-available" : "tool-output-error", ("toolCallId", JsonValue.Create(tool.Id)),
-            ("providerExecuted", JsonValue.Create(true)), ("providerMetadata", ToolMetadata(metadata)),
+            ("providerExecuted", JsonValue.Create(tool.Provider)), ("providerId", tool.Provider ? JsonValue.Create(route.ProviderKey) : null), ("providerMetadata", ToolMetadata(metadata)),
             ("output", wrapped), ("errorText", error is null ? null : JsonValue.Create(GatewayErrors.Display(error)))));
     }
 
@@ -89,6 +92,8 @@ public sealed partial class NativeChatStream
             tool = new() { Id = id, Name = block["name"]?.ToString() ?? type.Replace("_tool_result", "", StringComparison.Ordinal), Provider = type != "tool_use" };
             nativeTools.Add(id, tool);
         }
+        if (isResult && !tool.Provider || isCall && tool.Metadata["type"]?.ToString() is { } previousType && previousType != type)
+            throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
         var metadata = block.DeepClone().AsObject(); metadata.Remove("input");
         metadata["native_endpoint"] = "/v1/messages"; metadata["block_index"] = int.Parse(index, CultureInfo.InvariantCulture);
         if (providerStreamMetadata["id"] is { } messageId) metadata["message_id"] = messageId.DeepClone();
@@ -115,19 +120,40 @@ public sealed partial class NativeChatStream
     private void ResponseTool(JsonObject item, string index, bool complete, List<StreamEvent> result)
     {
         var type = item["type"]?.ToString() ?? "";
+        if (type == "shell_call" && item["environment"]?["type"]?.ToString() == "local"
+            || type == "tool_search_call" && item["execution"]?.ToString() is { } execution && execution != "server") UnsupportedTool();
         var client = type is "function_call" or "custom_tool_call" or "apply_patch_call";
-        var isResult = type is "shell_call_output" or "tool_search_output" or "program_call_output";
+        var isResult = type is "shell_call_output" or "tool_search_output" or "program_output";
         var hosted = type is "web_search_call" or "file_search_call" or "code_interpreter_call" or "image_generation_call" or "shell_call"
-            or "mcp_call" or "mcp_list_tools" or "tool_search_call" or "program_call";
+            or "mcp_call" or "mcp_list_tools" or "tool_search_call" or "program";
         if (!client && !hosted && !isResult) UnsupportedTool();
         var nativeId = item["id"]?.ToString() ?? throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
         var callId = item["call_id"]?.ToString();
         var key = isResult ? "call:" + callId : nativeId;
-        if (!nativeTools.TryGetValue(key, out var tool))
+        nativeTools.TryGetValue(key, out var tool);
+        if (isResult)
+        {
+            var callType = type == "shell_call_output" ? "shell_call" : type == "program_output" ? "program" : "tool_search_call";
+            // Hosted search permits absent call_id. Correlate anonymous pairs in output order,
+            // never through an empty shared dictionary key or an invented local function call.
+            if (callId is null && type == "tool_search_output") tool = nativeTools.Values.Distinct()
+                .Where(t => t.Metadata["type"]?.ToString() == callType && t.Metadata["call_id"] is null
+                    && (t.Result is null || t.Result["id"]?.ToString() == nativeId))
+                .OrderBy(t => t.Result?["id"]?.ToString() == nativeId ? 0 : 1)
+                .ThenBy(t => t.Metadata["output_index"]?.GetValue<int>() ?? 0).FirstOrDefault();
+            if (tool is null)
+            { pendingResponseResults[nativeId] = (item.DeepClone().AsObject(), index, complete); return; }
+            if (tool.Metadata["type"]?.ToString() != callType || tool.Result?["id"]?.ToString() is { } old && old != nativeId)
+                throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
+            pendingResponseResults.Remove(nativeId);
+        }
+        if (tool is null)
         {
             tool = new() { Id = client ? callId ?? nativeId : nativeId, Name = item["name"]?.ToString() ?? type.Replace("_call", "", StringComparison.Ordinal), Provider = !client };
             nativeTools.Add(key, tool);
         }
+        else if (!isResult && (tool.Provider == client || tool.Metadata["call_id"]?.ToString() != callId
+            || tool.Metadata["type"]?.ToString() != type)) throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
         if (callId is not null && !isResult) nativeTools["call:" + callId] = tool;
         var metadata = item.DeepClone().AsObject();
         metadata["native_endpoint"] = "/v1/responses"; metadata["native_item"] = item.DeepClone(); metadata["item_id"] = nativeId;
@@ -143,18 +169,36 @@ public sealed partial class NativeChatStream
                 if ((item[type == "custom_tool_call" ? "input" : "arguments"]?.ToString()) is { } arguments)
                 { if (complete || arguments.Length > 0) tool.Arguments = arguments; }
             }
-            else tool.Input = item["arguments"]?.DeepClone() ?? item["action"]?.DeepClone() ?? new JsonObject();
+            else
+            {
+                tool.Input = item["arguments"]?.DeepClone() ?? item["action"]?.DeepClone()
+                    ?? (type == "program" ? new JsonObject { ["code"] = item["code"]?.DeepClone() } : new JsonObject());
+                if (tool.Input is JsonValue argumentValue && argumentValue.TryGetValue<string>(out var argumentText))
+                {
+                    try { tool.Input = string.IsNullOrEmpty(argumentText) ? new JsonObject() : JsonNode.Parse(argumentText); }
+                    catch (JsonException) when (!complete) { tool.Input = new JsonObject(); }
+                    catch (JsonException) { throw new GatewayException(DesktopResources.Get("McpInvalidArguments")); }
+                }
+            }
             StartTool(tool, result);
         }
         if (!complete) return;
         CompleteTool(tool, result);
-        if (tool.Provider && !tool.Output && (type is not ("shell_call" or "program_call") || tool.Result is not null))
+        if (!isResult)
+            foreach (var pending in pendingResponseResults.Values.ToArray()) ResponseTool(pending.Item, pending.Index, pending.Complete, result);
+        if (tool.Provider && !tool.Output && (type is not ("shell_call" or "program" or "tool_search_call") || tool.Result is not null))
         {
             var output = tool.Result ?? metadata;
             var raw = output["native_item"] as JsonObject ?? item;
             var error = raw["status"]?.ToString() == "failed" || raw["error"] is not null
                 ? raw["error"] is JsonObject errorObject ? errorObject["message"]?.ToString() ?? "Provider tool execution failed." : raw["error"]?.ToString() ?? "Provider tool execution failed." : null;
-            ToolOutput(tool, output, raw["output"] ?? raw["results"] ?? raw["outputs"] ?? raw["result"] ?? raw, error, result);
+            var payload = raw["output"] ?? raw["results"] ?? raw["outputs"] ?? raw["result"] ?? raw["tools"] ?? raw;
+            if (type == "mcp_call" && payload is JsonValue payloadValue && payloadValue.TryGetValue<string>(out var payloadText))
+            {
+                try { payload = JsonNode.Parse(payloadText) ?? payload; }
+                catch (JsonException) { /* Ordinary hosted MCP text results remain text. */ }
+            }
+            ToolOutput(tool, output, payload, error, result);
             if (raw["action"]?["sources"] is JsonArray sources) foreach (var source in sources.OfType<JsonObject>()) Source(source, result);
             if (type == "image_generation_call" && raw["result"]?.ToString() is { Length: > 0 } image)
             {
@@ -176,13 +220,47 @@ public sealed partial class NativeChatStream
             var index = call["index"]?.ToString() ?? "0";
             if (!completionTools.TryGetValue(index, out var tool)) completionTools.Add(index, tool = new());
             if (tool.Complete) throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
-            if (call["id"] is { } id && tool.Id.Length == 0) tool.Id = id.ToString();
+            if (call["id"] is { } id)
+            {
+                if (tool.Id.Length > 0 && tool.Id != id.ToString() && delta?["function_call"] is null)
+                    throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
+                if (tool.Id.Length == 0) tool.Id = id.ToString();
+            }
             var function = call["function"] as JsonObject ?? call["custom"] as JsonObject;
-            if (function?["name"] is { } name) tool.Name += name.ToString();
-            tool.Metadata["type"] = call["type"]?.ToString() ?? "function";
+            var outputUpdate = function?.ContainsKey("output") == true || call.ContainsKey("output");
+            var marker = call["provider_executed"] ?? call["providerExecuted"] ?? function?["provider_executed"] ?? function?["providerExecuted"];
+            if (marker is JsonValue flag && flag.TryGetValue<bool>(out var providerExecuted))
+            {
+                // Ownership may be enriched by the result frame, but can never switch back to client.
+                if (tool.Provider && !providerExecuted) throw new GatewayException(DesktopResources.Get("InvalidStreamEvent"));
+                tool.Provider = providerExecuted;
+            }
+            if (function?["name"] is { } name && (!outputUpdate || tool.Name.Length == 0)) tool.Name += name.ToString();
+            if (outputUpdate)
+            {
+                tool.HasRemoteOutput = true; tool.RemoteOutput = (function?.ContainsKey("output") == true ? function["output"] : call["output"])?.DeepClone();
+                tool.Preliminary = (function?["preliminary"] ?? call["preliminary"])?.ToString() == "true";
+            }
+            if (call["type"] is { } callType) tool.Metadata["type"] = callType.DeepClone();
+            tool.Metadata["type"] ??= "function";
             tool.Metadata["native_endpoint"] = route.Endpoint;
             StartTool(tool, result);
             if ((function?[call["custom"] is null ? "arguments" : "input"]?.ToString()) is { } arguments) ToolDelta(tool, arguments, result);
+        }
+    }
+
+    private void FinishCompletionTools(List<StreamEvent> result)
+    {
+        foreach (var tool in completionTools.Values)
+        {
+            CompleteTool(tool, result);
+            if (tool.HasRemoteOutput && !tool.Preliminary)
+            {
+                var error = (tool.RemoteOutput as JsonObject)?["error"];
+                ToolOutput(tool, tool.Metadata, tool.RemoteOutput,
+                    error is JsonObject errorObject ? errorObject["message"]?.ToString() ?? "Provider tool execution failed." : error?.ToString(), result);
+            }
+            else if (tool.Provider) throw new GatewayException(DesktopResources.Get("NativeChatStreamIncomplete"));
         }
     }
 }

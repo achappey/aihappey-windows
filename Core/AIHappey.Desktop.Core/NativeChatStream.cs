@@ -183,7 +183,8 @@ public sealed partial class NativeChatStream(DesktopChatRoute route)
             if (completedResponse?["output"] is JsonArray output)
                 for (var i = 0; i < output.Count; i++)
                     if (output[i] is JsonObject item) ResponseItem(item, i.ToString(System.Globalization.CultureInfo.InvariantCulture), result, true);
-            if (nativeTools.Values.Distinct().Any(tool => !tool.Complete)) throw new GatewayException(DesktopResources.Get("NativeChatStreamIncomplete"));
+            if (pendingResponseResults.Count > 0 || nativeTools.Values.Distinct().Any(tool => !tool.Complete || tool.Provider && !tool.Output))
+                throw new GatewayException(DesktopResources.Get("NativeChatStreamIncomplete"));
             Finish(result);
         }
         else if (type == "response.output_text.annotation.added" && raw["annotation"] is JsonObject annotation) Source(annotation, result);
@@ -223,7 +224,7 @@ public sealed partial class NativeChatStream(DesktopChatRoute route)
             Add("reasoning-" + id + "-0", "reasoning", "", true, result);
         foreach (var pair in blocks.Where(pair => pair.Key.StartsWith((type == "reasoning" ? "reasoning-" : "text-") + id + "-", StringComparison.Ordinal)))
         {
-            Copy(metadata, pair.Value.Metadata, "id", "item_id", "phase", "summary", "encrypted_content", "output_index");
+            Copy(metadata, pair.Value.Metadata, "id", "item_id", "phase", "summary", "encrypted_content", "output_index", "response_id");
             // Metadata can arrive in output_item.done after text/reasoning end.
             result.Add(Event(pair.Value.Kind + (pair.Value.Closed ? "-end" : "-start"), ("id", JsonValue.Create(pair.Value.Id)), ("providerMetadata", ProviderMetadata(pair.Value))));
         }
@@ -252,7 +253,7 @@ public sealed partial class NativeChatStream(DesktopChatRoute route)
             {
                 reason = finish.ToString();
                 if (reason is "tool_calls" or "function_call") reason = "tool-calls";
-                foreach (var tool in completionTools.Values) CompleteTool(tool, result);
+                FinishCompletionTools(result);
                 Finish(result);
             }
         }
@@ -322,7 +323,8 @@ public sealed partial class NativeChatStream(DesktopChatRoute route)
         if (firstToken is { } ttft && metrics["ttft"] is null) metrics["ttft"] = ttft;
         if (output is > 0 && watch.Elapsed.TotalSeconds > 0 && metrics["tps"] is null) metrics["tps"] = output / watch.Elapsed.TotalSeconds;
         providers["gateway"] = metrics;
-        return new JsonObject { ["model"] = model, ["usage"] = usage, ["providerMetadata"] = providers,
+        // Direct transport uses provider-local IDs; portable history and UI selection remain canonical.
+        return new JsonObject { ["model"] = route.IsDirect ? route.CanonicalModel : model, ["usage"] = usage, ["providerMetadata"] = providers,
             ["timestamp"] = DateTimeOffset.UtcNow.ToString("O") };
     }
     private static void Copy(JsonObject source, JsonObject target, params string[] fields)

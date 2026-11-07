@@ -38,6 +38,20 @@ internal static class NativeChatTools
                 foreach (var tool in native.OfType<JsonObject>())
                 {
                     var type = tool["type"]?.ToString() ?? "";
+                    if (type == "function")
+                    {
+                        var function = (tool["function"] as JsonObject ?? tool).DeepClone().AsObject();
+                        function.Remove("type"); function.Remove("function");
+                        if (function["name"] is null) throw new InvalidOperationException("Native function is missing its name.");
+                        if (route.Endpoint == "/v1/messages")
+                        {
+                            function["input_schema"] = (function["parameters"] ?? function["input_schema"])?.DeepClone() ?? new JsonObject { ["type"] = "object", ["properties"] = new JsonObject() };
+                            function.Remove("parameters"); function.Remove("allowed_callers"); tools.Add(function);
+                        }
+                        else if (route.Endpoint == "/v1/responses") { function["type"] = "function"; tools.Add(function); }
+                        else tools.Add(new JsonObject { ["type"] = "function", ["function"] = function });
+                        continue;
+                    }
                     // Do not send a provider's Responses tools to its Messages/Completions surface.
                     var compatible = route.Endpoint == "/v1/responses" ? type is "function" or "custom" or "namespace" or "web_search" or "web_search_preview"
                             or "file_search" or "code_interpreter" or "image_generation" or "shell" or "apply_patch" or "tool_search" or "mcp" or "programmatic_tool_calling"
@@ -75,12 +89,17 @@ internal static class NativeChatTools
                     function["type"] = "function";
                     foreach (var field in new[] { "allowed_callers", "defer_loading", "strict", "output_schema" })
                         if (tool[field] is { } value) function[field] = value.DeepClone();
+                    if (tool["outputSchema"] is { } outputSchema) function["output_schema"] = outputSchema.DeepClone();
                     tools.Add(function);
                 }
                 else tools.Add(new JsonObject { ["type"] = "function", ["function"] = function });
             }
         }
         if (tools.Count > 0) body["tools"] = tools;
+        if (route.Endpoint == "/v1/messages" && body["tool_choice"] is JsonValue nativeChoice && nativeChoice.TryGetValue<string>(out var choiceText))
+            body["tool_choice"] = new JsonObject { ["type"] = choiceText == "required" ? "any" : choiceText };
+        else if (route.Endpoint != "/v1/messages" && body["tool_choice"] is JsonObject nativeObject && nativeObject["type"]?.ToString() is "auto" or "any" or "none")
+            body["tool_choice"] = nativeObject["type"]!.ToString() == "any" ? "required" : nativeObject["type"]!.ToString();
         // An explicit client budget/stop decision must override even a configured forced tool choice.
         if (choice == "none" || !body.ContainsKey("tool_choice") && tools.Count > 0 && choice is not null)
             body["tool_choice"] = route.Endpoint == "/v1/messages"

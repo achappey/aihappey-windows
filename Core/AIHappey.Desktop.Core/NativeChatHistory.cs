@@ -96,7 +96,13 @@ internal static class NativeChatHistory
             }
             // Native hosted results update their original UI card in place. Restore only indexed runs;
             // unindexed client results remain immediately after their calls, with stable step ordering.
-            foreach (var entry in Ordered(entries, "output_index", "response_id")) input.Add(entry);
+            if (entries.Any(entry => entry.Item["type"]?.ToString() is "program" or "program_output"))
+            {
+                var outputs = entries.Where(entry => entry.Item["type"]?.ToString() is "function_call_output" or "apply_patch_call_output").ToArray();
+                foreach (var entry in entries.Except(outputs).OrderBy(entry => entry.Metadata?["output_index"]?.GetValue<int>() ?? int.MaxValue)) input.Add(entry.Item);
+                foreach (var entry in outputs) input.Add(entry.Item);
+            }
+            else foreach (var entry in Ordered(entries, "output_index", "response_id")) input.Add(entry);
         }
         return input;
     }
@@ -107,7 +113,7 @@ internal static class NativeChatHistory
         if (metadata["native_item"] is JsonObject item) return item.DeepClone().AsObject();
         var type = metadata["type"]?.ToString();
         if (type is not ("web_search_call" or "file_search_call" or "code_interpreter_call" or "image_generation_call" or "shell_call"
-            or "shell_call_output" or "mcp_call" or "mcp_list_tools" or "tool_search_call" or "tool_search_output" or "program_call" or "program_call_output")) return null;
+            or "shell_call_output" or "mcp_call" or "mcp_list_tools" or "tool_search_call" or "tool_search_output" or "program" or "program_output")) return null;
         var copy = metadata.DeepClone().AsObject();
         foreach (var field in new[] { "native_endpoint", "output_index", "item_id", "response_id" }) copy.Remove(field);
         return copy;
@@ -135,7 +141,7 @@ internal static class NativeChatHistory
                 var meta = NativeChatTools.Metadata(part, route.ProviderKey);
                 if (type == "text" && part["text"]?.ToString() is { Length: > 0 } text)
                 {
-                    if (results.Count > 0) Flush(); // Legacy history without step markers.
+                    if (results.Count > 0 && !message.Parts.Any(p => p.Type == "step-start")) Flush(); // Legacy history without step markers.
                     var block = new JsonObject { ["type"] = "text", ["text"] = text };
                     if (meta?["type"]?.ToString() == "text" && meta["citations"] is { } citations) block["citations"] = citations.DeepClone();
                     blocks.Add((block, meta));
@@ -145,7 +151,7 @@ internal static class NativeChatHistory
                     JsonObject? block = meta["type"]?.ToString() == "redacted_thinking" && meta["data"] is { } data
                         ? new JsonObject { ["type"] = "redacted_thinking", ["data"] = data.DeepClone() }
                         : meta["signature"] is { } signature ? new JsonObject { ["type"] = "thinking", ["thinking"] = part["text"]?.ToString() ?? "", ["signature"] = signature.DeepClone() } : null;
-                    if (block is not null) { if (results.Count > 0) Flush(); blocks.Add((block, meta)); }
+                    if (block is not null) { if (results.Count > 0 && !message.Parts.Any(p => p.Type == "step-start")) Flush(); blocks.Add((block, meta)); }
                 }
                 else if (message.Role == Role.user && type == "file") blocks.Add((NativeChatRequests.File(part, route.Endpoint), null));
                 else if (message.Role == Role.assistant && NativeChatTools.IsTool(part) && NativeChatTools.Resolved(part))
