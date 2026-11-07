@@ -61,8 +61,7 @@ public sealed partial class NativeChatStream
         tool.Input = input;
         result.Add(Event("tool-input-available", ("toolCallId", JsonValue.Create(tool.Id)), ("toolName", JsonValue.Create(tool.Name)),
             ("input", input?.DeepClone()), ("providerExecuted", JsonValue.Create(tool.Provider)), ("providerId", tool.Provider ? JsonValue.Create(route.ProviderKey) : null), ("providerMetadata", ToolMetadata(tool.Metadata))));
-        if (!tool.Provider)
-            result.Add(Event("tool-approval-request", ("toolCallId", JsonValue.Create(tool.Id)), ("approvalId", JsonValue.Create(tool.Id))));
+        // Native tool calls are not approval requests. Only explicit backend UI parts may request review.
         tool.Complete = true;
     }
 
