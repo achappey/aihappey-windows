@@ -40,14 +40,21 @@ internal static class NativeChatToolRegressionTests
             foreach (var packet in round < 2 ? ToolPackets(endpoint, "call-" + round) : TextPackets(endpoint))
             {
                 ct.ThrowIfCancellationRequested();
-                foreach (var item in mapper.Apply(packet)) yield return item;
+                foreach (var item in mapper.Apply(packet))
+                {
+                    check(item.Type != "tool-approval-request", endpoint + " does not fabricate approval requests from native tool calls");
+                    yield return item;
+                }
             }
             mapper.CheckComplete(); await Task.CompletedTask;
         }
         await DesktopChatTurn.RunAsync(conversation, output, Stream,
-            (pending, ct) => { approvals++; check(pending.Part.TryGetProperty("output", out _), endpoint + " reviews executed results"); return Task.FromResult(new ToolApprovalDecision(true)); },
+            (_, _) => { approvals++; throw new Exception(endpoint + " must not prompt without a backend approval request"); },
             (_, _) => Task.CompletedTask, snapshot, "en", default);
-        check(requests == 3 && executions == 2 && approvals == 2 && output.Status == "complete", endpoint + " executes, reviews and continues exactly once per call");
+        check(requests == 3 && executions == 2 && approvals == 0 && output.Status == "complete", endpoint + " executes and continues exactly once per call without approval");
+        check(DesktopToolApprovals.Pending(output.Message).Count == 0 && output.Message.Parts.Where(PortableConversations.IsTool)
+            .All(part => PortableConversations.String(PortableConversations.Element(part), "state") == "output-available"
+                && !PortableConversations.Element(part).TryGetProperty("approval", out _)), endpoint + " completed client tools have outputs without invented approval metadata");
         check(output.Message.Parts.Count(p => p.Type == "step-start") == 3 && output.Text.Contains("Final answer"), endpoint + " retains step boundaries and final text");
         check(wires[1].ToJsonString().Contains("echo-result") && wires[2]["tool_choice"]!.ToJsonString().Contains("none"), endpoint + " replays results and enforces tool budget");
         check(!wires.Any(w => w.ContainsKey("previous_response_id") || w.ContainsKey("conversation") || w.ContainsKey("providerMetadata")), endpoint + " requests are stateless and protocol-local");
@@ -65,11 +72,14 @@ internal static class NativeChatToolRegressionTests
             if (replayEndpoint == "/v1/chat/completions")
                 check(replay["messages"]!.AsArray().Count(m => m?["role"]?.ToString() == "tool") == 2, "Completions retains tool roles across saved rounds");
         }
-        check(portable.Contains("callProviderMetadata") && portable.Contains("approval-responded") && !portable.Contains("response.output_item"), endpoint + " saves portable parts and review decisions, not SSE frames");
+        check(portable.Contains("callProviderMetadata") && !portable.Contains("approval") && !portable.Contains("response.output_item"), endpoint + " saves portable tool results without fabricated approvals or SSE frames");
         if (endpoint == "/v1/messages") check(NativeChatRequests.Build(route, preferences, reloaded.Messages.Select(m => m.Message).ToArray()).ToJsonString().Contains("signature-first-second"), "fragmented Messages signatures survive storage/replay");
         var toolPart = output.Message.Parts.First(PortableConversations.IsTool);
         var index = output.Message.Parts.IndexOf(toolPart);
-        var raw = PortableConversations.Node(toolPart); raw["approval"]!["approved"] = false;
+        // Explicit historical denial remains replayable; native tool calls must not create one themselves.
+        var raw = PortableConversations.Node(toolPart);
+        raw["state"] = "approval-responded";
+        raw["approval"] = new JsonObject { ["id"] = "historical-approval", ["approved"] = false };
         output.Message.Parts[index] = PortableConversations.Part(raw);
         var denied = NativeChatRequests.Build(route, preferences, conversation.Messages.Select(m => m.Message).ToArray());
         check(denied.ToJsonString().Contains("denied release") && PortableConversations.Node(output.Message.Parts[index])["output"] is not null, endpoint + " denial replay preserves the saved result");

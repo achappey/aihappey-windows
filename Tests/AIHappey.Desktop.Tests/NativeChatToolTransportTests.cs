@@ -29,10 +29,12 @@ internal static class NativeChatToolTransportTests
             conversation.Messages.Add(output);
             await DesktopChatTurn.RunAsync(conversation, output,
                 (messages, ct) => client.StreamAsync(ServiceKind.Ai, provider + "/test", conversation.Id, messages, ct, new(), provider, mcp: snapshot, route: route),
-                (_, _) => Task.FromResult(new ToolApprovalDecision(true)), (_, _) => Task.CompletedTask, snapshot, "en", default);
+                (_, _) => throw new Exception(endpoint + " must not prompt without a backend approval request"), (_, _) => Task.CompletedTask, snapshot, "en", default);
             var selected = direct ? native : gateway; var unused = direct ? gateway : native;
             check(selected.Bodies.Count == 2 && unused.Bodies.Count == 0 && executed == 1 && output.Text == "Final answer", endpoint + " " + (direct ? "direct" : "gateway") + " streams a tool turn and stateless continuation over real client transport");
-            check(selected.Bodies[0]["tools"]!.ToJsonString().Contains("echo") && selected.Bodies[1].ToJsonString().Contains("transport-result"), endpoint + " transport carries captured tools and reviewed results");
+            check(selected.Bodies[0]["tools"]!.ToJsonString().Contains("echo") && selected.Bodies[1].ToJsonString().Contains("transport-result"), endpoint + " transport carries captured tools and executed results");
+            check(DesktopToolApprovals.Pending(output.Message).Count == 0 && output.Message.Parts.Where(PortableConversations.IsTool)
+                .All(part => !PortableConversations.Element(part).TryGetProperty("approval", out _)), endpoint + " " + (direct ? "direct" : "gateway") + " has no fabricated approval metadata");
             check(selected.Headers.All(h => h.ContainsKey("X-Gateway-Secret") == !direct) && selected.Bodies.All(b => b["model"]!.ToString() == route.Model), endpoint + " continuation keeps credentials and canonical/local model routing isolated");
         }
         await HostedMatrixAsync(check);

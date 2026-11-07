@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using AIHappey.Desktop.Core;
 using AIHappey.Vercel.Models;
+using AIHappey.Vercel.Security;
 
 internal static class ToolApprovalRegressionTests
 {
@@ -15,7 +16,10 @@ internal static class ToolApprovalRegressionTests
         ? [Input, Approval, Output, Finish] : [Input, Output, Approval, Finish];
     private const string Input = """{"type":"tool-input-available","toolCallId":"call","toolName":"search","title":"Friendly title","input":{"q":"test"},"providerExecuted":false,"providerMetadata":{"test":{"keep":true}}}""";
     private const string Output = """{"type":"tool-output-available","toolCallId":"call","output":{"content":[{"type":"text","text":"result"}],"structuredContent":{"value":42}},"providerExecuted":false}""";
-    private const string Approval = """{"type":"tool-approval-request","toolCallId":"call","approvalId":"approval","signature":"v1.fixture-signature","reason":"Review this request","approvalDescriptor":{"label":"Search"},"inputSchemaInput":{"q":"test"}}""";
+    private static readonly ToolApprovalSigner Signer = new("desktop-approval-test-secret", "desktop-test-user");
+    private static readonly string Signature = Signer.CreateSignature("approval", new ToolCallPart
+        { ToolCallId = "call", ToolName = "search", Title = "Friendly title", ProviderExecuted = false, Input = Json("""{"q":"test"}""") });
+    private static readonly string Approval = $$$"""{"type":"tool-approval-request","toolCallId":"call","approvalId":"approval","signature":"{{{Signature}}}","reason":"Review this request","approvalDescriptor":{"label":"Search"},"inputSchemaInput":{"q":"test"}}""";
     private const string Finish = """{"type":"finish","messageMetadata":{"usage":{"totalTokens":17}}}""";
 
     public static async Task RunAsync(Action<bool, string> check, string root)
@@ -27,7 +31,7 @@ internal static class ToolApprovalRegressionTests
             var pending = DesktopToolApprovals.Pending(reply.Message).Single();
             check(assembler.Finished && assembler.ApprovalRequired && reply.Status == "approval required" && DesktopToolApprovals.HasOutput(pending.Part), "approval/output ordering preserves pending state: " + reverse);
             check(pending.ToolName == "search" && pending.Title == "Friendly title" && pending.Part.TryGetProperty("callProviderMetadata", out _), "approval uses canonical name and retains title/provider fields");
-            check(pending.Part.GetProperty("approval").GetProperty("signature").GetString() == "v1.fixture-signature"
+            check(pending.Part.GetProperty("approval").GetProperty("signature").GetString() == Signature
                 && pending.Part.GetProperty("approval").GetProperty("requestReason").GetString() == "Review this request"
                 && pending.Part.GetProperty("approval").TryGetProperty("descriptor", out _)
                 && pending.Part.GetProperty("approval").TryGetProperty("inputSchemaInput", out _), "signed request metadata survives stream assembly in both output orderings");
@@ -39,7 +43,9 @@ internal static class ToolApprovalRegressionTests
             var restored = PortableConversations.Read(PortableConversations.Write(Conversation(ServiceKind.Ai, reply)));
             check(PortableConversations.CanReplay(restored.Messages.Last()), "approval history round trips");
             var restoredApproval = PortableConversations.Element(restored.Messages.Last().Message.Parts.Single()).GetProperty("approval");
-            check(restoredApproval.GetProperty("signature").GetString() == "v1.fixture-signature" && !restoredApproval.GetProperty("isAutomatic").GetBoolean(), "manual signature and explicit automatic=false survive history round trip");
+            check(restoredApproval.GetProperty("signature").GetString() == Signature && !restoredApproval.GetProperty("isAutomatic").GetBoolean(), "manual signature and explicit automatic=false survive history round trip");
+            Signer.ValidateIncoming(restored.Messages.Select(message => message.Message));
+            check(true, "server-issued approval signature still validates after decision and history round trip");
             assembler.Continue(); assembler.Apply(StreamEvent.Parse(Approval));
             check(!assembler.ApprovalRequired, "duplicate approval chunk does not reset an answered decision");
         }
@@ -81,8 +87,10 @@ internal static class ToolApprovalRegressionTests
             check(tool.GetProperty("state").GetString() == "approval-responded" && tool.GetProperty("approval").GetProperty("approved").GetBoolean() == decision.Approved
                 && tool.GetProperty("approval").GetProperty("id").GetString() == "approval" && tool.TryGetProperty("output", out _), "continuation wire decision and existing output preserved");
             check(decision.Reason is null ? !tool.GetProperty("approval").TryGetProperty("reason", out _) : tool.GetProperty("approval").GetProperty("reason").GetString() == decision.Reason, "continuation wire reason matches browser");
-            check(tool.GetProperty("approval").GetProperty("signature").GetString() == "v1.fixture-signature"
+            check(tool.GetProperty("approval").GetProperty("signature").GetString() == Signature
                 && tool.GetProperty("approval").GetProperty("isAutomatic").GetBoolean() == decision.IsAutomatic, "continuation echoes signature and distinguishes rules from manual automatic-mode selection");
+            Signer.ValidateIncoming(JsonSerializer.Deserialize<List<UIMessage>>(body.RootElement.GetProperty("messages").GetRawText(), PortableConversations.Json)!);
+            check(true, "server-issued signature validates on the actual manual/automatic approval continuation payload");
             check(PortableConversations.CanReplay(reply), "final approved/denied assistant history replays");
             await session.DisposeAsync();
         }
@@ -113,8 +121,33 @@ internal static class ToolApprovalRegressionTests
             (_, _) => throw new Exception("Must not approve incomplete stream"), (_, _) => Task.CompletedTask, McpTurnSnapshot.Empty, "en", CancellationToken.None);
         check(interrupted.Status == "approval required" && interruptRounds == 1, "incomplete stream is not automatically approved or retried");
 
+        await CheckNoApprovalAsync(check);
         await CheckLongRunsAsync(check);
         await CheckMcpAsync(check);
+    }
+
+    private static async Task CheckNoApprovalAsync(Action<bool, string> check)
+    {
+        foreach (var service in new[] { ServiceKind.Ai, ServiceKind.Agents })
+        foreach (var withOutput in new[] { false, true })
+        {
+            var reply = Reply(); var rounds = 0; var executions = 0;
+            var snapshot = McpTurnSnapshot.Empty;
+            snapshot.AddLocal(Json("""{"name":"search","inputSchema":{"type":"object"}}"""), (_, _) =>
+            {
+                executions++;
+                return Task.FromResult(Json("""{"content":[{"type":"text","text":"result"}]}"""));
+            });
+            await DesktopChatTurn.RunAsync(Conversation(service, reply), reply,
+                (_, ct) => Events(++rounds == 1 ? withOutput ? [Input, Output, Finish] : [Input, Finish]
+                    : ["""{"type":"text-delta","id":"answer","delta":"continued"}""", Finish], ct),
+                (_, _) => throw new Exception("Tool input/output without a backend approval request must not prompt"),
+                (_, _) => Task.CompletedTask, snapshot, "en", default);
+            check(rounds == (withOutput ? 1 : 2) && executions == (withOutput ? 0 : 1) && reply.Status == "complete"
+                && DesktopToolApprovals.Pending(reply.Message).Count == 0 && reply.Message.Parts.Where(PortableConversations.IsTool)
+                    .All(part => !PortableConversations.Element(part).TryGetProperty("approval", out _)),
+                $"{service}: tool {(withOutput ? "output" : "input")} alone never creates an approval or review dialog");
+        }
     }
 
     private static async Task CheckLongRunsAsync(Action<bool, string> check)

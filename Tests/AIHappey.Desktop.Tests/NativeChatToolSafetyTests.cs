@@ -45,7 +45,9 @@ internal static class NativeChatToolSafetyTests
         var legacy = Reduce("/v1/chat/completions",
             """{"id":"l","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"function_call":{"name":"echo","arguments":"{"}},"finish_reason":null}]}""",
             """{"id":"l","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"function_call":{"arguments":"}"}},"finish_reason":"function_call"}]}""");
-        check(legacy.Message.Parts.Count(PortableConversations.IsTool) == 1 && DesktopToolApprovals.Pending(legacy.Message).Count == 1, "legacy function deltas remain one reviewable tool call");
+        check(legacy.Message.Parts.Count(PortableConversations.IsTool) == 1 && DesktopToolApprovals.Pending(legacy.Message).Count == 0
+            && PortableConversations.Node(legacy.Message.Parts.Single(PortableConversations.IsTool))["state"]!.ToString() == "input-available",
+            "legacy function deltas remain one executable tool call without a fabricated approval");
         var custom = Reduce("/v1/chat/completions",
             """{"id":"c","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"custom","type":"custom","custom":{"name":"custom-tool","input":"plain "}}]},"finish_reason":null}]}""",
             """{"id":"c","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"custom":{"input":"text"}}]},"finish_reason":"tool_calls"}]}""");
