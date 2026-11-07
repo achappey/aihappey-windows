@@ -101,7 +101,7 @@ internal static class ChatEndpointRegressionTests
             conversation.Messages.Add(output);
             var body = NativeChatRequests.Build(route, preferences, new[] { system }.Concat(conversation.Messages.Select(m => m.Message)).ToList());
             var wire = body.ToJsonString();
-            check(body["stream"]!.GetValue<bool>() && body["model"]!.ToString() == route.Model && !wire.Contains("providerMetadata") && body["tools"] is null, endpoint + " builds native basic-chat request rather than gateway request");
+            check(body["stream"]!.GetValue<bool>() && body["model"]!.ToString() == route.Model && !wire.Contains("providerMetadata"), endpoint + " builds a native request rather than a gateway chat envelope");
             check(wire.Contains("System context") && wire.Contains("Hello world"), endpoint + " replays the same conversation across protocols");
             var tokenField = endpoint == "/v1/messages" ? "max_tokens" : endpoint == "/v1/responses" ? "max_output_tokens" : "max_tokens";
             check(body[tokenField]!.GetValue<int>() == 123, endpoint + " uses native token limit field");
@@ -128,7 +128,7 @@ internal static class ChatEndpointRegressionTests
         foreach (var packet in reasoningPackets) foreach (var item in reasoningMapper.Apply(packet)) reasoningAssembler.Apply(item);
         var reasoningBody = NativeChatRequests.Build(new("/v1/responses", "openai/test", "openai"), new(), [reasoningOutput.Message]);
         check(reasoningBody.ToJsonString().Contains("opaque-encrypted") && reasoningOutput.Reasoning == "Thinking", "Responses encrypted reasoning remains replayable under provider metadata");
-        Reject(() => new NativeChatStream(new("/v1/messages", "anthropic/test", "anthropic")).Apply("""{"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"t","name":"shell","input":{}}}"""), "unexpected tools do not execute or complete successfully");
+        Reject(() => new NativeChatStream(new("/v1/messages", "anthropic/test", "anthropic")).Apply("""{"type":"content_block_start","index":0,"content_block":{"type":"unknown_executable","id":"t","name":"shell","input":{}}}"""), "unknown native blocks fail closed rather than becoming executable calls");
         var unsupported = new UIMessage { Id = "file", Role = Role.user, Parts = [PortableConversations.Part(new JsonObject { ["type"] = "file", ["mediaType"] = "audio/wav", ["url"] = "data:audio/wav;base64,AA==" })] };
         Reject(() => NativeChatRequests.Build(new("/v1/messages", "anthropic/test", "anthropic"), new(), [unsupported]), "unsupported attachments fail projection clearly");
 
@@ -159,6 +159,7 @@ internal static class ChatEndpointRegressionTests
         var framed = new List<SseReader.Frame>();
         await foreach (var frame in SseReader.ReadEventsAsync(frames)) framed.Add(frame);
         check(framed.Count == 1 && framed[0].Event == "content_block_delta", "SSE event names are preserved without leaking from empty ping frames");
+        await NativeChatToolRegressionTests.RunAsync(check, root);
     }
 
     private static async Task WireChecksAsync(Action<bool, string> check, DesktopSession session, DesktopChatRoute direct, UIMessage user)

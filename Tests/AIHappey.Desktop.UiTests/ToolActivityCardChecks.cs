@@ -32,12 +32,35 @@ public partial class App
         var client = Card("""{"type":"tool-missing-tool","toolCallId":"client","providerExecuted":false,"providerId":"openai","state":"input-streaming","inputText":"partial"}""");
         var signed = Card("""{"type":"tool-search","toolCallId":"signed","state":"approval-responded","input":{},"approval":{"id":"signed","approved":true,"isAutomatic":true,"signature":"v1.full-signature-fixture"}}""");
         var pendingSigned = Card("""{"type":"dynamic-tool","toolName":"search","toolCallId":"pending-signed","state":"approval-requested","input":{},"approval":{"id":"pending-signed","signature":"v1.pending-signature-fixture"}}""");
+        var nativeCards = new List<Border>();
+        foreach (var (endpoint, providerKey, packets) in new[] {
+            ("/v1/responses", "openai", new[] {
+                """{"type":"response.output_item.done","output_index":0,"item":{"type":"web_search_call","id":"native-web","status":"completed","action":{"type":"search","query":"fixture"}}}""",
+                """{"type":"response.completed","response":{"id":"native-r","object":"response","status":"completed","output":[]}}""" }),
+            ("/v1/messages", "anthropic", new[] {
+                """{"type":"content_block_start","index":0,"content_block":{"type":"server_tool_use","id":"native-search","name":"web_search","input":{}}}""",
+                """{"type":"content_block_stop","index":0}""",
+                """{"type":"content_block_start","index":1,"content_block":{"type":"web_search_tool_result","tool_use_id":"native-search","content":[]}}""",
+                """{"type":"content_block_stop","index":1}""", """{"type":"message_stop"}""" }) })
+        {
+            var message = new ConversationMessage { Message = new() { Id = "native-ui", Role = AIHappey.Vercel.Models.Role.assistant, Parts = [] } };
+            var mapper = new NativeChatStream(new(endpoint, providerKey + "/fixture", providerKey));
+            var assembler = new MessageAssembler(message);
+            foreach (var packet in packets) foreach (var item in mapper.Apply(packet)) assembler.Apply(item);
+            mapper.CheckComplete();
+            nativeCards.Add(Card(PortableConversations.Element(message.Message.Parts.Single(PortableConversations.IsTool)).GetRawText()));
+        }
         var content = new StackPanel { Spacing = 12 };
         foreach (var card in new[] { local, provider, unknown, client, signed, pendingSigned }) content.Children.Add(card);
+        foreach (var card in nativeCards) content.Children.Add(card);
         body.Children.Clear(); body.Children.Add(new ScrollViewer { Content = content });
         try
         {
             await Task.Delay(150); shell.UpdateLayout();
+            Check(nativeCards.All(card => Descendants(card).OfType<Grid>().Any(grid => grid.Name == "ProviderLogo")
+                && Descendants(card).OfType<Button>().Single(button => button.Name == "ConversationToolOutput").IsEnabled
+                && Descendants(card).OfType<TextBlock>().Single(text => text.Name == "ConversationToolState").Text == DesktopResources.Get("ToolStateOutputAvailable")),
+                context + ": native Responses/Messages streams render through existing provider tool cards, status and output actions");
             var signatureBadge = Descendants(signed).OfType<Border>().Single(b => b.Name == "ConversationToolSignature");
             Check(AutomationProperties.GetName(signatureBadge) == DesktopResources.Get("ToolApprovalSignatureAttached")
                 && ToolTipService.GetToolTip(signatureBadge) is TextBlock signatureTooltip && signatureTooltip.Text.Contains("v1.full-signature-fixture")

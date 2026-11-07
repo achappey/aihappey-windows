@@ -40,6 +40,47 @@ The [native menu suite](AIHappey.Desktop.UiTests/ChatEndpointChecks.cs) independ
 host capabilities and themes, browser-equivalent ordering, checked states, persistence, model/key
 changes, busy/Agents gating, and preserving drafts and the current conversation.
 
+#### Native reasoning and tools
+
+All three model-chat protocols share the existing desktop transcript, activity cards, result review,
+tool runtime and portable conversation storage in both gateway and supported direct-provider modes.
+The standalone protocol projects remain the only external client compile-time dependencies;
+gateway/Unified mappers are reference implementations, not desktop dependencies.
+
+| Protocol | Client tools | Provider-executed tools and replay |
+| --- | --- | --- |
+| Responses | Captured local/MCP functions, Responses namespaces and the existing apply-patch handler | Web/file search, code interpreter, generated images, hosted shell, hosted MCP, hosted tool search, and program execution; separate native call/output items retain their identities and order |
+| Messages | Captured local/MCP functions and the existing Anthropic text-editor handler | Server/MCP tool-use blocks and web search/fetch, code execution, bash/text-editor execution, tool-search and MCP results, including typed failures |
+| Chat Completions | Indexed/interleaved function calls and legacy function-call streams | Endpoint-native configured function/custom declarations, plus explicit provider-executed/output extensions for display; completed provider calls are not resurrected as client functions in replay |
+
+Signed/redacted Messages thinking, Responses encrypted reasoning and native item identifiers, and
+provider-required Completions reasoning fields are retained in portable part metadata. Replaying
+an assistant message reconstructs its model/tool steps rather than flattening all rounds together.
+Local calls are replayed only with resolved results (including errors and denied result release).
+Native provider items are replayed only for their compatible provider/protocol. Request-only output
+filtering never edits the original result saved in history. Responses requests disable server storage
+and request encrypted reasoning; continuation does not use a previous server response identifier.
+Direct requests use provider-local model IDs while saved model selection remains canonical.
+
+Provider-executed tools never enter local execution or local result review. Client tools retain the
+desktop's execute-then-review behavior; review is not a new permission-to-execute policy. Unknown
+native executable blocks, unsupported client-native harnesses (such as computer/local-shell or
+client-executed hosted tool search), malformed arguments, and incomplete transports fail closed.
+Custom string-call shapes can be retained, but do not bypass captured handlers' object-input
+validation. Provider-hosted containers, files and similar resources still have their provider-defined
+lifetimes; portable history does not create or extend those resources. Messages provider pauses use
+an explicit continuation signal, not an inference retry, and empty pauses cannot create a busy loop.
+
+The [multi-round regression fixtures](AIHappey.Desktop.Tests/NativeChatToolRegressionTests.cs),
+[gateway/direct transport and hosted-tool matrix](AIHappey.Desktop.Tests/NativeChatToolTransportTests.cs),
+and [policy/interruption fixtures](AIHappey.Desktop.Tests/NativeChatToolSafetyTests.cs) run as part of
+the existing endpoint suite. They verify portable save/reload and cross-endpoint replay, fragmented
+arguments/signatures, deduplicated snapshots, execution ownership, credential isolation, namespace
+projection, tool limits/stops, denied results and request-only output filtering. The existing
+[native activity-card checks](AIHappey.Desktop.UiTests/ToolActivityCardChecks.cs) also reduce native
+provider streams into the ordinary cards and verify their logos, status and output actions.
+These credential-free fixtures do not claim live provider capability or availability.
+
 ### Model-chat tool configuration
 
 Tool configuration is session-only, just like the browser. Closing chat settings commits the isolated draft in memory; Restore defaults clears it, and restarting the app does not reload it. Agent-owned and realtime tool settings are outside this feature. Calling methods and search are raw endpoint options, not an execution/approval policy or a guarantee of provider support.
