@@ -25,10 +25,10 @@
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.3.260402-preview2" />
     <PackageReference Include="Flags.Icons.WinUi" Version="3.4.3" />
     <PackageReference Include="FluentIcons.WinUI" Version="2.2.345" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.4-experimental" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.6-experimental" />
     <PackageReference Include="CommunityToolkit.Labs.WinUI.Controls.MarkdownTextBlock" Version="0.1.261027-build.2704" />
-    <PackageReference Include="PdfPig" Version="0.1.17-alpha-202611060028-2f7a5" />
-    <PackageReference Include="ModelContextProtocol" Version="2.3.1" />
+    <PackageReference Include="PdfPig" Version="0.1.17-alpha-202611070026-8c703" />
+    <PackageReference Include="ModelContextProtocol" Version="2.4.0" />
     <PackageReference Include="SIPSorcery.OpenAI.Realtime" Version="10.0.18-pre" />
     <PackageReference Include="SIPSorceryMedia.Windows" Version="10.0.18-pre" />
     <PackageReference Include="System.Data.OleDb" Version="11.0.0-rc.3.26522.148" />

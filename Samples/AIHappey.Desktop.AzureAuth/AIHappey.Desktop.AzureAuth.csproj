@@ -35,7 +35,7 @@
     <Content Include="desktop.default.json" Condition="!Exists('desktop.json')" Link="desktop.json" TargetPath="desktop.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Manifest Include="$(ApplicationManifest)" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.29648.1000-preview" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.4-experimental" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.6-experimental" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.92.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="11.0.0-rc.3.26522.148" />
     <ProjectReference Include="..\..\Core\AIHappey.Desktop.Core\AIHappey.Desktop.Core.csproj" />
