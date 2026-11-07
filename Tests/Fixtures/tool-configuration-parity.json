@@ -1,0 +1,2413 @@
+{
+  "shapes": [
+    {
+      "name": "inherited/false",
+      "tools": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "one",
+            "name": "Shared Service!",
+            "requestOptions": {
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            },
+            "namespace": true
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          }
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "two",
+            "name": "Shared Service?",
+            "description": "Second source"
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "source": {
+            "kind": "plugin",
+            "id": "plugin-one",
+            "name": "Shared Service!"
+          },
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "local",
+            "id": "ignored",
+            "name": "Local tools"
+          }
+        },
+        {
+          "name": "fallback",
+          "source": {
+            "kind": "mcp",
+            "id": "empty",
+            "name": "---___!!!"
+          },
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long-two",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ],
+      "config": {},
+      "namespaces": false,
+      "expected": [
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "fallback",
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "lookup",
+              "description": "Lookup title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "override/false",
+      "tools": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "one",
+            "name": "Shared Service!",
+            "requestOptions": {
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            },
+            "namespace": true
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          }
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "two",
+            "name": "Shared Service?",
+            "description": "Second source"
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "source": {
+            "kind": "plugin",
+            "id": "plugin-one",
+            "name": "Shared Service!"
+          },
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "local",
+            "id": "ignored",
+            "name": "Local tools"
+          }
+        },
+        {
+          "name": "fallback",
+          "source": {
+            "kind": "mcp",
+            "id": "empty",
+            "name": "---___!!!"
+          },
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long-two",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ],
+      "config": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic"
+          ],
+          "defer_loading": false
+        },
+        "other": {
+          "allowed_callers": [
+            "invalid",
+            "direct",
+            "direct"
+          ],
+          "defer_loading": true
+        }
+      },
+      "namespaces": false,
+      "expected": [
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "description": "  Other description  ",
+          "allowed_callers": [
+            "direct",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        {
+          "name": "plugin",
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "fallback",
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "lookup",
+              "description": "Lookup title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "allowed_callers": [
+                "programmatic"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "emptyOverride/false",
+      "tools": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "one",
+            "name": "Shared Service!",
+            "requestOptions": {
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            },
+            "namespace": true
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          }
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "two",
+            "name": "Shared Service?",
+            "description": "Second source"
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "source": {
+            "kind": "plugin",
+            "id": "plugin-one",
+            "name": "Shared Service!"
+          },
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "local",
+            "id": "ignored",
+            "name": "Local tools"
+          }
+        },
+        {
+          "name": "fallback",
+          "source": {
+            "kind": "mcp",
+            "id": "empty",
+            "name": "---___!!!"
+          },
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long-two",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ],
+      "config": {
+        "lookup": {}
+      },
+      "namespaces": false,
+      "expected": [
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "fallback",
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "lookup",
+              "description": "Lookup title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "emptyCallers/false",
+      "tools": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "one",
+            "name": "Shared Service!",
+            "requestOptions": {
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            },
+            "namespace": true
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          }
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "two",
+            "name": "Shared Service?",
+            "description": "Second source"
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "source": {
+            "kind": "plugin",
+            "id": "plugin-one",
+            "name": "Shared Service!"
+          },
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "local",
+            "id": "ignored",
+            "name": "Local tools"
+          }
+        },
+        {
+          "name": "fallback",
+          "source": {
+            "kind": "mcp",
+            "id": "empty",
+            "name": "---___!!!"
+          },
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long-two",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ],
+      "config": {
+        "lookup": {
+          "allowed_callers": [],
+          "defer_loading": false
+        }
+      },
+      "namespaces": false,
+      "expected": [
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "fallback",
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "lookup",
+              "description": "Lookup title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "inherited/true",
+      "tools": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "one",
+            "name": "Shared Service!",
+            "requestOptions": {
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            },
+            "namespace": true
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          }
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "two",
+            "name": "Shared Service?",
+            "description": "Second source"
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "source": {
+            "kind": "plugin",
+            "id": "plugin-one",
+            "name": "Shared Service!"
+          },
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "local",
+            "id": "ignored",
+            "name": "Local tools"
+          }
+        },
+        {
+          "name": "fallback",
+          "source": {
+            "kind": "mcp",
+            "id": "empty",
+            "name": "---___!!!"
+          },
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long-two",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ],
+      "config": {},
+      "namespaces": true,
+      "expected": [
+        {
+          "type": "namespace",
+          "name": "shared_service",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "lookup",
+              "description": "Lookup title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service_2",
+          "description": "Second source",
+          "tools": [
+            {
+              "type": "function",
+              "name": "other",
+              "description": "Other description",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service_3",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "plugin",
+              "parameters": {
+                "type": "object",
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "local",
+          "description": "Locally available application tools.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "local",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "tools",
+          "description": "Tools provided by ---___!!!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "fallback",
+              "description": "Annotation title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "description": "Tools provided by xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "long",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_2",
+          "description": "Tools provided by xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "long_two",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "override/true",
+      "tools": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "one",
+            "name": "Shared Service!",
+            "requestOptions": {
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            },
+            "namespace": true
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          }
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "two",
+            "name": "Shared Service?",
+            "description": "Second source"
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "source": {
+            "kind": "plugin",
+            "id": "plugin-one",
+            "name": "Shared Service!"
+          },
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "local",
+            "id": "ignored",
+            "name": "Local tools"
+          }
+        },
+        {
+          "name": "fallback",
+          "source": {
+            "kind": "mcp",
+            "id": "empty",
+            "name": "---___!!!"
+          },
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long-two",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ],
+      "config": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic"
+          ],
+          "defer_loading": false
+        },
+        "other": {
+          "allowed_callers": [
+            "invalid",
+            "direct",
+            "direct"
+          ],
+          "defer_loading": true
+        }
+      },
+      "namespaces": true,
+      "expected": [
+        {
+          "type": "namespace",
+          "name": "shared_service",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "lookup",
+              "description": "Lookup title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "allowed_callers": [
+                "programmatic"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service_2",
+          "description": "Second source",
+          "tools": [
+            {
+              "type": "function",
+              "name": "other",
+              "description": "Other description",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              },
+              "allowed_callers": [
+                "direct",
+                "direct"
+              ],
+              "defer_loading": true
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service_3",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "plugin",
+              "parameters": {
+                "type": "object",
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "local",
+          "description": "Locally available application tools.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "local",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "tools",
+          "description": "Tools provided by ---___!!!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "fallback",
+              "description": "Annotation title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "description": "Tools provided by xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "long",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_2",
+          "description": "Tools provided by xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "long_two",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "emptyOverride/true",
+      "tools": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "one",
+            "name": "Shared Service!",
+            "requestOptions": {
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            },
+            "namespace": true
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          }
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "two",
+            "name": "Shared Service?",
+            "description": "Second source"
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "source": {
+            "kind": "plugin",
+            "id": "plugin-one",
+            "name": "Shared Service!"
+          },
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "local",
+            "id": "ignored",
+            "name": "Local tools"
+          }
+        },
+        {
+          "name": "fallback",
+          "source": {
+            "kind": "mcp",
+            "id": "empty",
+            "name": "---___!!!"
+          },
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long-two",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ],
+      "config": {
+        "lookup": {}
+      },
+      "namespaces": true,
+      "expected": [
+        {
+          "type": "namespace",
+          "name": "shared_service",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "lookup",
+              "description": "Lookup title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service_2",
+          "description": "Second source",
+          "tools": [
+            {
+              "type": "function",
+              "name": "other",
+              "description": "Other description",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service_3",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "plugin",
+              "parameters": {
+                "type": "object",
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "local",
+          "description": "Locally available application tools.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "local",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "tools",
+          "description": "Tools provided by ---___!!!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "fallback",
+              "description": "Annotation title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "description": "Tools provided by xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "long",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_2",
+          "description": "Tools provided by xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "long_two",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "emptyCallers/true",
+      "tools": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "one",
+            "name": "Shared Service!",
+            "requestOptions": {
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            },
+            "namespace": true
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          }
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "two",
+            "name": "Shared Service?",
+            "description": "Second source"
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "source": {
+            "kind": "plugin",
+            "id": "plugin-one",
+            "name": "Shared Service!"
+          },
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "local",
+            "id": "ignored",
+            "name": "Local tools"
+          }
+        },
+        {
+          "name": "fallback",
+          "source": {
+            "kind": "mcp",
+            "id": "empty",
+            "name": "---___!!!"
+          },
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long-two",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      ],
+      "config": {
+        "lookup": {
+          "allowed_callers": [],
+          "defer_loading": false
+        }
+      },
+      "namespaces": true,
+      "expected": [
+        {
+          "type": "namespace",
+          "name": "shared_service",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "lookup",
+              "description": "Lookup title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service_2",
+          "description": "Second source",
+          "tools": [
+            {
+              "type": "function",
+              "name": "other",
+              "description": "Other description",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "shared_service_3",
+          "description": "Tools provided by Shared Service!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "plugin",
+              "parameters": {
+                "type": "object",
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "local",
+          "description": "Locally available application tools.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "local",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "tools",
+          "description": "Tools provided by ---___!!!.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "fallback",
+              "description": "Annotation title",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "description": "Tools provided by xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "long",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        },
+        {
+          "type": "namespace",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_2",
+          "description": "Tools provided by xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.",
+          "tools": [
+            {
+              "type": "function",
+              "name": "long_two",
+              "parameters": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "flat-with-existing-options",
+      "tools": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "one",
+            "name": "Shared Service!",
+            "requestOptions": {
+              "allowed_callers": [
+                "direct",
+                "programmatic"
+              ],
+              "defer_loading": true
+            },
+            "namespace": false
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          },
+          "allowed_callers": [
+            "invalid"
+          ],
+          "defer_loading": true
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "two",
+            "name": "Shared Service?",
+            "description": "Second source",
+            "namespace": false
+          },
+          "description": "  Other description  ",
+          "allowed_callers": [
+            "invalid"
+          ],
+          "defer_loading": true
+        },
+        {
+          "name": "plugin",
+          "source": {
+            "kind": "plugin",
+            "id": "plugin-one",
+            "name": "Shared Service!",
+            "namespace": false
+          },
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          },
+          "allowed_callers": [
+            "invalid"
+          ],
+          "defer_loading": true
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "local",
+            "id": "ignored",
+            "name": "Local tools",
+            "namespace": false
+          },
+          "allowed_callers": [
+            "invalid"
+          ],
+          "defer_loading": true
+        },
+        {
+          "name": "fallback",
+          "source": {
+            "kind": "mcp",
+            "id": "empty",
+            "name": "---___!!!",
+            "namespace": false
+          },
+          "annotations": {
+            "title": "Annotation title"
+          },
+          "allowed_callers": [
+            "invalid"
+          ],
+          "defer_loading": true
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "namespace": false
+          },
+          "allowed_callers": [
+            "invalid"
+          ],
+          "defer_loading": true
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "source": {
+            "kind": "mcp",
+            "id": "long-two",
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "namespace": false
+          },
+          "allowed_callers": [
+            "invalid"
+          ],
+          "defer_loading": true
+        }
+      ],
+      "config": {},
+      "namespaces": false,
+      "expected": [
+        {
+          "name": "lookup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "title": "Lookup title",
+          "annotations": {
+            "title": "Lower precedence"
+          },
+          "allowed_callers": [
+            "direct",
+            "programmatic"
+          ],
+          "defer_loading": true
+        },
+        {
+          "name": "other",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "description": "  Other description  "
+        },
+        {
+          "name": "plugin",
+          "parameters": {
+            "type": "object",
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "name": "local",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "fallback",
+          "annotations": {
+            "title": "Annotation title"
+          }
+        },
+        {
+          "name": "long",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "name": "long_two",
+          "inputSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      ]
+    }
+  ],
+  "editTools": [
+    {
+      "name": "lookup",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "source": {
+        "kind": "mcp",
+        "id": "one",
+        "name": "Shared Service!",
+        "requestOptions": {
+          "allowed_callers": [
+            "direct",
+            "programmatic"
+          ],
+          "defer_loading": true
+        },
+        "namespace": true
+      },
+      "title": "Lookup title",
+      "annotations": {
+        "title": "Lower precedence"
+      }
+    },
+    {
+      "name": "other",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "source": {
+        "kind": "mcp",
+        "id": "two",
+        "name": "Shared Service?",
+        "description": "Second source"
+      },
+      "description": "  Other description  "
+    },
+    {
+      "name": "plugin",
+      "source": {
+        "kind": "plugin",
+        "id": "plugin-one",
+        "name": "Shared Service!"
+      },
+      "parameters": {
+        "type": "object",
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "local",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "source": {
+        "kind": "local",
+        "id": "ignored",
+        "name": "Local tools"
+      }
+    },
+    {
+      "name": "fallback",
+      "source": {
+        "kind": "mcp",
+        "id": "empty",
+        "name": "---___!!!"
+      },
+      "annotations": {
+        "title": "Annotation title"
+      }
+    },
+    {
+      "name": "long",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "source": {
+        "kind": "mcp",
+        "id": "long",
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    },
+    {
+      "name": "long_two",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "source": {
+        "kind": "mcp",
+        "id": "long-two",
+        "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    }
+  ],
+  "edits": [
+    {
+      "op": {
+        "kind": "caller",
+        "name": "lookup",
+        "value": "direct"
+      },
+      "before": {},
+      "expected": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        }
+      }
+    },
+    {
+      "op": {
+        "kind": "caller",
+        "name": "lookup",
+        "value": "programmatic"
+      },
+      "before": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        }
+      },
+      "expected": {}
+    },
+    {
+      "op": {
+        "kind": "deferred",
+        "name": "lookup",
+        "value": false
+      },
+      "before": {},
+      "expected": {
+        "lookup": {
+          "allowed_callers": [
+            "direct",
+            "programmatic"
+          ],
+          "defer_loading": false
+        }
+      }
+    },
+    {
+      "op": {
+        "kind": "caller",
+        "name": "all",
+        "value": "programmatic"
+      },
+      "before": {
+        "lookup": {
+          "allowed_callers": [
+            "direct",
+            "programmatic"
+          ],
+          "defer_loading": false
+        }
+      },
+      "expected": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic"
+          ],
+          "defer_loading": false
+        },
+        "local": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "fallback": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "long": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "long_two": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "other": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "plugin": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        }
+      }
+    },
+    {
+      "op": {
+        "kind": "caller",
+        "name": "all",
+        "value": "direct"
+      },
+      "before": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic"
+          ],
+          "defer_loading": false
+        },
+        "local": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "fallback": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "long": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "long_two": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "other": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "plugin": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        }
+      },
+      "expected": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": false
+        },
+        "local": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "fallback": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long_two": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "other": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "plugin": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        }
+      }
+    },
+    {
+      "op": {
+        "kind": "deferred",
+        "name": "all",
+        "value": true
+      },
+      "before": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": false
+        },
+        "local": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "fallback": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long_two": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "other": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "plugin": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        }
+      },
+      "expected": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "local": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "fallback": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "long": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "long_two": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "other": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "plugin": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        }
+      }
+    },
+    {
+      "op": {
+        "kind": "deferred",
+        "name": "all",
+        "value": false
+      },
+      "before": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "local": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "fallback": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "long": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "long_two": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "other": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        },
+        "plugin": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ],
+          "defer_loading": true
+        }
+      },
+      "expected": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "local": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "fallback": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long_two": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "other": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "plugin": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        }
+      }
+    },
+    {
+      "op": {
+        "kind": "caller",
+        "name": "lookup",
+        "value": "direct"
+      },
+      "before": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "local": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "fallback": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long_two": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "other": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "plugin": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        }
+      },
+      "expected": {
+        "lookup": {
+          "allowed_callers": [
+            "programmatic"
+          ]
+        },
+        "local": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "fallback": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "long_two": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "other": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        },
+        "plugin": {
+          "allowed_callers": [
+            "programmatic",
+            "direct"
+          ]
+        }
+      }
+    }
+  ]
+}

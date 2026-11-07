@@ -3,5 +3,5 @@
   "shell", "sidebar", "streaming-attachments", "icons", "overview-tabs", "usage", "providers",
   "agents", "agent-context", "mcp-presentation", "elicitation", "ai-models", "skills", "local-tools", "images",
   "media-libraries", "media-settings-tabs", "transcription-tabs", "videos", "realtime", "explorer", "chat-skills-settings", "settings-appearance",
-  "chat-settings-scrolling", "chat-provider-forms", "tool-output"
+  "chat-settings-scrolling", "tool-configuration", "chat-provider-forms", "tool-output"
 ]

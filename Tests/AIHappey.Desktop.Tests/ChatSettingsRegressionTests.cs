@@ -105,6 +105,7 @@ internal static class ChatSettingsRegressionTests
             && handler.LastBody.Contains("chatBotInstructions") && handler.LastBody.Contains("Distributor instructions"),
             "chat settings: the actual request path excludes legacy instructions and preserves app instructions");
         await ChatToolSettingsRegressionTests.RunAsync(check, root);
+        await ToolConfigurationRegressionTests.RunAsync(check, root);
         await ToolOutputContentRegressionTests.RunAsync(check, root);
         await ChatProviderFormRegressionTests.RunAsync(check, root);
     }

@@ -60,10 +60,13 @@ for (const lang of ['en', 'nl']) {
     if (typeof value !== 'string') throw new Error(`Missing browser label: ${lang}/${name}`);
     labels[`ChatForm_${name}`] = value;
   }
-  for (const key of ['mcpPage.policy', 'annotations.openWorld', 'annotations.destructive', 'annotations.readOnly', 'annotations.idempotent']) {
+  for (const key of ['mcpPage.policy', 'annotations.openWorld', 'annotations.destructive', 'annotations.readOnly', 'annotations.idempotent',
+    'toolConfiguration.title', 'toolConfiguration.useNamespaces', 'toolConfiguration.allTools', 'toolConfiguration.allowedCallers',
+    'toolConfiguration.deferLoading', 'toolConfiguration.namespace', 'toolConfiguration.empty']) {
     if (typeof generalLabels[key] !== 'string') throw new Error(`Missing browser label: ${lang}/${key}`);
     labels[`ChatForm_${key.replace(/\./g, '_')}`] = generalLabels[key];
   }
+  labels.ChatForm_toolConfiguration_select = lang === 'nl' ? 'Selecteren...' : 'Select...';
   for (const [key, value] of Object.entries(providers)) labels[`ChatForm_${key.replace(/\./g, '_')}`] = value.replace(/\s*\(\{\{effort\}\}\)/g, '');
   const file = path.join(root, 'aihappey-desktop/Core/AIHappey.Desktop.Core/Strings', lang, 'Resources.resw');
   let xml = fs.readFileSync(file, 'utf8');

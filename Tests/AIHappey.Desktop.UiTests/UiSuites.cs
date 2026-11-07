@@ -45,6 +45,7 @@ public partial class App
             ["chat-skills-settings"] = CheckChatSkillsSettingsAsync,
             ["settings-appearance"] = CheckChatToolsSettingsAsync,
             ["chat-settings-scrolling"] = CheckChatSettingsScrollingAsync,
+            ["tool-configuration"] = CheckToolConfigurationAsync,
             ["chat-provider-forms"] = CheckNativeChatProvidersAsync,
             ["tool-output"] = CheckToolOutputSettingsAsync,
         };
@@ -61,7 +62,7 @@ public partial class App
             {
                 "activity" => ["transcript"],
                 "authoring-tools" => ["local-tools"],
-                "chat-settings" => ["context-search", "composer-progress", "chat-skills-settings", "settings-appearance", "chat-settings-scrolling", "chat-provider-forms"],
+                "chat-settings" => ["context-search", "composer-progress", "chat-skills-settings", "settings-appearance", "chat-settings-scrolling", "tool-configuration", "chat-provider-forms"],
                 _ => [name]
             };
             foreach (var key in selected) if (!suites.ContainsKey(key)) throw new ArgumentException("Unknown UI suite: " + key);

@@ -22,6 +22,18 @@ node Tests/check-usage-parity.cjs
 
 Focused core suites do not run unrelated prerequisites. The full core run aggregates failures across suites while retaining strict, fail-fast assertions within each suite. The usage snapshot mode produces only its JSON document; the parity checker builds it before execution. Runner regression checks validate failed-build refusal, focused selection, aggregate failure accounting, snapshot isolation, manifest coverage, and rejection of incomplete or failed UI reports.
 
+### Model-chat tool configuration
+
+Tool configuration is session-only, just like the browser. Closing chat settings commits the isolated draft in memory; Restore defaults clears it, and restarting the app does not reload it. Agent-owned and realtime tool settings are outside this feature. Calling methods and search are raw endpoint options, not an execution/approval policy or a guarantee of provider support.
+
+```powershell
+dotnet run --project Tests/AIHappey.Desktop.Tests -- --chat-settings-only
+node Tests/check-tool-configuration-parity.cjs
+powershell -NoProfile -ExecutionPolicy Bypass -File Tests/run-ui-tests.ps1 -Suite tool-configuration
+```
+
+The read-only parity check executes the browser's actual request shaper and settings handlers against the checked-in fixture. Use `node Tests/check-tool-configuration-parity.cjs --write` only when intentionally updating that contract. The native suite covers both themes, multi-select caller flyouts, bulk edits, source defaults, namespace headings, dynamic catalogs, isolated drafts, save failure/reopen/reset, automation labels, keyboard focus, and narrow/short-window scrolling.
+
 ### Composer keyboard checks
 
 The `composer-keyboard` suite in the [native UI runner](run-ui-tests.ps1) exercises chat (both authentication hosts), images, video, and speech in both themes using real Windows keyboard input. It checks Enter-to-send, native Shift+Enter insertion and selection replacement, existing multiline drafts, and unavailable sends. Run it in an interactive desktop session with the test window in the foreground and no modifier keys held; the suite refuses to inject keys if those conditions are not met. Avoid typing or switching windows during the run. A failed focus/injection check is not evidence that keyboard behavior passed.

@@ -27,7 +27,7 @@ public partial class App
             && !Descendants(dialog).OfType<TextBox>().Any(t => t.Name == "SystemInstructions"), context + ": General retains token limit but has no custom-instructions field");
         var navigation = Field<NavigationView>(dialog, "tabs"); CheckNativeTabs(navigation, context);
         var tabs = navigation.MenuItems.OfType<NavigationViewItem>().ToArray();
-        Check(tabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab", "ChatPluginsTab", "ChatProviderTab"])
+        Check(tabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatToolConfigurationTab", "ChatSkillsTab", "ChatPluginsTab", "ChatProviderTab"])
             && ReferenceEquals(navigation.SelectedItem, tabs[0]),
             context + ": chat tabs retain General, Tools, Skills, Plugins and provider with General selected by default");
         dialog.ShowToolsTab(); await Task.Delay(80);
@@ -85,7 +85,7 @@ public partial class App
         shown = reset.ShowAsync(); await Task.Delay(100); InvokeButton(Descendants(reset).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80);
         var resetNavigation = Field<NavigationView>(reset, "tabs");
         var resetTabs = resetNavigation.MenuItems.OfType<NavigationViewItem>().ToArray();
-        Check(resetTabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatSkillsTab", "ChatPluginsTab"])
+        Check(resetTabs.Select(t => t.Name).SequenceEqual(["ChatGeneralTab", "ChatToolsTab", "ChatToolConfigurationTab", "ChatSkillsTab", "ChatPluginsTab"])
             && ReferenceEquals(resetNavigation.SelectedItem, resetTabs[0]),
             context + ": restore defaults preserves General, Tools, Skills order without a provider form");
         InvokeButton(Descendants(reset).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
