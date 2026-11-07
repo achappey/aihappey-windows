@@ -134,7 +134,8 @@ internal static class ChatToolSettingsRegressionTests
 
     private static async Task CheckContinuationAsync(Action<bool, string> check, bool byStop, bool review)
     {
-        var preferences = new ChatPreferences { ToolChoice = "required", MaxToolCalls = byStop ? null : 1, StopTools = byStop ? ["search"] : [] };
+        var preferences = new ChatPreferences { ToolChoice = "required", MaxToolCalls = byStop ? null : 1, StopTools = byStop ? ["search"] : [],
+            UseToolNamespaces = byStop, ToolRequestConfig = new() { ["search"] = new() { AllowedCallers = ["programmatic"], DeferLoading = true } } };
         var snapshot = McpTurnSnapshot.Empty; var executions = 0; var reviews = 0;
         foreach (var name in new[] { "search", "second" }) snapshot.AddLocal(Definition(name), (_, _) => { executions++; return Task.FromResult(Json("""{"content":[]}""")); });
         snapshot.ApplyPolicy(preferences.ToolAnnotations);
@@ -151,6 +152,11 @@ internal static class ChatToolSettingsRegressionTests
         check(handler.Bodies.Count == 2 && first["toolChoice"]!.GetValue<string>() == "required" && next["toolChoice"]!.GetValue<string>() == "none"
             && executions == 2 && reviews == (review ? 1 : 0) && output.Text == "Final answer" && output.Status == "complete",
             $"chat tools: {(byStop ? "stop tool" : "call limit")} completes parallel batch then final response; review={review}");
+        var firstTools = byStop ? first["providerMetadata"]!["openai"]!["tools"]!.AsArray().Single(t => t?["type"]?.ToString() == "namespace")!["tools"] : first["tools"];
+        var nextTools = byStop ? next["providerMetadata"]!["openai"]!["tools"]!.AsArray().Single(t => t?["type"]?.ToString() == "namespace")!["tools"] : next["tools"];
+        var configured = firstTools!.AsArray().Single(t => t?["name"]?.ToString() == "search")!;
+        check(JsonNode.DeepEquals(firstTools, nextTools) && configured["allowed_callers"]![0]!.ToString() == "programmatic" && configured["defer_loading"]!.GetValue<bool>(),
+            $"tool configuration: real parallel tool continuation retains exact request settings; namespaces={byStop}, review={review}");
         var completed = output.Message.Parts.Where(PortableConversations.IsTool).ToArray();
         check(completed.Length == 2 && completed.All(part => DesktopToolApprovals.HasOutput(PortableConversations.Element(part))),
             "chat tools: final turn retains both tool results without reexecution");
