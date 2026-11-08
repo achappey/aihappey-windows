@@ -105,6 +105,17 @@ The `composer-keyboard` suite in the [native UI runner](run-ui-tests.ps1) exerci
 
 For manual IME coverage, compose text with a Japanese or Chinese input method in each prompt. Enter must confirm the active composition without submitting; a subsequent Enter sends. Also verify multiline text paste and chat attachment paste shortcuts remain native.
 
+### Conversation Activities sizing
+
+The activity and transcript native UI suites include the [Activities sizing checks](AIHappey.Desktop.UiTests/ActivitySizingChecks.cs).
+They exercise compact (480 logical units), wider (75% of the available chat workspace, with compact as its minimum),
+and full-workspace sizes in both themes and authentication hosts. Widths are capped to the workspace; full size
+and layouts without enough room for chat use a native overlay that leaves the left navigation available.
+Coverage includes accessible expand/shrink controls and endpoint-disabled states, size retention across close/reopen
+and refresh, preserving tab/content instances and scrolling while resizing, explicit close during a layout transition,
+window-size breakpoints, navigation collapse/expansion, and an unchanged composer draft and conversation history.
+The selected size is shell-local, not a saved preference or conversation property.
+
 ## Client/runtime dependency boundary
 
 The [dependency check](check-dependency-boundary.cjs) runs automatically with the standalone checks. It follows desktop project and solution references, permits only the standalone Vercel, Responses, Messages, and Chat Completions protocol projects outside the desktop repository, rejects missing or server-side projects, and guards against Unified/server-mapper imports in desktop source. References used only to publish or launch the bundled runtimes are deliberately allowed.

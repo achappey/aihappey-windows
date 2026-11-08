@@ -27,6 +27,7 @@ public partial class App
         {
             await CheckToolActivityCardsAsync(shell, context);
             await CheckCanvasActivityCardsAsync(shell, context);
+            await CheckActivitySizingAsync(shell, context);
             foreach (var width in new[] { 1280, 720 })
             {
                 window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(400); shell.UpdateLayout();
