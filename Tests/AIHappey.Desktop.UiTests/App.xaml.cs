@@ -781,14 +781,33 @@ public partial class App : Application
         var query = Descendants(dialog).OfType<TextBox>().Single(text => text.Name == "ConversationSearchQuery");
         Check(dialog.Title.ToString() == "Search chats" && Descendants(dialog).OfType<Border>().Count(border => border.Name == "ConversationSearchCard") == 6,
             context + ": centered search modal initially shows six recent cards");
+        var searchStatus = Descendants(dialog).OfType<TextBlock>().Single(text => text.Name == "ConversationSearchStatus");
+        var searchCards = Descendants(dialog).OfType<Border>().Where(border => border.Name == "ConversationSearchCard").ToArray();
+        Check(searchStatus.Visibility == Visibility.Collapsed && searchStatus.Text == ""
+            && ((Grid)dialog.Content).RowDefinitions.Count == 2, context + ": recent results have no heading, count, or unused status row");
+        foreach (var card in searchCards)
+        {
+            var countBadge = Descendants(card).OfType<Border>().Single(border => border.Name == "ConversationSearchMessageCount");
+            var timeBadge = Descendants(card).OfType<Border>().Single(border => border.Name == "ConversationSearchUpdated");
+            var footer = Descendants(card).OfType<Border>().Single(border => border.Name == "ConversationSearchFooter");
+            var chat = chats.Single(chat => chat.Title == AutomationProperties.GetName(card));
+            Check(((TextBlock)countBadge.Child).Text == "1 message" && countBadge.Style is not null && timeBadge.Style is not null
+                && ((TextBlock)timeBadge.Child).Text == RelativeTime.Format(chat.Updated, DateTimeOffset.UtcNow, DesktopResources.Get),
+                context + ": search card uses separate localized message-count and relative-time badges");
+            Check(card.Padding == new Thickness(0) && footer.ActualWidth >= card.ActualWidth - 2
+                && Readable(((TextBlock)countBadge.Child).Foreground, countBadge.Background, theme),
+                context + ": shared card has a full-width footer and readable metadata badges");
+        }
         Check(FocusManager.GetFocusedElement(shell.XamlRoot) == query && Readable(query.Foreground, query.Background, theme), context + ": modal search autofocus and readable native input");
         query.Text = "no such fixture";
+        Check(searchStatus.Visibility == Visibility.Visible && searchStatus.Text == "Searching", context + ": search loading feedback remains visible");
         await Task.Delay(250);
-        Check(Descendants(dialog).OfType<TextBlock>().Any(text => text.Text == "No results."), context + ": search modal no-results state");
+        Check(searchStatus.Visibility == Visibility.Visible && searchStatus.Text == "No results.", context + ": search modal no-results state");
         query.Text = "Needle"; query.Text = "Recent chat 2";
         await Task.Delay(250);
         Check(Descendants(dialog).OfType<Border>().Count(border => border.Name == "ConversationSearchCard") == 1
             && Descendants(dialog).OfType<TextBlock>().Any(text => text.Text == "Recent chat 2"), context + ": debounced title search rejects stale message query");
+        Check(searchStatus.Visibility == Visibility.Collapsed && searchStatus.Text == "", context + ": successful search has no result count");
         dialog.Hide(); await searchTask;
         Check(Field<Conversation>(shell, "current") == chats[0] && input.Text == "Preserve search draft"
             && Field<ListView>(shell, "chats").Items.Count == 8 && FocusManager.GetFocusedElement(shell.XamlRoot) == Field<Button>(shell, "searchChats"),
@@ -804,6 +823,7 @@ public partial class App : Application
         await searchTask;
         Check(Field<Conversation>(shell, "current") == chats[7] && Field<AutoSuggestBox>(shell, "target").Text == "backend-agent-id"
             && Field<ToggleButton>(shell, "agents").IsChecked == true && input.Text == "", context + ": result opens agent conversation with its original service and backend target");
+        await CheckSearchCardFeedbackAsync(shell, theme, context);
         Call(shell, "SetBusy", true, true);
         Check(!Field<Button>(shell, "searchChats").IsEnabled, context + ": modal search action respects streaming busy state");
         Call(shell, "SetBusy", false, false);
@@ -859,6 +879,53 @@ public partial class App : Application
         InvokeButton(Field<Button>(shell, "newChat"));
         Check(Field<Conversation>(shell, "current").Messages.Count == 0 && Field<StackPanel>(shell, "composer").Visibility == Visibility.Visible,
             context + ": New chat alone returns to welcome page without an extra Chat navigation entry");
+    }
+
+    private async Task CheckSearchCardFeedbackAsync(ChatShell shell, ElementTheme theme, string context)
+    {
+        var type = typeof(ChatShell).Assembly.GetType("AIHappey.Desktop.Core.ConversationSearchDialog")!;
+        var summary = new Conversation { Title = "Remote summary", IsSummary = true, MessageCount = 4, Updated = DateTimeOffset.UtcNow.AddHours(-2) };
+        var empty = new Conversation { Title = "Empty fixture", Updated = DateTimeOffset.UtcNow.AddDays(-3) };
+        Func<string, CancellationToken, Task<IReadOnlyList<ConversationSearchHit>>> search = (text, ct) => text == "failure"
+            ? Task.FromException<IReadOnlyList<ConversationSearchHit>>(new InvalidOperationException("Search fixture failure"))
+            : Task.FromResult(ConversationSearch.Find([summary, empty], text, ct));
+        var dialog = (ContentDialog)Activator.CreateInstance(type, new object?[] { new[] { summary, empty }, search })!;
+        dialog.XamlRoot = shell.XamlRoot; dialog.RequestedTheme = theme; SystemAppearance.PrepareDialog(dialog);
+        var shown = dialog.ShowAsync();
+        try
+        {
+            await Task.Delay(100); dialog.UpdateLayout();
+            var counts = Descendants(dialog).OfType<Border>().Where(border => border.Name == "ConversationSearchMessageCount").Select(border => ((TextBlock)border.Child).Text).ToArray();
+            Check(counts.SequenceEqual(["4 messages", "0 messages"]), context + ": badges retain remote-summary counts and pluralize zero");
+            Check(Descendants(dialog).OfType<Border>().Where(border => border.Name == "ConversationSearchUpdated").Select(border => ((TextBlock)border.Child).Text)
+                .SequenceEqual(["2 hours ago", "3 days ago"]), context + ": timestamps use relative time rather than absolute dates");
+            var content = (Grid)dialog.Content; var width = content.Width; content.Width = 180; dialog.UpdateLayout();
+            var badges = Descendants(dialog).OfType<Border>().Where(border => border.Name is "ConversationSearchMessageCount" or "ConversationSearchUpdated").Take(2).ToArray();
+            Check(badges[1].TransformToVisual(content).TransformPoint(new()).Y > badges[0].TransformToVisual(content).TransformPoint(new()).Y
+                && Descendants(dialog).OfType<ScrollViewer>().All(viewer => viewer.ScrollableWidth < 1), context + ": metadata badges wrap without horizontal scrolling in narrow content");
+            content.Width = width; dialog.UpdateLayout();
+            var query = Descendants(dialog).OfType<TextBox>().Single(text => text.Name == "ConversationSearchQuery");
+            var status = Descendants(dialog).OfType<TextBlock>().Single(text => text.Name == "ConversationSearchStatus");
+            query.Text = "failure"; await Task.Delay(250);
+            Check(status.Visibility == Visibility.Visible && status.Text == DesktopResources.Get("OperationFailed")
+                && AutomationProperties.GetLiveSetting(status) == AutomationLiveSetting.Polite, context + ": search failures retain visible accessible feedback");
+            query.Text = "Remote"; await Task.Delay(250);
+            Check(status.Visibility == Visibility.Collapsed && status.Text == ""
+                && Descendants(dialog).OfType<Border>().Count(border => border.Name == "ConversationSearchCard") == 1,
+                context + ": a successful remote search clears error feedback without a result count");
+        }
+        finally { dialog.Hide(); await shown; }
+
+        dialog = (ContentDialog)Activator.CreateInstance(type, new object?[] { Array.Empty<Conversation>(), null })!;
+        dialog.XamlRoot = shell.XamlRoot; dialog.RequestedTheme = theme; SystemAppearance.PrepareDialog(dialog);
+        shown = dialog.ShowAsync();
+        try
+        {
+            await Task.Delay(100);
+            var status = Descendants(dialog).OfType<TextBlock>().Single(text => text.Name == "ConversationSearchStatus");
+            Check(status.Visibility == Visibility.Visible && status.Text == "No recent chats.", context + ": empty history keeps its explanatory feedback");
+        }
+        finally { dialog.Hide(); await shown; }
     }
 
     private static void Toggle(ToggleButton button) => ((IToggleProvider)new ToggleButtonAutomationPeer(button).GetPattern(PatternInterface.Toggle)).Toggle();
