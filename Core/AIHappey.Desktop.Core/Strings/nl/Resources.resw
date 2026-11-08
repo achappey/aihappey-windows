@@ -102,6 +102,8 @@
   <data name="Activities" xml:space="preserve"><value>Activiteiten</value></data>
   <data name="ToggleActivities" xml:space="preserve"><value>Gespreksactiviteiten tonen</value></data>
   <data name="CloseActivities" xml:space="preserve"><value>Gespreksactiviteiten sluiten</value></data>
+  <data name="ExpandActivities" xml:space="preserve"><value>Activiteitenpaneel vergroten</value></data>
+  <data name="ShrinkActivities" xml:space="preserve"><value>Activiteitenpaneel verkleinen</value></data>
   <data name="ToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
   <data name="CanvasCount" xml:space="preserve"><value>Canvas ({0})</value></data>
   <data name="NoCanvasActivities" xml:space="preserve"><value>Geen Markdown-documenten in dit gesprek.</value></data>

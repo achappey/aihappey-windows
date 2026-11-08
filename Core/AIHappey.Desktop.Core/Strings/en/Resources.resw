@@ -102,6 +102,8 @@
   <data name="Activities" xml:space="preserve"><value>Activities</value></data>
   <data name="ToggleActivities" xml:space="preserve"><value>Show conversation activities</value></data>
   <data name="CloseActivities" xml:space="preserve"><value>Close conversation activities</value></data>
+  <data name="ExpandActivities" xml:space="preserve"><value>Expand activities panel</value></data>
+  <data name="ShrinkActivities" xml:space="preserve"><value>Shrink activities panel</value></data>
   <data name="ToolsCount" xml:space="preserve"><value>Tools ({0})</value></data>
   <data name="CanvasCount" xml:space="preserve"><value>Canvas ({0})</value></data>
   <data name="NoCanvasActivities" xml:space="preserve"><value>No Markdown documents in this conversation.</value></data>

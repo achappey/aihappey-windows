@@ -10,11 +10,17 @@ namespace AIHappey.Desktop.Core;
 
 public sealed partial class ChatShell
 {
+    private enum ConversationActivitySize { Compact, Wider, Full }
+
+    private ConversationActivitySize conversationActivitySize;
+    private bool changingConversationActivityLayout;
     private readonly SplitView conversationActivity = new()
     {
         Name = "ConversationActivitySplit", PanePlacement = SplitViewPanePlacement.Right,
-        DisplayMode = SplitViewDisplayMode.Inline, IsPaneOpen = false, OpenPaneLength = 440, CompactPaneLength = 0
+        DisplayMode = SplitViewDisplayMode.Inline, IsPaneOpen = false, OpenPaneLength = 480, CompactPaneLength = 0
     };
+    private readonly Button expandConversationActivity = ActivityButton(DesktopResources.Get("ExpandActivities"), Icon.PanelRightExpand);
+    private readonly Button shrinkConversationActivity = ActivityButton(DesktopResources.Get("ShrinkActivities"), Icon.PanelRightContract);
     private readonly ToggleButton activityToggle = new()
     {
         Name = "ConversationActivityToggle", Content = DesktopIcons.Create(Icon.Wrench), Width = 40, Height = 40,
@@ -39,25 +45,68 @@ public sealed partial class ChatShell
         header.Children.Add(new TextBlock
         {
             Text = DesktopResources.Get("Activities"), FontSize = 20,
-            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis
         });
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        expandConversationActivity.Name = "ExpandConversationActivity";
+        shrinkConversationActivity.Name = "ShrinkConversationActivity";
+        expandConversationActivity.Click += (_, _) => ResizeConversationActivity(1);
+        shrinkConversationActivity.Click += (_, _) => ResizeConversationActivity(-1);
+        actions.Children.Add(expandConversationActivity); actions.Children.Add(shrinkConversationActivity);
         var close = ActivityButton(DesktopResources.Get("CloseActivities"), Icon.Dismiss); close.Name = "CloseConversationActivity";
-        close.Click += (_, _) => conversationActivity.IsPaneOpen = false;
-        Grid.SetColumn(close, 1); header.Children.Add(close); panel.Children.Add(header);
+        close.Click += (_, _) => activityToggle.IsChecked = false;
+        actions.Children.Add(close);
+        Grid.SetColumn(actions, 1); header.Children.Add(actions); panel.Children.Add(header);
         Grid.SetRow(conversationActivityBody, 1); panel.Children.Add(conversationActivityBody);
         ControlAppearance.Apply(panel, (_, _) => { }, palette =>
         { panel.Background = new SolidColorBrush(palette.Panel); conversationActivity.PaneBackground = new SolidColorBrush(palette.Panel); });
-        conversationActivity.PaneClosed += (_, _) => activityToggle.IsChecked = false;
-        conversationActivity.SizeChanged += (_, args) =>
+        conversationActivity.PaneClosed += (_, _) =>
         {
-            conversationActivity.DisplayMode = args.NewSize.Width < 900 ? SplitViewDisplayMode.Overlay : SplitViewDisplayMode.Inline;
-            conversationActivity.OpenPaneLength = Math.Min(480, Math.Max(0, args.NewSize.Width));
+            if (!changingConversationActivityLayout && !conversationActivity.IsPaneOpen) activityToggle.IsChecked = false;
         };
+        conversationActivity.SizeChanged += (_, _) => UpdateConversationActivityLayout();
         conversationActivity.Pane = panel; conversationActivity.Content = content;
         ControlAppearance.Stock(activityToggle); ToolbarControls.Label(activityToggle, DesktopResources.Get("ToggleActivities"));
         activityToggle.Checked += (_, _) => { conversationActivity.IsPaneOpen = true; RefreshConversationActivity(); };
         activityToggle.Unchecked += (_, _) => conversationActivity.IsPaneOpen = false;
+        UpdateConversationActivityLayout();
         return conversationActivity;
+    }
+
+    private void ResizeConversationActivity(int step)
+    {
+        conversationActivitySize = (ConversationActivitySize)Math.Clamp((int)conversationActivitySize + step, 0, 2);
+        UpdateConversationActivityLayout();
+    }
+
+    private void UpdateConversationActivityLayout()
+    {
+        var width = Math.Max(0, conversationActivity.ActualWidth);
+        var length = conversationActivitySize switch
+        {
+            ConversationActivitySize.Compact => Math.Min(480, width),
+            ConversationActivitySize.Wider => Math.Min(width, Math.Max(480, width * .75)),
+            _ => width
+        };
+        // Full size covers only the chat workspace, not the outer navigation. Overlay also
+        // keeps the underlying chat usable instead of squeezing it into a very narrow column.
+        var mode = width < 900 || conversationActivitySize == ConversationActivitySize.Full || width - length < 420
+            ? SplitViewDisplayMode.Overlay : SplitViewDisplayMode.Inline;
+        conversationActivity.OpenPaneLength = length;
+        expandConversationActivity.IsEnabled = conversationActivitySize != ConversationActivitySize.Full;
+        shrinkConversationActivity.IsEnabled = conversationActivitySize != ConversationActivitySize.Compact;
+        if (conversationActivity.DisplayMode == mode) return;
+
+        // SplitView may dismiss its pane when DisplayMode changes. Restore the user's open
+        // state after the native transition, unless they explicitly closed it in the meantime.
+        changingConversationActivityLayout = true;
+        conversationActivity.DisplayMode = mode;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            changingConversationActivityLayout = false;
+            if (!closing && activityToggle.IsChecked == true) conversationActivity.IsPaneOpen = true;
+        });
     }
 
     private void RefreshConversationActivity()
