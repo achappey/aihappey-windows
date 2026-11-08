@@ -36,7 +36,7 @@
                             <Button x:Name="AddAttachment" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Add" /></Button>
                             <Button x:Name="Settings" Grid.Column="1" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Settings" /></Button>
                             <Button x:Name="Dictate" Grid.Column="3" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Mic" /></Button>
-                            <Button x:Name="Stop" Grid.Column="4" Visibility="Collapsed" />
+                            <Button x:Name="Stop" Grid.Column="4" Width="40" Height="40" Padding="0" CornerRadius="6" Visibility="Collapsed"><ic:FluentIcon Icon="Stop" IconSize="Resizable" FontSize="20" /></Button>
                             <Button x:Name="Send" Grid.Column="5" Width="40" Height="40" Padding="0"><ic:FluentIcon Icon="Send" /></Button>
                         </Grid>
                         <TextBlock x:Name="NoModels" TextWrapping="Wrap" Visibility="Collapsed" />
@@ -45,7 +45,7 @@
                     <Grid Margin="0,24,0,0" ColumnSpacing="12">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                         <TextBlock x:Name="LibraryTitle" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        <HyperlinkButton x:Name="OpenFolder" Grid.Column="1" Padding="0" VerticalAlignment="Center" />
+                        <Button x:Name="OpenFolder" Grid.Column="1" Width="40" Height="40" Padding="0" CornerRadius="6" VerticalAlignment="Center"><ic:FluentIcon Icon="FolderOpen" IconSize="Resizable" FontSize="20" /></Button>
                     </Grid>
                     <TextBlock x:Name="EmptyLibrary" TextWrapping="Wrap" />
                 </StackPanel>

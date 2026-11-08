@@ -51,16 +51,17 @@ public sealed partial class ImagesPage : UserControl
     {
         InitializeComponent();
         Name = "ImagesPage"; Title.Text = DesktopResources.Get("Images"); LibraryTitle.Text = DesktopResources.Get("MyImages");
-        Prompt.PlaceholderText = DesktopResources.Get("ImagePromptPlaceholder"); Stop.Content = DesktopResources.Get("Stop");
-        NoModels.Text = DesktopResources.Get("ImageNoModels"); EmptyLibrary.Text = DesktopResources.Get("ImageEmptyLibrary"); OpenFolder.Content = DesktopResources.Get("ImageOpenFolder");
+        Prompt.PlaceholderText = DesktopResources.Get("ImagePromptPlaceholder");
+        NoModels.Text = DesktopResources.Get("ImageNoModels"); EmptyLibrary.Text = DesktopResources.Get("ImageEmptyLibrary");
         AutomationProperties.SetHeadingLevel(Title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
         AutomationProperties.SetHeadingLevel(LibraryTitle, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level2);
         ToolbarControls.Label(Prompt, DesktopResources.Get("ImagePromptPlaceholder"));
         ToolbarControls.Label(Send, DesktopResources.Get("ImageGenerate")); ToolbarControls.Label(Settings, DesktopResources.Get("ImageSettings"));
         ToolbarControls.Label(AddAttachment, DesktopResources.Get("Attachments"));
         ToolbarControls.Label(Dictate, DesktopResources.Get("SpeechDictate"));
-        foreach (var control in new Control[] { Prompt, Send, Stop, OpenFolder }) ControlAppearance.Stock(control);
-        ToolbarControls.Subtle(AddAttachment); ToolbarControls.Subtle(Settings); ToolbarControls.Subtle(Dictate);
+        ToolbarControls.Label(Stop, DesktopResources.Get("Stop")); ToolbarControls.Label(OpenFolder, DesktopResources.Get("ImageOpenFolder"));
+        foreach (var control in new Control[] { Prompt, Send, Stop }) ControlAppearance.Stock(control);
+        ToolbarControls.Subtle(AddAttachment); ToolbarControls.Subtle(Settings); ToolbarControls.Subtle(Dictate); ToolbarControls.Subtle(OpenFolder);
         AddAttachment.Flyout = AttachmentMenu(false); Prompt.ContextFlyout = AttachmentMenu(true);
         Send.Click += async (_, _) => { if (editable && hasModel && SendRequested is not null) await SendRequested(); };
         Dictate.Click += async (_, _) => { if (DictationRequested is not null) await DictationRequested(); };

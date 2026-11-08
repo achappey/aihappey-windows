@@ -38,14 +38,15 @@ public sealed partial class VideosPage : UserControl
         InitializeComponent(); Name = "VideosPage";
         Title.Text = DesktopResources.Get("Videos"); LibraryTitle.Text = DesktopResources.Get("MyVideos");
         Prompt.PlaceholderText = DesktopResources.Get("VideoPromptPlaceholder"); NoModels.Text = DesktopResources.Get("VideoNoModels");
-        EmptyLibrary.Text = DesktopResources.Get("VideoEmptyLibrary"); OpenFolder.Content = DesktopResources.Get("VideoOpenFolder");
+        EmptyLibrary.Text = DesktopResources.Get("VideoEmptyLibrary");
         AutomationProperties.SetHeadingLevel(Title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
         AutomationProperties.SetHeadingLevel(LibraryTitle, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level2);
         ToolbarControls.Label(Prompt, DesktopResources.Get("VideoPromptPlaceholder")); ToolbarControls.Label(Send, DesktopResources.Get("VideoGenerate"));
         ToolbarControls.Label(AddAttachment, DesktopResources.Get("Attachments")); ToolbarControls.Label(Settings, DesktopResources.Get("VideoSettings"));
         ToolbarControls.Label(Dictate, DesktopResources.Get("SpeechDictate"));
-        foreach (var control in new Control[] { Prompt, Send, OpenFolder }) ControlAppearance.Stock(control);
-        ToolbarControls.Subtle(AddAttachment); ToolbarControls.Subtle(Settings); ToolbarControls.Subtle(Dictate);
+        ToolbarControls.Label(OpenFolder, DesktopResources.Get("VideoOpenFolder"));
+        foreach (var control in new Control[] { Prompt, Send }) ControlAppearance.Stock(control);
+        ToolbarControls.Subtle(AddAttachment); ToolbarControls.Subtle(Settings); ToolbarControls.Subtle(Dictate); ToolbarControls.Subtle(OpenFolder);
         AddAttachment.Flyout = AttachmentMenu();
         Send.Click += async (_, _) => { if (Send.IsEnabled && SendRequested is not null) await SendRequested(); };
         Dictate.Click += async (_, _) => { if (DictationRequested is not null) await DictationRequested(); };

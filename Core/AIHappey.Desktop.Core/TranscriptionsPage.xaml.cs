@@ -28,7 +28,7 @@ public sealed partial class TranscriptionsPage : UserControl
         InitializeComponent(); Name = "TranscriptionsPage";
         Title.Text = DesktopResources.Get("Transcriptions"); DropHint.Text = DesktopResources.Get("TranscriptionDropHint"); FileHint.Text = DesktopResources.Get("TranscriptionFileHint");
         LibraryTitle.Text = DesktopResources.Get("MyTranscriptions"); NoModels.Text = DesktopResources.Get("TranscriptionNoModels"); EmptyLibrary.Text = DesktopResources.Get("TranscriptionEmptyLibrary");
-        Stop.Content = DesktopResources.Get("Stop"); OpenFolder.Content = DesktopResources.Get("TranscriptionOpenFolder");
+        ToolbarControls.Label(Stop, DesktopResources.Get("Stop")); ToolbarControls.Label(OpenFolder, DesktopResources.Get("TranscriptionOpenFolder"));
         AutomationProperties.SetHeadingLevel(Title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1);
         AutomationProperties.SetHeadingLevel(LibraryTitle, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level2);
         ToolbarControls.Label(AddFiles, DesktopResources.Get("TranscriptionAddFiles")); ToolbarControls.Label(Settings, DesktopResources.Get("TranscriptionSettings"));
@@ -40,7 +40,8 @@ public sealed partial class TranscriptionsPage : UserControl
         AutomationProperties.SetLiveSetting(Realtime, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         TranscriptionTabs.SelectionChanged += (_, _) => UpdateTabs();
         Realtime.Click += async (_, _) => { if (Realtime.IsEnabled && RealtimeRequested is not null) await RealtimeRequested(); };
-        foreach (var control in new Control[] { AddFiles, Settings, Stop, OpenFolder }) ControlAppearance.Stock(control);
+        foreach (var control in new Control[] { AddFiles, Settings, Stop }) ControlAppearance.Stock(control);
+        ToolbarControls.Subtle(OpenFolder);
         AddFiles.Click += async (_, _) => { if (editable && hasModel && PickRequested is not null) await PickRequested(); };
         Settings.Click += async (_, _) => { if (editable && SettingsRequested is not null) await SettingsRequested(); };
         Dictate.Click += async (_, _) => { if (Dictate.IsEnabled && DictationRequested is not null) await DictationRequested(); };

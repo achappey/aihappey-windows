@@ -29,11 +29,11 @@ public sealed partial class SpeechPage : UserControl
     {
         InitializeComponent(); Name = "SpeechPage"; Title.Text = DesktopResources.Get("Speech"); LibraryTitle.Text = DesktopResources.Get("MySpeechFiles");
         Prompt.PlaceholderText = DesktopResources.Get("SpeechPromptPlaceholder"); NoModels.Text = DesktopResources.Get("SpeechNoModels"); EmptyLibrary.Text = DesktopResources.Get("SpeechEmptyLibrary");
-        Stop.Content = DesktopResources.Get("Stop"); OpenFolder.Content = DesktopResources.Get("SpeechOpenFolder");
+        ToolbarControls.Label(Stop, DesktopResources.Get("Stop")); ToolbarControls.Label(OpenFolder, DesktopResources.Get("SpeechOpenFolder"));
         AutomationProperties.SetHeadingLevel(Title, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level1); AutomationProperties.SetHeadingLevel(LibraryTitle, Microsoft.UI.Xaml.Automation.Peers.AutomationHeadingLevel.Level2);
         ToolbarControls.Label(Prompt, DesktopResources.Get("SpeechPromptPlaceholder")); ToolbarControls.Label(Settings, DesktopResources.Get("SpeechSettings")); ToolbarControls.Label(Import, DesktopResources.Get("SpeechImport"));
         ToolbarControls.Label(Dictate, DesktopResources.Get("SpeechDictate")); ToolbarControls.Label(Send, DesktopResources.Get("SpeechGenerate"));
-        ControlAppearance.Stock(Prompt); foreach (var control in new Control[] { Send, Stop, OpenFolder }) ControlAppearance.Stock(control); ToolbarControls.Subtle(Settings); ToolbarControls.Subtle(Import); ToolbarControls.Subtle(Dictate);
+        ControlAppearance.Stock(Prompt); foreach (var control in new Control[] { Send, Stop }) ControlAppearance.Stock(control); ToolbarControls.Subtle(Settings); ToolbarControls.Subtle(Import); ToolbarControls.Subtle(Dictate); ToolbarControls.Subtle(OpenFolder);
         Prompt.TextChanged += (_, _) => UpdateSend();
         ComposerKeyboard.Attach(Prompt, () => Send.IsEnabled, () => SendRequested?.Invoke() ?? Task.CompletedTask);
         Send.Click += async (_, _) => { if (SendRequested is not null) await SendRequested(); }; Import.Click += async (_, _) => { if (ImportRequested is not null) await ImportRequested(); };

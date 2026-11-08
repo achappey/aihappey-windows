@@ -24,7 +24,7 @@
                 <StackPanel x:Name="Notices" Spacing="8" />
                 <Grid Margin="0,24,0,0" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <TextBlock x:Name="LibraryTitle" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <HyperlinkButton x:Name="OpenFolder" Grid.Column="1" Padding="0" VerticalAlignment="Center" />
+                    <Button x:Name="OpenFolder" Grid.Column="1" Width="40" Height="40" Padding="0" CornerRadius="6" VerticalAlignment="Center"><ic:FluentIcon Icon="FolderOpen" IconSize="Resizable" FontSize="20" /></Button>
                 </Grid>
                 <TextBlock x:Name="EmptyLibrary" TextWrapping="Wrap" />
             </StackPanel></GridView.Header>
