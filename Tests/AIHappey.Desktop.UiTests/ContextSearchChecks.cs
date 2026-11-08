@@ -43,7 +43,8 @@ public partial class App
             void Tab(string name) => SelectNativeTab(navigation, name);
             ToggleSwitch[] Toggles(string name) => Descendants(dialog).OfType<ToggleSwitch>().Where(t => t.Name == name).ToArray();
             SettingsExpander[] Rows(string name) => Descendants(dialog).OfType<SettingsExpander>().Where(e => e.Name == name).ToArray();
-            ToggleSwitch CatalogToggle() => (ToggleSwitch)Rows("ContextCatalogRow").Single().Content;
+            Button CatalogAction() => Descendants((DependencyObject)Rows("ContextCatalogRow").Single().ItemsHeader)
+                .OfType<Button>().Single(b => b.Name is "ContextCatalogInstall" or "ContextCatalogRemove");
             Button Button(string name) => Descendants(dialog).OfType<Button>().Single(b => b.Name == name);
             var tabs = navigation.MenuItems.OfType<NavigationViewItem>().ToArray();
             Check(tabs.Length == 4 && ReferenceEquals(navigation.SelectedItem, tabs[0]) && tabs.All(t => t.Icon is not null)
@@ -52,7 +53,8 @@ public partial class App
             Check(Query().TransformToVisual(dialog).TransformPoint(new()).Y < tabs[0].TransformToVisual(dialog).TransformPoint(new()).Y,
                 context + ": single accessible search field above navigation");
             var tool = Toggles("ContextToolToggle").First(); var toolId = (string)tool.Tag; tool.IsOn = true;
-            Query().Text = "no-matching-result"; await Task.Delay(40);
+            Query().Text = "no-matching-result";
+            await WaitForSkillUiAsync(() => Toggles("ContextToolToggle").Length == 0 && tabs.All(t => AutomationProperties.GetName(t).EndsWith("(0)")));
             Check(Toggles("ContextToolToggle").Length == 0 && tabs.All(t => AutomationProperties.GetName(t).EndsWith("(0)")), context + ": query filters every tab and updates counts");
             Query().Text = DesktopLocalTools.Plugins.Single(p => p.Id == toolId).Tools[0].GetProperty("name").GetString()!; await Task.Delay(40);
             Check(Toggles("ContextToolToggle").Any(t => (string)t.Tag == toolId && t.IsOn), context + ": tool-definition search retains hidden selection");
@@ -76,35 +78,39 @@ public partial class App
             Query().Text = ""; Tab("catalog"); await Task.Delay(40);
             Check(indicator.IsIndeterminate, context + ": independent catalog request displays progress");
             catalogLoad.SetResult(new(servers, ["https://offline.example"])); await Task.Delay(80);
-            Check(Rows("ContextCatalogRow").Length == 20 && Rows("ContextCatalogRow").All(e => !e.IsExpanded && e.Content is ToggleSwitch) && Button("ContextSearchMore").Visibility == Visibility.Visible
+            Check(Rows("ContextCatalogRow").Length == 20 && Rows("ContextCatalogRow").All(e => !e.IsExpanded && e.Content is null
+                    && Descendants((DependencyObject)e.Header).OfType<UserControl>().Any(icon => icon.Name == "McpServerIcon"))
+                && Toggles("ContextCatalogToggle").Length == 0 && Button("ContextSearchMore").Visibility == Visibility.Visible
                 && Button("ContextSearchRetry").Visibility == Visibility.Visible, context + ": partial catalog retains paginated results with retry");
             InvokeButton(Button("ContextSearchMore")); await Task.Delay(50);
             Check(Rows("ContextCatalogRow").Length == 25, context + ": Show more reveals next catalog page");
             Query().Text = "https://server1.example/mcp";
             await WaitForSkillUiAsync(() => Field<StackPanel>(dialog, "rows").Children.Count == 1); dialog.UpdateLayout();
             Check(Rows("ContextCatalogRow").Length == 1, context + ": endpoint query selects one catalog row");
-            Check(CatalogToggle().IsOn && !CatalogToggle().IsEnabled, context + ": plugin-owned server is installed but cannot be removed independently");
+            Check(CatalogAction().Name == "ContextCatalogRemove" && !CatalogAction().IsEnabled, context + ": plugin-owned server is installed but cannot be removed independently");
             Query().Text = "Server 0";
             await WaitForSkillUiAsync(() => Field<StackPanel>(dialog, "rows").Children.OfType<SettingsExpander>().SingleOrDefault()?.Tag as string == servers[0].Id); dialog.UpdateLayout();
-            Check(CatalogToggle().Tag as string == servers[0].Id && CatalogToggle().IsOn, context + ": endpoint match recognizes manually installed server");
+            Check(CatalogAction().Tag as string == servers[0].Id && CatalogAction().Name == "ContextCatalogRemove", context + ": endpoint match recognizes manually installed server");
             Rows("ContextCatalogRow").Single().IsExpanded = true; await Task.Delay(80);
-            Check(Button("ContextCatalogConfigure").Tag as string == servers[0].Id, context + ": installed server keeps configuration action in expanded details");
-            failMutation = false; CatalogToggle().IsOn = false; await Task.Delay(100);
-            Check(installed.Count == 1 && !dialog.CatalogInstallHappened && !CatalogToggle().IsOn && Rows("ContextCatalogRow").Single().IsExpanded,
-                context + ": removal resets header toggle, retains expansion, and does not trigger post-close server management");
-            failMutation = true; CatalogToggle().IsOn = true; await Task.Delay(100);
-            Check(installed.Count == 1 && !CatalogToggle().IsOn && !Descendants(dialog).OfType<TextBlock>().Single(t => t.Name == "ContextSearchError").Text.Contains("private disk"), context + ": catalog action failures roll back the switch and are sanitized and retryable");
-            failMutation = false; mutationGate = new(); CatalogToggle().IsOn = true;
+            Check(Button("ContextCatalogConfigure").Tag as string == servers[0].Id && CatalogAction().Content is IconElement
+                && Descendants(Rows("ContextCatalogRow").Single()).OfType<Border>().Any(b => b.Name == "McpServerRowFooter"
+                    && Descendants(b).OfType<Button>().Count() == 2), context + ": installed server has icon-only uninstall and edit in its divided footer");
+            failMutation = false; InvokeButton(CatalogAction()); await Task.Delay(100);
+            Check(installed.Count == 1 && !dialog.CatalogInstallHappened && CatalogAction().Name == "ContextCatalogInstall" && Rows("ContextCatalogRow").Single().IsExpanded,
+                context + ": removal updates footer action, retains expansion, and does not trigger post-close server management");
+            failMutation = true; InvokeButton(CatalogAction()); await Task.Delay(100);
+            Check(installed.Count == 1 && CatalogAction().Name == "ContextCatalogInstall" && !Descendants(dialog).OfType<TextBlock>().Single(t => t.Name == "ContextSearchError").Text.Contains("private disk"), context + ": catalog button failures retain installed state and are sanitized and retryable");
+            failMutation = false; mutationGate = new(); InvokeButton(CatalogAction());
             await WaitForSkillUiAsync(() => Field<bool>(dialog, "pending"));
             InvokeButton(Button("CloseButton")); await Task.Delay(40);
             Check(shown.Status == Windows.Foundation.AsyncStatus.Started && !Query().IsEnabled && !navigation.IsEnabled && saved is null,
                 context + ": pending catalog mutation blocks editing and close without saving");
             mutationGate.SetResult();
             await WaitForSkillUiAsync(() => installed.Count == 2 && !Field<bool>(dialog, "pending")); dialog.UpdateLayout();
-            Check(dialog.CatalogInstallHappened && CatalogToggle().IsOn && CatalogToggle().IsEnabled,
-                context + ": successful installation updates toggle and requests server management on close");
-            await WaitForSkillUiAsync(() => Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root.XamlRoot) is ToggleSwitch { Name: "ContextCatalogToggle" });
-            Check(true, context + ": successful installation restores header-toggle focus");
+            Check(dialog.CatalogInstallHappened && CatalogAction().Name == "ContextCatalogRemove" && CatalogAction().IsEnabled,
+                context + ": successful installation updates footer action and requests server management on close");
+            await WaitForSkillUiAsync(() => Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root.XamlRoot) is Button { Name: "ContextCatalogRemove" });
+            Check(true, context + ": successful installation restores footer-button focus");
             InvokeButton(Button("ContextSearchRetry")); await Task.Delay(60);
             Check(catalogLoads == 2 && Button("ContextSearchRetry").Visibility == Visibility.Collapsed, context + ": retry clears partial-registry warning");
             Query().Text = ""; Tab("skills"); await Task.Delay(50);
@@ -155,22 +161,23 @@ public partial class App
             var dialog = new ContextSearchDialog(new(), [], _ => Task.FromResult(new DesktopSkillSelection([], new HashSet<string>(), "")),
                 (_, _) => Task.CompletedTask, _ => Task.FromResult(new McpCatalogResult([item], [])), () => existing ? [server] : [],
                 (_, _, _) => { mutations++; return Task.CompletedTask; }) { XamlRoot = root.XamlRoot, RequestedTheme = theme };
-            var shown = dialog.ShowAsync(); await Task.Delay(100);
+            var shown = dialog.ShowAsync();
+            await WaitForSkillUiAsync(() => Descendants(dialog).OfType<NavigationView>().Any());
             // The previous check leaves a narrow window, so Catalog may be in native
             // overflow without a realized container/automation peer until opened.
             var navigation = Descendants(dialog).OfType<NavigationView>().Single();
             navigation.SelectedItem = navigation.MenuItems.OfType<NavigationViewItem>().Single(t => t.Tag as string == "catalog");
             await WaitForSkillUiAsync(() => Field<StackPanel>(dialog, "rows").Children.Count == 1); dialog.UpdateLayout();
-            var toggle = Descendants(dialog).OfType<ToggleSwitch>().Single(t => t.Name == "ContextCatalogToggle");
+            var row = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "ContextCatalogRow");
+            row.IsExpanded = true; await Task.Delay(80);
             if (existing)
             {
-                Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "ContextCatalogRow").IsExpanded = true; await Task.Delay(80);
                 InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "ContextCatalogConfigure"));
             }
-            else toggle.IsOn = true;
+            else InvokeButton(Descendants(dialog).OfType<Button>().Single(b => b.Name == "ContextCatalogInstall"));
             await shown;
             Check(mutations == 0 && dialog.ServerConfigurationRequested is { Id: "secure" } requested && requested.HeaderDefinitions.Count == 1
-                && !dialog.CatalogInstallHappened && toggle.IsOn == existing, context + ": " + (existing ? "edit retains configuration and installed state" : "install hands off required configuration without premature installation"));
+                && !dialog.CatalogInstallHappened && !Descendants(row).OfType<ToggleSwitch>().Any(), context + ": " + (existing ? "edit retains configuration and installed state" : "install hands off required configuration without premature installation"));
         }
     }
 
@@ -194,6 +201,31 @@ public partial class App
             Call(shell, "UpdateMode", ServiceKind.Agents);
             Check(menu.Items.OfType<MenuFlyoutItem>().Single(i => i.Name == "SearchContext").Visibility == Visibility.Collapsed, context + ": model context search hidden in agent mode");
             Call(shell, "UpdateMode", ServiceKind.Ai);
+            session.ContextOptions.McpCatalogUrls = [];
+            ContentDialog? McpDialog(string field) => (ContentDialog?)typeof(ChatShell).GetField(field,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(shell);
+            var manage = (Task)Call(shell, "ManageMcpAsync", false, null!)!;
+            await WaitForSkillUiAsync(() => McpDialog("mcpDialog") is not null);
+            var management = McpDialog("mcpDialog")!;
+            await WaitForSkillUiAsync(() => { management.UpdateLayout(); return Descendants(management).OfType<Button>().Any(button => button.Name == "SecondaryButton"); });
+            InvokeButton(Descendants(management).OfType<Button>().Single(button => button.Name == "SecondaryButton"));
+            await WaitForSkillUiAsync(() => McpDialog("mcpCatalogDialog") is not null);
+            var catalog = McpDialog("mcpCatalogDialog")!;
+            await WaitForSkillUiAsync(() => Descendants(catalog).OfType<Button>().Any(button => button.Name == "CloseButton")
+                && Descendants(catalog).OfType<TextBlock>().Any(text => text.Text == DesktopResources.Get("McpNoRegistries")));
+            Check(McpDialog("mcpDialog") is null && Field<bool>(shell, "historyDialogOpen")
+                && Descendants(catalog).OfType<TextBlock>().Any(text => text.Text == DesktopResources.Get("McpNoRegistries")),
+                context + ": Catalogs opens one sequential modal with an explicit no-source state");
+            InvokeButton(Descendants(catalog).OfType<Button>().Single(button => button.Name == "CloseButton"));
+            await WaitForSkillUiAsync(() => McpDialog("mcpDialog") is { } next && !ReferenceEquals(next, management));
+            management = McpDialog("mcpDialog")!;
+            await WaitForSkillUiAsync(() => Descendants(management).OfType<Button>().Any(button => button.Name == "CloseButton"));
+            Check(McpDialog("mcpCatalogDialog") is null && management.Title.ToString() == "Installed servers",
+                context + ": closing Catalogs returns to a refreshed installed-server dialog");
+            InvokeButton(Descendants(management).OfType<Button>().Single(button => button.Name == "CloseButton"));
+            await manage;
+            Check(!Field<bool>(shell, "historyDialogOpen") && Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(shell.XamlRoot) == Field<Button>(shell, "addContext"),
+                context + ": closing installed servers releases modal gating and restores composer focus");
         }
         finally { await shell.ShutdownAsync(); window.Content = null; if (Directory.Exists(session.DataDirectory)) Directory.Delete(session.DataDirectory, true); }
     }

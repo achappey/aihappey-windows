@@ -31,6 +31,7 @@ public partial class App
             ["agents"] = CheckAgentsAsync,
             ["agent-context"] = theme => BothHosts(CheckAgentContextBadgesAsync, theme),
             ["mcp-presentation"] = CheckMcpPresentationAsync,
+            ["mcp-catalog"] = CheckMcpCatalogAsync,
             ["elicitation"] = CheckElicitationAsync,
             ["ai-models"] = CheckAiModelsAsync,
             ["skills"] = CheckSkillsAsync,

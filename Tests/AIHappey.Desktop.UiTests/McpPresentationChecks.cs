@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using AIHappey.Desktop.Core;
+using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
@@ -64,6 +65,7 @@ public partial class App
         {
             root.Children.Clear(); root.Children.Add(icon); await Task.Delay(150);
             var image = Descendants(icon).OfType<Image>().Single();
+            await WaitForSkillUiAsync(() => image.Visibility == Visibility.Visible);
             Check(image.Source is SvgImageSource && image.Visibility == Visibility.Visible && image.Stretch == Stretch.Uniform
                 && Descendants(icon).OfType<FluentIcons.WinUI.FluentIcon>().Single().Visibility == Visibility.Collapsed, context + ": embedded SVG replaces fallback with aspect ratio preserved");
             root.RequestedTheme = theme == ElementTheme.Light ? ElementTheme.Dark : ElementTheme.Light;
@@ -321,7 +323,8 @@ public partial class App
             {
                 InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "PrimaryButton")); await Task.Delay(80);
                 Check(!dialog.IsPrimaryButtonEnabled && !url.IsEnabled && dialog.CloseButtonText == "Cancel", context + ": pending Save disables repeated submissions and keeps Cancel available");
-                InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "CloseButton")); await Task.Delay(80);
+                InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "CloseButton"));
+                await WaitForSkillUiAsync(() => dialog.IsPrimaryButtonEnabled && url.IsEnabled);
                 Check(opened.Status == Windows.Foundation.AsyncStatus.Started && manager.Servers.Count == 0 && dialog.IsPrimaryButtonEnabled && url.IsEnabled,
                     context + ": Cancel during Save stops the operation and retains an editable, unpersisted draft");
             }
@@ -353,6 +356,16 @@ public partial class App
 
             dialog = (ContentDialog)Activator.CreateInstance(dialogType, [manager, false, null])!;
             dialog.XamlRoot = root.XamlRoot; opened = dialog.ShowAsync(); await Task.Delay(120);
+            var installedRow = Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "McpInstalledServer");
+            Check(!installedRow.IsExpanded && installedRow.Content is ToggleSwitch
+                && Descendants((DependencyObject)installedRow.Header).OfType<UserControl>().Any(icon => icon.Name == "McpServerIcon")
+                && !Descendants(dialog).OfType<TextBlock>().Any(text => text.Text == DesktopResources.Get("McpEnableHint"))
+                && !Descendants(dialog).OfType<Button>().Any(button => button.Name == "McpAddServer")
+                && dialog.SecondaryButtonText == "Catalogs", context + ": installed servers use collapsed logo rows with enable switches, no introduction/Add, and a Catalogs footer button");
+            installedRow.IsExpanded = true; await Task.Delay(80);
+            Check(Descendants(installedRow).OfType<Border>().Any(border => border.Name == "McpServerRowFooter"
+                && Descendants(border).OfType<Button>().Count(button => button.Content is IconElement) == 2),
+                context + ": edit and uninstall are icon-only actions in the expanded card footer");
             InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "Edit")); await Task.Delay(80);
             Check(dialog.Title.ToString() == "Edit server" && dialog.PrimaryButtonText == "Save" && dialog.CloseButtonText == "Cancel", context + ": management Edit enters the same footer-based editor");
             InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "CloseButton")); await Task.Delay(80);
@@ -364,7 +377,8 @@ public partial class App
             for (var attempt = 0; dialog.Title.ToString() != "Installed servers" && attempt < 30; attempt++) await Task.Delay(50);
             Check(opened.Status == Windows.Foundation.AsyncStatus.Started && dialog.Title.ToString() == "Installed servers"
                 && manager.Servers[0].Server.Name == "Saved edit", context + ": management editor Save persists and returns to the server list");
-            InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "CloseButton")); await opened;
+            InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "SecondaryButton")); await opened;
+            Check((bool)dialogType.GetProperty("CatalogRequested")!.GetValue(dialog)!, context + ": Catalogs requests sequential catalog navigation instead of nesting dialogs");
         }
         finally { if (Directory.Exists(storeRoot)) Directory.Delete(storeRoot, true); else if (File.Exists(storeRoot)) File.Delete(storeRoot); }
     }

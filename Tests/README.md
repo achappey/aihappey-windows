@@ -22,6 +22,12 @@ node Tests/check-usage-parity.cjs
 
 Focused core suites do not run unrelated prerequisites. The full core run aggregates failures across suites while retaining strict, fail-fast assertions within each suite. The usage snapshot mode produces only its JSON document; the parity checker builds it before execution. Runner regression checks validate failed-build refusal, focused selection, aggregate failure accounting, snapshot isolation, manifest coverage, and rejection of incomplete or failed UI reports.
 
+### MCP catalog and composer discovery
+
+The `mcp-catalog` native UI suite covers installed-server expandable rows, header logos and enable switches, icon-only card footers, Catalogs navigation requests, configuration drafts, and the dedicated searchable catalog modal. It also checks pagination, partial-source retry, installation/removal failures, plugin ownership, configuration handoff/return state, cancellation, and narrow/short windows in both themes. The `context-search` suite covers the matching Model context rows and sequential composer-to-catalog navigation. Both suites use isolated profiles and credential-free fixtures.
+
+Run `powershell -NoProfile -ExecutionPolicy Bypass -File Tests/run-ui-tests.ps1 -Suite mcp-catalog` or select `context-search` for composer coverage.
+
 ### Model-chat endpoints
 
 The independent core and native UI suites are both named `chat-endpoints`:
