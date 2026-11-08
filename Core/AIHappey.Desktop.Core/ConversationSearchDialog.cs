@@ -12,7 +12,7 @@ internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialo
     private readonly Grid layout = new() { RowSpacing = 12 };
     private readonly TextBox query = new() { Name = "ConversationSearchQuery", PlaceholderText = DesktopResources.Get("SearchConversationsPlaceholder"), CornerRadius = new CornerRadius(8) };
     private readonly StackPanel results = new() { Name = "ConversationSearchResults", Spacing = 8 };
-    private readonly TextBlock status = new() { Name = "ConversationSearchStatus", TextWrapping = TextWrapping.Wrap };
+    private readonly TextBlock status = new() { Name = "ConversationSearchStatus", TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Top, Visibility = Visibility.Collapsed };
     private readonly ScrollViewer viewer;
     private CancellationTokenSource? pending;
     private bool closed;
@@ -27,12 +27,13 @@ internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialo
         DefaultButton = ContentDialogButton.None;
         HorizontalAlignment = HorizontalAlignment.Center; VerticalAlignment = VerticalAlignment.Center;
         Resources["ContentDialogMaxWidth"] = 760d; Resources["ContentDialogMinWidth"] = 0d;
-        layout.RowDefinitions.Add(new() { Height = GridLength.Auto }); layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
-        layout.Children.Add(query); Grid.SetRow(status, 1); layout.Children.Add(status);
+        layout.Children.Add(query);
         viewer = new ScrollViewer { Content = results, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalContentAlignment = HorizontalAlignment.Stretch };
-        Grid.SetRow(viewer, 2); layout.Children.Add(viewer); Content = layout;
+        Grid.SetRow(viewer, 1); layout.Children.Add(viewer);
+        Grid.SetRow(status, 1); layout.Children.Add(status); Content = layout;
         ControlAppearance.Native(query); ToolbarControls.Label(query, DesktopResources.Get("SearchConversations"));
         AutomationProperties.SetLiveSetting(status, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         query.TextChanged += async (_, _) => await SearchAsync();
@@ -55,7 +56,7 @@ internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialo
         pending?.Cancel();
         using var cancellation = new CancellationTokenSource(); pending = cancellation;
         var text = query.Text.Trim();
-        results.Children.Clear(); status.Text = text.Length == 0 ? DesktopResources.Get("RecentChats") : DesktopResources.Get("Searching");
+        results.Children.Clear(); SetStatus(DesktopResources.Get("Searching"));
         try
         {
             if (text.Length != 0) await Task.Delay(200, cancellation.Token);
@@ -63,32 +64,51 @@ internal sealed class ConversationSearchDialog : ContentDialog, IResponsiveDialo
             if (!closed && pending == cancellation) { Render(hits, text); viewer.ChangeView(null, 0, null, true); }
         }
         catch (OperationCanceledException) { /* Replaced query/closed modal never renders stale results. */ }
-        catch (Exception) { if (!closed && pending == cancellation) status.Text = DesktopResources.Get("OperationFailed"); }
+        catch (Exception) { if (!closed && pending == cancellation) SetStatus(DesktopResources.Get("OperationFailed")); }
         finally { if (pending == cancellation) pending = null; }
+    }
+
+    private void SetStatus(string text)
+    {
+        status.Text = text;
+        status.Visibility = text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void Render(IReadOnlyList<ConversationSearchHit> hits, string text)
     {
         results.Children.Clear();
-        status.Text = hits.Count == 0 ? text.Length == 0 ? DesktopResources.Get("NoRecentChats") : DesktopResources.Get("NoResults")
-            : text.Length == 0 ? DesktopResources.Get("RecentChats") : hits.Count == 1 ? DesktopResources.Format("ConversationCountOne", hits.Count) : DesktopResources.Format("ConversationCount", hits.Count, hits.Count == 50 ? "+" : "");
+        SetStatus(hits.Count == 0 ? DesktopResources.Get(text.Length == 0 ? "NoRecentChats" : "NoResults") : "");
+        var now = DateTimeOffset.UtcNow;
         foreach (var hit in hits)
         {
             var conversation = hit.Conversation;
-            var content = new StackPanel { Spacing = 8 };
+            var grid = new Grid();
+            grid.RowDefinitions.Add(new() { Height = GridLength.Auto }); grid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+            var content = new StackPanel { Spacing = 8, Margin = new Thickness(16) };
             content.Children.Add(new TextBlock { Text = conversation.Title, FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
             var count = conversation.IsSummary ? conversation.MessageCount : conversation.Messages.Count;
-            var summary = new TextBlock { Text = DesktopResources.Format(count == 1 ? "MessageSummaryOne" : "MessageSummary", count, conversation.Updated.ToLocalTime()), TextWrapping = TextWrapping.Wrap };
-            NativeCardSurface.Secondary(summary, true); content.Children.Add(summary);
+            var badges = new MessageFooterPanel();
+            badges.Children.Add(Badge("ConversationSearchMessageCount", DesktopResources.Format(count == 1 ? "MessageCountOne" : "MessageCount", count)));
+            badges.Children.Add(Badge("ConversationSearchUpdated", RelativeTime.Format(conversation.Updated, now, DesktopResources.Get)));
+            content.Children.Add(badges);
             if (hit.Snippet is not null) content.Children.Add(new TextBlock { Text = hit.Snippet, TextWrapping = TextWrapping.Wrap, MaxLines = 3, TextTrimming = TextTrimming.CharacterEllipsis });
+            grid.Children.Add(content);
             var open = new Button { Name = "OpenSearchConversation", Tag = conversation.Id, Content = DesktopIcons.Create(Icon.Chat, 18), Width = 36, Height = 36, Padding = new Thickness(0), HorizontalAlignment = HorizontalAlignment.Left };
             NativeCardSurface.Action(open); ToolbarControls.Label(open, DesktopResources.Format("OpenConversation", conversation.Title));
             open.Click += (_, _) => { SelectedConversation = conversation; Hide(); };
-            var footer = new Border { Child = open, Padding = new Thickness(0, 8, 0, 0), BorderThickness = new Thickness(0, 1, 0, 0) };
-            NativeCardSurface.Divider(footer); content.Children.Add(footer);
-            var card = new Border { Name = "ConversationSearchCard", Child = content };
-            NativeCardSurface.Card(card, true);
+            var footer = new Border { Name = "ConversationSearchFooter", Child = open, Padding = new Thickness(12, 8, 12, 8), BorderThickness = new Thickness(0, 1, 0, 0) };
+            NativeCardSurface.Divider(footer); Grid.SetRow(footer, 1); grid.Children.Add(footer);
+            var card = new Border { Name = "ConversationSearchCard", Child = grid };
+            NativeCardSurface.Card(card); AutomationProperties.SetName(card, conversation.Title);
             results.Children.Add(card);
         }
+    }
+
+    private static Border Badge(string name, string text)
+    {
+        var label = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap };
+        NativeCardSurface.Secondary(label, true);
+        var badge = new Border { Name = name, Child = label, HorizontalAlignment = HorizontalAlignment.Left };
+        NativeCardSurface.Badge(badge); ToolbarControls.Label(badge, text); return badge;
     }
 }

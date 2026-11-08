@@ -361,6 +361,8 @@
   <data name="ConversationCountOne" xml:space="preserve"><value>{0} chat</value></data>
   <data name="MessageSummary" xml:space="preserve"><value>{0} berichten ┬╖ {1:g}</value></data>
   <data name="MessageSummaryOne" xml:space="preserve"><value>{0} bericht ┬╖ {1:g}</value></data>
+  <data name="MessageCount" xml:space="preserve"><value>{0} berichten</value></data>
+  <data name="MessageCountOne" xml:space="preserve"><value>{0} bericht</value></data>
   <data name="AllCount" xml:space="preserve"><value>Alle ({0})</value></data>
   <data name="FavoritesCount" xml:space="preserve"><value>Favorieten ({0})</value></data>
   <data name="LocalCount" xml:space="preserve"><value>Lokaal ({0})</value></data>
