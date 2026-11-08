@@ -40,6 +40,8 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
     private string? skillWarning, catalogWarning;
     private bool skillsLoading, catalogLoading, pending, saving, closed, discard;
     private int visible = 20;
+    private McpDialogState? restoredCatalogState;
+    private string? catalogFocusId;
     public bool CatalogInstallHappened { get; private set; }
     public DesktopMcpServer? ServerConfigurationRequested { get; private set; }
     public ChatPreferences? Result { get; private set; }
@@ -91,12 +93,29 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
     }
 
     public void Shutdown() { discard = true; lifetime.Cancel(); StopProgress(); Hide(); }
+    internal McpDialogState CaptureCatalogState()
+    {
+        var state = new McpDialogState { Query = search.Text, Visible = visible, Offset = viewer.VerticalOffset,
+            FocusId = catalogFocusId, Catalog = catalog };
+        state.Expanded.UnionWith(expanded); return state;
+    }
+    internal void RestoreCatalogState(McpDialogState state)
+    {
+        restoredCatalogState = state; catalog = state.Catalog ?? catalog;
+        expanded.UnionWith(state.Expanded); search.Text = state.Query; visible = state.Visible;
+        tab = "catalog"; tabs.SelectedItem = tabItems[tab]; Render();
+        Opened += (_, _) => DispatcherQueue.TryEnqueue(RestoreCatalogPresentation);
+    }
+    private void RestoreCatalogPresentation()
+    {
+        if (closed || discard || restoredCatalogState is not { } state) return;
+        layout.UpdateLayout(); viewer.ChangeView(null, state.Offset, null, true);
+        if (state.FocusId is { } id) RestoreFocus(id);
+    }
     public void RefreshInstalled() { if (!closed && !discard && !pending && !saving) Render(); }
     public Task RefreshSkillsAsync() => closed || discard || skillsLoading ? Task.CompletedTask : LoadSkillsAsync();
     private bool Matches(params string?[] values) => string.Join(" ", values).Contains(search.Text.Trim(), StringComparison.OrdinalIgnoreCase);
-    private DesktopMcpServer? Installed(McpCatalogItem item) => installed().FirstOrDefault(server =>
-        server.Id.Equals(item.Id, StringComparison.OrdinalIgnoreCase) || server.Name.Equals(item.Name, StringComparison.OrdinalIgnoreCase)
-        || server.Url.Equals(item.Url, StringComparison.OrdinalIgnoreCase));
+    private DesktopMcpServer? Installed(McpCatalogItem item) => McpServerRow.Installed(installed(), item);
 
     private async Task LoadSkillsAsync()
     {
@@ -118,7 +137,11 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
         }
         catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
         catch { catalogWarning = DesktopResources.Get("McpRegistryPartialFailure"); }
-        finally { catalogLoading = false; if (!closed && !discard) Render(); }
+        finally
+        {
+            catalogLoading = false;
+            if (!closed && !discard) { Render(); RestoreCatalogPresentation(); restoredCatalogState = null; }
+        }
     }
     private void Render()
     {
@@ -240,55 +263,34 @@ public sealed class ContextSearchDialog : ContentDialog, IResponsiveDialog
     private void CatalogRow(McpCatalogItem item)
     {
         var existing = Installed(item);
-        var toggle = RowToggle("ContextCatalogToggle", item.Id,
-            DesktopResources.Format("ActionForItem", DesktopResources.Get(existing is null ? "McpInstall" : "McpRemove"), item.Name), existing is not null);
-        toggle.IsEnabled = existing?.PluginId is null;
-        var content = Expander("catalog/" + item.Id, "ContextCatalogRow", item.Id, item.Name, toggle, item.Description, item.Version);
-        content.Children.Add(new McpServerIcon(item.Icons, 32));
-        if (existing is not null && existing.PluginId is null)
+        McpServerRow.Catalog(rows, "ContextCatalogRow", "ContextCatalog", item, existing, expanded,
+            async install => await ChangeCatalogAsync(item, install), () =>
         {
-            var configure = new Button { Name = "ContextCatalogConfigure", Tag = item.Id, Content = DesktopIcons.Create(Icon.Edit) };
-            ControlAppearance.Stock(configure); ToolbarControls.Label(configure, DesktopResources.Format("ActionForItem", DesktopResources.Get("Edit"), item.Name));
-            AutomationProperties.SetAutomationId(configure, "ContextCatalogConfigure_" + item.Id);
-            configure.Click += (_, _) =>
-            {
-                if (pending || saving || closed || discard) return;
-                ServerConfigurationRequested = existing.Clone();
-                if (existing.Url == item.Url) { ServerConfigurationRequested.HeaderDefinitions = item.HeaderDefinitions.ToArray(); ServerConfigurationRequested.OAuthManaged = item.OAuthManaged; }
-                Hide();
-            };
-            content.Children.Add(configure);
+            if (pending || saving || closed || discard || existing is null || existing.PluginId is not null) return;
+            ServerConfigurationRequested = existing.Clone();
+            if (existing.Url == item.Url) { ServerConfigurationRequested.HeaderDefinitions = item.HeaderDefinitions.ToArray(); ServerConfigurationRequested.OAuthManaged = item.OAuthManaged; }
+            catalogFocusId = "ContextCatalogConfigure_" + item.Id;
+            Hide();
+        });
+    }
+    private async Task ChangeCatalogAsync(McpCatalogItem item, bool install)
+    {
+        if (pending || saving || closed || discard || Installed(item)?.PluginId is not null) return;
+        if (install && McpHeaderConfiguration.RequiresConfiguration(item))
+        { catalogFocusId = "ContextCatalogAction_" + item.Id; ServerConfigurationRequested = item.CreateServer(); Hide(); return; }
+        pending = true; error.Visibility = Visibility.Collapsed; Render();
+        try
+        {
+            await changeServer(item, install, lifetime.Token); lifetime.Token.ThrowIfCancellationRequested();
+            if (install) CatalogInstallHappened = true;
         }
-        var syncing = false;
-        void ResetToggle()
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch (Exception e) { if (!closed && !discard) ShowError(DesktopMcpManager.SafeError(e)); }
+        finally
         {
-            syncing = true; toggle.IsOn = existing is not null; syncing = false;
+            pending = false;
+            if (!closed && !discard) { Render(); RestoreFocus("ContextCatalogAction_" + item.Id); }
         }
-        toggle.Toggled += async (_, _) =>
-        {
-            if (syncing) return;
-            if (pending || saving || closed || discard || existing?.PluginId is not null) { ResetToggle(); return; }
-            var install = toggle.IsOn;
-            if (install && McpHeaderConfiguration.RequiresConfiguration(item))
-            { ResetToggle(); ServerConfigurationRequested = item.CreateServer(); Hide(); return; }
-            pending = true; error.Visibility = Visibility.Collapsed; Render();
-            try
-            {
-                await changeServer(item, install, lifetime.Token); lifetime.Token.ThrowIfCancellationRequested();
-                if (install) CatalogInstallHappened = true;
-            }
-            catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
-            catch (Exception e) { if (!closed && !discard) ShowError(DesktopMcpManager.SafeError(e)); }
-            finally
-            {
-                pending = false;
-                if (!closed && !discard)
-                {
-                    Render();
-                    RestoreFocus("ContextCatalogToggle_" + item.Id);
-                }
-            }
-        };
     }
     private void SetEditable(bool value)
     {

@@ -1137,6 +1137,7 @@
   <data name="AgentDiscoverTools" xml:space="preserve"><value>Discover tools</value></data>
   <data name="Tools" xml:space="preserve"><value>Tools</value></data>
   <data name="McpCatalog" xml:space="preserve"><value>Catalog</value></data>
+  <data name="McpCatalogs" xml:space="preserve"><value>Catalogs</value></data>
   <data name="Local" xml:space="preserve"><value>Local</value></data>
   <data name="ProvidersDescription" xml:space="preserve"><value>Browse {0} AI providers.</value></data>
   <data name="SearchProviders" xml:space="preserve"><value>Search providers</value></data>

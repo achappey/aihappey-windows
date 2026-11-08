@@ -19,6 +19,8 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     private McpHeadersEditor? headersEditor;
     private bool working, closed;
     private CancellationTokenSource? operation;
+    private McpDialogState state = new();
+    public bool CatalogRequested { get; private set; }
     public McpServersDialog(DesktopMcpManager manager, bool add = false, DesktopMcpServer? edit = null)
     {
         this.manager = manager; editorOnly = add || edit is not null;
@@ -31,18 +33,37 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
         foreach (var control in new Control[] { name, url }) ControlAppearance.Native(control);
         manager.Changed += ManagerChanged;
         PrimaryButtonClick += async (_, args) => { args.Cancel = true; await SaveAsync(); };
+        SecondaryButtonClick += (_, args) =>
+        {
+            if (working || draft is not null) { args.Cancel = true; return; }
+            CatalogRequested = true; state.FocusId = "SecondaryButton";
+        };
         CloseButtonClick += (_, args) =>
         {
             if (working) { operation?.Cancel(); args.Cancel = true; }
             else if (draft is not null && !editorOnly)
-            { args.Cancel = true; draft = null; status.Text = ""; Render(); }
+            { args.Cancel = true; draft = null; status.Text = ""; Render(); DispatcherQueue.TryEnqueue(() => RestorePresentation()); }
         };
-        Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; };
+        Opened += (_, _) =>
+        {
+            SizeToRoot(); XamlRoot.Changed += RootChanged;
+            DispatcherQueue.TryEnqueue(() => RestorePresentation());
+        };
         Closing += (_, args) => { if (working && !closed) { operation?.Cancel(); args.Cancel = true; } };
         Closed += (_, _) => { closed = true; lifetime.Cancel(); manager.Changed -= ManagerChanged; XamlRoot.Changed -= RootChanged; };
         if (edit is not null) Edit(edit.Clone()); else if (add) Edit(new()); else Render();
     }
     public void Shutdown() { closed = true; lifetime.Cancel(); Hide(); }
+    public void RestoreState(McpDialogState value) { state = value; if (draft is null) Render(); }
+    public McpDialogState CaptureState() { state.Offset = viewer.VerticalOffset; return state; }
+    private void RestorePresentation()
+    {
+        if (closed) return;
+        UpdateLayout(); viewer.ChangeView(null, state.Offset, null, true);
+        if (state.FocusId is { } id)
+            ControlAppearance.Descendants(this).OfType<Control>().FirstOrDefault(control =>
+                AutomationProperties.GetAutomationId(control) == id || control.Name == id)?.Focus(FocusState.Programmatic);
+    }
     private void ManagerChanged() => DispatcherQueue.TryEnqueue(() =>
     {
         if (closed) return;
@@ -57,22 +78,16 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     private void Render()
     {
         Title = DesktopResources.Get("McpInstalledServers"); headersEditor = null; UpdateFooter();
-        body.Children.Clear(); body.Children.Add(status);
-        body.Children.Add(new TextBlock { Text = DesktopResources.Get("McpEnableHint"), TextWrapping = TextWrapping.Wrap });
-        body.Children.Add(Button("McpAddServer", () => Edit(new())));
+        var offset = viewer.VerticalOffset;
+        var focusedId = XamlRoot is null ? null : (Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(XamlRoot) is Control focused
+            ? AutomationProperties.GetAutomationId(focused) : null);
+        body.Children.Clear(); status.Visibility = string.IsNullOrEmpty(status.Text) ? Visibility.Collapsed : Visibility.Visible; body.Children.Add(status);
         var servers = manager.Servers;
         if (servers.Count == 0) body.Children.Add(new TextBlock { Text = DesktopResources.Get("McpNoInstalledServers"), TextWrapping = TextWrapping.Wrap });
         foreach (var view in servers)
         {
             var server = view.Server;
             var canConnect = McpHeaderConfiguration.CanConnect(server);
-            var panel = new StackPanel { Spacing = 8 };
-            var header = new Grid { ColumnSpacing = 12 };
-            header.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-            header.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-            header.Children.Add(new TextBlock { Text = server.Name, FontSize = 16,
-                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap,
-                VerticalAlignment = VerticalAlignment.Center });
             var toggle = new ToggleSwitch { Name = "McpServerEnabled", IsOn = server.Enabled,
                 OnContent = "", OffContent = "", MinWidth = 0,
                 HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
@@ -80,15 +95,17 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
             ControlAppearance.Stock(toggle); AutomationProperties.SetAutomationId(toggle, server.Id + ":Enabled");
             AutomationProperties.SetName(toggle, server.Name);
             toggle.Toggled += async (_, _) => await ActAsync(ct => manager.SetEnabledAsync(server.Id, toggle.IsOn, ct, interactive: true));
-            Grid.SetColumn(toggle, 1); header.Children.Add(toggle); panel.Children.Add(header);
-            var address = new TextBlock { Text = server.Url, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
-            NativeCardSurface.Secondary(address); panel.Children.Add(address);
-            var state = new TextBlock { Name = "McpConnectionStatus", Text = DesktopResources.Get("McpState" + view.State), TextWrapping = TextWrapping.Wrap };
-            NativeCardSurface.Secondary(state, true); panel.Children.Add(state);
+            var row = new McpServerRow(body, "McpInstalledServer", server.Id, server.Name, McpIcons.ForServer(view), toggle, state.Expanded);
+            var panel = row.Details;
+            row.Text(server.Description); row.Text(server.Version, small: true); row.Text(server.Url, selectable: true);
+            var connectionState = new TextBlock { Name = "McpConnectionStatus", Text = DesktopResources.Get("McpState" + view.State), TextWrapping = TextWrapping.Wrap };
+            NativeCardSurface.Secondary(connectionState, true); panel.Children.Add(connectionState);
             if (view.Error is not null) panel.Children.Add(new TextBlock { Text = view.Error, TextWrapping = TextWrapping.Wrap });
-            var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-            actions.Children.Add(Button("Edit", () => Edit(server.Clone())));
-            actions.Children.Add(Button("McpRemove", async () => await ActAsync(ct => manager.RemoveAsync(server.Id, ct))));
+            var actions = row.Actions;
+            row.Action("Edit", server.Id + ":Edit", DesktopResources.Format("ActionForItem", DesktopResources.Get("Edit"), server.Name),
+                FluentIcons.Common.Icon.Edit, () => Edit(server.Clone()), server.PluginId is null);
+            row.Action("McpRemove", server.Id + ":Remove", DesktopResources.Format("ActionForItem", DesktopResources.Get("McpRemove"), server.Name),
+                FluentIcons.Common.Icon.Delete, async () => await ActAsync(ct => manager.RemoveAsync(server.Id, ct)), server.PluginId is null);
             if (server.Enabled && canConnect && view.State == McpConnectionState.AuthenticationRequired)
                 actions.Children.Add(Button("McpSignIn", async () => await ActAsync(ct => manager.SignInAsync(server.Id, ct))));
             else if (view.State == McpConnectionState.SigningIn)
@@ -98,7 +115,6 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
                 var retry = Button("Retry", async () => await ActAsync(ct => manager.SetEnabledAsync(server.Id, true, ct)));
                 retry.IsEnabled = canConnect; actions.Children.Add(retry);
             }
-            panel.Children.Add(actions);
             if (view.Discovery is { } discovery)
             {
                 var tools = new StackPanel { Spacing = 12 };
@@ -116,13 +132,20 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
                     HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch };
                 ControlAppearance.Native(toolsView); panel.Children.Add(toolsView);
             }
-            var card = new Border { Name = "McpInstalledServer", Child = panel };
-            NativeCardSurface.Card(card, true); body.Children.Add(card);
         }
+        if (XamlRoot is not null) DispatcherQueue.TryEnqueue(() =>
+        {
+            if (closed || draft is not null) return;
+            UpdateLayout(); viewer.ChangeView(null, offset, null, true);
+            if (!string.IsNullOrEmpty(focusedId)) ControlAppearance.Descendants(body).OfType<Control>()
+                .FirstOrDefault(control => AutomationProperties.GetAutomationId(control) == focusedId)?.Focus(FocusState.Programmatic);
+        });
     }
     private void Edit(DesktopMcpServer server)
     {
-        draft = server; status.Text = ""; body.Children.Clear(); body.Children.Add(status);
+        state.Offset = viewer.VerticalOffset;
+        state.FocusId = server.Id + ":Edit";
+        draft = server; status.Text = ""; status.Visibility = Visibility.Collapsed; body.Children.Clear(); body.Children.Add(status);
         Title = DesktopResources.Get(manager.Servers.Any(view => view.Server.Id == server.Id) ? "McpEditServer" : "McpAddServer");
         UpdateFooter();
         body.Children.Add(name); body.Children.Add(url); name.Text = server.Name; url.Text = server.Url;
@@ -131,7 +154,9 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
     private void UpdateFooter()
     {
         PrimaryButtonText = draft is null ? "" : DesktopResources.Get("Save");
+        SecondaryButtonText = draft is null && !editorOnly ? DesktopResources.Get("McpCatalogs") : "";
         IsPrimaryButtonEnabled = !working;
+        IsSecondaryButtonEnabled = !working;
         CloseButtonText = DesktopResources.Get(working || draft is not null ? "Cancel" : "Close");
         DefaultButton = draft is null ? ContentDialogButton.None : ContentDialogButton.Primary;
     }
@@ -144,11 +169,11 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
             server.Headers = headersEditor.ReadHeaders();
             server.Validate();
         }
-        catch (InvalidOperationException e) { status.Text = e.Message; return; }
+        catch (InvalidOperationException e) { status.Text = e.Message; status.Visibility = Visibility.Visible; return; }
         if (await ActAsync(ct => manager.InstallAsync(server, ct)) && !closed)
         {
             draft = null;
-            if (editorOnly) Hide(); else Render();
+            if (editorOnly) Hide(); else { Render(); DispatcherQueue.TryEnqueue(() => RestorePresentation()); }
         }
     }
     private async Task<bool> ActAsync(Func<CancellationToken, Task> action)
@@ -157,7 +182,7 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
         using var currentOperation = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
         operation = currentOperation;
         var controls = ControlAppearance.Descendants(body).OfType<Control>().Select(control => (Control: control, control.IsEnabled)).ToArray();
-        working = true; UpdateFooter(); status.Text = DesktopResources.Get("Working");
+        working = true; UpdateFooter(); status.Text = DesktopResources.Get("Working"); status.Visibility = Visibility.Visible;
         foreach (var (control, _) in controls) control.IsEnabled = false;
         try { await action(currentOperation.Token); status.Text = ""; return true; }
         catch (OperationCanceledException) { status.Text = DesktopResources.Get("OperationCanceled"); return false; }
@@ -168,11 +193,15 @@ internal sealed class McpServersDialog : ContentDialog, IResponsiveDialog
             if (!closed)
             {
                 if (draft is null) Render();
-                else foreach (var (control, enabled) in controls) control.IsEnabled = enabled;
+                else
+                {
+                    status.Visibility = string.IsNullOrEmpty(status.Text) ? Visibility.Collapsed : Visibility.Visible;
+                    foreach (var (control, enabled) in controls) control.IsEnabled = enabled;
+                }
             }
         }
     }
     private void RootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => SizeToRoot();
     void IResponsiveDialog.SizeToRoot() => SizeToRoot();
-    private void SizeToRoot() { viewer.Width = Math.Max(0, Math.Min(800, XamlRoot.Size.Width - 96)); viewer.Height = Math.Max(0, Math.Min(650, XamlRoot.Size.Height - 240)); }
+    private void SizeToRoot() { viewer.Width = Math.Max(0, Math.Min(800, XamlRoot.Size.Width - 96)); viewer.MaxHeight = Math.Max(0, Math.Min(650, XamlRoot.Size.Height - 240)); }
 }

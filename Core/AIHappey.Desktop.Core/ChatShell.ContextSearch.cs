@@ -20,43 +20,48 @@ public sealed partial class ChatShell
             ct.ThrowIfCancellationRequested();
             if (!Current()) throw new OperationCanceledException(ct);
         }
-        var dialog = new ContextSearchDialog(session.Settings.Chat, agentPlugins, async ct =>
+        McpDialogState? presentation = null;
+        while (Current())
         {
-            RequireCurrent(ct); var selection = await LoadSkillSelectionAsync(ct); RequireCurrent(ct); return selection;
-        }, async (id, ct) => { RequireCurrent(ct); await PrefetchSkillAsync(id, ct); }, async ct =>
-        {
-            RequireCurrent(ct);
-            var result = await new DesktopMcpCatalogClient(mcpCatalogHttp).ListAsync(session.ContextOptions.McpCatalogUrls ?? [], ct);
-            RequireCurrent(ct); mcpCatalog = result; return result;
-        }, () => Mcp.Servers.Select(view => view.Server).ToArray(), async (item, install, ct) =>
-        {
-            RequireCurrent(ct);
-            // Match both registry identity and endpoint so manually added servers are not duplicated.
-            var existing = Mcp.Servers.FirstOrDefault(view => view.Server.Id.Equals(item.Id, StringComparison.OrdinalIgnoreCase)
-                || view.Server.Name.Equals(item.Name, StringComparison.OrdinalIgnoreCase) || view.Server.Url.Equals(item.Url, StringComparison.OrdinalIgnoreCase));
-            if (install && existing is null)
+            var dialog = new ContextSearchDialog(session.Settings.Chat, agentPlugins, async ct =>
             {
-                var server = item.CreateServer(); server.Headers = McpHeaderConfiguration.Initial(item);
-                await Mcp.InstallAsync(server, ct);
+                RequireCurrent(ct); var selection = await LoadSkillSelectionAsync(ct); RequireCurrent(ct); return selection;
+            }, async (id, ct) => { RequireCurrent(ct); await PrefetchSkillAsync(id, ct); }, async ct =>
+            {
+                RequireCurrent(ct);
+                var result = await new DesktopMcpCatalogClient(mcpCatalogHttp).ListAsync(session.ContextOptions.McpCatalogUrls ?? [], ct);
+                RequireCurrent(ct); mcpCatalog = result; return result;
+            }, () => Mcp.Servers.Select(view => view.Server).ToArray(), async (item, install, ct) =>
+            {
+                RequireCurrent(ct);
+                // Keep catalog identity/endpoint matching and plugin ownership identical in both dialogs.
+                await ChangeCatalogServerAsync(item, install, ct);
+                RequireCurrent(ct);
+            }) { XamlRoot = XamlRoot };
+            dialog.SaveAsync = async preferences =>
+            {
+                RequireCurrent(downloadLifetime.Token);
+                var next = session.Settings.Clone(); next.Chat = preferences.Clone();
+                await SettingsStore.SaveAsync(session.DataDirectory, next);
+                RequireCurrent(downloadLifetime.Token); session.Settings = next;
+                await LoadPluginsAsync(downloadLifetime.Token); RenderContextTags();
+            };
+            if (presentation is not null) dialog.RestoreCatalogState(presentation);
+            contextSearchDialog = dialog; historyDialogOpen = true; SystemAppearance.PrepareDialog(dialog);
+            try { await dialog.ShowAsync(); }
+            finally
+            {
+                contextSearchDialog = null; historyDialogOpen = false;
+                if (Current()) addContext.Focus(FocusState.Programmatic);
             }
-            else if (!install && existing is not null) await Mcp.RemoveAsync(existing.Server.Id, ct);
-        }) { XamlRoot = XamlRoot };
-        dialog.SaveAsync = async preferences =>
-        {
-            RequireCurrent(downloadLifetime.Token);
-            var next = session.Settings.Clone(); next.Chat = preferences.Clone();
-            await SettingsStore.SaveAsync(session.DataDirectory, next);
-            RequireCurrent(downloadLifetime.Token); session.Settings = next;
-            await LoadPluginsAsync(downloadLifetime.Token); RenderContextTags();
-        };
-        contextSearchDialog = dialog; historyDialogOpen = true; SystemAppearance.PrepareDialog(dialog);
-        try { await dialog.ShowAsync(); }
-        finally
-        {
-            contextSearchDialog = null; historyDialogOpen = false;
-            if (Current()) addContext.Focus(FocusState.Programmatic);
+            if (Current() && dialog.Result is not null && dialog.ServerConfigurationRequested is { } configure)
+            {
+                presentation = dialog.CaptureCatalogState();
+                await ManageMcpAsync(edit: configure);
+                continue;
+            }
+            if (Current() && dialog.Result is not null && dialog.CatalogInstallHappened) await ManageMcpAsync();
+            break;
         }
-        if (Current() && dialog.Result is not null && dialog.ServerConfigurationRequested is { } configure) await ManageMcpAsync(edit: configure);
-        else if (Current() && dialog.Result is not null && dialog.CatalogInstallHappened) await ManageMcpAsync();
     }
 }

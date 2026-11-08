@@ -16,6 +16,7 @@ public sealed partial class ChatShell
     private readonly HttpClient mcpCatalogHttp = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }) { Timeout = TimeSpan.FromSeconds(30) };
     private DesktopMcpManager Mcp => session.InitializeMcp();
     private McpServersDialog? mcpDialog;
+    private McpCatalogDialog? mcpCatalogDialog;
     private McpCatalogResult? mcpCatalog;
     private McpTurnSnapshot? activeMcpTurn;
 
@@ -51,6 +52,7 @@ public sealed partial class ChatShell
         RenderContextTags();
         if (chatSettingsDialog is { } dialog) { _ = dialog.RefreshSkillsAsync(); dialog.RefreshAvailableTools(); }
         contextSearchDialog?.RefreshInstalled();
+        mcpCatalogDialog?.RefreshInstalled();
         if (contextSearchDialog is { } search) _ = search.RefreshSkillsAsync();
         resourcesDialog?.SetCatalog(Mcp.Capture().Resources);
         promptsDialog?.SetCatalog(Mcp.CapturePrompts());
@@ -117,14 +119,68 @@ public sealed partial class ChatShell
     private async Task ManageMcpAsync(bool add = false, DesktopMcpServer? edit = null)
     {
         if (busy || closing || historyDialogOpen || catalogDialog is not null || mcpDialog is not null || !initialized) return;
-        var dialog = new McpServersDialog(Mcp, add, edit) { XamlRoot = XamlRoot };
-        SystemAppearance.PrepareDialog(dialog); mcpDialog = dialog; historyDialogOpen = true;
-        try { await dialog.ShowAsync(); }
+        var partition = session.HistoryPartition;
+        var pluginScope = session.PluginPartition;
+        bool Current() => !closing && partition == session.HistoryPartition && pluginScope == session.PluginPartition;
+        void RequireCurrent(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (!Current()) throw new OperationCanceledException(ct);
+        }
+        var managementState = new McpDialogState(); var catalogState = new McpDialogState();
+        historyDialogOpen = true;
+        try
+        {
+            while (Current())
+            {
+                var dialog = new McpServersDialog(Mcp, add, edit) { XamlRoot = XamlRoot };
+                if (!add && edit is null) dialog.RestoreState(managementState);
+                SystemAppearance.PrepareDialog(dialog); mcpDialog = dialog;
+                try { await dialog.ShowAsync(); }
+                finally { managementState = dialog.CaptureState(); mcpDialog = null; }
+                if (!Current() || !dialog.CatalogRequested) break;
+                while (Current())
+                {
+                    var catalog = new McpCatalogDialog(async ct =>
+                    {
+                        RequireCurrent(ct);
+                        var result = await new DesktopMcpCatalogClient(mcpCatalogHttp).ListAsync(session.ContextOptions.McpCatalogUrls ?? [], ct);
+                        RequireCurrent(ct); mcpCatalog = result; return result;
+                    }, () => Mcp.Servers.Select(view => view.Server).ToArray(), async (item, install, ct) =>
+                    {
+                        RequireCurrent(ct); await ChangeCatalogServerAsync(item, install, ct); RequireCurrent(ct);
+                    }, session.ContextOptions.McpCatalogUrls?.Any(url => !string.IsNullOrWhiteSpace(url)) == true, catalogState) { XamlRoot = XamlRoot };
+                    SystemAppearance.PrepareDialog(catalog); mcpCatalogDialog = catalog;
+                    try { await catalog.ShowAsync(); }
+                    finally { mcpCatalogDialog = null; }
+                    if (!Current() || catalog.ServerConfigurationRequested is not { } configure) break;
+                    var editor = new McpServersDialog(Mcp, edit: configure) { XamlRoot = XamlRoot };
+                    SystemAppearance.PrepareDialog(editor); mcpDialog = editor;
+                    try { await editor.ShowAsync(); }
+                    finally { mcpDialog = null; }
+                }
+            }
+        }
         finally
         {
-            mcpDialog = null; historyDialogOpen = false; RenderMcpTags(); mcpOverview.SetInstalled(Mcp.Servers);
-            if (!closing && activePage == DesktopPage.Chat) addContext.Focus(FocusState.Programmatic);
-            else if (!closing && activePage == DesktopPage.Mcp && add) addMcpServer.Focus(FocusState.Programmatic);
+            mcpDialog = null; mcpCatalogDialog = null; historyDialogOpen = false;
+            if (Current())
+            {
+                RenderMcpTags(); mcpOverview.SetInstalled(Mcp.Servers);
+                if (activePage == DesktopPage.Chat) addContext.Focus(FocusState.Programmatic);
+                else if (activePage == DesktopPage.Mcp && add) addMcpServer.Focus(FocusState.Programmatic);
+            }
         }
+    }
+    private async Task ChangeCatalogServerAsync(McpCatalogItem item, bool install, CancellationToken ct)
+    {
+        var existing = McpServerRow.Installed(Mcp.Servers.Select(view => view.Server), item);
+        if (existing?.PluginId is not null) return;
+        if (install && existing is null)
+        {
+            var server = item.CreateServer(); server.Headers = McpHeaderConfiguration.Initial(item);
+            await Mcp.InstallAsync(server, ct);
+        }
+        else if (!install && existing is not null) await Mcp.RemoveAsync(existing.Id, ct);
     }
 }

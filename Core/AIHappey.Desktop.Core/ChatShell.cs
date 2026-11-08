@@ -963,7 +963,7 @@ public sealed partial class ChatShell : UserControl
         promptsDialog?.Hide();
         approvalDialog?.Hide();
         systemContextDialog?.Hide();
-        mcpDialog?.Shutdown(); Mcp.Changed -= McpChanged;
+        mcpDialog?.Shutdown(); mcpCatalogDialog?.Shutdown(); Mcp.Changed -= McpChanged;
         if (chatSettingsDialog is not null) { chatSettingsDialog.DiscardOnShutdown = true; chatSettingsDialog.CancelSkillLoading(); chatSettingsDialog.Hide(); }
         contextSearchDialog?.Shutdown();
         while (busy || pendingProviderSettingsWrites > 0) await Task.Delay(20);
