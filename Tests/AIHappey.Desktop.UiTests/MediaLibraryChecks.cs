@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Text.Json.Nodes;
 using AIHappey.Desktop.Core;
+using FluentIcons.Common;
+using FluentIcons.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -44,6 +46,8 @@ public partial class App
             var speechPage = new SpeechPage { RequestedTheme = theme }; root.Children.Add(speechPage);
             speechPage.SetModelAvailable(true); speechPage.SetItems([speech]); await Task.Delay(300); speechPage.UpdateLayout();
             CheckMediaToolbar(speechPage, "Import", context);
+            CheckMediaFolderButton(speechPage, callback => speechPage.FolderRequested = callback, busy => speechPage.SetBusy(busy, false), "SpeechOpenFolder", context);
+            CheckMediaStopButton(speechPage, callback => speechPage.StopRequested = callback, speechPage.SetBusy, context);
             var speechCard = Descendants(speechPage).OfType<Border>().Single(c => c.Name == "SpeechCard");
             Check(Descendants(speechCard).OfType<TextBlock>().Any(t => t.Name == "SpeechModel" && t.Text == "voice/nested"
                 && AutomationProperties.GetName(t) == "echo/voice/nested"), context + ": loaded provider logo removes only provider prefix and retains accessible full ID");
@@ -74,6 +78,8 @@ public partial class App
             var transcriptionsPage = new TranscriptionsPage { RequestedTheme = theme }; root.Children.Add(transcriptionsPage);
             transcriptionsPage.SetModelAvailable(true); transcriptionsPage.SetItems([transcription]); await Task.Delay(250); transcriptionsPage.UpdateLayout();
             CheckMediaToolbar(transcriptionsPage, "AddFiles", context);
+            CheckMediaFolderButton(transcriptionsPage, callback => transcriptionsPage.FolderRequested = callback, busy => transcriptionsPage.SetBusy(busy, false), "TranscriptionOpenFolder", context);
+            CheckMediaStopButton(transcriptionsPage, callback => transcriptionsPage.StopRequested = callback, transcriptionsPage.SetBusy, context);
             Check(Descendants(transcriptionsPage).OfType<TextBlock>().Any(t => t.Text == "transcribe/nested")
                 && Descendants(transcriptionsPage).OfType<Button>().Single(b => b.Name == "TranscriptionActions").Flyout is MenuFlyout,
                 context + ": transcription preserves card actions and shows branded short model ID");
@@ -123,6 +129,59 @@ public partial class App
             context + ": " + page.Name + " attachments precede settings visually and in keyboard order");
     }
 
+    private void CheckMediaIconButton(Button button, Icon artwork, string label, string context)
+    {
+        context += ": " + button.Name;
+        Check(button.Content is FluentIcon { IconSize: IconSize.Resizable, FontSize: 20, IconVariant: IconVariant.Regular } icon
+            && icon.Icon == artwork && icon.ReadLocalValue(IconElement.ForegroundProperty) == DependencyProperty.UnsetValue,
+            context + " uses only named Fluent artwork with inherited theme/state foreground");
+        Check(button.Width == 40 && button.Height == 40 && button.Padding == new Thickness(0)
+            && button.CornerRadius == new CornerRadius(6) && button.IsTabStop,
+            context + " retains a 40px keyboard-accessible native button target");
+        Check(AutomationProperties.GetName(button) == label && ToolTipService.GetToolTip(button) is ToolTip { Content: string tooltip } && tooltip == label,
+            context + " retains its localized screen-reader label and tooltip without visible text");
+    }
+
+    private void CheckMediaFolderButton(UserControl page, Action<Func<Task>> setCallback, Action<bool> setBusy, string resource, string context)
+    {
+        var folder = (Button)page.FindName("OpenFolder");
+        CheckMediaIconButton(folder, Icon.FolderOpen, DesktopResources.Get(resource), context + " / " + page.Name);
+        Check(folder.BorderThickness == new Thickness(0), context + ": folder action uses subtle toolbar styling");
+        var calls = 0; setCallback(() => { calls++; return Task.CompletedTask; });
+        InvokeButton(folder);
+        Check(calls == 1, context + ": " + page.Name + " folder icon invokes the existing folder action");
+        setBusy(true); Check(!folder.IsEnabled, context + ": folder action remains disabled while busy");
+        setBusy(false); Check(folder.IsEnabled, context + ": folder action is restored when idle");
+        CheckMediaFolderLayout(page, context);
+    }
+
+    private void CheckMediaStopButton(UserControl page, Action<Action> setCallback, Action<bool, bool> setBusy, string context)
+    {
+        var stop = (Button)page.FindName("Stop");
+        CheckMediaIconButton(stop, Icon.Stop, DesktopResources.Get("Stop"), context + " / " + page.Name);
+        Check(stop.Visibility == Visibility.Collapsed, context + ": stop remains hidden when idle");
+        setBusy(true, false); Check(stop.Visibility == Visibility.Collapsed, context + ": non-inference work does not expose stop");
+        setBusy(true, true); page.UpdateLayout();
+        Check(stop.Visibility == Visibility.Visible && stop.IsEnabled && stop.ActualWidth == 40 && stop.ActualHeight == 40
+            && (page.FindName("Send") is not Button send || send.Visibility == Visibility.Collapsed),
+            context + ": " + page.Name + " generation exposes a 40px stop icon instead of send");
+        var calls = 0; setCallback(() => calls++); InvokeButton(stop);
+        Check(calls == 1, context + ": stop icon invokes the existing cancellation action");
+        setBusy(false, false);
+        Check(stop.Visibility == Visibility.Collapsed && (page.FindName("Send") is not Button restored || restored.Visibility == Visibility.Visible),
+            context + ": returning to idle hides stop and restores send");
+    }
+
+    private void CheckMediaFolderLayout(UserControl page, string context)
+    {
+        var folder = (Button)page.FindName("OpenFolder"); var parent = (Grid)folder.Parent;
+        var position = folder.TransformToVisual(page).TransformPoint(new());
+        Check(folder.ActualWidth == 40 && folder.ActualHeight == 40 && Grid.GetColumn(folder) == 1
+            && Math.Abs(folder.TransformToVisual(parent).TransformPoint(new()).X + folder.ActualWidth - parent.ActualWidth) < 1
+            && position.X >= 0 && position.X + folder.ActualWidth <= page.ActualWidth + 1,
+            context + ": " + page.Name + " folder icon stays right-aligned and inside the viewport");
+    }
+
     private async Task CheckTranscriptionTabsAsync(ElementTheme theme)
     {
         var root = new Grid { RequestedTheme = theme }; window!.Content = root;
@@ -146,7 +205,7 @@ public partial class App
         var recorded = (SelectorBarItem)page.FindName("RecordedTab"); var live = (SelectorBarItem)page.FindName("RealtimeTab");
         var grid = (GridView)page.FindName("LibraryGrid"); var panel = (ScrollViewer)page.FindName("RealtimePanel");
         var text = (TextBlock)page.FindName("RealtimeText"); var empty = (TextBlock)page.FindName("EmptyLibrary");
-        var folder = (HyperlinkButton)page.FindName("OpenFolder"); var action = (Button)page.FindName("Realtime");
+        var folder = (Button)page.FindName("OpenFolder"); var action = (Button)page.FindName("Realtime");
         Check(tabs.Items.Count == 2 && tabs.Items[0] == recorded && tabs.Items[1] == live && tabs.SelectedItem == recorded
             && grid.Items.Count == 1 && panel.Visibility == Visibility.Collapsed, context + ": native transcription tabs default to recorded cards");
         Check(((TextBlock)page.FindName("LibraryTitle")).TransformToVisual(page).TransformPoint(new()).Y
@@ -184,6 +243,7 @@ public partial class App
         {
             window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(90); page.UpdateLayout();
             var grid = (GridView)page.FindName("LibraryGrid");
+            CheckMediaFolderLayout(page, context + $" / {width}px");
             Check(Descendants(page).OfType<Border>().Where(c => c.Name is "SpeechCard" or "TranscriptionCard").All(c => c.ActualWidth <= page.ActualWidth)
                 && Descendants(grid).OfType<ScrollViewer>().First().ScrollableWidth < 1, context + $": {page.Name} cards fit at {width}px");
         }

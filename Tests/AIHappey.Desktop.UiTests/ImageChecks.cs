@@ -23,6 +23,8 @@ public partial class App
             var page = new ImagesPage { RequestedTheme = theme };
             window!.Content = page; window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); window.Activate(); await Task.Delay(180); page.UpdateLayout();
             var prompt = (TextBox)page.FindName("Prompt"); var grid = (GridView)page.FindName("LibraryGrid");
+            CheckMediaFolderButton(page, callback => page.FolderRequested = callback, busy => page.SetBusy(busy, false), "ImageOpenFolder", context);
+            CheckMediaStopButton(page, callback => page.StopRequested = callback, page.SetBusy, context);
             Check(prompt.AcceptsReturn && prompt.MinHeight == 96 && AutomationProperties.GetName(prompt).Length > 0, context + ": native accessible multiline composer");
             Check(((Button)page.FindName("Send")).IsEnabled == false, context + ": empty/no-model prompt cannot generate");
             page.SetModelAvailable(true); prompt.Text = "A lighthouse"; await Task.Delay(60);
@@ -47,11 +49,11 @@ public partial class App
             page.SetItems([image], 2); await Task.Delay(120); page.UpdateLayout();
             Check(grid.Items.Count == 3 && grid.ItemsPanelRoot is ItemsWrapGrid, context + ": virtualized native gallery with pending placeholders");
             Check(((ImageTile)grid.Items[2]).Thumbnail is BitmapImage bitmap && bitmap.DecodePixelWidth == 320 && ((ImageTile)grid.Items[0]).Pending, context + ": bounded thumbnails and pending tiles");
-            Check(((HyperlinkButton)page.FindName("OpenFolder")).Content.ToString() == "Open folder", context + ": subtle Explorer link above gallery");
             foreach (var width in new[] { 480, 720, 1280 })
             {
                 window.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(90); page.UpdateLayout();
                 var panel = (ItemsWrapGrid)grid.ItemsPanelRoot;
+                CheckMediaFolderLayout(page, context + $" / {width}px");
                 Check(panel.MaximumRowsOrColumns >= 1 && panel.MaximumRowsOrColumns <= 5 && prompt.ActualWidth <= page.ActualWidth
                     && Descendants(grid).OfType<ScrollViewer>().First().ScrollableWidth < 1, context + $": native responsive gallery at {width}px");
             }

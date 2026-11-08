@@ -22,6 +22,7 @@ public partial class App
             var page = new VideosPage { RequestedTheme = theme }; window!.Content = page;
             window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); window.Activate(); await Task.Delay(150); page.UpdateLayout();
             var prompt = (TextBox)page.FindName("Prompt"); var grid = (GridView)page.FindName("LibraryGrid"); var send = (Button)page.FindName("Send");
+            CheckMediaFolderButton(page, callback => page.FolderRequested = callback, page.SetBusy, "VideoOpenFolder", context);
             Check(prompt.AcceptsReturn && prompt.MinHeight == 96 && AutomationProperties.GetName(prompt).Length > 0 && !send.IsEnabled, context + ": native accessible multiline composer with disabled empty/no-model send");
             page.SetModelAvailable(true); prompt.Text = "A lighthouse"; await Task.Delay(30); Check(send.IsEnabled, context + ": prompt and selected video model enable send");
             Check(((MenuFlyout)((Button)page.FindName("AddAttachment")).Flyout).Items.OfType<MenuFlyoutItem>().Select(i => i.Text)
@@ -32,7 +33,8 @@ public partial class App
             await Task.Delay(60); page.UpdateLayout();
             Check(page.Attachments.Count == 2 && page.Attachments.Count(f => !f.IsLink) == 1 && page.Attachments[0].Name == "source.mp4", context + ": local composer attachment replaces previous input while URL references remain");
             InvokeButton(Descendants(page).OfType<Button>().First(b => b.Name == "VideoRemoveAttachment")); Check(page.Attachments.Count == 1 && page.Attachments[0].IsLink, context + ": native remove tag updates only video draft");
-            page.SetSubmitting(true); Check(!send.IsEnabled && prompt.IsReadOnly && !((Button)page.FindName("Settings")).IsEnabled, context + ": submission reserves composer without affecting library navigation"); page.SetSubmitting(false);
+            page.SetSubmitting(true); Check(!send.IsEnabled && prompt.IsReadOnly && !((Button)page.FindName("Settings")).IsEnabled
+                && ((Button)page.FindName("OpenFolder")).IsEnabled, context + ": submission reserves composer without affecting library navigation"); page.SetSubmitting(false);
             var job = new VideoJob { Model = "p/video", RequestedVideos = 2, State = "pending" };
             page.SetItems([], [job]); await Task.Delay(100); page.UpdateLayout();
             Check(grid.Items.Count == 2 && grid.ItemsPanelRoot is ItemsWrapGrid && ((TextBlock)page.FindName("EmptyLibrary")).Visibility == Visibility.Collapsed, context + ": pending jobs render native virtualized gallery placeholders");
@@ -46,6 +48,7 @@ public partial class App
             foreach (var width in new[] { 480, 720, 1280 })
             {
                 window.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, 900)); await Task.Delay(70); page.UpdateLayout();
+                CheckMediaFolderLayout(page, context + $" / {width}px");
                 Check(((ItemsWrapGrid)grid.ItemsPanelRoot).MaximumRowsOrColumns is >= 1 and <= 3 && prompt.ActualWidth <= page.ActualWidth
                     && Descendants(grid).OfType<ScrollViewer>().First().ScrollableWidth < 1, context + $": native gallery fits {width}px viewport");
             }
