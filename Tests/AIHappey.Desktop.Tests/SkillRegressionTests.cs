@@ -112,6 +112,16 @@ internal static class SkillRegressionTests
     }
     private static async Task CheckIconsAsync(Action<bool, string> check, string root)
     {
+        var providerSkill = new CatalogItem(CatalogKind.Skill, "clawhub/1password", "1password", "Provider-owned skill");
+        var provider = ProviderCatalog.SkillProvider(providerSkill.Id, providerSkill.Origin);
+        check(provider?.Id == "clawhub" && provider.Icons.Count > 0 && providerSkill.Icons.Count == 0
+            && ReferenceEquals(provider, ProviderCatalog.SkillProvider(providerSkill)),
+            "skill logos: settings and overview share the provider logo lookup even without explicit skill icons");
+        check(ProviderCatalog.SkillProvider("/ClawHub/1password", CatalogOrigin.Backend)?.Id == "clawhub"
+            && ProviderCatalog.SkillProvider("clawhub/1password", CatalogOrigin.Local) is null
+            && ProviderCatalog.SkillProvider("unknown-provider/skill", CatalogOrigin.Backend) is null
+            && ProviderCatalog.SkillProvider("clawhub", CatalogOrigin.Backend) is null,
+            "skill logos: shared lookup normalizes provider names and rejects local, unknown, and unqualified skills");
         using var skillJson = JsonDocument.Parse("""
             {"id":"provider/logo","name":"Logo skill","default_version":"1","latest_version":"2","icons":[
               {"src":"https://fixture.invalid/light.svg","theme":"light","mimeType":"image/svg+xml"},

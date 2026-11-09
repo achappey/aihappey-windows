@@ -122,6 +122,51 @@ public partial class App
         await WaitForProviderUiAsync(() => failedSaveAttempted && Field<TextBlock>(failedSave, "validation").Visibility == Visibility.Visible, "Save-failure validation did not arrive");
         Check(shown.Status == Windows.Foundation.AsyncStatus.Started && failedSave.Result is null, context + ": disk failure keeps dialog and previous state intact");
         failedSave.DiscardOnShutdown = true; failedSave.Hide(); await shown;
+        await CheckChatSkillProviderLogosAsync(root, theme);
+    }
+
+    private async Task CheckChatSkillProviderLogosAsync(Grid root, ElementTheme theme)
+    {
+        var context = "Skill provider logos / " + theme;
+        var explicitIcon = new McpIcon("data:image/png;base64,AA==");
+        var items = new DesktopSkill[] {
+            new("clawhub/1password", "1password", "Provider logo without skill icons", "remote"),
+            new("clawhub/explicit", "Explicit skill icon", "Explicit artwork takes priority", "remote") { Icons = [explicitIcon] },
+            new("clawhub/unsupported", "Unsupported skill icon", "Unsafe artwork cannot hide the provider logo", "remote") { Icons = [new("file:///C:/private.png")] },
+            new("clawhub/local", "Local skill", "Never infer a provider for local skills", "local"),
+            new("clawhub/connected", "Connected skill", "Never infer a provider for MCP skills", "mcp"),
+            new("unknown-provider/skill", "Unknown provider", "Generic fallback", "remote"),
+            new("clawhub", "Unqualified skill", "Generic fallback", "remote")
+        };
+        var dialog = new ChatSettingsDialog(new(), null,
+            _ => Task.FromResult(new DesktopSkillSelection(items, new HashSet<string> { "clawhub/1password" }, "localhost")))
+            { XamlRoot = root.XamlRoot, RequestedTheme = theme };
+        SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(100);
+        dialog.ShowSkillsTab(); await Task.Delay(100); dialog.UpdateLayout();
+        var rows = Descendants(dialog).OfType<SettingsExpander>().Where(row => row.Name == "ChatSkillCard").ToArray();
+        DependencyObject Header(string id) => (DependencyObject)rows.Single(row => row.Tag as string == id).Header;
+        FrameworkElement? ProviderLogo(string id) => Descendants(Header(id)).OfType<FrameworkElement>().SingleOrDefault(control => control.Name == "SkillProviderLogo");
+        var artwork = ProviderLogo("clawhub/1password");
+        Check(artwork is not null && artwork.Width == 32 && artwork.Height == 32
+            && !Descendants(Header("clawhub/1password")).OfType<UserControl>().Any(control => control.Name == "McpServerIcon"),
+            context + ": a provider-owned skill with no explicit icons uses the provider-logo renderer, including favorites");
+        var resolved = Field<CatalogProvider>(artwork!, "provider");
+        var expected = ProviderCatalog.SkillProvider(new(CatalogKind.Skill, "clawhub/1password", "1password", ""))!;
+        Check(resolved.Id == expected.Id && resolved.Icons.SequenceEqual(expected.Icons) && resolved.Urls == new ProviderUrls(),
+            context + ": settings use the same provider and logo sources as the Skills page, without external favicon fallback");
+        var explicitSlot = Descendants(Header("clawhub/explicit")).OfType<UserControl>().Single(control => control.Name == "McpServerIcon");
+        Check(ProviderLogo("clawhub/explicit") is null && Field<IReadOnlyList<McpIcon>>(explicitSlot, "icons").SequenceEqual([explicitIcon]),
+            context + ": explicit skill icons retain priority over provider branding");
+        Check(ProviderLogo("clawhub/unsupported") is not null,
+            context + ": unsupported skill artwork falls back to the available provider logo");
+        Check(new[] { "clawhub/local", "clawhub/connected", "unknown-provider/skill", "clawhub" }.All(id => ProviderLogo(id) is null
+            && Descendants(Header(id)).OfType<UserControl>().Any(control => control.Name == "McpServerIcon")),
+            context + ": local, MCP, unknown-provider and unqualified skills keep generic artwork rather than misleading branding");
+        var providerRow = rows.Single(row => row.Tag as string == "clawhub/1password");
+        Check(!providerRow.IsExpanded && providerRow.Content is ToggleSwitch toggle && Within(toggle, dialog)
+            && Field<ScrollViewer>(dialog, "page").ScrollableWidth < 1,
+            context + ": provider logo preserves the compact row, visible toggle, and narrow-dialog layout");
+        InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "CloseButton")); await shown;
     }
 
     private async Task CheckSkillsAsync(ElementTheme theme)
