@@ -8,7 +8,7 @@ using AIHappey.Responses.Streaming;
 namespace AIHappey.Desktop.Core;
 
 /// <summary>Per-response reducer. Only portable UI events leave this boundary, never native SSE packets.</summary>
-public sealed partial class NativeChatStream(DesktopChatRoute route)
+public sealed partial class NativeChatStream(DesktopChatRoute route, bool localShell = false)
 {
     private sealed class Block(string kind)
     {

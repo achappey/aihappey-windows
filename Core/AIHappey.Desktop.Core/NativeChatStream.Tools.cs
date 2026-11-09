@@ -119,9 +119,10 @@ public sealed partial class NativeChatStream
     private void ResponseTool(JsonObject item, string index, bool complete, List<StreamEvent> result)
     {
         var type = item["type"]?.ToString() ?? "";
-        if (type == "shell_call" && item["environment"]?["type"]?.ToString() == "local"
-            || type == "tool_search_call" && item["execution"]?.ToString() is { } execution && execution != "server") UnsupportedTool();
-        var client = type is "function_call" or "custom_tool_call" or "apply_patch_call";
+        var local = type == "shell_call" && (item["environment"]?["type"]?.ToString() == "local"
+            || item["environment"] is null && localShell);
+        if (type == "tool_search_call" && item["execution"]?.ToString() is { } execution && execution != "server") UnsupportedTool();
+        var client = local || type is "function_call" or "custom_tool_call" or "apply_patch_call";
         var isResult = type is "shell_call_output" or "tool_search_output" or "program_output";
         var hosted = type is "web_search_call" or "file_search_call" or "code_interpreter_call" or "image_generation_call" or "shell_call"
             or "mcp_call" or "mcp_list_tools" or "tool_search_call" or "program";
@@ -148,7 +149,7 @@ public sealed partial class NativeChatStream
         }
         if (tool is null)
         {
-            tool = new() { Id = client ? callId ?? nativeId : nativeId, Name = item["name"]?.ToString() ?? type.Replace("_call", "", StringComparison.Ordinal), Provider = !client };
+            tool = new() { Id = client ? callId ?? nativeId : nativeId, Name = local ? NativeShellTools.ToolName : item["name"]?.ToString() ?? type.Replace("_call", "", StringComparison.Ordinal), Provider = !client };
             nativeTools.Add(key, tool);
         }
         else if (!isResult && (tool.Provider == client || tool.Metadata["call_id"]?.ToString() != callId
@@ -163,6 +164,7 @@ public sealed partial class NativeChatStream
         {
             tool.Metadata = metadata;
             if (type == "apply_patch_call") tool.Input = new JsonObject { ["operation"] = item["operation"]?.DeepClone() };
+            else if (local) tool.Input = item["action"]?.DeepClone() ?? new JsonObject();
             else if (client)
             {
                 if ((item[type == "custom_tool_call" ? "input" : "arguments"]?.ToString()) is { } arguments)

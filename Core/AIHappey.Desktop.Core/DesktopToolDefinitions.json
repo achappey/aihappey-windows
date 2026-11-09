@@ -1,4 +1,23 @@
 {
+  "windows-powershell": [
+    {
+      "name": "local_powershell_execute",
+      "title": "Execute PowerShell",
+      "description": "Execute a non-interactive script locally with the desktop process's permissions. Can read or modify files, run programs and access the network; not sandboxed. Uses a fresh process without profiles for each execution; state does not persist. Working directory defaults to the user profile. Returns stdout, stderr, exitCode, timedOut and truncated. Timeout defaults to 60000 ms, capped at 120000 ms; combined output defaults to 16384 characters, capped at 65536. Existing result review occurs after execution only when requested by the gateway; rejecting a result does not undo side effects.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "script": { "type": "string", "minLength": 1, "maxLength": 262144 },
+          "workingDirectory": { "type": "string", "description": "Optional existing absolute local working directory, not an access restriction." },
+          "timeoutMs": { "type": "integer", "minimum": 1, "maximum": 120000 },
+          "maxOutputLength": { "type": "integer", "minimum": 1, "maximum": 65536 }
+        },
+        "required": ["script"],
+        "additionalProperties": false
+      },
+      "annotations": { "readOnlyHint": false, "destructiveHint": true, "idempotentHint": false, "openWorldHint": true }
+    }
+  ],
   "windows-search": [
     {
       "name": "local_windows_search",

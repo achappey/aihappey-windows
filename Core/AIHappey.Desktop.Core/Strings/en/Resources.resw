@@ -1246,6 +1246,7 @@
   <data name="LocalPluginSystemInformation" xml:space="preserve"><value>Windows System Information</value></data>
   <data name="LocalPluginAppLauncher" xml:space="preserve"><value>Windows App Launcher</value></data>
   <data name="LocalPluginNotifications" xml:space="preserve"><value>Windows Notifications</value></data>
+  <data name="LocalPluginPowerShell" xml:space="preserve"><value>PowerShell</value></data>
   <data name="LocalWindowActionUnavailable" xml:space="preserve"><value>The window action is unavailable or was refused by Windows. The target may be closed, protected, or unresponsive.</value></data>
   <data name="LocalWindowBoundsInvalid" xml:space="preserve"><value>Supply integer desktop coordinates and, when resizing, both width and height from 1 to 32768 pixels without coordinate overflow.</value></data>
   <data name="LocalClipboardImageInvalid" xml:space="preserve"><value>The image is unsupported, invalid, or exceeds 20 MiB or 16 megapixels.</value></data>

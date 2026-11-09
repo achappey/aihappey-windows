@@ -151,7 +151,7 @@ public sealed class DesktopChatClient(DesktopSession session, HttpClient http, H
         if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")
             throw new GatewayException(DesktopResources.Get("ChatStreamRequired"));
         await using var stream = await response.Content.ReadAsStreamAsync(ct);
-        var mapper = new NativeChatStream(route);
+        var mapper = new NativeChatStream(route, NativeShellTools.Enabled(preferences, route.ProviderKey));
         await foreach (var frame in SseReader.ReadEventsAsync(stream, ct))
         {
             if (frame.Data == "[DONE]") break;

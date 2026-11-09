@@ -542,6 +542,10 @@ public sealed partial class ChatShell : UserControl
                 : inferencePreferences.PluginEnabled(DesktopLocalTools.SkillSearch))
                 await LoadRuntimeSkillsAsync(ct);
             var mcpTurn = CaptureSkillRuntime(inferencePreferences, agentToolsOnly: Service == ServiceKind.Agents);
+            NativeShellTools.Register(mcpTurn, inferencePreferences,
+                Service == ServiceKind.Ai ? ChatPreferences.ResolveProvider(ServiceKind.Ai, selected, selectedProvider) : null,
+                chatRoute?.IsNative == true ? chatRoute.Endpoint : null,
+                () => !closing && session.HistoryPartition == partition);
             if (Service == ServiceKind.Ai && (chatRoute?.IsNative != true || chatRoute.Endpoint == "/v1/responses") && ChatPreferences.ResolveProvider(ServiceKind.Ai, selected, selectedProvider) == "openai"
                 && OpenAIApplyPatchTools.Enabled(inferencePreferences))
             {

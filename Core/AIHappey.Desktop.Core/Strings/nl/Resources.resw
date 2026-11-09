@@ -1241,6 +1241,7 @@
   <data name="LocalPluginSystemInformation" xml:space="preserve"><value>Windows Systeeminformatie</value></data>
   <data name="LocalPluginAppLauncher" xml:space="preserve"><value>Windows Appstarter</value></data>
   <data name="LocalPluginNotifications" xml:space="preserve"><value>Windows Meldingen</value></data>
+  <data name="LocalPluginPowerShell" xml:space="preserve"><value>PowerShell</value></data>
   <data name="LocalWindowActionUnavailable" xml:space="preserve"><value>De vensteractie is niet beschikbaar of is geweigerd door Windows. Het venster is mogelijk gesloten, beveiligd of reageert niet.</value></data>
   <data name="LocalWindowBoundsInvalid" xml:space="preserve"><value>Geef gehele bureaubladcoördinaten op en bij formaatwijziging zowel breedte als hoogte van 1 tot 32768 pixels, zonder coördinatenoverloop.</value></data>
   <data name="LocalClipboardImageInvalid" xml:space="preserve"><value>De afbeelding is niet ondersteund, ongeldig of groter dan 20 MiB of 16 megapixels.</value></data>

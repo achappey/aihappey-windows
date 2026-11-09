@@ -66,6 +66,13 @@ internal static class NativeChatHistory
                     var callId = call?["call_id"]?.ToString() ?? part["toolCallId"]?.ToString();
                     if (string.IsNullOrEmpty(callId) || !seen.Add("client:" + callId)) continue;
                     var nativeType = call?["type"]?.ToString();
+                    if (nativeType == "shell_call")
+                    {
+                        var shell = ResponseNative(call) ?? throw new InvalidOperationException("Missing native shell call.");
+                        entries.Add((shell, call));
+                        entries.Add((NativeShellTools.ReplayOutput(part, callId, route.ProviderKey), null));
+                        continue;
+                    }
                     var item = new JsonObject { ["type"] = "function_call", ["call_id"] = callId,
                         ["name"] = NativeChatTools.Name(part), ["arguments"] = NativeChatTools.Stringify(part["input"] ?? new JsonObject()) };
                     if (nativeType == "custom_tool_call")
