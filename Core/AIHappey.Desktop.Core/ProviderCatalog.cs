@@ -34,10 +34,11 @@ public static class ProviderCatalog
     private static readonly Lazy<IReadOnlyDictionary<string, CatalogProvider>> catalog = new(Load);
     public static IReadOnlyDictionary<string, CatalogProvider> All => catalog.Value;
     public static CatalogProvider Get(string id) => All.GetValueOrDefault(id) ?? new() { Id = id, Name = id };
-    public static CatalogProvider? SkillProvider(CatalogItem item)
+    public static CatalogProvider? SkillProvider(CatalogItem item) => item.Kind == CatalogKind.Skill ? SkillProvider(item.Id, item.Origin) : null;
+    public static CatalogProvider? SkillProvider(string id, CatalogOrigin origin)
     {
-        if (item.Kind != CatalogKind.Skill || item.Origin != CatalogOrigin.Backend) return null;
-        var parts = item.Id.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (origin != CatalogOrigin.Backend) return null;
+        var parts = id.Split('/', StringSplitOptions.RemoveEmptyEntries);
         return parts.Length > 1 ? All.GetValueOrDefault(parts[0].ToLowerInvariant()) : null;
     }
     public static string? ApiKeyHeader(CatalogProvider provider)

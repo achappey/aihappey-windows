@@ -91,7 +91,10 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
         var heading = new Grid { ColumnSpacing = 12 };
         heading.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         heading.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-        heading.Children.Add(new McpServerIcon(skill.Icons, 32));
+        var provider = skill.Origin == "remote" ? ProviderCatalog.SkillProvider(skill.Id, CatalogOrigin.Backend) : null;
+        heading.Children.Add(!skill.Icons.Any(McpIcons.Supported) && provider is { Icons.Count: > 0 }
+            ? new ProviderLogo(provider with { Urls = new() }, 32, showPlaceholder: true, placeholderIcon: FluentIcons.Common.Icon.Globe) { Name = "SkillProviderLogo" }
+            : new McpServerIcon(skill.Icons, 32));
         var label = new TextBlock { Text = skill.Label, TextWrapping = TextWrapping.Wrap,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(label, 1); heading.Children.Add(label); expander.Header = heading;
