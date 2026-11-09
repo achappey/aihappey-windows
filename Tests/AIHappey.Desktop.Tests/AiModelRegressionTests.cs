@@ -29,15 +29,15 @@ internal static class AiModelRegressionTests
         check(AiModelCatalog.Types.All(t => loaded.AiModels.DefaultFor(t) == "provider/" + t)
             && new[] { "image", "video", "speech", "transcription" }.All(loaded.AiModels.AllowsChat), "all nine defaults and four switches round trip through settings storage");
         var draft = loaded.Clone();
-        draft.AiModels.LanguageModel = "changed"; draft.AiModels.ChatWithImageModels = false;
+        draft.AiModels.LanguageModel![0] = "changed"; draft.AiModels.ChatWithImageModels = false;
         draft.ModelContext.ToolTimeoutMinutes = 2; draft.AllowedToolList.Clear(); draft.Ai.RemoteUrl = "changed";
-        check(loaded.AiModels.LanguageModel == "provider/language" && loaded.AiModels.ChatWithImageModels
+        check(loaded.AiModels.DefaultFor("language") == "provider/language" && loaded.AiModels.ChatWithImageModels
             && loaded.ModelContext.ToolTimeoutMinutes == 19 && loaded.AllowedToolList.SequenceEqual(["keep-tool"])
             && loaded.Ai.RemoteUrl != "changed", "complete settings clones isolate AI/MCP/tool/connection drafts");
         var unrelated = loaded.Clone(); unrelated.Chat = loaded.Chat.Clone();
         await SettingsStore.SaveAsync(directory, unrelated);
         loaded = await SettingsStore.LoadAsync(directory, new());
-        check(loaded.AiModels.VideoModel == "provider/video" && loaded.ModelContext.ToolTimeoutMinutes == 19
+        check(loaded.AiModels.DefaultFor("video") == "provider/video" && loaded.ModelContext.ToolTimeoutMinutes == 19
             && loaded.AllowedToolList.SequenceEqual(["keep-tool"]), "unrelated chat-setting saves preserve model preferences and existing settings");
         var blockedDirectory = Path.Combine(root, "ai-settings-blocked");
         await File.WriteAllTextAsync(blockedDirectory, "not a directory");
@@ -46,11 +46,49 @@ internal static class AiModelRegressionTests
         catch (IOException)
         {
             check(JsonSerializer.Serialize(loaded, JsonSerializerOptions.Web) == beforeFailure
-                && (await SettingsStore.LoadAsync(directory, new())).AiModels.LanguageModel == "provider/language",
+                && (await SettingsStore.LoadAsync(directory, new())).AiModels.DefaultFor("language") == "provider/language",
                 "failed draft persistence leaves live and previously persisted model settings unchanged");
         }
         preferences.SetDefault("video", "  ");
-        check(preferences.VideoModel is null, "clearing a default does not persist whitespace");
+        check(preferences.VideoModel is { Length: 0 }, "clearing a default persists an explicit empty list");
+
+        var migrated = JsonSerializer.Deserialize<AiModelPreferences>("""
+            {"languageModel":" p/old ","imageModel":[],"videoModel":["p/video-2","p/video-1","p/video-2"],
+             "speechModel":null,"transcriptionModel":"p/stt","audioModel":"p/realtime"}
+            """, JsonSerializerOptions.Web)!;
+        check(migrated.LanguageModel!.SequenceEqual(["p/old"]) && migrated.ImageModel is { Length: 0 }
+            && migrated.VideoModel!.SequenceEqual(["p/video-2", "p/video-1"]) && migrated.SpeechModel is null,
+            "legacy IDs migrate to arrays; ordered arrays, empty and unset preferences remain distinct");
+        var seeds = new Dictionary<string, string[]> { ["language"] = ["p/config"], ["image"] = ["p/config-image"],
+            ["speech"] = [" p/speech-2 ", "p/speech-1", "p/speech-2"], ["transcription"] = ["must-not-change"] };
+        check(migrated.SeedDefaults(seeds) && !migrated.SeedDefaults(seeds)
+            && migrated.LanguageModel!.SequenceEqual(["p/old"]) && migrated.ImageModel!.Length == 0
+            && migrated.SpeechModel!.SequenceEqual(["p/speech-2", "p/speech-1"])
+            && migrated.TranscriptionModel == "p/stt" && migrated.AudioModel == "p/realtime",
+            "configuration seeds only unset multi-model preferences, independently of routing");
+        var json = JsonSerializer.Serialize(migrated, JsonSerializerOptions.Web);
+        using (var document = JsonDocument.Parse(json))
+            check(AiModelPreferences.MultiModelTypes.All(type => document.RootElement.GetProperty(type + "Model").ValueKind == JsonValueKind.Array),
+                "all four multi-model preferences serialize as arrays");
+        var roundTrip = JsonSerializer.Deserialize<AiModelPreferences>(json, JsonSerializerOptions.Web)!;
+        check(roundTrip.SpeechModel!.SequenceEqual(migrated.SpeechModel!) && roundTrip.ImageModel!.Length == 0,
+            "ordered model arrays and explicit empty preferences round trip");
+        var modelCatalog = AiModelPreferences.MultiModelTypes.SelectMany(type => new[] {
+            new ChatTarget("p/" + type + "-1", "one") { ModelType = type },
+            new ChatTarget("p/" + type + "-2", "two") { ModelType = type } }).ToArray();
+        foreach (var type in AiModelPreferences.MultiModelTypes)
+        {
+            var list = new[] { "p/" + type + "-2", "p/" + type + "-1" };
+            migrated.SetDefaults(type, list);
+            check(AiModelCatalog.InitialModels(modelCatalog, migrated, type, true).SequenceEqual(list)
+                && AiModelCatalog.InitialModels(modelCatalog, migrated, type, false).SequenceEqual(list.Take(1))
+                && migrated.DefaultsFor(type)!.SequenceEqual(list), "routing affects runtime selection only: " + type);
+        }
+        var configJson = """{"defaultModelsByType":{"language":["p/one","p/two"],"image":[]}}""";
+        var header = JsonSerializer.Deserialize<AIHappey_Desktop_HeaderAuth.HeaderConfiguration>(configJson, JsonSerializerOptions.Web)!;
+        var enterprise = JsonSerializer.Deserialize<AIHappey_Desktop_AzureAuth.EnterpriseConfiguration>(configJson, JsonSerializerOptions.Web)!;
+        check(header.DefaultModelsByType!["language"].SequenceEqual(enterprise.DefaultModelsByType!["language"])
+            && header.DefaultModelsByType["image"].Length == 0, "both Windows consumer configurations accept ordered model arrays");
 
         using var handler = new ModelsHandler();
         using var http = new HttpClient(handler);
@@ -77,11 +115,11 @@ internal static class AiModelRegressionTests
         check(AiModelCatalog.ChatSuggestions(many, off, "p/0").Single().Id == "p/0"
             && AiModelCatalog.ChatSuggestions(many, off).Take(100).First().Id == "p/149", "search and ordering apply before suggestion truncation");
 
-        off.LanguageModel = "old";
+        off.LanguageModel = ["old"];
         check(AiModelCatalog.NewChatModel(models, off) == "old", "available preferred language model wins over newest model");
-        off.LanguageModel = "missing";
-        check(AiModelCatalog.NewChatModel(models, off) == "new" && off.LanguageModel == "missing", "missing default falls back to newest language without overwriting preference");
-        off.LanguageModel = "image";
+        off.LanguageModel = ["missing"];
+        check(AiModelCatalog.NewChatModel(models, off) == "new" && off.LanguageModel.SequenceEqual(["missing"]), "missing default falls back to newest language without overwriting preference");
+        off.LanguageModel = ["image"];
         check(AiModelCatalog.NewChatModel(models, off) == "new", "wrong-type default cannot select a non-language model for a new chat");
         check(AiModelCatalog.NewChatModel([], off) == "" && AiModelCatalog.NewChatModel([models[0]], off) == "", "no language catalog leaves selection empty");
         var agents = await client.ListAsync(ServiceKind.Agents, CancellationToken.None);

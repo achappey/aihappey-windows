@@ -42,6 +42,23 @@ public partial class App
         {
             view.SelectedItem = view.MenuItems.OfType<NavigationViewItem>().Single(x => (string)x.Tag == type);
             dialog.UpdateLayout();
+            if (AiModelPreferences.MultiModelTypes.Contains(type))
+            {
+                var multi = Descendants(view).OfType<ChatTargetPicker>().Single(x => x.Name == "AiDefaultModel_" + type);
+                var options = ((IEnumerable<ChatTarget>)multi.ItemsSource!).ToArray();
+                Check(multi.Text == "p/" + type + "-old" && options.Length == 2 && options.All(x => x.ModelType == type)
+                    && !string.IsNullOrEmpty(AutomationProperties.GetName(multi)), context + ": accessible multi-model default picker " + type);
+                InvokeButton(multi); await Task.Delay(80);
+                var list = Field<ListView>(multi, "list");
+                list.SelectedItems.Clear();
+                list.SelectedItems.Add(options.Single(x => x.Id == "p/" + type + "-new"));
+                list.SelectedItems.Add(options.Single(x => x.Id == "p/" + type + "-old"));
+                Check(Field<AiModelPreferences>(view, "draft").DefaultsFor(type)!.SequenceEqual(["p/" + type + "-new", "p/" + type + "-old"]),
+                    context + ": two defaults persist in selection order without a routing model: " + type);
+                multi.IsSuggestionListOpen = false;
+            }
+            else
+            {
             var picker = Descendants(view).OfType<AutoSuggestBox>().Single(x => x.Name == "AiDefaultModel_" + type);
             var options = ((IEnumerable<ChatTarget>)picker.ItemsSource).ToArray();
             Check(picker.Text == "p/" + type + "-old" && options.Length == 2
@@ -59,6 +76,7 @@ public partial class App
             InvokeButton(Descendants(picker).OfType<Button>().Single(x => x.Name == "QueryButton"));
             await WaitForProviderUiAsync(() => Field<AiModelPreferences>(view, "draft").DefaultFor(type) == "p/" + type + "-new", "Model picker did not commit: " + type);
             Check(picker.Text == "p/" + type + "-new", context + ": native query button commits available " + type + " model");
+            }
             var switches = Descendants(view).OfType<ToggleSwitch>().Where(x => x.Name == "AiChatWith_" + type).ToArray();
             Check(switches.Length == (type is "image" or "video" or "speech" or "transcription" ? 1 : 0),
                 context + ": Chat with switch only on supported type " + type);
@@ -79,7 +97,8 @@ public partial class App
             && saved.Images.Size == "1024x1536" && saved.Images.MaskPath == "retained-mask.png"
             && saved.Images.ProviderOptions["future"]["keep"]!.GetValue<bool>()
             && saved.Transcriptions.ProviderOptions["future"]["keep"]!.GetValue<string>() == "transcription"
-            && !original.AiModels.ChatWithImageModels && original.AiModels.LanguageModel == "p/language-old",
+            && AiModelPreferences.MultiModelTypes.All(type => saved.AiModels.DefaultsFor(type)!.Length == 2)
+            && !original.AiModels.ChatWithImageModels && original.AiModels.DefaultFor("language") == "p/language-old",
             context + ": Save isolates all defaults/switches and preserves unrelated preferences");
 
         var canceled = new SettingsDialog(original, true, "en", catalog) { XamlRoot = root.XamlRoot };
@@ -87,23 +106,23 @@ public partial class App
         ((NavigationView)canceled.FindName("Tabs")).SelectedItem = canceled.FindName("ArtificialIntelligenceTab"); canceled.UpdateLayout();
         InvokeButton(Descendants(canceled.AiModelView).OfType<Button>().Single(x => x.Name == "AiClearDefault_language"));
         canceled.Hide(); await shown;
-        Check(canceled.Result is null && original.AiModels.LanguageModel == "p/language-old", context + ": Cancel discards a native clear-default edit");
+        Check(canceled.Result is null && original.AiModels.DefaultFor("language") == "p/language-old", context + ": Cancel discards a native clear-default edit");
 
-        var unavailable = original.Clone(); unavailable.AiModels.LanguageModel = "missing";
+        var unavailable = original.Clone(); unavailable.AiModels.LanguageModel = ["missing"];
         var missing = new SettingsDialog(unavailable, true, "en", catalog) { XamlRoot = root.XamlRoot };
         shown = missing.ShowAsync(); await Task.Delay(100);
         ((NavigationView)missing.FindName("Tabs")).SelectedItem = missing.FindName("ArtificialIntelligenceTab"); missing.UpdateLayout();
         Check(Descendants(missing.AiModelView).OfType<TextBlock>().Any(x => x.Text == DesktopResources.Get("AiDefaultUnavailable")),
             context + ": unavailable preference remains visible with an explanatory state");
         InvokeButton(Descendants(missing).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await shown;
-        Check(missing.Result?.AiModels.LanguageModel == "missing", context + ": viewing/saving does not auto-replace unavailable defaults");
+        Check(missing.Result?.AiModels.DefaultFor("language") == "missing", context + ": viewing/saving does not auto-replace unavailable defaults");
 
         var noPreference = new DesktopSettings();
         foreach (var type in AiModelCatalog.Types) ProviderPreferences.SetEnabled(noPreference, type, "p", true);
         var effective = new SettingsDialog(noPreference, true, "en", catalog) { XamlRoot = root.XamlRoot };
         shown = effective.ShowAsync(); await Task.Delay(100);
         ((NavigationView)effective.FindName("Tabs")).SelectedItem = effective.FindName("ArtificialIntelligenceTab"); effective.UpdateLayout();
-        Check(Descendants(effective.AiModelView).OfType<AutoSuggestBox>().Single(x => x.Name == "AiDefaultModel_language").Text == "p/language-new",
+        Check(Descendants(effective.AiModelView).OfType<ChatTargetPicker>().Single(x => x.Name == "AiDefaultModel_language").Text == "p/language-new",
             context + ": unset language preference displays its effective newest-language fallback");
         InvokeButton(Descendants(effective).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await shown;
         Check(effective.Result?.AiModels.LanguageModel is null, context + ": viewing fallback never creates an explicit default preference");
@@ -112,10 +131,10 @@ public partial class App
         var asyncDialog = new SettingsDialog(original, true, "en", loadAiModels: _ => deferred.Task) { XamlRoot = root.XamlRoot };
         shown = asyncDialog.ShowAsync(); await Task.Delay(100);
         ((NavigationView)asyncDialog.FindName("Tabs")).SelectedItem = asyncDialog.FindName("ArtificialIntelligenceTab"); asyncDialog.UpdateLayout();
-        Check(Descendants(asyncDialog.AiModelView).OfType<AutoSuggestBox>().Single(x => x.Name == "AiDefaultModel_language").IsEnabled == false,
+        Check(Descendants(asyncDialog.AiModelView).OfType<ChatTargetPicker>().Single(x => x.Name == "AiDefaultModel_language").IsEnabled == false,
             context + ": uncached AI catalog shows disabled pickers while loading");
         deferred.SetResult(catalog); await Task.Delay(100); asyncDialog.UpdateLayout();
-        Check(Descendants(asyncDialog.AiModelView).OfType<AutoSuggestBox>().Single(x => x.Name == "AiDefaultModel_language").IsEnabled,
+        Check(Descendants(asyncDialog.AiModelView).OfType<ChatTargetPicker>().Single(x => x.Name == "AiDefaultModel_language").IsEnabled,
             context + ": settings opened outside model mode accept an asynchronously loaded full AI catalog");
         asyncDialog.Hide(); await shown;
 
@@ -128,7 +147,7 @@ public partial class App
         Check(Descendants(failed.AiModelView).OfType<TextBlock>().Any(x => x.Text == DesktopResources.Get("AiModelsLoadFailed")),
             context + ": catalog failure is a sanitized native state, not a settings failure");
         InvokeButton(Descendants(failed).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await shown;
-        Check(failed.Result?.AiModels.LanguageModel == original.AiModels.LanguageModel, context + ": failed catalog loading preserves saved defaults");
+        Check(failed.Result?.AiModels.LanguageModel?.SequenceEqual(original.AiModels.LanguageModel!) == true, context + ": failed catalog loading preserves saved defaults");
 
         var lateCatalog = new TaskCompletionSource<IReadOnlyList<ChatTarget>>();
         CancellationToken catalogToken = default;
@@ -160,11 +179,11 @@ public partial class App
             Call("UpdateTargetSuggestions", "");
             Check(picker.Text == "p/language-old" && ((IEnumerable<ChatTarget>)picker.ItemsSource).Any(x => x.ModelType == "image"),
                 context + ": eligibility refresh exposes enabled types without changing current selection");
-            session.Settings.AiModels.LanguageModel = "p/language-old";
+            session.Settings.AiModels.LanguageModel = ["p/language-old"];
             picker.Text = "p/image-new";
             Call("NewConversation");
             Check(picker.Text == "p/language-old", context + ": new AI chat replaces previous selection with preferred language model");
-            session.Settings.AiModels.LanguageModel = "missing";
+            session.Settings.AiModels.LanguageModel = ["missing"];
             Call("NewConversation");
             Check(picker.Text == "p/language-new", context + ": new AI chat falls back to newest language, never newest image");
             Call("UpdateMode", ServiceKind.Agents);

@@ -17,7 +17,7 @@ internal static class EnterpriseSettingsRegressionTests
             Agents = new() { Location = RuntimeLocation.Remote, RemoteUrl = "https://old-agents.example" },
             Language = "nl", ConvertAttachmentsToText = false,
             Chat = new() { ShowTokens = true, ShowProviderLogo = false },
-            AiModels = new() { LanguageModel = "provider/model" },
+            AiModels = new() { LanguageModel = ["provider/model"] },
             ModelContext = new() { ToolTimeoutMinutes = 19 }
         };
         await SettingsStore.SaveAsync(directory, saved);
@@ -26,7 +26,7 @@ internal static class EnterpriseSettingsRegressionTests
         check(loaded.Ai.RemoteUrl == config.AiUrl && loaded.Agents.RemoteUrl == config.AgentsUrl,
             "enterprise settings: host gateways override stale saved addresses before validation");
         check(loaded.Language == "nl" && !loaded.ConvertAttachmentsToText && loaded.Chat.ShowTokens
-            && !loaded.Chat.ShowProviderLogo && loaded.AiModels.LanguageModel == "provider/model"
+            && !loaded.Chat.ShowProviderLogo && loaded.AiModels.LanguageModel!.SequenceEqual(["provider/model"])
             && loaded.ModelContext.ToolTimeoutMinutes == 19,
             "enterprise settings: gateway policy preserves user preferences");
         foreach (var service in new[] { ServiceKind.Ai, ServiceKind.Agents })
