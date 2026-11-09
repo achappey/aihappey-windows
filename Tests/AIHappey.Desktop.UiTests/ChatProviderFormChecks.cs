@@ -92,12 +92,70 @@ public partial class App
             Check(reopen.Result!.ProviderHeaders.Count == 0 && (provider == "deepseek" ? JsonNode.DeepEquals(reopen.Result.ProviderMetadata["deepseek"], new JsonObject())
                 : JsonNode.DeepEquals(reopen.Result.ProviderMetadata["anthropic"], AnthropicChatConfig.Defaults())), context + ": restore defaults rebuilds and commits provider defaults");
         }
+        await CheckOpenAIChatSettingsAsync(root, theme);
         // Registration must remain an additive extension, including case-insensitive lookup.
         foreach (var provider in new[] { "OPENAI", "ANTHROPIC", "DEEPSEEK" })
         {
             var dialog = new ChatSettingsDialog(new(), provider) { XamlRoot = root.XamlRoot };
             Check(ProviderForm(dialog) is not null, "Native provider factory: case-insensitive " + provider);
         }
+    }
+    private async Task CheckOpenAIChatSettingsAsync(Grid root, ElementTheme theme)
+    {
+        var context = "OpenAI chat settings / " + theme;
+        var original = new ChatPreferences();
+        original.ProviderMetadata["openai"] = JsonNode.Parse("""{"multi_agent":{"enabled":true,"max_concurrent_subagents":3},"inputImageDetail":"high","future":{"keep":true}}""")!.AsObject();
+        original.ProviderHeaders["openai"] = new() { ["openai-beta"] = "custom=v1" };
+        var before = original.ProviderMetadata["openai"].ToJsonString();
+        var dialog = new ChatSettingsDialog(original, "openai") { XamlRoot = root.XamlRoot, RequestedTheme = theme };
+        SystemAppearance.PrepareDialog(dialog); var shown = dialog.ShowAsync(); await Task.Delay(100);
+        SelectChatSettingsTab(dialog, "ChatProviderTab"); await Task.Delay(80);
+        var form = ProviderForm(dialog); var view = ProviderView(form);
+        var model = Field<OpenAIChatConfig>(form, "model");
+        SettingsExpander Section(string name) => ProviderControls(view).OfType<SettingsExpander>().Single(expander => expander.Name == "OpenAI_" + name);
+        ToggleSwitch Header(string name) => ProviderControls((DependencyObject)Section(name).Content).OfType<ToggleSwitch>().Single();
+        var other = ProviderControls((DependencyObject)Section("other").ItemsHeader).ToArray();
+        Check(other.OfType<ComboBox>().Count() == 1 && (string)other.OfType<ComboBox>().Single().Header == ProviderLabel("openai.serviceTier.title")
+            && !ProviderControls(view).OfType<ComboBox>().Any(control => (string)control.Header == ProviderLabel("openai.imageInputDetail.title")),
+            context + ": Other retains service tier and parallel tool calls but has no input-image-detail dropdown");
+        Check(Header("multi_agent").IsOn && model.Headers["OpenAI-Beta"] == "custom=v1," + OpenAIChatConfig.MultiAgentBeta,
+            context + ": existing enabled standalone card repairs its missing beta on form initialization");
+        Header("multi_agent").IsOn = false;
+        Check(model.Get("multi_agent") is null && model.Headers["OpenAI-Beta"] == "custom=v1", context + ": standalone header toggle removes only its beta flag");
+        Header("agent").IsOn = true;
+        var agentMulti = ProviderControls((DependencyObject)Section("agent").ItemsHeader).OfType<ToggleSwitch>()
+            .Single(control => AutomationProperties.GetName(control) == ProviderLabel("openai.sessionAgent.multiAgent"));
+        agentMulti.IsOn = true;
+        Check(model.Boolean("agent/multi_agent/enabled") && model.Headers["OpenAI-Beta"] == "custom=v1",
+            context + ": Agent-card multi-agent remains outside automatic beta ownership");
+        Header("multi_agent").IsOn = true;
+        Check(model.Headers["OpenAI-Beta"] == "custom=v1," + OpenAIChatConfig.MultiAgentBeta && ProviderValid(form),
+            context + ": standalone re-enable adds one required beta and retains valid settings");
+        Check(original.ProviderMetadata["openai"].ToJsonString() == before && original.ProviderHeaders["openai"]["openai-beta"] == "custom=v1",
+            context + ": header and body edits remain isolated from saved preferences");
+        InvokeButton(Descendants(dialog).OfType<Button>().Single(button => button.Name == "CloseButton")); await shown;
+        var saved = dialog.Result!;
+        Check(saved.ProviderHeaders["openai"]["OpenAI-Beta"] == "custom=v1," + OpenAIChatConfig.MultiAgentBeta
+            && !saved.ProviderMetadata["openai"].ContainsKey("inputImageDetail") && saved.ProviderMetadata["openai"]["future"]!["keep"]!.GetValue<bool>(),
+            context + ": closing saves synchronized beta and drops only obsolete image detail");
+        var reopen = new ChatSettingsDialog(saved, "openai") { XamlRoot = root.XamlRoot, RequestedTheme = theme };
+        shown = reopen.ShowAsync(); await Task.Delay(100); SelectChatSettingsTab(reopen, "ChatProviderTab"); await Task.Delay(60);
+        var reopenedForm = ProviderForm(reopen); var reopened = Field<OpenAIChatConfig>(reopenedForm, "model");
+        var reopenedSection = ProviderControls(ProviderView(reopenedForm)).OfType<SettingsExpander>().Single(expander => expander.Name == "OpenAI_multi_agent");
+        var toggle = ProviderControls((DependencyObject)reopenedSection.Content).OfType<ToggleSwitch>().Single();
+        Check(toggle.IsOn && reopened.Headers["OpenAI-Beta"] == "custom=v1," + OpenAIChatConfig.MultiAgentBeta,
+            context + ": standalone state and hidden beta survive reopening");
+        toggle.IsOn = false;
+        InvokeButton(Descendants(reopen).OfType<Button>().Single(button => button.Name == "CloseButton")); await shown;
+        Check(reopen.Result!.ProviderHeaders["openai"]["OpenAI-Beta"] == "custom=v1"
+            && reopen.Result.ProviderMetadata["openai"]["agent"]!["multi_agent"]!["enabled"]!.GetValue<bool>(),
+            context + ": saving standalone off removes its beta even while Agent-card multi-agent stays on");
+        var reset = new ChatSettingsDialog(saved, "openai") { XamlRoot = root.XamlRoot, RequestedTheme = theme };
+        shown = reset.ShowAsync(); await Task.Delay(100);
+        InvokeButton(Descendants(reset).OfType<Button>().Single(button => button.Name == "PrimaryButton")); await Task.Delay(80);
+        InvokeButton(Descendants(reset).OfType<Button>().Single(button => button.Name == "CloseButton")); await shown;
+        Check(reset.Result!.ProviderHeaders.Count == 0 && !reset.Result.ProviderMetadata["openai"].ContainsKey("multi_agent"),
+            context + ": restore defaults clears standalone multi-agent and beta headers");
     }
     private async Task ExerciseAnthropicFormAsync(ChatSettingsDialog dialog, object form, FrameworkElement view, string context)
     {

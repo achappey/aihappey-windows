@@ -11,6 +11,7 @@ internal static class SkillRegressionTests
     private const string Markdown = "---\nname: sample\ndescription: Sample skill\n---\n# Instructions\nRead references/info.md. Never run scripts automatically.";
     public static async Task RunAsync(Action<bool, string> check, string root)
     {
+        await CheckIconsAsync(check, root);
         var legacy = JsonSerializer.Deserialize<ChatPreferences>("{}")!;
         check(legacy.EnabledSkillIds.Count == 0, "skills: old settings default to no enabled skills");
         var preferences = new ChatPreferences { EnabledSkillIds = ["provider/sample", "provider/sample", "", "mcp:x:y"] };
@@ -108,6 +109,32 @@ internal static class SkillRegressionTests
             var values = document.Root!.Elements("data").ToDictionary(e => e.Attribute("name")!.Value, e => e.Element("value")!.Value);
             check(values["SkillLoadFailed"].Length > 0 && string.Format(values["DisableSkill"], "sample").Contains("sample"), "skills: localized UI/tool failure messages " + lang);
         }
+    }
+    private static async Task CheckIconsAsync(Action<bool, string> check, string root)
+    {
+        using var skillJson = JsonDocument.Parse("""
+            {"id":"provider/logo","name":"Logo skill","default_version":"1","latest_version":"2","icons":[
+              {"src":"https://fixture.invalid/light.svg","theme":"light","mimeType":"image/svg+xml"},
+              {"src":"data:image/png;base64,AA==","theme":"dark","mimeType":"image/png"},
+              {"src":"file:///C:/private.png"},{"src":"javascript:alert(1)"},{"src":"https://fixture.invalid/code","mimeType":"text/html"},null]}
+            """);
+        var logoSkill = CatalogProjection.Skill(skillJson.RootElement)!;
+        check(logoSkill.Icons.Count == 2 && logoSkill.Icons[0].MimeType == "image/svg+xml" && logoSkill.Icons[1].Theme == "dark",
+            "skill logos: catalog projection retains safe image metadata and filters unsafe sources");
+        var descriptor = DesktopSkill.FromCatalog(logoSkill);
+        check(descriptor.Icons.Count == 2 && descriptor.Id == logoSkill.Id && descriptor.Version == "2" && descriptor.DefaultVersion == "1"
+            && descriptor.Icons[0].Source == logoSkill.Icons[0].Source && descriptor.Icons[0].MimeType == "image/svg+xml",
+            "skill logos: settings descriptors preserve icons, theme and MIME without changing skill identity or versions");
+        var downloads = 0;
+        var skillCache = new DesktopSkillStore(Path.Combine(root, "skill-logo-cache"), (_, _, _) => { downloads++; throw new IOException("must not download"); });
+        await skillCache.SaveCatalogAsync("fixture", [logoSkill], default);
+        var cachedSkill = (await skillCache.CatalogAsync("fixture", default)).Single();
+        check(cachedSkill.Icons.SequenceEqual(logoSkill.Icons) && DesktopSkill.FromCatalog(cachedSkill).Icons.SequenceEqual(descriptor.Icons) && downloads == 0,
+            "skill logos: cached catalogs retain image metadata without reading or downloading skill instructions");
+        using var legacySkill = JsonDocument.Parse("""{"id":"provider/legacy","icons":null}""");
+        check(DesktopSkill.FromCatalog(CatalogProjection.Skill(legacySkill.RootElement)!).Icons.Count == 0
+            && JsonSerializer.Deserialize<DesktopSkill>("""{"Id":"local:old","Name":"Old","Description":"Legacy","Origin":"local"}""")!.Icons.Count == 0,
+            "skill logos: old and image-free descriptors remain compatible with generic artwork");
     }
     private static async Task CheckLocalAsync(Action<bool, string> check, string root)
     {

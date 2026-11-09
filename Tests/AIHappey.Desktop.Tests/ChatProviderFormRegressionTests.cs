@@ -107,5 +107,6 @@ internal static class ChatProviderFormRegressionTests
         Same(JsonSerializer.SerializeToNode(reloaded.Chat.ProviderHeaders), JsonSerializer.SerializeToNode(preferences.ProviderHeaders), "all provider headers survive persistence");
         Same(preferences.InferenceDefaults().ProviderMetadata["anthropic"], AnthropicChatConfig.Defaults(), "inference reset restores Anthropic chat defaults");
         check(preferences.InferenceDefaults().ProviderHeaders.Count == 0 && !preferences.InferenceDefaults().ProviderMetadata.ContainsKey("deepseek"), "provider forms: reset clears custom headers and keeps DeepSeek implicit defaults");
+        await OpenAIChatSettingsRegressionTests.RunAsync(check, root);
     }
 }

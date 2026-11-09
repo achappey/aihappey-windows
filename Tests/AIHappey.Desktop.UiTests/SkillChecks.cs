@@ -15,9 +15,11 @@ public partial class App
         var root = new Grid { RequestedTheme = theme }; window!.Content = root;
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 900)); window.Activate(); await Task.Delay(100);
         var context = "Skills / " + theme; var original = new ChatPreferences(); var prefetches = 0;
-        var items = new DesktopSkill[] { new("provider/sample", "Sample", "Remote description", "remote", "2"),
+        var svg = "data:image/svg+xml," + Uri.EscapeDataString("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"32\"><rect width=\"32\" height=\"32\" fill=\"green\"/></svg>");
+        var items = new DesktopSkill[] { new("provider/sample", "Sample", "Remote description", "remote", "2")
+                { Icons = [new(svg, "light"), new(svg, "dark")] },
             new("mcp:server:sample", "MCP sample", "Connected description", "mcp", Server: "Fixture server"),
-            new("provider/other", "Other", "Other description", "remote") };
+            new("provider/other", "Other", "Other description", "remote") { Icons = [new("data:image/png;base64,not-base64")] } };
         var dialog = new ChatSettingsDialog(original, "openai", _ => Task.FromResult(new DesktopSkillSelection(items,
             new HashSet<string> { "provider/sample" }, "api.example")), (_, _) => { prefetches++; throw new IOException("offline"); })
             { XamlRoot = root.XamlRoot, RequestedTheme = theme };
@@ -45,8 +47,28 @@ public partial class App
         var rows = Descendants(dialog).OfType<SettingsExpander>().Where(e => e.Name == "ChatSkillCard").ToArray();
         Check(rows.Length == 3 && rows.All(e => !e.IsExpanded && e.Content is ToggleSwitch { Header: null, OnContent: "", OffContent: "" }),
             context + ": skills start as compact native expanders with header switches and no switch captions");
+        Check(rows.All(row => row.Header is Grid { ColumnSpacing: 12 } heading
+            && Descendants(heading).OfType<UserControl>().Any(icon => icon.Name == "McpServerIcon" && icon.Width == 32 && icon.Height == 32)),
+            context + ": skill headers match MCP catalog logo size and title spacing");
         var sample = rows.Single(e => e.Tag as string == "provider/sample");
-        var title = (TextBlock)sample.Header; var sampleToggle = (ToggleSwitch)sample.Content;
+        var title = Descendants((DependencyObject)sample.Header).OfType<TextBlock>().Single(text => text.Text == "Sample");
+        var sampleToggle = (ToggleSwitch)sample.Content;
+        AppContext.SetSwitch("AIHappey.Desktop.DisableRemoteImages", false);
+        try
+        {
+            // Re-load the header controls with only embedded, credential-free image fixtures.
+            dialog.ShowToolsTab(); await Task.Delay(60); dialog.ShowSkillsTab(); await Task.Delay(120);
+            var logo = Descendants((DependencyObject)sample.Header).OfType<UserControl>().Single(icon => icon.Name == "McpServerIcon");
+            await WaitForSkillUiAsync(() => Descendants(logo).OfType<Image>().Any(image => image.Visibility == Visibility.Visible));
+            Check(Descendants(logo).OfType<Image>().Single().Source is Microsoft.UI.Xaml.Media.Imaging.SvgImageSource
+                && Descendants(logo).OfType<Image>().Single().Stretch == Microsoft.UI.Xaml.Media.Stretch.Uniform,
+                context + ": an available skill logo renders through the same native SVG slot as MCP");
+            Check(rows.Where(row => !ReferenceEquals(row, sample)).All(row =>
+                Descendants((DependencyObject)row.Header).OfType<FluentIcons.WinUI.FluentIcon>().Single().Visibility == Visibility.Visible)
+                && prefetches == 0, context + ": missing or broken skill logos retain generic artwork without fetching skill instructions");
+        }
+        finally { AppContext.SetSwitch("AIHappey.Desktop.DisableRemoteImages", true); }
+        dialog.UpdateLayout();
         var titlePoint = title.TransformToVisual(sample).TransformPoint(new());
         var togglePoint = sampleToggle.TransformToVisual(sample).TransformPoint(new());
         Check(titlePoint.X + title.ActualWidth <= togglePoint.X
@@ -113,8 +135,12 @@ public partial class App
         try
         {
             typeof(ChatShell).GetField("runtimeSkillCatalog", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(shell,
-                new CatalogItem[] { new(CatalogKind.Skill, "provider/sample", "Sample", "Remote description") });
+                new CatalogItem[] { new(CatalogKind.Skill, "provider/sample", "Sample", "Remote description")
+                    { Icons = [new("data:image/png;base64,AA==", "dark", "image/png")] } });
             typeof(ChatShell).GetField("runtimeSkillPartition", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(shell, session.HistoryPartition);
+            var descriptors = (IReadOnlyList<DesktopSkill>)Call(shell, "AvailableSkillDescriptors")!;
+            Check(descriptors.Single().Icons.Single() == new McpIcon("data:image/png;base64,AA==", "dark", "image/png"),
+                context + ": shell settings selection retains catalog skill icon metadata");
             Call(shell, "RenderContextTags"); shell.UpdateLayout();
             Check(Descendants(shell).OfType<Border>().Count(b => b.Name == "EnabledSkillBadge") == 2, context + ": composer shows enabled and disconnected selections with removable badges");
             var runtime = (McpTurnSnapshot)Call(shell, "CaptureSkillRuntime", session.Settings.Chat)!;

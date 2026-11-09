@@ -176,6 +176,25 @@ internal static class ChatEndpointRegressionTests
         await foreach (var _ in client.StreamAsync(ServiceKind.Ai, "openai/test", "same-conversation", [user], default, new() { EndpointMode = "direct", Endpoint = direct.Endpoint }, route: direct)) { }
         check(directHandler.Url == direct.DirectUrl && !directHandler.Headers!.ContainsKey("X-Gateway-Secret")
             && directHandler.Body!["model"]!.ToString() == "org/model", "direct transport bypasses gateway auth and preserves pinned provider model");
+        foreach (var enabled in new[] { true, false })
+        {
+            var preferences = new ChatPreferences();
+            preferences.ProviderMetadata["openai"] = new JsonObject { ["multi_agent"] = new JsonObject { ["enabled"] = enabled }, ["inputImageDetail"] = "high" };
+            // Deliberately stale/missing saved beta: the outgoing request must repair it.
+            preferences.ProviderHeaders["openai"] = new() { ["openai-beta"] = enabled ? "custom=v1" : "custom=v1," + OpenAIChatConfig.MultiAgentBeta };
+            foreach (var endpoint in new[] { "/api/chat", "/v1/responses" })
+            {
+                preferences.Endpoint = gatewayHandler.Endpoint = endpoint;
+                await foreach (var _ in client.StreamAsync(ServiceKind.Ai, "openai/test", "same", [user], default, preferences)) { }
+                var expected = enabled ? "custom=v1," + OpenAIChatConfig.MultiAgentBeta : "custom=v1";
+                check(gatewayHandler.Headers!["OpenAI-Beta"] == expected && !gatewayHandler.Body!.ToJsonString().Contains("inputImageDetail"),
+                    endpoint + " transport reconciles standalone multi-agent beta and omits obsolete image detail / " + enabled);
+            }
+            preferences.EndpointMode = "direct"; preferences.Endpoint = direct.Endpoint;
+            await foreach (var _ in client.StreamAsync(ServiceKind.Ai, "openai/test", "same", [user], default, preferences, route: direct)) { }
+            check(directHandler.Headers!["OpenAI-Beta"] == (enabled ? "custom=v1," + OpenAIChatConfig.MultiAgentBeta : "custom=v1")
+                && !directHandler.Headers.ContainsKey("X-Gateway-Secret"), "direct OpenAI transport reconciles beta without leaking gateway auth / " + enabled);
+        }
         gatewayHandler.Endpoint = "/v1/responses";
         await foreach (var _ in client.StreamAsync(ServiceKind.Agents, "agent", "same", [user], default, new() { Endpoint = "/v1/messages", EndpointMode = "direct" })) { }
         check(gatewayHandler.Url!.AbsolutePath == "/prefix/api/chat", "Agents ignore model-chat endpoint preferences");
