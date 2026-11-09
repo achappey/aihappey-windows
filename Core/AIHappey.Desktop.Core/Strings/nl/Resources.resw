@@ -692,7 +692,7 @@
   <data name="McpDescription" xml:space="preserve"><value>Model Context Protocol biedt één gestructureerde manier om met prompts, bronnen en tools te werken, ongeacht waar de informatie vandaan komt. Je werkt altijd overzichtelijk, transparant en op dezelfde manier.</value></data>
   <data name="McpAddServer" xml:space="preserve"><value>Server toevoegen</value></data>
   <data name="McpEditServer" xml:space="preserve"><value>Server bewerken</value></data>
-  <data name="McpInstalledServers" xml:space="preserve"><value>Ge├»nstalleerde servers</value></data>
+  <data name="McpInstalledServers" xml:space="preserve"><value>Geïnstalleerde servers</value></data>
   <data name="McpManage" xml:space="preserve"><value>Beheren</value></data>
   <data name="McpInstall" xml:space="preserve"><value>Installeren</value></data>
   <data name="McpRemove" xml:space="preserve"><value>Verwijderen</value></data>
@@ -776,7 +776,7 @@
   <data name="SettingsMcpTools.Text" xml:space="preserve"><value>Tools</value></data>
   <data name="SettingsMcpTimeout.Header" xml:space="preserve"><value>Tool-time-out (minuten)</value></data>
   <data name="SettingsMcpResetProgress.Header" xml:space="preserve"><value>Time-out opnieuw starten bij voortgang</value></data>
-  <data name="SettingsMcpOfficialExtensions.Text" xml:space="preserve"><value>Offici├½le extensies</value></data>
+  <data name="SettingsMcpOfficialExtensions.Text" xml:space="preserve"><value>Officiële extensies</value></data>
   <data name="SettingsMcpApps.Header" xml:space="preserve"><value>Apps</value></data>
   <data name="SettingsMcpSkills.Header" xml:space="preserve"><value>Skills</value></data>
   <data name="SettingsMcpExtensionsHint.Text" xml:space="preserve"><value>Deze voorkeuren worden opgeslagen voor toekomstige ondersteuning. Apps en Vaardigheden zijn nog niet ge├»mplementeerd in deze client.</value></data>
@@ -876,7 +876,7 @@
   <data name="ImageOption_opaque" xml:space="preserve"><value>Dekkend</value></data>
   <data name="ImageAttachFiles" xml:space="preserve"><value>Afbeeldingen toevoegen</value></data>
   <data name="ImageCut" xml:space="preserve"><value>Knippen</value></data>
-  <data name="ImageCopy" xml:space="preserve"><value>Kopi├½ren</value></data>
+  <data name="ImageCopy" xml:space="preserve"><value>Kopiëren</value></data>
   <data name="ImagePaste" xml:space="preserve"><value>Plakken</value></data>
   <data name="ImageSelectAll" xml:space="preserve"><value>Alles selecteren</value></data>
   <data name="ImagePreview" xml:space="preserve"><value>Afbeeldingsvoorbeeld</value></data>
@@ -946,7 +946,7 @@
   <data name="TranscriptionLanguages" xml:space="preserve"><value>Mogelijke talen</value></data>
   <data name="TranscriptionLanguagesHint" xml:space="preserve"><value>ISO-639-1-codes gescheiden door komma's, bijvoorbeeld nl, en</value></data>
   <data name="TranscriptionKeywords" xml:space="preserve"><value>Trefwoorden</value></data>
-  <data name="TranscriptionKeywordsHint" xml:space="preserve"><value>E├⌐n woord of uitdrukking per regel om de transcriptie te sturen</value></data>
+  <data name="TranscriptionKeywordsHint" xml:space="preserve"><value>Eén woord of uitdrukking per regel om de transcriptie te sturen</value></data>
   <data name="TranscriptionPrompt" xml:space="preserve"><value>Prompt</value></data>
   <data name="TranscriptionPromptHint" xml:space="preserve"><value>Optionele instructies in de audiotaal om de stijl te sturen of een eerder fragment voort te zetten</value></data>
   <data name="TranscriptionResponseFormat" xml:space="preserve"><value>Antwoordformaat</value></data>
@@ -1005,8 +1005,8 @@
   <data name="ModelsProviderWebsite" xml:space="preserve"><value>Website van {0} openen</value></data>
   <data name="ModelsWebsiteFailed" xml:space="preserve"><value>De website van de provider kon niet worden geopend.</value></data>
   <data name="ModelsUnavailable" xml:space="preserve"><value>Dit model is niet meer beschikbaar bij de huidige AI-service. Vernieuw het modellenoverzicht.</value></data>
-  <data name="Videos" xml:space="preserve"><value>VideoΓÇÖs</value></data>
-  <data name="MyVideos" xml:space="preserve"><value>Mijn videoΓÇÖs</value></data>
+  <data name="Videos" xml:space="preserve"><value>Videos</value></data>
+  <data name="MyVideos" xml:space="preserve"><value>Mijn videos</value></data>
   <data name="VideoSettings" xml:space="preserve"><value>Video-instellingen</value></data>
   <data name="VideoSettingsInvalid" xml:space="preserve"><value>Voer geldige video-instellingen en een absoluut opslagpad in.</value></data>
   <data name="VideoPromptRequired" xml:space="preserve"><value>Selecteer een videomodel en voer een prompt in.</value></data>
