@@ -93,6 +93,9 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFilePaths.cs" Link="Core/LocalFilePaths.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalFileTools.cs" Link="Core/LocalFileTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/OpenAIApplyPatchTools.cs" Link="Core/OpenAIApplyPatchTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/PowerShell*.cs" Link="Core/%(Filename)%(Extension)" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/LocalPowerShellTools.cs" Link="Core/LocalPowerShellTools.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/NativeShellTools.cs" Link="Core/NativeShellTools.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalDocumentFiles.cs" Link="Core/LocalDocumentFiles.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/LocalDocumentEdits.cs" Link="Core/LocalDocumentEdits.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AnthropicTextEditorTools.cs" Link="Core/AnthropicTextEditorTools.cs" />

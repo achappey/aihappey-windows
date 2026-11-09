@@ -35,6 +35,7 @@ internal static class RegressionSuites
             // Includes shared cursors, local files, Windows tools, desktop tools, and authoring.
             ["local-tools"] = () => LocalToolRegressionTests.RunAsync(check, Data("local-tools")),
             ["apply-patch"] = () => ApplyPatchRegressionTests.RunAsync(check, Data("apply-patch")),
+            ["powershell"] = () => PowerShellRegressionTests.RunAsync(check, Data("powershell")),
             ["document-tools"] = () => DocumentToolRegressionTests.RunAsync(check, Data("document-tools")),
             ["models-overview"] = () => ModelsOverviewRegressionTests.RunAsync(check, Data("models")),
             ["agents"] = () => AgentRegressionTests.RunAsync(check, Data("agents")),
