@@ -5,16 +5,11 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace AIHappey.Desktop.Core;
 
-/// <summary>Browser-style nested server sections, projected only from the captured system context.
+/// <summary>Native expandable server sections, projected only from the captured system context.
 /// No discovery, resource reads, or tool execution happens in this view.</summary>
 internal sealed class McpSystemContextView : UserControl
 {
-    private readonly Grid layout = new() { RowSpacing = 12 };
-    private readonly NavigationView navigation = new() { Name = "McpContextSections", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
-        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
-        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
-    private readonly StackPanel content = new() { Name = "McpContextSectionContent", Spacing = 12 };
-    private readonly List<Func<UIElement>> sections = [];
+    private readonly StackPanel sections = new() { Name = "McpContextSections", Spacing = 12 };
     private readonly JsonElement block;
     private readonly JsonElement server;
 
@@ -23,9 +18,7 @@ internal sealed class McpSystemContextView : UserControl
         this.block = block.Clone();
         server = this.block.GetProperty("modelContextProtocolServer");
         Name = "McpSystemContextView";
-        layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        Grid.SetRow(content, 1); layout.Children.Add(navigation); layout.Children.Add(content); Content = layout;
+        Content = sections;
 
         AddSection("General", General);
         var instructions = PortableConversations.String(this.block, "instructions");
@@ -36,27 +29,18 @@ internal sealed class McpSystemContextView : UserControl
             AddSection("McpMetadata", () => Card(DesktopResources.Get("McpMetadata"), SystemContextDialog.JsonTree(metadata, null, 0)));
         AddCatalogSection("resources", "McpResources");
         AddCatalogSection("resourceTemplates", "McpResourceTemplates");
-
-        navigation.SelectedItem = navigation.MenuItems[0];
-        navigation.SelectionChanged += (_, args) =>
-        {
-            if (args.SelectedItem is NavigationViewItem { Tag: int index }) Select(index);
-        };
-        Select(0);
     }
 
     private void AddSection(string key, Func<UIElement> render, string? label = null)
     {
         label ??= DesktopResources.Get(key);
-        var index = sections.Count;
-        var tab = new NavigationViewItem { Name = "McpContext" + key, Content = label, Tag = index };
-        ToolbarControls.Label(tab, label); AutomationProperties.SetAutomationId(tab, tab.Name);
-        sections.Add(render); navigation.MenuItems.Add(tab);
-    }
-
-    private void Select(int index)
-    {
-        content.Children.Clear(); content.Children.Add(sections[index]());
+        var expander = new Expander { Name = "McpContext" + key, Header = label, IsExpanded = false,
+            HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+        ControlAppearance.Native(expander); ToolbarControls.Label(expander, label);
+        AutomationProperties.SetAutomationId(expander, expander.Name);
+        // Render only on first expansion; retain content and its state on collapse/reopen.
+        expander.Expanding += (_, _) => expander.Content ??= render();
+        sections.Children.Add(expander);
     }
 
     private UIElement General()
@@ -98,7 +82,7 @@ internal sealed class McpSystemContextView : UserControl
     private void AddCatalogSection(string property, string key)
     {
         // Render the captured assistant-visible catalogs, never the raw user picker catalog.
-        // Do not show empty placeholder tabs or fetch/read a resource merely to inspect context.
+        // Do not show empty placeholder sections or fetch/read a resource merely to inspect context.
         if (!block.TryGetProperty(property, out var items) || items.ValueKind != JsonValueKind.Array || items.GetArrayLength() == 0) return;
         AddSection(key, () =>
         {
