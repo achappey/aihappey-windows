@@ -30,9 +30,21 @@ public sealed class WindowsTranscriptionMediaEncoder : ITranscriptionMediaEncode
         profile.Audio.Bitrate = (uint)(rates.LastOrDefault(rate => rate <= bitrateKbps * 1000, rates[0]));
         var transcoder = new MediaTranscoder { TrimStartTime = TimeSpan.FromSeconds(range.StartSecond),
             TrimStopTime = TimeSpan.FromSeconds(range.EndSecond), AlwaysReencode = true };
-        var prepared = await transcoder.PrepareFileTranscodeAsync(input, output, profile).AsTask(ct);
+        // Explicit stream ownership is essential on cancellation: file-based transcoding can
+        // retain an input handle past the canceled task and prevent the splitter's cleanup.
+        using var inputStream = await input.OpenAsync(FileAccessMode.Read);
+        using var outputStream = await output.OpenAsync(FileAccessMode.ReadWrite);
+        var preparation = transcoder.PrepareStreamTranscodeAsync(inputStream, outputStream, profile);
+        using var prepareCancellation = ct.Register(preparation.Cancel);
+        Windows.Media.Transcoding.PrepareTranscodeResult prepared;
+        try { prepared = await preparation.AsTask(); }
+        finally { preparation.Close(); }
+        ct.ThrowIfCancellationRequested();
         if (!prepared.CanTranscode) throw new InvalidOperationException(DesktopResources.Get("TranscriptionCodecUnavailable"));
-        await prepared.TranscodeAsync().AsTask(ct);
+        var action = prepared.TranscodeAsync();
+        using var transcodeCancellation = ct.Register(action.Cancel);
+        try { await action.AsTask(); }
+        finally { action.Close(); }
         ct.ThrowIfCancellationRequested();
     }
 }
