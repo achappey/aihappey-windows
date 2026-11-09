@@ -21,6 +21,7 @@ internal static class RegressionSuites
             ["overview-consistency"] = () => OverviewConsistencyRegressionTests.RunAsync(check, Data("overview")),
             ["usage"] = () => UsageRegressionTests.RunAsync(check, Data("usage")),
             ["enterprise-settings"] = () => EnterpriseSettingsRegressionTests.RunAsync(check, Data("enterprise")),
+            ["conversation-storage"] = () => ConversationStorageRegressionTests.RunAsync(check, Data("conversation-storage")),
             ["provider-settings"] = () => ProviderSettingsRegressionTests.RunAsync(check, Data("provider-settings")),
             ["explorer"] = () => ExplorerRegressionTests.RunAsync(check, Data("explorer")),
             ["plugins"] = () => PluginRegressionTests.RunAsync(check, Data("plugins")),
