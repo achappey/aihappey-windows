@@ -116,6 +116,25 @@ and refresh, preserving tab/content instances and scrolling while resizing, expl
 window-size breakpoints, navigation collapse/expansion, and an unchanged composer draft and conversation history.
 The selected size is shell-local, not a saved preference or conversation property.
 
+## Large-file transcription splitting
+
+AI settings → Transcription enables **Split large transcription files** by default, with a **5-second overlap** and **15 MB** configured chunk budget. The overlap slider accepts 0–60 seconds; the size slider accepts 1–100 MB. Disabling splitting disables both sliders and sends the original media unchanged. Explicit saved choices survive restart; older settings without these fields receive the new defaults.
+
+Picker and drop transcription inputs use file-backed snapshots rather than chat attachment admission. The shared chat attachment limit is unchanged and does not restrict this path. The gateway JSON audio is streamed as base64. For split files, the browser's duration-derived ranges, overlap clamping, request headroom, bitrate target, names, text joining, segment offsets, language, duration, warnings, and split metadata are preserved. The size budget includes the browser's 1 MB JSON allowance and base64 expansion, so the encoded audio is smaller than the configured budget. As in the browser, overlapping transcript text is **not deduplicated**.
+
+The local encoder uses Windows Media Foundation and the Windows media transcoder, not a bundled FFmpeg runtime. Supported formats depend on installed Windows codecs. Windows chooses a supported AAC bitrate from the browser-derived target; encoded bytes are not expected to match FFmpeg. Every encoded chunk must still fit the safe payload allowance. A splitting/codec failure does not fall back to sending the oversized original. Temporary originals and chunks are removed on completion, failure, and cancellation. All successful chunks produce one library item with the unchanged original media; partial chunk results are not saved as completed transcripts. Realtime transcription is unaffected.
+
+Run the following from the desktop repository root:
+
+```powershell
+node Tests/check-transcription-parity.cjs
+dotnet run --project Tests/AIHappey.Desktop.Tests -- --transcriptions-only
+dotnet run --project Tests/AIHappey.Desktop.Tests -- --transcription-codecs-only
+powershell -NoProfile -ExecutionPolicy Bypass -File Tests/run-ui-tests.ps1 -Suite ai-models
+```
+
+The parity check executes the actual neighboring browser splitter and merger with a fake codec and compares a checked-in oracle. Its explicit refresh switch is only for intentional browser-contract updates. The deterministic core suite covers thresholds, overlap, ordering, streaming uploads, defaults/reload, disabled mode, a 100 MB source, merged persistence, errors, cancellation, cleanup, and completed-result commits. The Windows codec suite creates real local audio and video, splits a 100 MB WAV using the production encoder, checks duration and payload limits, verifies byte-identical original-media persistence, and tests cancellation and unsupported media. These tests make no live provider requests. The existing AI-model native UI suite covers accessible controls, disabled sliders, draft isolation, save/cancel, and both themes.
+
 ## Client/runtime dependency boundary
 
 The [dependency check](check-dependency-boundary.cjs) runs automatically with the standalone checks. It follows desktop project and solution references, permits only the standalone Vercel, Responses, Messages, and Chat Completions protocol projects outside the desktop repository, rejects missing or server-side projects, and guards against Unified/server-mapper imports in desktop source. References used only to publish or launch the bundled runtimes are deliberately allowed.
