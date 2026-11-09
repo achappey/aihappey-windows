@@ -410,6 +410,70 @@
     },
     {
       "input": {
+        "name": "above-boundary.wav",
+        "size": 15728641,
+        "duration": 60,
+        "maxSize": 15,
+        "overlap": 5,
+        "enabled": true
+      },
+      "expected": {
+        "split": true,
+        "durationInSeconds": 60,
+        "chunks": [
+          {
+            "index": 0,
+            "total": 2,
+            "startSecond": 0,
+            "endSecond": 41.99999732971209,
+            "name": "above-boundary.part-001-of-002.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 1,
+            "total": 2,
+            "startSecond": 36.99999732971209,
+            "endSecond": 60,
+            "name": "above-boundary.part-002-of-002.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          }
+        ],
+        "bitrates": [
+          1740,
+          1740
+        ]
+      }
+    },
+    {
+      "input": {
+        "name": "subsecond.wav",
+        "size": 16777216,
+        "duration": 0.5,
+        "maxSize": 15,
+        "overlap": 5,
+        "enabled": true
+      },
+      "expected": {
+        "split": false,
+        "durationInSeconds": 0.5,
+        "chunks": [
+          {
+            "index": 0,
+            "total": 1,
+            "startSecond": 0,
+            "endSecond": 0.5,
+            "name": "subsecond.wav",
+            "size": 16777216,
+            "mediaType": "audio/wav"
+          }
+        ],
+        "bitrates": []
+      }
+    },
+    {
+      "input": {
         "name": "disabled.wav",
         "size": 104857600,
         "duration": 600,

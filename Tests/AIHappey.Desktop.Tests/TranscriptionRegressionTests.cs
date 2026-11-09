@@ -18,7 +18,7 @@ internal static class TranscriptionRegressionTests
                 FileSplitMaxSizeMb = input["maxSize"]!.GetValue<int>(), FileSplitOverlapSeconds = input["overlap"]!.GetValue<int>() };
             var size = input["size"]!.GetValue<long>(); var duration = input["duration"]!.GetValue<double>();
             var encoder = new FakeEncoder { Duration = duration };
-            var source = Source(input["name"]!.GetValue<string>(), size);
+            var source = Source(input["name"]!.GetValue<string>(), size, input["type"]?.GetValue<string>() ?? "audio/wav");
             using (var files = await new TranscriptionFileSplitter(encoder, Path.Combine(root, "plans")).SplitAsync(source, options, default))
             {
                 check(files.Split == expected["split"]!.GetValue<bool>() && files.Chunks.Count == expected["chunks"]!.AsArray().Count,
@@ -28,7 +28,8 @@ internal static class TranscriptionRegressionTests
                     var chunk = files.Chunks[i]; var reference = expected["chunks"]![i]!;
                     check(chunk.Index == reference["index"]!.GetValue<int>() && chunk.Total == reference["total"]!.GetValue<int>()
                         && Math.Abs(chunk.StartSecond - reference["startSecond"]!.GetValue<double>()) < 1e-9
-                        && Math.Abs(chunk.EndSecond - reference["endSecond"]!.GetValue<double>()) < 1e-9 && chunk.File.Name == reference["name"]!.GetValue<string>(),
+                        && Math.Abs(chunk.EndSecond - reference["endSecond"]!.GetValue<double>()) < 1e-9 && chunk.File.Name == reference["name"]!.GetValue<string>()
+                        && chunk.File.MediaType == reference["mediaType"]!.GetValue<string>(),
                         source.Name + ": exact browser range/name " + i);
                 }
                 check(encoder.Bitrates.SequenceEqual(expected["bitrates"]!.AsArray().Select(n => n!.GetValue<int>())), source.Name + ": exact browser bitrate targets");
@@ -64,6 +65,9 @@ internal static class TranscriptionRegressionTests
         var loaded = await SettingsStore.LoadAsync(Path.Combine(root, "settings"), new());
         check(!loaded.Transcriptions.FileSplitEnabled && loaded.Transcriptions.FileSplitOverlapSeconds == 12 && loaded.Transcriptions.FileSplitMaxSizeMb == 77
             && loaded.Transcriptions.ProviderOptions["future"]["keep"]!.GetValue<bool>(), "saved opt-out and custom split/provider settings survive storage and cloning");
+        loaded.Transcriptions.FileSplitEnabled = true;
+        await SettingsStore.SaveAsync(Path.Combine(root, "settings"), loaded);
+        check((await SettingsStore.LoadAsync(Path.Combine(root, "settings"), new())).Transcriptions.FileSplitEnabled, "saved enabled choice survives a second restart");
         check(ComposerAttachments.MaximumFileBytes == 25 * 1024 * 1024, "chat attachment limit is unchanged, not used by transcription");
         await UploadsAsync(check);
         await TransactionsAsync(check, root);
@@ -153,6 +157,14 @@ internal static class TranscriptionRegressionTests
             }, (_, _) => { committed = true; return Task.CompletedTask; }, stop.Token);
             check(committed, "Stop arriving after successful response does not discard a completed result");
         }
+        var fallback = new TranscriptionFileProcessor(new(new FakeEncoder { Fail = true }, work));
+        var disabled = new TranscriptionPreferences { FileSplitEnabled = false }; var originalCalls = 0;
+        await fallback.TranscribeAsync(source, disabled, (file, _, _) =>
+        {
+            originalCalls++; check(file.Name == source.Name && file.Length == source.Length, "disabled splitting uploads the unchanged 100 MB source once without native codecs");
+            return Task.FromResult(new TranscriptionResult(file.Name, file.MediaType, "p/model", new(), new() { ["text"] = "unchanged" }));
+        }, (_, _) => Task.CompletedTask, default);
+        check(originalCalls == 1, "disabled path never applies chat attachment size admission");
         var changed = new TranscriptionSource("changed.wav", "audio/wav", 2, _ => Task.FromResult<Stream>(new MemoryStream(new byte[3])));
         try { await changed.CopyToAsync(new MemoryStream(), default); check(false, "source growth"); }
         catch (IOException) { check(true, "changed input is rejected instead of silently truncating media"); }

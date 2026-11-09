@@ -60,6 +60,19 @@ internal static class TranscriptionNativeTests
         check(beforeHash.SequenceEqual(afterHash),
             "native full flow persists one transcript with byte-identical original media");
 
+        using (var stop = new CancellationTokenSource())
+        {
+            var output = Path.Combine(root, "cancel.m4a");
+            var encoding = encoder.EncodeAsync(path, output, new(0, duration), 128, stop.Token);
+            await Task.Delay(50); stop.Cancel();
+            try { await encoding; check(false, "native transcode must honor Stop"); }
+            catch (OperationCanceledException)
+            {
+                File.Delete(output);
+                check(!File.Exists(output), "native Stop cancels encoding and releases temporary file handles");
+            }
+        }
+
         var invalidPath = Path.Combine(root, "unsupported.webm");
         await File.WriteAllBytesAsync(invalidPath, new byte[16 * 1024 * 1024]);
         try

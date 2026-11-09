@@ -44,6 +44,8 @@ const inputs = [
   { name: 'short.wav', size: 30 * MB, duration: 2, maxSize: 1, overlap: 60, enabled: true },
   { name: 'long.flac', size: 80 * MB, duration: 3600, maxSize: 25, overlap: 12, enabled: true },
   { name: 'boundary.wav', size: 15 * MB, duration: 60, maxSize: 15, overlap: 5, enabled: true },
+  { name: 'above-boundary.wav', size: 15 * MB + 1, duration: 60, maxSize: 15, overlap: 5, enabled: true },
+  { name: 'subsecond.wav', size: 16 * MB, duration: 0.5, maxSize: 15, overlap: 5, enabled: true },
   { name: 'disabled.wav', size: 100 * MB, duration: 600, maxSize: 15, overlap: 5, enabled: false },
   { name: 'wide.wav', size: 140 * MB, duration: 1000, maxSize: 100, overlap: 5, enabled: true },
 ];
