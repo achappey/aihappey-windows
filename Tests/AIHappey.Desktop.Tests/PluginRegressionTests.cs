@@ -14,9 +14,14 @@ internal static class PluginRegressionTests
         foreach (var language in new[] { "en", "nl" })
         {
             using var stream = typeof(PluginRegressionTests).Assembly.GetManifestResourceStream("Desktop.Resources." + language)!;
-            var resourceNames = XDocument.Load(stream).Root!.Elements("data").Select(d => (string)d.Attribute("name")!).ToHashSet(StringComparer.Ordinal);
+            var resources = XDocument.Load(stream).Root!.Elements("data").ToDictionary(d => (string)d.Attribute("name")!, d => (string)d.Element("value")!, StringComparer.Ordinal);
+            var resourceNames = resources.Keys.ToHashSet(StringComparer.Ordinal);
             foreach (var key in new[] { "Search", "Description", "All", "Favorites", "Name", "Edit", "Close", "NoResults", "PluginsTitle", "PluginsDescription", "PluginWebsite", "PluginSpecification", "PluginKeywords", "PluginAuthor", "PluginCounts", "PluginDetails", "PluginFavorite", "PluginUnfavorite", "PluginUnavailable", "PluginCreate", "PluginVersion", "PluginHomepage", "PluginRepository", "PluginLicense", "PluginAuthorName", "PluginAuthorEmail", "PluginAuthorUrl", "PluginTransportHint", "PluginMcpCatalog", "PluginEndpoint", "PluginAllServers", "PluginFilesHint", "PluginAddFiles", "PluginDiagnostics", "PluginOperationFailed", "PluginSetting_defer_loading", "PluginSetting_namespace", "PluginSetting_direct", "PluginSetting_programmatic", "PluginConfiguration", "PluginApplyConfiguration", "PluginImport", "PluginLoadFolder", "PluginImported", "PluginZipOnly", "PluginArchive", "PluginDeleteConfirm", "PluginDisable", "PluginEditorTools", "PluginAgentEmpty", "PluginAgentSnapshotHint", "PluginEmbedded", "PluginFromAgent", "PluginAgentConverted" })
                 check(resourceNames.Contains(key), language + " plugin native resource " + key);
+            foreach (var key in new[] { "New", "PluginImportMenu", "PluginFolder" })
+                check(resources.TryGetValue(key, out var label) && !string.IsNullOrWhiteSpace(label), language + " plugin menu label " + key);
+            check(resources["PluginImportMenu"] == resources["SkillImportMenu"] && resources["PluginFolder"] == resources["SkillFolder"],
+                language + " plugin Import and Folder labels match Skills without using skill-specific resource keys");
         }
         void Reject(Action action, string label) { try { action(); } catch (Exception e) when (e is InvalidDataException or JsonException or ArgumentException) { check(true, label); return; } throw new Exception("Expected rejection: " + label); }
         async Task RejectAsync(Func<Task> action, string label) { try { await action(); } catch (Exception e) when (e is InvalidDataException or JsonException or ArgumentException) { check(true, label); return; } throw new Exception("Expected rejection: " + label); }
