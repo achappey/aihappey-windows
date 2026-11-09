@@ -66,6 +66,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         ShowTokens.IsOn = chatPreferences.ShowTokens;
         ShowMetrics.IsOn = chatPreferences.ShowMetrics;
         ShowProviderLogo.IsOn = chatPreferences.ShowProviderLogo;
+        ShowContextSize.IsOn = chatPreferences.ShowContextSize;
         ApiDebugEnabled.IsOn = chatPreferences.ApiDebugEnabled;
         ToolOutputText.IsOn = chatPreferences.ToolOutputContentSettings.Text;
         ToolOutputLinks.IsOn = chatPreferences.ToolOutputContentSettings.Links;
@@ -132,6 +133,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         chatPreferences.Dictate = (string)((ComboBoxItem)DictateChoice.SelectedItem).Tag;
         chatPreferences.ShowMetrics = ShowMetrics.IsOn;
         chatPreferences.ShowProviderLogo = ShowProviderLogo.IsOn;
+        chatPreferences.ShowContextSize = ShowContextSize.IsOn;
         chatPreferences.ApiDebugEnabled = ApiDebugEnabled.IsOn;
         chatPreferences.ToolOutputContentSettings.Text = ToolOutputText.IsOn;
         chatPreferences.ToolOutputContentSettings.Links = ToolOutputLinks.IsOn;

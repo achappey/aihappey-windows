@@ -10,7 +10,7 @@ public sealed partial class ChatShell
     private readonly MessageFooterPanel approvalBadges = new() { Name = "ToolApprovalBadges", AlignRight = true };
     private readonly ScrollViewer approvalBadgeScroll = new() { Name = "ToolApprovalBadgeScroll", MaxHeight = 128,
         VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-        HorizontalScrollMode = ScrollMode.Disabled, Visibility = Visibility.Collapsed };
+        HorizontalScrollMode = ScrollMode.Disabled, VerticalAlignment = VerticalAlignment.Bottom, Visibility = Visibility.Collapsed };
     private readonly SemaphoreSlim approvalSettingsWrite = new(1, 1);
     private ToolApprovalDialog? approvalDialog;
 

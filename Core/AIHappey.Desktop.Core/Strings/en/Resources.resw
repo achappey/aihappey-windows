@@ -423,6 +423,10 @@
   <data name="SettingsShowProviderLogo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Show provider logo</value></data>
   <data name="SettingsShowProviderLogo.OnContent" xml:space="preserve"><value>On</value></data>
   <data name="SettingsShowProviderLogo.OffContent" xml:space="preserve"><value>Off</value></data>
+  <data name="SettingsShowContextSize.Header" xml:space="preserve"><value>Show context size</value></data>
+  <data name="SettingsShowContextSize.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Show context size</value></data>
+  <data name="SettingsShowContextSize.OnContent" xml:space="preserve"><value>On</value></data>
+  <data name="SettingsShowContextSize.OffContent" xml:space="preserve"><value>Off</value></data>
   <data name="SettingsApiDebug.Header" xml:space="preserve"><value>Debug</value></data>
   <data name="SettingsApiDebug.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Debug</value></data>
   <data name="SettingsApiDebug.OnContent" xml:space="preserve"><value>On</value></data>

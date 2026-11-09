@@ -30,7 +30,7 @@ public sealed partial class ChatShell
         var model = Service == ServiceKind.Ai && target.Selection.Ids.Count == 1
             ? targets.FirstOrDefault(m => m.Id == target.Text.Trim()) : null;
         var capacity = model?.ContextWindow;
-        var showContext = capacity is > 0 && double.IsFinite(capacity.Value);
+        var showContext = session.Settings.Chat.ShowContextSize && capacity is > 0 && double.IsFinite(capacity.Value);
         if (showContext)
         {
             var used = usage.Tokens ?? 0;

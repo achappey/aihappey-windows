@@ -16,6 +16,7 @@ public sealed class ChatPreferences
     public bool ShowTokens { get; set; }
     public bool ShowMetrics { get; set; }
     public bool ShowProviderLogo { get; set; } = true;
+    public bool ShowContextSize { get; set; } = true;
     public bool ApiDebugEnabled { get; set; }
     private string dictate = "windows";
     public string Dictate { get => dictate; set => dictate = value is "none" or "transcriptions" ? value : "windows"; }
@@ -86,6 +87,7 @@ public sealed class ChatPreferences
         ShowTokens = ShowTokens,
         ShowMetrics = ShowMetrics,
         ShowProviderLogo = ShowProviderLogo,
+        ShowContextSize = ShowContextSize,
         ApiDebugEnabled = ApiDebugEnabled,
         Dictate = Dictate,
         ToolOutputContentSettings = ToolOutputContentSettings.Clone(),
@@ -107,7 +109,7 @@ public sealed class ChatPreferences
     internal ChatPreferences InferenceDefaults() => new()
     {
         EndpointMode = EndpointMode, Endpoint = Endpoint,
-        ShowTokens = ShowTokens, ShowMetrics = ShowMetrics, ShowProviderLogo = ShowProviderLogo, ApiDebugEnabled = ApiDebugEnabled,
+        ShowTokens = ShowTokens, ShowMetrics = ShowMetrics, ShowProviderLogo = ShowProviderLogo, ShowContextSize = ShowContextSize, ApiDebugEnabled = ApiDebugEnabled,
         Dictate = Dictate,
         ToolOutputContentSettings = ToolOutputContentSettings.Clone()
     };
