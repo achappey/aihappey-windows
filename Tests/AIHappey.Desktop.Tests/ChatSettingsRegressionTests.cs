@@ -32,6 +32,9 @@ internal static class ChatSettingsRegressionTests
             "chat display: old settings default to tokens off and provider logos on");
         check(!new ChatPreferences().ShowTokens && new ChatPreferences().ShowProviderLogo,
             "chat display: fresh preferences have browser-compatible defaults");
+        check(loaded.Chat.ShowContextSize && new ChatPreferences().ShowContextSize
+            && JsonSerializer.Deserialize<ChatPreferences>("{}")!.ShowContextSize,
+            "context size: fresh and legacy preferences default on");
         check(!loaded.Chat.ApiDebugEnabled && !new ChatPreferences().ApiDebugEnabled, "chat debug: fresh and legacy settings default off");
         check(loaded.Chat.MaxOutputTokens == 123 && loaded.Chat.EnabledSkillIds.SequenceEqual(["provider/sample"])
             && loaded.Chat.ActivePlugins.SequenceEqual(["files"]), "chat settings: legacy instruction option does not prevent loading other preferences");
@@ -43,8 +46,13 @@ internal static class ChatSettingsRegressionTests
             && persisted["chat"]!["providerMetadata"]!["custom"]!["futureOption"]!.GetValue<bool>(),
             "chat settings: saving drops legacy instructions without discarding native provider options");
         loaded.Chat.ShowTokens = true; loaded.Chat.ShowProviderLogo = false;
+        loaded.Chat.ShowContextSize = false;
         loaded.Chat.ApiDebugEnabled = true;
         var clone = loaded.Clone();
+        check(!clone.Chat.ShowContextSize && !loaded.Chat.InferenceDefaults().ShowContextSize,
+            "context size: cloning and inference resets preserve the disabled choice");
+        clone.Chat.ShowContextSize = true;
+        check(!loaded.Chat.ShowContextSize, "context size: editing the settings draft does not mutate the live choice");
         check(clone.Chat.ApiDebugEnabled, "chat debug: settings cloning preserves enabled debug");
         clone.Chat.ApiDebugEnabled = false;
         check(loaded.Chat.ApiDebugEnabled, "chat debug: draft changes do not mutate live preferences");
@@ -54,11 +62,14 @@ internal static class ChatSettingsRegressionTests
         await SettingsStore.SaveAsync(directory, loaded);
         var reloaded = await SettingsStore.LoadAsync(directory, new());
         check(reloaded.Chat.ApiDebugEnabled, "chat debug: enabled value survives restart");
+        check(!reloaded.Chat.ShowContextSize, "context size: explicit disabled choice survives restart");
         check(reloaded.Chat.ShowTokens && !reloaded.Chat.ShowProviderLogo, "chat display: tokens on and logos off survive settings persistence");
         var displayRequest = loaded.Chat.RequestBody("custom/model", "fixture", [], "custom");
         check(!displayRequest.ContainsKey("showTokens") && !displayRequest.ContainsKey("showProviderLogo"),
             "chat display: UI preferences are not inference request fields");
+        check(!displayRequest.ContainsKey("showContextSize"), "context size: preference is not an inference request field");
         loaded.Chat.ShowTokens = false; loaded.Chat.ShowProviderLogo = true;
+        loaded.Chat.ShowContextSize = true;
         loaded.Chat.ApiDebugEnabled = false;
         check(!displayRequest.ContainsKey("apiDebugEnabled"), "chat debug: toggle is not an inference body field");
         check(JsonNode.DeepEquals(displayRequest, loaded.Chat.RequestBody("custom/model", "fixture", [], "custom")),
@@ -66,6 +77,8 @@ internal static class ChatSettingsRegressionTests
         await SettingsStore.SaveAsync(directory, loaded);
         reloaded = await SettingsStore.LoadAsync(directory, new());
         check(!reloaded.Chat.ApiDebugEnabled, "chat debug: explicit disabled value survives restart");
+        check(reloaded.Chat.ShowContextSize && loaded.Chat.Clone().ShowContextSize && loaded.Chat.InferenceDefaults().ShowContextSize,
+            "context size: enabled choice survives restart, cloning and inference resets");
         check(!reloaded.Chat.ShowTokens && reloaded.Chat.ShowProviderLogo, "chat display: explicit default choices also round-trip");
 
         var mcp = McpTurnSnapshot.Empty;

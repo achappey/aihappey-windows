@@ -165,18 +165,18 @@ public partial class App
         }
         var cancelled = await OpenSettings();
         var controls = ((StackPanel)cancelled.FindName("ChatPage")).Children.OfType<ToggleSwitch>().ToArray();
-        Check(controls.Select(t => t.Name).SequenceEqual(["ShowTokens", "ShowProviderLogo", "ShowMetrics", "ApiDebugEnabled"])
-            && !controls[0].IsOn && controls[1].IsOn && !controls[2].IsOn && !controls[3].IsOn && controls.All(t => AutomationProperties.GetName(t).Length > 0),
-            context + ": Chat has four accessible toggles with metrics and debug off by default");
+        Check(controls.Select(t => t.Name).SequenceEqual(["ShowTokens", "ShowProviderLogo", "ShowContextSize", "ShowMetrics", "ApiDebugEnabled"])
+            && controls.Select(t => t.IsOn).SequenceEqual([false, true, true, false, false]) && controls.All(t => AutomationProperties.GetName(t).Length > 0),
+            context + ": Chat has five accessible toggles with context size on between provider logo and metrics");
         ToggleSwitch[] OutputToggles(SettingsDialog dialog) => ((StackPanel)dialog.FindName("ToolOutputContentPanel")).Children.OfType<ToggleSwitch>().ToArray();
         var outputControls = OutputToggles(cancelled);
         Check(outputControls.Select(t => t.Name).SequenceEqual(["ToolOutputText", "ToolOutputLinks", "ToolOutputImages", "ToolOutputAudio", "ToolOutputVideo", "ToolOutputDocuments"])
             && outputControls.Select(t => t.IsOn).SequenceEqual([true, true, false, false, false, false])
             && outputControls.All(t => AutomationProperties.GetName(t).Length > 0), context + ": tool-output card has six localized accessible toggles with browser defaults");
         foreach (var toggle in outputControls) toggle.IsOn = !toggle.IsOn;
-        controls[0].IsOn = true; controls[1].IsOn = false; controls[2].IsOn = true; controls[3].IsOn = true;
+        foreach (var toggle in controls) toggle.IsOn = !toggle.IsOn;
         InvokeButton(Descendants(cancelled).OfType<Button>().Single(b => b.Name == "CloseButton")); await (Task)cancelled.Tag;
-        Check(!session.Settings.Chat.ShowTokens && !session.Settings.Chat.ShowMetrics && Metrics().Length == 0 && session.Settings.Chat.ShowProviderLogo && !session.Settings.Chat.ApiDebugEnabled && !Tokens() && Logos().Length == 2,
+        Check(!session.Settings.Chat.ShowTokens && session.Settings.Chat.ShowContextSize && !session.Settings.Chat.ShowMetrics && Metrics().Length == 0 && session.Settings.Chat.ShowProviderLogo && !session.Settings.Chat.ApiDebugEnabled && !Tokens() && Logos().Length == 2,
             context + ": Cancel discards display draft and leaves transcript unchanged");
         Check(session.Settings.Chat.ToolOutputContentSettings.Text && session.Settings.Chat.ToolOutputContentSettings.Links && !session.Settings.Chat.ToolOutputContentSettings.Images
             && !session.Settings.Chat.ToolOutputContentSettings.Audio && !session.Settings.Chat.ToolOutputContentSettings.Video
@@ -186,6 +186,7 @@ public partial class App
         ((ToggleSwitch)saved.FindName("ShowTokens")).IsOn = true;
         ((ToggleSwitch)saved.FindName("ShowMetrics")).IsOn = true;
         ((ToggleSwitch)saved.FindName("ShowProviderLogo")).IsOn = false;
+        ((ToggleSwitch)saved.FindName("ShowContextSize")).IsOn = false;
         ((ToggleSwitch)saved.FindName("ApiDebugEnabled")).IsOn = true;
         foreach (var toggle in OutputToggles(saved)) toggle.IsOn = !toggle.IsOn;
         window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(520, 900)); await Task.Delay(100); saved.UpdateLayout();
@@ -193,13 +194,13 @@ public partial class App
             && ((Grid)saved.FindName("Layout")).ActualWidth <= shell.XamlRoot.Size.Width,
             context + ": narrow Chat settings retains responsive native navigation");
         InvokeButton(Descendants(saved).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await (Task)saved.Tag; await Task.Delay(80);
-        Check(session.Settings.Chat.ShowTokens && session.Settings.Chat.ShowMetrics && Metrics().Length == 2 && !session.Settings.Chat.ShowProviderLogo && Tokens() && Logos().Length == 0
+        Check(session.Settings.Chat.ShowTokens && !session.Settings.Chat.ShowContextSize && session.Settings.Chat.ShowMetrics && Metrics().Length == 2 && !session.Settings.Chat.ShowProviderLogo && Tokens() && Logos().Length == 0
             && Labels().All(label => label == "openai/gpt-fixture") && Price(), context + ": Save immediately shows tokens and restores model prefixes without changing prices");
         Check(input.Text == "Unsent display-settings draft" && ((UiRuntime)session.Runtime).Resolutions == resolutions
             && Field<Conversation>(shell, "current") == conversation && PortableConversations.Write(conversation) == original,
             context + ": display Save preserves composer draft, runtime, current conversation and metadata");
         var persisted = await SettingsStore.LoadAsync(session.DataDirectory, new());
-        Check(persisted.Chat.ShowTokens && persisted.Chat.ShowMetrics && !persisted.Chat.ShowProviderLogo && persisted.Chat.ApiDebugEnabled, context + ": native settings Save persists display, metrics and debug choices");
+        Check(persisted.Chat.ShowTokens && !persisted.Chat.ShowContextSize && persisted.Chat.ShowMetrics && !persisted.Chat.ShowProviderLogo && persisted.Chat.ApiDebugEnabled, context + ": native settings Save persists display, context size, metrics and debug choices");
         Check(!persisted.Chat.ToolOutputContentSettings.Text && !persisted.Chat.ToolOutputContentSettings.Links && persisted.Chat.ToolOutputContentSettings.Images
             && persisted.Chat.ToolOutputContentSettings.Audio && persisted.Chat.ToolOutputContentSettings.Video
             && persisted.Chat.ToolOutputContentSettings.Documents, context + ": Save persists all six tool-output values");
@@ -207,16 +208,17 @@ public partial class App
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1280, 900)); await Task.Delay(80);
         var restored = await OpenSettings();
         Check(((ToggleSwitch)restored.FindName("ShowTokens")).IsOn && ((ToggleSwitch)restored.FindName("ShowMetrics")).IsOn && !((ToggleSwitch)restored.FindName("ShowProviderLogo")).IsOn
-            && ((ToggleSwitch)restored.FindName("ApiDebugEnabled")).IsOn,
+            && !((ToggleSwitch)restored.FindName("ShowContextSize")).IsOn && ((ToggleSwitch)restored.FindName("ApiDebugEnabled")).IsOn,
             context + ": reopening settings restores saved display values");
         Check(OutputToggles(restored).Select(t => t.IsOn).SequenceEqual([false, false, true, true, true, true]), context + ": reopening restores all tool-output selections");
         foreach (var toggle in OutputToggles(restored)) toggle.IsOn = !toggle.IsOn;
         ((ToggleSwitch)restored.FindName("ShowTokens")).IsOn = false;
         ((ToggleSwitch)restored.FindName("ShowMetrics")).IsOn = false;
         ((ToggleSwitch)restored.FindName("ShowProviderLogo")).IsOn = true;
+        ((ToggleSwitch)restored.FindName("ShowContextSize")).IsOn = true;
         ((ToggleSwitch)restored.FindName("ApiDebugEnabled")).IsOn = false;
         InvokeButton(Descendants(restored).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await (Task)restored.Tag; await Task.Delay(80);
-        Check(!Tokens() && Metrics().Length == 0 && Logos().Length == 2 && Labels().All(label => label == "gpt-fixture") && Price(),
+        Check(session.Settings.Chat.ShowContextSize && !Tokens() && Metrics().Length == 0 && Logos().Length == 2 && Labels().All(label => label == "gpt-fixture") && Price(),
             context + ": restoring defaults refreshes existing assistant cards without reopening history");
         foreach (var width in new[] { 520, 1280 })
         {

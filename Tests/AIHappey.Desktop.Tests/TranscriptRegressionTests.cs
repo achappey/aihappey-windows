@@ -168,6 +168,8 @@ internal static class TranscriptRegressionTests
                 "SettingsShowTokens.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name", "SettingsShowProviderLogo.Header",
                 "SettingsShowProviderLogo.OnContent", "SettingsShowProviderLogo.OffContent",
                 "SettingsShowProviderLogo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name",
+                "SettingsShowContextSize.Header", "SettingsShowContextSize.OnContent", "SettingsShowContextSize.OffContent",
+                "SettingsShowContextSize.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name",
                 "SettingsApiDebug.Header", "SettingsApiDebug.OnContent", "SettingsApiDebug.OffContent",
                 "SettingsApiDebug.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" })
                 check(values.TryGetValue(key, out var text) && text.Length > 0, language + ": chat display setting is translated: " + key);

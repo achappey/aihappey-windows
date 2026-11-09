@@ -34,7 +34,7 @@ public partial class App
                 Metadata = JsonSerializer.Deserialize<Dictionary<string, object>>("""{"usage":{"totalTokens":2500},"providerMetadata":{"gateway":{"cost":0.001}}}""")! } };
             conversation.Messages.Add(message);
             session.Settings.Chat.ActivePlugins = [DesktopLocalTools.Conversations, DesktopLocalTools.Files];
-            session.Settings.Chat.EnabledSkillIds = ["missing-fixture-skill"];
+            session.Settings.Chat.EnabledSkillIds = ["missing-fixture-skill", .. Enumerable.Range(1, 5).Select(i => "missing-fixture-skill-" + i)];
             session.ToolApprovals.ApproveAll = true;
             Call(shell, "RenderContextTags"); Call(shell, "RenderApprovalBadges"); Call(shell, "RenderTranscript");
             await Task.Delay(120); shell.UpdateLayout();
@@ -42,6 +42,12 @@ public partial class App
             var count = Field<TextBlock>(shell, "composerContextCount");
             var badgeRow = Field<Grid>(shell, "composerBadgeRow");
             var right = Field<ScrollViewer>(shell, "approvalBadgeScroll");
+            void CheckBottomAlignment(string width)
+            {
+                var bounds = right.TransformToVisual(badgeRow).TransformBounds(new(0, 0, right.ActualWidth, right.ActualHeight));
+                Check(right.VerticalAlignment == VerticalAlignment.Bottom && Math.Abs(bounds.Bottom - badgeRow.ActualHeight) < 2,
+                    context + $": {width} right-side usage, price and approval controls stay anchored just above the input");
+            }
             Check(!progress.IsIndeterminate && progress.Maximum == 100 && progress.Value == 25
                 && count.Text == ModelOverviewCatalog.CompactNumber(2500) + "/" + ModelOverviewCatalog.CompactNumber(10000),
                 context + $": native determinate progress and compact context counts agree (value={progress.Value}, count={count.Text}, selected={picker.Text})");
@@ -61,6 +67,9 @@ public partial class App
             Check(PluginBadges().All(b => AutomationProperties.GetName(b) == DesktopResources.Get(DesktopLocalTools.Plugins.Single(p => p.Id == (string)b.Tag).ResourceKey))
                 && Descendants(shell).OfType<Border>().Any(b => b.Name == "EnabledSkillBadge"), context + ": localized plugin names preserve existing skill badges");
             Check(Grid.GetRow(right) == 0 && Grid.GetColumn(right) == 1 && badgeRow.ActualWidth > 640, context + ": wide metadata keeps selections left and usage/BRRR right");
+            Check(badgeRow.Children.OfType<StackPanel>().Single().ActualHeight > right.ActualHeight,
+                context + ": wrapped context tags are taller than the right-side controls");
+            CheckBottomAlignment("wide wrapped-tag");
             Field<ListView>(picker, "list").SelectedItem = catalog[1]; await Task.Delay(40);
             Check(progress.Value == 50, context + ": selecting another model immediately recalculates context capacity");
             message.Message.Metadata!["usage"] = JsonSerializer.SerializeToElement(new { totalTokens = 50 });
@@ -70,6 +79,19 @@ public partial class App
                 && Field<TextBlock>(shell, "composerCostText").Text == "0.00>"
                 && Descendants(shell).OfType<Border>().Any(b => b.Name == "ConversationCostBadge"),
                 context + ": late metadata updates retained progress and total price including tool costs");
+            shell.UpdateLayout(); CheckBottomAlignment("wide with price");
+            var original = PortableConversations.Write(conversation);
+            session.Settings.Chat.ShowContextSize = false;
+            Call(shell, "UpdateComposerUsage"); shell.UpdateLayout();
+            Check(!Descendants(shell).Contains(progress) && !Descendants(shell).Contains(count)
+                && Descendants(shell).OfType<Border>().Any(b => b.Name == "ConversationCostBadge")
+                && Descendants(shell).Contains(brrr) && PluginBadges().Length == 2
+                && PortableConversations.Write(conversation) == original,
+                context + ": disabling context size hides the bar and count together without changing badges or conversation metadata");
+            session.Settings.Chat.ShowContextSize = true;
+            Call(shell, "UpdateComposerUsage"); shell.UpdateLayout();
+            Check(Descendants(shell).Contains(progress) && Descendants(shell).Contains(count) && progress.Value == 1,
+                context + ": re-enabling context size restores retained native controls and current usage");
             InvokeButton(Descendants(shell).OfType<Button>().Single(b => b.Name == "DisableLocalPlugin" && (string)b.Tag == DesktopLocalTools.Files));
             await HistoryIdleAsync(shell);
             var saved = await SettingsStore.LoadAsync(session.DataDirectory, new());
@@ -82,6 +104,7 @@ public partial class App
             Check(Grid.GetRow(right) == 1 && Grid.GetColumn(right) == 0
                 && Within(progress, shell) && Within(brrr, shell) && Within(PluginBadges().Single(), shell)
                 && right.ScrollableWidth < 1, context + $": narrow metadata stacks and wraps without clipping badge actions (width={badgeRow.ActualWidth}, row={Grid.GetRow(right)}, column={Grid.GetColumn(right)}, progress={Within(progress, shell)}, BRRR={Within(brrr, shell)}, plugin={Within(PluginBadges().Single(), shell)}, scroll={right.ScrollableWidth})");
+            CheckBottomAlignment("narrow stacked");
             Field<ListView>(picker, "list").SelectedItem = catalog[2]; await Task.Delay(40);
             Check(!Descendants(shell).Contains(progress), context + ": models without a context window omit progress");
             Call(shell, "NewConversation"); await Task.Delay(80);
