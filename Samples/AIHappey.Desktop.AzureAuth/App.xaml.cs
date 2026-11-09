@@ -24,6 +24,7 @@ public partial class App : Application
             session.ContextOptions.AppName ??= DesktopBranding.AppName;
             session.DefaultAgents = AIHappey.Desktop.Samples.SampleAgents.Load();
             session.DefaultProvidersByType = config.DefaultProvidersByType;
+            session.DefaultModelsByType = config.DefaultModelsByType;
             if (config.ChatbotInstructions is not null) session.ContextOptions.ChatbotInstructions = config.ChatbotInstructions;
             await DesktopStartup.InitializeAsync(session);
             window = new MainWindow(session);

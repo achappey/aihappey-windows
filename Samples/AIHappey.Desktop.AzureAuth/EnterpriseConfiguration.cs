@@ -27,6 +27,7 @@ public sealed class EnterpriseConfiguration
     }
     public string? ChatbotInstructions { get; set; }
     public Dictionary<string, string[]>? DefaultProvidersByType { get; set; }
+    public Dictionary<string, string[]>? DefaultModelsByType { get; set; }
 
     public static EnterpriseConfiguration Load()
     {

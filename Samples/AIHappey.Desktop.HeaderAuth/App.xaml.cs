@@ -24,7 +24,9 @@ public partial class App : Application
             session.ContextOptions = DesktopContextOptions.Load(Path.Combine(AppContext.BaseDirectory, "chat-context.json"));
             session.ContextOptions.AppName ??= DesktopBranding.AppName;
             session.DefaultAgents = AIHappey.Desktop.Samples.SampleAgents.Load();
-            session.DefaultProvidersByType = HeaderConfiguration.Load().DefaultProvidersByType;
+            var config = HeaderConfiguration.Load();
+            session.DefaultProvidersByType = config.DefaultProvidersByType;
+            session.DefaultModelsByType = config.DefaultModelsByType;
             await DesktopStartup.InitializeAsync(session);
             window = new MainWindow(session);
         }

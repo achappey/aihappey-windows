@@ -6,6 +6,7 @@ namespace AIHappey_Desktop_HeaderAuth;
 public sealed class HeaderConfiguration
 {
     public Dictionary<string, string[]>? DefaultProvidersByType { get; set; }
+    public Dictionary<string, string[]>? DefaultModelsByType { get; set; }
     public static HeaderConfiguration Load()
     {
         var overridePath = Path.Combine(DesktopPaths.ProfileDirectory("HeaderAuth"), "desktop.json");
