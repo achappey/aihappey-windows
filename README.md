@@ -14,6 +14,7 @@ A native Windows AI client built with WinUI 3. Chat with AI models and agents, c
 - Provider-specific model settings, filtering and voice model visibility
 - Offline provider catalog with native cards, favorites, filters, details and provider links
 - Realtime voice conversations and agents with streaming audio, interruption and tool execution
+- Decisions with intelligent multi-model and agent routing based on user input and configurable decision models
 - Multi-agent workflows with sequential, concurrent, handoff, group chat and magentic orchestration
 - MCP server discovery, installation and management
 - MCP Tools, Prompts and Resources, including resource templates
