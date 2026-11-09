@@ -1391,7 +1391,7 @@
     <value>Specification</value>
   </data>
   <data name="PluginKeywords" xml:space="preserve">
-    <value>Keywords</value>
+    <value>Labels</value>
   </data>
   <data name="PluginAuthor" xml:space="preserve">
     <value>Author</value>
@@ -1427,13 +1427,43 @@
     <value>License</value>
   </data>
   <data name="PluginAuthorName" xml:space="preserve">
-    <value>Author name</value>
+    <value>Name</value>
   </data>
   <data name="PluginAuthorEmail" xml:space="preserve">
-    <value>Author email</value>
+    <value>Email</value>
   </data>
   <data name="PluginAuthorUrl" xml:space="preserve">
-    <value>Author URL</value>
+    <value>URL</value>
+  </data>
+  <data name="PluginNamePlaceholder" xml:space="preserve">
+    <value>Short, unique name for this plugin...</value>
+  </data>
+  <data name="PluginVersionPlaceholder" xml:space="preserve">
+    <value>Version of this plugin, for example 1.0.0...</value>
+  </data>
+  <data name="PluginDescriptionPlaceholder" xml:space="preserve">
+    <value>Brief description of what this plugin provides...</value>
+  </data>
+  <data name="PluginHomepagePlaceholder" xml:space="preserve">
+    <value>Homepage URL for this plugin...</value>
+  </data>
+  <data name="PluginRepositoryPlaceholder" xml:space="preserve">
+    <value>Repository URL for this plugin...</value>
+  </data>
+  <data name="PluginLicensePlaceholder" xml:space="preserve">
+    <value>License for this plugin, for example MIT or Apache-2.0...</value>
+  </data>
+  <data name="PluginAuthorNamePlaceholder" xml:space="preserve">
+    <value>Name of the author...</value>
+  </data>
+  <data name="PluginAuthorEmailPlaceholder" xml:space="preserve">
+    <value>Email address of the author...</value>
+  </data>
+  <data name="PluginAuthorUrlPlaceholder" xml:space="preserve">
+    <value>Website URL of the author...</value>
+  </data>
+  <data name="PluginAddLabel" xml:space="preserve">
+    <value>Add label</value>
   </data>
   <data name="PluginTransportHint" xml:space="preserve">
     <value>Streamable HTTP is supported. Local-process and legacy SSE configurations are preserved but never executed. Package headers are public data, not secret storage.</value>

@@ -1386,7 +1386,7 @@
     <value>Specificatie</value>
   </data>
   <data name="PluginKeywords" xml:space="preserve">
-    <value>Trefwoorden</value>
+    <value>Labels</value>
   </data>
   <data name="PluginAuthor" xml:space="preserve">
     <value>Auteur</value>
@@ -1422,13 +1422,43 @@
     <value>Licentie</value>
   </data>
   <data name="PluginAuthorName" xml:space="preserve">
-    <value>Naam auteur</value>
+    <value>Naam</value>
   </data>
   <data name="PluginAuthorEmail" xml:space="preserve">
-    <value>E-mail auteur</value>
+    <value>E-mail</value>
   </data>
   <data name="PluginAuthorUrl" xml:space="preserve">
-    <value>URL auteur</value>
+    <value>URL</value>
+  </data>
+  <data name="PluginNamePlaceholder" xml:space="preserve">
+    <value>Korte, unieke naam voor deze plugin...</value>
+  </data>
+  <data name="PluginVersionPlaceholder" xml:space="preserve">
+    <value>Versie van deze plugin, bijvoorbeeld 1.0.0...</value>
+  </data>
+  <data name="PluginDescriptionPlaceholder" xml:space="preserve">
+    <value>Korte beschrijving van wat deze plugin biedt...</value>
+  </data>
+  <data name="PluginHomepagePlaceholder" xml:space="preserve">
+    <value>Homepage-URL van deze plugin...</value>
+  </data>
+  <data name="PluginRepositoryPlaceholder" xml:space="preserve">
+    <value>Repository-URL van deze plugin...</value>
+  </data>
+  <data name="PluginLicensePlaceholder" xml:space="preserve">
+    <value>Licentie van deze plugin, bijvoorbeeld MIT of Apache-2.0...</value>
+  </data>
+  <data name="PluginAuthorNamePlaceholder" xml:space="preserve">
+    <value>Naam van de auteur...</value>
+  </data>
+  <data name="PluginAuthorEmailPlaceholder" xml:space="preserve">
+    <value>E-mailadres van de auteur...</value>
+  </data>
+  <data name="PluginAuthorUrlPlaceholder" xml:space="preserve">
+    <value>Website-URL van de auteur...</value>
+  </data>
+  <data name="PluginAddLabel" xml:space="preserve">
+    <value>Label toevoegen</value>
   </data>
   <data name="PluginTransportHint" xml:space="preserve">
     <value>Streamable HTTP wordt ondersteund. Configuraties voor lokale processen en oudere SSE worden bewaard maar nooit uitgevoerd. Pakketheaders zijn openbare gegevens, geen opslag voor geheimen.</value>

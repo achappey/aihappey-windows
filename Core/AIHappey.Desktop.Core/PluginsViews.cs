@@ -182,27 +182,41 @@ public sealed class PluginEditDialog : ContentDialog, IResponsiveDialog
         if (plugin is null && authorName is { Length: > 0 }) draft.Manifest["author"] = authorObject = new() { ["name"] = authorName, ["email"] = authorEmail ?? "" };
         foreach (var (key, label) in new[] { ("name", "PluginAuthorName"), ("email", "PluginAuthorEmail"), ("url", "PluginAuthorUrl") })
         {
-            var input = new TextBox { Header = DesktopResources.Get(label), Text = DesktopAgent.Text(authorObject?[key]), IsReadOnly = readOnly || authorName is { Length: > 0 } }; ControlAppearance.Stock(input); author.Children.Add(input);
+            var input = new TextBox { Name = "PluginAuthor_" + key, Header = DesktopResources.Get(label), PlaceholderText = DesktopResources.Get(label + "Placeholder"), Text = DesktopAgent.Text(authorObject?[key]), IsReadOnly = readOnly || authorName is { Length: > 0 } }; ControlAppearance.Stock(input); author.Children.Add(input);
             input.TextChanged += (_, _) => { var obj = draft.Manifest["author"] as JsonObject; if (obj is null) draft.Manifest["author"] = obj = new(); obj[key] = input.Text; };
         }
         Tab("author", DesktopResources.Get("PluginAuthor"), author);
-        var keywordPanel = Panel(); var keywordInput = new TextBox { Header = DesktopResources.Get("PluginKeywords"), Text = string.Join(", ", draft.Keywords), IsReadOnly = readOnly };
-        ControlAppearance.Stock(keywordInput); keywordPanel.Children.Add(keywordInput); keywordInput.TextChanged += (_, _) => draft.Manifest["keywords"] = JsonSerializer.SerializeToNode(keywordInput.Text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Distinct().ToArray()); Tab("keywords", DesktopResources.Get("PluginKeywords"), keywordPanel);
-        var skillPanel = Panel(); var skillSearch = new AutoSuggestBox { PlaceholderText = DesktopResources.Get("Search") }; ControlAppearance.Stock(skillSearch); skillPanel.Children.Add(skillSearch); skillPanel.Children.Add(skillRows);
+        Tab("keywords", DesktopResources.Get("PluginKeywords"), Labels());
+        var skillPanel = Panel(); var skillSearch = new AutoSuggestBox { Name = "PluginSkillSearch", PlaceholderText = DesktopResources.Get("Search") }; ControlAppearance.Stock(skillSearch); skillPanel.Children.Add(skillSearch); skillPanel.Children.Add(skillRows);
+        var skillToggles = new List<ToggleSwitch>();
         void Skills()
         {
-            skillRows.Children.Clear(); var embedded = draft.Skills();
+            skillRows.Children.Clear(); skillToggles.Clear(); var embedded = draft.Skills();
             foreach (var descriptor in skills.Concat(embedded.Select(s => s.Descriptor)).DistinctBy(s => s.Name).Where(s => (s.Name + " " + s.Description).Contains(skillSearch.Text, StringComparison.OrdinalIgnoreCase)))
             {
-                var toggle = new ToggleSwitch { Header = descriptor.Name, IsOn = embedded.Any(s => s.Directory == descriptor.Name), IsEnabled = !readOnly && !working, OnContent = "", OffContent = "" }; ControlAppearance.Stock(toggle); skillRows.Children.Add(toggle);
-                skillRows.Children.Add(new TextBlock { Text = descriptor.Description, TextWrapping = TextWrapping.Wrap });
-                toggle.Toggled += async (_, _) => await Work(async ct =>
+                var toggle = new ToggleSwitch { Name = "PluginSkillToggle", Tag = descriptor.Name, IsOn = embedded.Any(s => s.Directory == descriptor.Name), IsEnabled = !readOnly && !working, OnContent = "", OffContent = "", MinWidth = 0, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
+                ControlAppearance.Stock(toggle); ToolbarControls.Label(toggle, descriptor.Label); skillToggles.Add(toggle);
+                var row = NativeSettingsSurface.Expander(skillRows, "PluginSkillCard", descriptor.Label, toggle, out var body); row.Tag = descriptor.Name;
+                if (descriptor.Version is { Length: > 0 } version)
                 {
-                    if (toggle.IsOn) { var additions = await snapshot(descriptor.Id, ct); ct.ThrowIfCancellationRequested(); draft.Files.RemoveAll(f => f.Path.StartsWith("skills/" + descriptor.Name + "/", StringComparison.Ordinal)); draft.Files.AddRange(additions); }
-                    else draft.Files.RemoveAll(f => f.Path.StartsWith("skills/" + descriptor.Name + "/", StringComparison.Ordinal));
+                    var badge = new TextBlock { Text = version }; NativeCardSurface.Secondary(badge, true); body.Children.Add(badge);
+                }
+                var description = new TextBlock { Text = descriptor.Description, TextWrapping = TextWrapping.Wrap }; NativeCardSurface.Secondary(description); body.Children.Add(description);
+                toggle.Toggled += async (_, _) =>
+                {
+                    if (working || readOnly) return;
+                    error.Text = ""; error.Visibility = Visibility.Collapsed;
+                    foreach (var control in skillToggles) control.IsEnabled = false;
+                    await Work(async ct =>
+                    {
+                        if (toggle.IsOn) { var additions = await snapshot(descriptor.Id, ct); ct.ThrowIfCancellationRequested(); draft.Files.RemoveAll(f => f.Path.StartsWith("skills/" + descriptor.Name + "/", StringComparison.Ordinal)); draft.Files.AddRange(additions); }
+                        else draft.Files.RemoveAll(f => f.Path.StartsWith("skills/" + descriptor.Name + "/", StringComparison.Ordinal));
+                    });
+                    // Rebuild after Work clears its busy state, including on snapshot failure.
                     Skills(); Files();
-                });
+                };
             }
+            if (skillRows.Children.Count == 0) skillRows.Children.Add(new TextBlock { Text = DesktopResources.Get("NoResults") });
         }
         skillSearch.TextChanged += (_, _) => Skills(); Skills(); Tab("skills", DesktopResources.Get("Skills"), skillPanel);
         var mcp = Panel(); mcp.Children.Add(new TextBlock { Text = DesktopResources.Get("PluginTransportHint"), TextWrapping = TextWrapping.Wrap });
@@ -217,7 +231,7 @@ public sealed class PluginEditDialog : ContentDialog, IResponsiveDialog
             var bulk = Panel(); bulk.Children.Add(new TextBlock { Text = DesktopResources.Get("PluginAllServers") }); SettingsControls(bulk, null); mcp.Children.Add(bulk);
         }
         mcp.Children.Add(serverRows); Servers(); Tab("mcp", DesktopResources.Get("McpTitle"), mcp);
-        var filesPanel = Panel(); filesPanel.Children.Add(new TextBlock { Text = DesktopResources.Get("PluginFilesHint"), TextWrapping = TextWrapping.Wrap });
+        var filesPanel = Panel();
         if (!readOnly) filesPanel.Children.Add(Button("PluginAddFiles", () => Work(async ct =>
         {
             var picker = new FileOpenPicker(); picker.FileTypeFilter.Add("*"); Initialize(picker); var files = await picker.PickMultipleFilesAsync().AsTask(ct); await AddFiles(files, ct); Files();
@@ -241,8 +255,53 @@ public sealed class PluginEditDialog : ContentDialog, IResponsiveDialog
     private static StackPanel Panel() => new() { Spacing = 12 };
     private void Field(StackPanel panel, string key, string label, bool immutable = false)
     {
-        var input = new TextBox { Name = "Plugin_" + key, Header = DesktopResources.Get(label), Text = DesktopAgent.Text(draft.Manifest[key]), IsReadOnly = readOnly || immutable, AcceptsReturn = key == "description", TextWrapping = TextWrapping.Wrap };
+        var input = new TextBox { Name = "Plugin_" + key, Header = DesktopResources.Get(label), PlaceholderText = DesktopResources.Get("Plugin" + char.ToUpperInvariant(key[0]) + key[1..] + "Placeholder"), Text = DesktopAgent.Text(draft.Manifest[key]), IsReadOnly = readOnly || immutable, AcceptsReturn = key == "description", TextWrapping = TextWrapping.Wrap };
+        if (key == "description") input.MinHeight = 140;
         ControlAppearance.Stock(input); panel.Children.Add(input); input.TextChanged += (_, _) => draft.Manifest[key] = input.Text;
+    }
+    private StackPanel Labels()
+    {
+        var panel = Panel(); panel.Name = "PluginLabels";
+        var selected = Panel(); selected.Name = "PluginLabelItems";
+        void Write(IEnumerable<string> values) => draft.Manifest["keywords"] = JsonSerializer.SerializeToNode(values.ToArray());
+        void Render()
+        {
+            selected.Children.Clear();
+            foreach (var label in draft.Keywords)
+            {
+                var row = new Grid { Name = "PluginLabelRow", Tag = label, ColumnSpacing = 8 };
+                row.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+                row.Children.Add(new TextBlock { Text = label, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
+                if (!readOnly)
+                {
+                    var remove = new Button { Name = "PluginLabelRemove", Tag = label, Content = DesktopIcons.Create(Icon.Dismiss, 16) }; ControlAppearance.Stock(remove);
+                    ToolbarControls.Label(remove, DesktopResources.Get("Remove") + " " + label);
+                    remove.Click += (_, _) => { if (!working) { Write(draft.Keywords.Where(value => value != label)); Render(); } };
+                    Grid.SetColumn(remove, 1); row.Children.Add(remove);
+                }
+                selected.Children.Add(row);
+            }
+        }
+        if (!readOnly)
+        {
+            var editor = new Grid { ColumnSpacing = 8 };
+            editor.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) }); editor.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+            var input = new TextBox { Name = "PluginLabelInput", Header = DesktopResources.Get("PluginKeywords"), PlaceholderText = DesktopResources.Get("PluginAddLabel"), HorizontalAlignment = HorizontalAlignment.Stretch };
+            var add = new Button { Name = "PluginLabelAdd", Content = DesktopResources.Get("Add"), IsEnabled = false, VerticalAlignment = VerticalAlignment.Bottom };
+            ControlAppearance.Stock(input); ControlAppearance.Stock(add); ToolbarControls.Label(input, DesktopResources.Get("PluginKeywords"));
+            void Add()
+            {
+                if (working || string.IsNullOrWhiteSpace(input.Text)) return;
+                var value = input.Text.Trim();
+                if (!draft.Keywords.Contains(value, StringComparer.Ordinal)) Write(draft.Keywords.Append(value));
+                input.Text = ""; Render(); input.Focus(FocusState.Programmatic);
+            }
+            input.TextChanged += (_, _) => add.IsEnabled = !string.IsNullOrWhiteSpace(input.Text);
+            input.KeyDown += (_, args) => { if (args.Key == Windows.System.VirtualKey.Enter) { args.Handled = true; Add(); } };
+            add.Click += (_, _) => Add();
+            editor.Children.Add(input); Grid.SetColumn(add, 1); editor.Children.Add(add); panel.Children.Add(editor);
+        }
+        panel.Children.Add(selected); Render(); return panel;
     }
     private void Tab(string key, string title, FrameworkElement view) { pages[key] = view; var item = new NavigationViewItem { Content = title, Tag = key }; AutomationProperties.SetAutomationId(item, "PluginTab_" + key); tabs.MenuItems.Add(item); }
     private async Task Work(Func<CancellationToken, Task> action)
