@@ -3,6 +3,7 @@ using System.Text.Json;
 using AIHappey.Desktop.Core;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -168,9 +169,23 @@ public partial class App
         var omitted = McpTurnSnapshot.Empty;
         omitted.AddContext(Json("""{"modelContextProtocolServer":{"name":"Stale server"},"tools":[{"name":"disabled_tool","inputSchema":{"type":"object"}}]}"""));
         await InspectAsync(omitted, "context-only tool is not in request");
+        var navigationFixture = McpTurnSnapshot.Empty;
+        navigationFixture.AddContext(JsonSerializer.SerializeToElement(new
+        {
+            modelContextProtocolServer = new { name = "navigation-server", title = "Context navigation server with a deliberately long title", version = "1.0" },
+            instructions = "Captured server instructions", metadata = new { note = "Captured metadata marker" },
+            resources = Enumerable.Range(1, 12).Select(index => new { name = "Captured resource " + index, uri = "resource://fixture/" + index }).ToArray(),
+            resourceTemplates = new[] { new { name = "Captured template", uriTemplate = "resource://fixture/{name}" } }
+        }));
+        for (var index = 0; index < 6; index++)
+            navigationFixture.AddContext(JsonSerializer.SerializeToElement(new
+            {
+                modelContextProtocolServer = new { name = "Additional context server with a long title " + index }
+            }));
+        await InspectAsync(navigationFixture, "native nested sections and overflow", inspectNavigation: true);
         Check(calls == 0, context + ": inspecting tools does not execute tools or read resources/skills");
 
-        async Task InspectAsync(McpTurnSnapshot snapshot, string scenario)
+        async Task InspectAsync(McpTurnSnapshot snapshot, string scenario, bool inspectNavigation = false)
         {
             var message = new DesktopSystemContextComposer().Compose(new(new() { AppName = "Context test", ChatbotInstructions = "Test instructions" },
                 new(), null, "en", false, DateTimeOffset.UtcNow) { Mcp = snapshot });
@@ -186,9 +201,15 @@ public partial class App
                 var displayed = (List<JsonElement>)dialogType.GetField("tools", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(dialog)!;
                 Check(displayed.Select(tool => tool.GetRawText()).SequenceEqual(expected.Select(tool => tool.GetRawText())),
                     prefix + ": complete definitions match request exactly, including schemas and aliases");
-                var toolTab = Descendants(dialog).OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>()
-                    .SingleOrDefault(button => button.Name == "SystemContextToolsTab");
-                Check(expected.Length == 0 ? toolTab is null : toolTab is { IsChecked: true }
+                var navigation = Descendants(dialog).OfType<NavigationView>().Single(view => view.Name == "SystemContextTabs");
+                var items = navigation.MenuItems.OfType<NavigationViewItem>().ToArray();
+                Check(navigation.PaneDisplayMode == NavigationViewPaneDisplayMode.Top && !navigation.IsSettingsVisible
+                    && !navigation.IsPaneToggleButtonVisible && !Descendants(dialog).OfType<TabView>().Any()
+                    && !Descendants(dialog).OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>()
+                        .Any(button => button.Name.StartsWith("SystemContextTab") || button.Name == "SystemContextToolsTab"),
+                    prefix + ": context uses stock native top navigation, not toggle-button tabs");
+                var toolTab = items.SingleOrDefault(item => item.Name == "SystemContextToolsTab");
+                Check(expected.Length == 0 ? toolTab is null && ReferenceEquals(navigation.SelectedItem, items[0]) : toolTab is { IsSelected: true }
                     && toolTab.Content?.ToString() == "Tools (" + expected.Length + ")", prefix + ": correct Tools count and initial selection");
                 var cards = Descendants(dialog).OfType<Border>().Where(border => border.Name == "SystemContextToolCard").ToArray();
                 Check(cards.Length == expected.Length && cards.Select((card, index) =>
@@ -203,16 +224,82 @@ public partial class App
                         Check(Descendants(card).OfType<TextBlock>().Any(text => text.Text == "Server tool description")
                             && Descendants(card).OfType<TextBlock>().Any(text => text.Text == "Read-only"), prefix + ": descriptions and annotation badges preserved");
                 }
-                var tabs = Descendants(dialog).OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>()
-                    .Where(button => button.Name.StartsWith("SystemContextTab")).ToArray();
-                Check(tabs.Length == message.Parts.Count && tabs.Any(button => button.Content?.ToString() == "Context test"),
+                var tabs = items.Where(item => item.Name.StartsWith("SystemContextTab")).ToArray();
+                Check(tabs.Length == message.Parts.Count && tabs.Any(item => item.Content?.ToString() == "Context test")
+                    && items.All(item => AutomationProperties.GetAutomationId(item) == item.Name
+                        && AutomationProperties.GetName(item) == item.Content?.ToString()),
                     prefix + ": all original context tabs retained");
-                dialogType.GetMethod("Render", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(dialog, [expected.Length > 0 ? 1 : 0]);
+                Check(items[0].Focus(FocusState.Keyboard) && new NavigationViewItemAutomationPeer(items[0]).GetName() == items[0].Content?.ToString(),
+                    prefix + ": initial tab has native keyboard focus and accessible name");
+                navigation.SelectedItem = tabs[0]; await Task.Delay(60);
                 dialog.UpdateLayout();
                 Check(!Descendants(dialog).OfType<Border>().Any(border => border.Name == "SystemContextToolCard"),
                     prefix + ": other context tabs remain separately navigable");
+                if (toolTab is not null)
+                {
+                    navigation.SelectedItem = toolTab; await Task.Delay(60);
+                    Check(Descendants(dialog).OfType<Border>().Count(border => border.Name == "SystemContextToolCard") == expected.Length,
+                        prefix + ": returning to Tools restores all request tool cards");
+                }
+                if (inspectNavigation)
+                {
+                    var serverTab = tabs.Single(item => item.Content?.ToString() == "Context navigation server with a deliberately long title");
+                    navigation.SelectedItem = serverTab; await Task.Delay(80);
+                    var sections = Descendants(dialog).OfType<NavigationView>().Single(view => view.Name == "McpContextSections");
+                    var sectionItems = sections.MenuItems.OfType<NavigationViewItem>().ToArray();
+                    Check(sections.PaneDisplayMode == NavigationViewPaneDisplayMode.Top && sectionItems[0].IsSelected
+                        && sectionItems.Select(item => item.Name).SequenceEqual(new[] { "McpContextGeneral", "McpContextInstructions",
+                            "McpContextMcpMetadata", "McpContextMcpResources", "McpContextMcpResourceTemplates" })
+                        && sectionItems[3].Content?.ToString() == "Resources (12)" && sectionItems[4].Content?.ToString() == "Resource templates (1)"
+                        && sectionItems.All(item => AutomationProperties.GetAutomationId(item) == item.Name
+                            && AutomationProperties.GetName(item) == item.Content?.ToString()),
+                        prefix + ": nested native tabs retain General default, optional sections, counts and accessible labels");
+                    Check(sectionItems[0].Focus(FocusState.Keyboard)
+                        && new NavigationViewItemAutomationPeer(sectionItems[0]).GetName() == "General",
+                        prefix + ": nested tab is keyboard focusable with a native accessible name");
+                    foreach (var (item, text) in sectionItems.Zip(new[] { "navigation-server", "Captured server instructions",
+                        "Captured metadata marker", "Captured resource 12", "Captured template" }))
+                    {
+                        sections.SelectedItem = item; await Task.Delay(60);
+                        Check(Descendants(dialog).OfType<TextBlock>().Any(block => block.Text.Contains(text)),
+                            prefix + ": native selection renders captured " + item.Content);
+                    }
+                    sections.SelectedItem = sectionItems[1];
+                    navigation.SelectedItem = tabs[0]; await Task.Delay(60);
+                    navigation.SelectedItem = serverTab; await Task.Delay(60);
+                    Check(ReferenceEquals(sections, Descendants(dialog).OfType<NavigationView>().Single(view => view.Name == "McpContextSections"))
+                        && ReferenceEquals(sections.SelectedItem, sectionItems[1]), prefix + ": returning to server retains cached nested selection");
+                    navigation.SelectedItem = tabs.Last(); await Task.Delay(60);
+                    var minimal = Descendants(dialog).OfType<NavigationView>().Single(view => view.Name == "McpContextSections");
+                    Check(minimal.MenuItems.Count == 1 && ((NavigationViewItem)minimal.SelectedItem).Name == "McpContextGeneral",
+                        prefix + ": absent optional data creates no placeholder tabs");
+                    navigation.SelectedItem = serverTab; sections.SelectedItem = sectionItems[3];
+                    var viewer = (ScrollViewer)dialogType.GetField("viewer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(dialog)!;
+                    foreach (var width in new[] { 520, 1000 })
+                    {
+                        var scale = root.XamlRoot.RasterizationScale;
+                        window!.AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(width * scale), (int)(800 * scale)));
+                        await Task.Delay(150); dialog.UpdateLayout();
+                        Check(navigation.ActualWidth <= ((FrameworkElement)dialog.Content).ActualWidth + 1
+                            && sections.ActualWidth <= viewer.ViewportWidth + 1
+                            && Descendants(dialog).OfType<ScrollViewer>().All(view => view.ScrollableWidth < 1)
+                            && ReferenceEquals(navigation.SelectedItem, serverTab) && ReferenceEquals(sections.SelectedItem, sectionItems[3])
+                            && navigation.MenuItems.Count == items.Length && sections.MenuItems.Count == 5,
+                            prefix + $": both native tab strips fit {width}px with overflow and stable selection");
+                    }
+                    Check(viewer.ScrollableHeight > 0, prefix + ": captured resource cards remain vertically scrollable");
+                    viewer.ChangeView(null, viewer.ScrollableHeight, null, true); await Task.Delay(60);
+                    navigation.SelectedItem = tabs[0]; await Task.Delay(60);
+                    Check(viewer.VerticalOffset < 1, prefix + ": switching outer tabs still resets content scroll");
+                }
+                Check(dialog.CloseButtonText == "Close" && dialog.DefaultButton == ContentDialogButton.Close,
+                    prefix + ": native Close action remains unchanged");
             }
-            finally { dialog.Hide(); await dialogTask; }
+            finally
+            {
+                dialog.Hide(); await dialogTask;
+                if (inspectNavigation) window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 800));
+            }
         }
     }
 
