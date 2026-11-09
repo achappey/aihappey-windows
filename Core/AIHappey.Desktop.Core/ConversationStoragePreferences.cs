@@ -1,6 +1,6 @@
 namespace AIHappey.Desktop.Core;
 
-/// <summary>Opt-in connection and source selection; neither choice migrates conversation documents.</summary>
+/// <summary>Cloud availability preference and explicit source selection; neither choice migrates conversation documents.</summary>
 public sealed class ConversationStoragePreferences
 {
     private bool cloudEnabled;

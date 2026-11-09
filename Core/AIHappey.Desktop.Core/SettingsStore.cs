@@ -5,6 +5,15 @@ namespace AIHappey.Desktop.Core;
 public static class SettingsStore
 {
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> writes = new(StringComparer.OrdinalIgnoreCase);
+
+    internal static Task<DesktopSettings> LoadForSessionAsync(string directory, DesktopSession session)
+    {
+        // Seed only first-run defaults. Deserialized user preferences always take precedence.
+        var defaults = session.Settings.Clone();
+        defaults.ConversationStorage.CloudEnabled = session.Host is IDesktopConversationHost { ConversationsEndpoint: not null };
+        return LoadAsync(directory, defaults, session.Host.ApplySettingsPolicy);
+    }
+
     public static async Task<DesktopSettings> LoadAsync(string directory, DesktopSettings defaults,
         Action<DesktopSettings>? applyHostPolicy = null)
     {
