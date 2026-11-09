@@ -2,7 +2,6 @@ using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AIHappey.Desktop.Core;
 
@@ -10,25 +9,23 @@ namespace AIHappey.Desktop.Core;
 /// No discovery, resource reads, or tool execution happens in this view.</summary>
 internal sealed class McpSystemContextView : UserControl
 {
-    private readonly Grid layout = new() { ColumnSpacing = 16, RowSpacing = 12 };
-    private readonly StackPanel navigation = new() { Name = "McpContextSections", Spacing = 4 };
+    private readonly Grid layout = new() { RowSpacing = 12 };
+    private readonly NavigationView navigation = new() { Name = "McpContextSections", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly StackPanel content = new() { Name = "McpContextSectionContent", Spacing = 12 };
-    private readonly List<(ToggleButton Button, Func<UIElement> Render)> sections = [];
+    private readonly List<Func<UIElement>> sections = [];
     private readonly JsonElement block;
     private readonly JsonElement server;
-    private int selected;
 
     public McpSystemContextView(JsonElement block)
     {
         this.block = block.Clone();
         server = this.block.GetProperty("modelContextProtocolServer");
         Name = "McpSystemContextView";
-        layout.ColumnDefinitions.Add(new() { Width = new GridLength(160) });
-        layout.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        navigation.HorizontalAlignment = HorizontalAlignment.Stretch;
-        Grid.SetColumn(content, 1); layout.Children.Add(navigation); layout.Children.Add(content); Content = layout;
+        Grid.SetRow(content, 1); layout.Children.Add(navigation); layout.Children.Add(content); Content = layout;
 
         AddSection("General", General);
         var instructions = PortableConversations.String(this.block, "instructions");
@@ -40,7 +37,11 @@ internal sealed class McpSystemContextView : UserControl
         AddCatalogSection("resources", "McpResources");
         AddCatalogSection("resourceTemplates", "McpResourceTemplates");
 
-        SizeChanged += (_, args) => ArrangeSections(args.NewSize.Width);
+        navigation.SelectedItem = navigation.MenuItems[0];
+        navigation.SelectionChanged += (_, args) =>
+        {
+            if (args.SelectedItem is NavigationViewItem { Tag: int index }) Select(index);
+        };
         Select(0);
     }
 
@@ -48,29 +49,14 @@ internal sealed class McpSystemContextView : UserControl
     {
         label ??= DesktopResources.Get(key);
         var index = sections.Count;
-        var button = new ToggleButton { Name = "McpContext" + key, Content = new TextBlock { Text = label, TextWrapping = TextWrapping.Wrap },
-            HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left,
-            Padding = new Thickness(12, 10, 12, 10), MinHeight = 40, CornerRadius = new CornerRadius(6) };
-        ControlAppearance.Stock(button); ToolbarControls.Label(button, label);
-        button.Click += (_, _) => Select(index);
-        sections.Add((button, render)); navigation.Children.Add(button);
+        var tab = new NavigationViewItem { Name = "McpContext" + key, Content = label, Tag = index };
+        ToolbarControls.Label(tab, label); AutomationProperties.SetAutomationId(tab, tab.Name);
+        sections.Add(render); navigation.MenuItems.Add(tab);
     }
 
     private void Select(int index)
     {
-        selected = index;
-        for (var i = 0; i < sections.Count; i++) sections[i].Button.IsChecked = i == selected;
-        content.Children.Clear(); content.Children.Add(sections[selected].Render());
-    }
-
-    private void ArrangeSections(double width)
-    {
-        // Keep vertical navigation at normal widths; stack above the detail card when space is limited.
-        var narrow = width < 560;
-        layout.ColumnDefinitions[0].Width = narrow ? new GridLength(1, GridUnitType.Star) : new GridLength(160);
-        layout.ColumnDefinitions[1].Width = narrow ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
-        layout.ColumnSpacing = narrow ? 0 : 16;
-        Grid.SetColumn(content, narrow ? 0 : 1); Grid.SetRow(content, narrow ? 1 : 0);
+        content.Children.Clear(); content.Children.Add(sections[index]());
     }
 
     private UIElement General()

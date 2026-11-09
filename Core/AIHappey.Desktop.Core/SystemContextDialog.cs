@@ -1,8 +1,8 @@
 using System.Text.Json;
 using AIHappey.Vercel.Models;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 
 namespace AIHappey.Desktop.Core;
@@ -11,10 +11,11 @@ namespace AIHappey.Desktop.Core;
 internal sealed class SystemContextDialog : ContentDialog, IResponsiveDialog
 {
     private readonly Grid layout = new() { RowSpacing = 16 };
-    private readonly StackPanel tabs = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
+    private readonly NavigationView tabs = new() { Name = "SystemContextTabs", PaneDisplayMode = NavigationViewPaneDisplayMode.Top,
+        IsSettingsVisible = false, IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed,
+        IsPaneToggleButtonVisible = false, AlwaysShowHeader = false, Height = 56 };
     private readonly StackPanel body = new() { Name = "SystemContextBody", Spacing = 12 };
     private readonly ScrollViewer viewer;
-    private readonly List<ToggleButton> buttons = [];
     private readonly List<(string Label, string Text, JsonElement? Json, bool Markdown)> parts = [];
     private readonly List<JsonElement> tools = [];
     private readonly HashSet<int> mcpJsonParts = [];
@@ -29,9 +30,7 @@ internal sealed class SystemContextDialog : ContentDialog, IResponsiveDialog
         Resources["ContentDialogMaxWidth"] = 1000d; Resources["ContentDialogMinWidth"] = 0d;
         layout.RowDefinitions.Add(new() { Height = GridLength.Auto });
         layout.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
-        layout.Children.Add(new ScrollViewer { Content = tabs, HorizontalScrollMode = ScrollMode.Enabled,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollMode = ScrollMode.Disabled,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled });
+        layout.Children.Add(tabs);
         viewer = new ScrollViewer { Content = body, HorizontalScrollMode = ScrollMode.Disabled,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalContentAlignment = HorizontalAlignment.Stretch };
@@ -73,6 +72,11 @@ internal sealed class SystemContextDialog : ContentDialog, IResponsiveDialog
             var index = parts.Count - 1;
             AddTab(label, index);
         }
+        if (parts.Count > 0) tabs.SelectedItem = tabs.MenuItems[0];
+        tabs.SelectionChanged += (_, args) =>
+        {
+            if (args.SelectedItem is NavigationViewItem { Tag: int index }) Render(index);
+        };
         Opened += (_, _) => { SizeToRoot(); XamlRoot.Changed += RootChanged; };
         Closed += (_, _) => XamlRoot.Changed -= RootChanged;
         if (parts.Count > 0) Render(0);
@@ -80,15 +84,14 @@ internal sealed class SystemContextDialog : ContentDialog, IResponsiveDialog
 
     private void AddTab(string label, int index)
     {
-        var button = new ToggleButton { Name = index == 0 && tools.Count > 0 ? "SystemContextToolsTab" : "SystemContextTab" + index,
-            Content = label, Padding = new Thickness(12, 8, 12, 8), MinHeight = 36 };
-        ControlAppearance.Stock(button); ToolbarControls.Label(button, label);
-        button.Click += (_, _) => Render(index); buttons.Add(button); tabs.Children.Add(button);
+        var tab = new NavigationViewItem { Name = index == 0 && tools.Count > 0 ? "SystemContextToolsTab" : "SystemContextTab" + index,
+            Content = label, Tag = index };
+        ToolbarControls.Label(tab, label); AutomationProperties.SetAutomationId(tab, tab.Name);
+        tabs.MenuItems.Add(tab);
     }
 
     private void Render(int index)
     {
-        for (var i = 0; i < buttons.Count; i++) buttons[i].IsChecked = i == index;
         body.Children.Clear(); var part = parts[index];
         if (agentMode) body.Children.Add(Text(DesktopResources.Get("AgentContextOmitted")));
         if (index == 0 && tools.Count > 0)
