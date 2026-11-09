@@ -5,6 +5,7 @@ using CommunityToolkit.WinUI.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
+using Microsoft.UI.Xaml.Automation.Provider;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -182,10 +183,10 @@ public partial class App
             {
                 modelContextProtocolServer = new { name = "Additional context server with a long title " + index }
             }));
-        await InspectAsync(navigationFixture, "native nested sections and overflow", inspectNavigation: true);
+        await InspectAsync(navigationFixture, "native MCP expanders and outer tab overflow", inspectSections: true);
         Check(calls == 0, context + ": inspecting tools does not execute tools or read resources/skills");
 
-        async Task InspectAsync(McpTurnSnapshot snapshot, string scenario, bool inspectNavigation = false)
+        async Task InspectAsync(McpTurnSnapshot snapshot, string scenario, bool inspectSections = false)
         {
             var message = new DesktopSystemContextComposer().Compose(new(new() { AppName = "Context test", ChatbotInstructions = "Test instructions" },
                 new(), null, "en", false, DateTimeOffset.UtcNow) { Mcp = snapshot });
@@ -199,7 +200,7 @@ public partial class App
             {
                 var prefix = context + " / " + scenario;
                 var displayed = (List<JsonElement>)dialogType.GetField("tools", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(dialog)!;
-                Check(displayed.Select(tool => tool.GetRawText()).SequenceEqual(expected.Select(tool => tool.GetRawText())),
+                Check(displayed.Count == expected.Length && displayed.Zip(expected, JsonElement.DeepEquals).All(equal => equal),
                     prefix + ": complete definitions match request exactly, including schemas and aliases");
                 var navigation = Descendants(dialog).OfType<NavigationView>().Single(view => view.Name == "SystemContextTabs");
                 var items = navigation.MenuItems.OfType<NavigationViewItem>().ToArray();
@@ -231,7 +232,8 @@ public partial class App
                     prefix + ": all original context tabs retained");
                 Check(items[0].Focus(FocusState.Keyboard) && new NavigationViewItemAutomationPeer(items[0]).GetName() == items[0].Content?.ToString(),
                     prefix + ": initial tab has native keyboard focus and accessible name");
-                navigation.SelectedItem = tabs[0]; await Task.Delay(60);
+                var instructionsTab = tabs.Single(item => item.Content?.ToString() == "Context test");
+                navigation.SelectedItem = instructionsTab; await Task.Delay(60);
                 dialog.UpdateLayout();
                 Check(!Descendants(dialog).OfType<Border>().Any(border => border.Name == "SystemContextToolCard"),
                     prefix + ": other context tabs remain separately navigable");
@@ -241,39 +243,53 @@ public partial class App
                     Check(Descendants(dialog).OfType<Border>().Count(border => border.Name == "SystemContextToolCard") == expected.Length,
                         prefix + ": returning to Tools restores all request tool cards");
                 }
-                if (inspectNavigation)
+                if (inspectSections)
                 {
                     var serverTab = tabs.Single(item => item.Content?.ToString() == "Context navigation server with a deliberately long title");
                     navigation.SelectedItem = serverTab; await Task.Delay(80);
-                    var sections = Descendants(dialog).OfType<NavigationView>().Single(view => view.Name == "McpContextSections");
-                    var sectionItems = sections.MenuItems.OfType<NavigationViewItem>().ToArray();
-                    Check(sections.PaneDisplayMode == NavigationViewPaneDisplayMode.Top && sectionItems[0].IsSelected
+                    var sections = Descendants(dialog).OfType<StackPanel>().Single(panel => panel.Name == "McpContextSections");
+                    var sectionItems = sections.Children.OfType<Expander>().ToArray();
+                    Check(sectionItems.All(item => !item.IsExpanded && item.Content is null)
+                        && !Descendants(sections).OfType<NavigationView>().Any()
                         && sectionItems.Select(item => item.Name).SequenceEqual(new[] { "McpContextGeneral", "McpContextInstructions",
                             "McpContextMcpMetadata", "McpContextMcpResources", "McpContextMcpResourceTemplates" })
-                        && sectionItems[3].Content?.ToString() == "Resources (12)" && sectionItems[4].Content?.ToString() == "Resource templates (1)"
+                        && sectionItems[3].Header?.ToString() == "Resources (12)" && sectionItems[4].Header?.ToString() == "Resource templates (1)"
                         && sectionItems.All(item => AutomationProperties.GetAutomationId(item) == item.Name
-                            && AutomationProperties.GetName(item) == item.Content?.ToString()),
-                        prefix + ": nested native tabs retain General default, optional sections, counts and accessible labels");
-                    Check(sectionItems[0].Focus(FocusState.Keyboard)
-                        && new NavigationViewItemAutomationPeer(sectionItems[0]).GetName() == "General",
-                        prefix + ": nested tab is keyboard focusable with a native accessible name");
+                            && AutomationProperties.GetName(item) == item.Header?.ToString()),
+                        prefix + ": native sections start collapsed and unrendered, with no nested tabs and unchanged counts and labels");
+                    var header = Descendants(sectionItems[0]).OfType<Microsoft.UI.Xaml.Controls.Primitives.ToggleButton>().Single();
+                    Check(header.Focus(FocusState.Keyboard) && new ExpanderAutomationPeer(sectionItems[0]).GetName() == "General",
+                        prefix + ": native expander header is keyboard focusable and accessible");
                     foreach (var (item, text) in sectionItems.Zip(new[] { "navigation-server", "Captured server instructions",
                         "Captured metadata marker", "Captured resource 12", "Captured template" }))
                     {
-                        sections.SelectedItem = item; await Task.Delay(60);
-                        Check(Descendants(dialog).OfType<TextBlock>().Any(block => block.Text.Contains(text)),
-                            prefix + ": native selection renders captured " + item.Content);
+                        ((IExpandCollapseProvider)new ExpanderAutomationPeer(item).GetPattern(PatternInterface.ExpandCollapse)).Expand();
+                        await Task.Delay(60);
+                        Check(item.IsExpanded && item.Content is DependencyObject content
+                            && (Descendants(content).OfType<TextBlock>().Any(block => block.Text.Contains(text))
+                                || Descendants(content).OfType<ChatMarkdown>().Any(markdown => markdown.Text.Contains(text))),
+                            prefix + ": expanding renders captured " + item.Header);
                     }
-                    sections.SelectedItem = sectionItems[1];
-                    navigation.SelectedItem = tabs[0]; await Task.Delay(60);
+                    Check(sectionItems.All(item => item.IsExpanded), prefix + ": all sections can remain expanded independently");
+                    var instructionContent = sectionItems[1].Content;
+                    sectionItems[0].IsExpanded = false;
+                    ((IExpandCollapseProvider)new ExpanderAutomationPeer(sectionItems[1]).GetPattern(PatternInterface.ExpandCollapse)).Collapse();
+                    await Task.Delay(60);
+                    Check(!sectionItems[1].IsExpanded && ReferenceEquals(sectionItems[1].Content, instructionContent)
+                        && sectionItems[3].IsExpanded, prefix + ": collapsing retains content without closing other sections");
+                    sectionItems[1].IsExpanded = true; await Task.Delay(60);
+                    Check(ReferenceEquals(sectionItems[1].Content, instructionContent), prefix + ": reopening reuses section content");
+                    navigation.SelectedItem = instructionsTab; await Task.Delay(60);
                     navigation.SelectedItem = serverTab; await Task.Delay(60);
-                    Check(ReferenceEquals(sections, Descendants(dialog).OfType<NavigationView>().Single(view => view.Name == "McpContextSections"))
-                        && ReferenceEquals(sections.SelectedItem, sectionItems[1]), prefix + ": returning to server retains cached nested selection");
-                    navigation.SelectedItem = tabs.Last(); await Task.Delay(60);
-                    var minimal = Descendants(dialog).OfType<NavigationView>().Single(view => view.Name == "McpContextSections");
-                    Check(minimal.MenuItems.Count == 1 && ((NavigationViewItem)minimal.SelectedItem).Name == "McpContextGeneral",
-                        prefix + ": absent optional data creates no placeholder tabs");
-                    navigation.SelectedItem = serverTab; sections.SelectedItem = sectionItems[3];
+                    Check(ReferenceEquals(sections, Descendants(dialog).OfType<StackPanel>().Single(panel => panel.Name == "McpContextSections"))
+                        && !sectionItems[0].IsExpanded && sectionItems.Skip(1).All(item => item.IsExpanded)
+                        && ReferenceEquals(sectionItems[1].Content, instructionContent), prefix + ": returning to server retains expansion and content state");
+                    navigation.SelectedItem = tabs.Single(item => item.Content?.ToString() == "Additional context server with a long title 5");
+                    await Task.Delay(60);
+                    var minimal = Descendants(dialog).OfType<StackPanel>().Single(panel => panel.Name == "McpContextSections");
+                    Check(minimal.Children.Count == 1 && minimal.Children[0] is Expander { Name: "McpContextGeneral", IsExpanded: false, Content: null },
+                        prefix + ": absent optional data creates no placeholder sections");
+                    navigation.SelectedItem = serverTab;
                     var viewer = (ScrollViewer)dialogType.GetField("viewer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(dialog)!;
                     foreach (var width in new[] { 520, 1000 })
                     {
@@ -283,13 +299,14 @@ public partial class App
                         Check(navigation.ActualWidth <= ((FrameworkElement)dialog.Content).ActualWidth + 1
                             && sections.ActualWidth <= viewer.ViewportWidth + 1
                             && Descendants(dialog).OfType<ScrollViewer>().All(view => view.ScrollableWidth < 1)
-                            && ReferenceEquals(navigation.SelectedItem, serverTab) && ReferenceEquals(sections.SelectedItem, sectionItems[3])
-                            && navigation.MenuItems.Count == items.Length && sections.MenuItems.Count == 5,
-                            prefix + $": both native tab strips fit {width}px with overflow and stable selection");
+                            && ReferenceEquals(navigation.SelectedItem, serverTab) && !sectionItems[0].IsExpanded
+                            && sectionItems.Skip(1).All(item => item.IsExpanded)
+                            && navigation.MenuItems.Count == items.Length && sections.Children.Count == 5,
+                            prefix + $": outer tab overflow and expanded sections fit {width}px without changing state");
                     }
                     Check(viewer.ScrollableHeight > 0, prefix + ": captured resource cards remain vertically scrollable");
                     viewer.ChangeView(null, viewer.ScrollableHeight, null, true); await Task.Delay(60);
-                    navigation.SelectedItem = tabs[0]; await Task.Delay(60);
+                    navigation.SelectedItem = instructionsTab; await Task.Delay(60);
                     Check(viewer.VerticalOffset < 1, prefix + ": switching outer tabs still resets content scroll");
                 }
                 Check(dialog.CloseButtonText == "Close" && dialog.DefaultButton == ContentDialogButton.Close,
@@ -298,7 +315,7 @@ public partial class App
             finally
             {
                 dialog.Hide(); await dialogTask;
-                if (inspectNavigation) window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 800));
+                if (inspectSections) window!.AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 800));
             }
         }
     }
