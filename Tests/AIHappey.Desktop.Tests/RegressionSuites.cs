@@ -48,6 +48,8 @@ internal static class RegressionSuites
             ["images"] = () => ImageRegressionTests.RunAsync(check, Data("images")),
             ["videos"] = () => VideoRegressionTests.RunAsync(check, Data("videos")),
             ["speech"] = () => SpeechRegressionTests.RunAsync(check, Data("speech")),
+            ["transcriptions"] = () => TranscriptionRegressionTests.RunAsync(check, Data("transcriptions")),
+            ["transcription-codecs"] = () => TranscriptionNativeTests.RunAsync(check, Data("transcription-codecs")),
             ["composer-attachments"] = () => ComposerAttachmentRegressionTests.RunAsync(check, reject, Session()),
             ["catalog"] = () => CatalogRegressionTests.RunAsync(check, reject, Data("catalog"), Session()),
             ["ai-models"] = () => AiModelRegressionTests.RunAsync(check, Data("ai-models"), Session()),

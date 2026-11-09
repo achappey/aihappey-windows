@@ -2118,4 +2118,11 @@ Speaker: {1}</value></data>
   <data name="NativeChatStreamIncomplete" xml:space="preserve"><value>The endpoint stream ended without a complete response. The partial reply was retained; no inference request was retried.</value></data>
   <data name="NativeChatToolsUnsupported" xml:space="preserve"><value>This endpoint requested a tool that is not supported in basic chat. Choose Gateway (/api/chat) for tool-enabled conversations.</value></data>
   <data name="NativeChatBasicOnly" xml:space="preserve"><value>This endpoint supports basic streaming chat. Tool execution is currently available only through Gateway (/api/chat).</value></data>
+  <data name="TranscriptionFileSplitEnabled" xml:space="preserve"><value>Split large transcription files</value></data>
+  <data name="TranscriptionFileSplitOverlapSeconds" xml:space="preserve"><value>Transcription split overlap</value></data>
+  <data name="TranscriptionFileSplitMaxSizeMb" xml:space="preserve"><value>Transcription split max chunk size</value></data>
+  <data name="TranscriptionFileSplitFailedTooLarge" xml:space="preserve"><value>Could not split {0}. Windows may not support this media format, or an encoded chunk exceeded the safe upload size. The original file was not sent.</value></data>
+  <data name="TranscriptionCodecUnavailable" xml:space="preserve"><value>Windows could not decode or encode this media format. Convert it to a supported audio format and try again.</value></data>
+  <data name="TranscriptionChunkTooLarge" xml:space="preserve"><value>An encoded audio chunk exceeds the safe request payload limit.</value></data>
+  <data name="TranscriptionSourceChanged" xml:space="preserve"><value>The media file changed while it was being read. Try again with a stable copy.</value></data>
 </root>

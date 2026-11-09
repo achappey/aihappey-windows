@@ -157,7 +157,16 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/VideoLibrary.cs" Link="Core/VideoLibrary.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/VideoJobs.cs" Link="Core/VideoJobs.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionPreferences.cs" Link="Core/TranscriptionPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionSource.cs" Link="Core/TranscriptionSource.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionUploadContent.cs" Link="Core/TranscriptionUploadContent.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionFileSplit.cs" Link="Core/TranscriptionFileSplit.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionClient.cs" Link="Core/TranscriptionClient.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/TranscriptionLibrary.cs" Link="Core/TranscriptionLibrary.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/WindowsTranscriptionMediaEncoder.cs" Link="Core/WindowsTranscriptionMediaEncoder.cs" />
+    <EmbeddedResource Include="../Fixtures/transcription-parity.json" LogicalName="Desktop.TranscriptionFixture" />
+    <PackageReference Include="NAudio.Wasapi" Version="3.0.0" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTranscriptionConfiguration.cs" Link="Core/RealtimeTranscriptionConfiguration.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTranscriptionTranscript.cs" Link="Core/RealtimeTranscriptionTranscript.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SpeechPreferences.cs" Link="Core/SpeechPreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SpeechClient.cs" Link="Core/SpeechClient.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SpeechLibrary.cs" Link="Core/SpeechLibrary.cs" />

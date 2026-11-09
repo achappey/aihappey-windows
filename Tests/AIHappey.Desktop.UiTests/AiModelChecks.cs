@@ -85,6 +85,20 @@ public partial class App
                 Check(!switches[0].IsOn && !string.IsNullOrEmpty(AutomationProperties.GetName(switches[0])), context + ": switch is off and labeled");
                 switches[0].IsOn = true;
             }
+            if (type == "transcription")
+            {
+                var split = Descendants(view).OfType<ToggleSwitch>().Single(x => x.Name == "TranscriptionFileSplitEnabled");
+                var overlap = Descendants(view).OfType<Slider>().Single(x => x.Name == "TranscriptionFileSplitOverlapSeconds");
+                var size = Descendants(view).OfType<Slider>().Single(x => x.Name == "TranscriptionFileSplitMaxSizeMb");
+                Check(split.IsOn && overlap.Value == 5 && size.Value == 15 && overlap.Minimum == 0 && overlap.Maximum == 60
+                    && size.Minimum == 1 && size.Maximum == 100 && overlap.IsEnabled && size.IsEnabled,
+                    context + ": browser-equivalent split controls default enabled, 5 seconds, 15 MB");
+                Check(new Control[] { split, overlap, size }.All(c => !string.IsNullOrWhiteSpace(AutomationProperties.GetName(c))),
+                    context + ": splitting controls have native accessibility labels");
+                overlap.Value = 12; size.Value = 42; split.IsOn = false;
+                Check(!overlap.IsEnabled && !size.IsEnabled && original.Transcriptions.FileSplitEnabled
+                    && original.Transcriptions.FileSplitOverlapSeconds == 5, context + ": opt-out disables sliders and changes only dialog draft");
+            }
         }
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(500, 850)); await Task.Delay(100); dialog.UpdateLayout();
         Check(((Grid)dialog.FindName("Layout")).ActualWidth <= root.ActualWidth && tabs.IsPaneToggleButtonVisible
@@ -97,6 +111,7 @@ public partial class App
             && saved.Images.Size == "1024x1536" && saved.Images.MaskPath == "retained-mask.png"
             && saved.Images.ProviderOptions["future"]["keep"]!.GetValue<bool>()
             && saved.Transcriptions.ProviderOptions["future"]["keep"]!.GetValue<string>() == "transcription"
+            && !saved.Transcriptions.FileSplitEnabled && saved.Transcriptions.FileSplitOverlapSeconds == 12 && saved.Transcriptions.FileSplitMaxSizeMb == 42
             && AiModelPreferences.MultiModelTypes.All(type => saved.AiModels.DefaultsFor(type)!.Length == 2)
             && !original.AiModels.ChatWithImageModels && original.AiModels.DefaultFor("language") == "p/language-old",
             context + ": Save isolates all defaults/switches and preserves unrelated preferences");
@@ -104,9 +119,14 @@ public partial class App
         var canceled = new SettingsDialog(original, true, "en", catalog) { XamlRoot = root.XamlRoot };
         shown = canceled.ShowAsync(); await Task.Delay(100);
         ((NavigationView)canceled.FindName("Tabs")).SelectedItem = canceled.FindName("ArtificialIntelligenceTab"); canceled.UpdateLayout();
+        canceled.AiModelView.SelectedItem = canceled.AiModelView.MenuItems.OfType<NavigationViewItem>().Single(x => (string)x.Tag == "transcription"); canceled.UpdateLayout();
+        Descendants(canceled.AiModelView).OfType<ToggleSwitch>().Single(x => x.Name == "TranscriptionFileSplitEnabled").IsOn = false;
+        Descendants(canceled.AiModelView).OfType<Slider>().Single(x => x.Name == "TranscriptionFileSplitMaxSizeMb").Value = 88;
         InvokeButton(Descendants(canceled.AiModelView).OfType<Button>().Single(x => x.Name == "AiClearDefault_language"));
         canceled.Hide(); await shown;
-        Check(canceled.Result is null && original.AiModels.DefaultFor("language") == "p/language-old", context + ": Cancel discards a native clear-default edit");
+        Check(canceled.Result is null && original.AiModels.DefaultFor("language") == "p/language-old"
+            && original.Transcriptions.FileSplitEnabled && original.Transcriptions.FileSplitMaxSizeMb == 15,
+            context + ": Cancel discards native model and transcription splitting edits");
 
         var unavailable = original.Clone(); unavailable.AiModels.LanguageModel = ["missing"];
         var missing = new SettingsDialog(unavailable, true, "en", catalog) { XamlRoot = root.XamlRoot };

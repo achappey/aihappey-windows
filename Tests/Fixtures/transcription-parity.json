@@ -1,0 +1,724 @@
+{
+  "plans": [
+    {
+      "input": {
+        "name": "100mb.wav",
+        "size": 104857600,
+        "duration": 600,
+        "maxSize": 15,
+        "overlap": 5,
+        "enabled": true
+      },
+      "expected": {
+        "split": true,
+        "durationInSeconds": 600,
+        "chunks": [
+          {
+            "index": 0,
+            "total": 11,
+            "startSecond": 0,
+            "endSecond": 63,
+            "name": "100mb.part-001-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 1,
+            "total": 11,
+            "startSecond": 58,
+            "endSecond": 121,
+            "name": "100mb.part-002-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 2,
+            "total": 11,
+            "startSecond": 116,
+            "endSecond": 179,
+            "name": "100mb.part-003-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 3,
+            "total": 11,
+            "startSecond": 174,
+            "endSecond": 237,
+            "name": "100mb.part-004-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 4,
+            "total": 11,
+            "startSecond": 232,
+            "endSecond": 295,
+            "name": "100mb.part-005-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 5,
+            "total": 11,
+            "startSecond": 290,
+            "endSecond": 353,
+            "name": "100mb.part-006-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 6,
+            "total": 11,
+            "startSecond": 348,
+            "endSecond": 411,
+            "name": "100mb.part-007-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 7,
+            "total": 11,
+            "startSecond": 406,
+            "endSecond": 469,
+            "name": "100mb.part-008-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 8,
+            "total": 11,
+            "startSecond": 464,
+            "endSecond": 527,
+            "name": "100mb.part-009-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 9,
+            "total": 11,
+            "startSecond": 522,
+            "endSecond": 585,
+            "name": "100mb.part-010-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 10,
+            "total": 11,
+            "startSecond": 580,
+            "endSecond": 600,
+            "name": "100mb.part-011-of-011.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          }
+        ],
+        "bitrates": [
+          1160,
+          1160,
+          1160,
+          1160,
+          1160,
+          1160,
+          1160,
+          1160,
+          1160,
+          1160,
+          1160
+        ]
+      }
+    },
+    {
+      "input": {
+        "name": "video.mp4",
+        "size": 42991616,
+        "duration": 123.45,
+        "maxSize": 7,
+        "overlap": 0,
+        "enabled": true,
+        "type": "video/mp4"
+      },
+      "expected": {
+        "split": true,
+        "durationInSeconds": 123.45,
+        "chunks": [
+          {
+            "index": 0,
+            "total": 10,
+            "startSecond": 0,
+            "endSecond": 13.549390243902439,
+            "name": "video.part-001-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 1,
+            "total": 10,
+            "startSecond": 13.549390243902439,
+            "endSecond": 27.098780487804877,
+            "name": "video.part-002-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 2,
+            "total": 10,
+            "startSecond": 27.098780487804877,
+            "endSecond": 40.64817073170732,
+            "name": "video.part-003-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 3,
+            "total": 10,
+            "startSecond": 40.64817073170732,
+            "endSecond": 54.197560975609754,
+            "name": "video.part-004-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 4,
+            "total": 10,
+            "startSecond": 54.197560975609754,
+            "endSecond": 67.7469512195122,
+            "name": "video.part-005-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 5,
+            "total": 10,
+            "startSecond": 67.7469512195122,
+            "endSecond": 81.29634146341463,
+            "name": "video.part-006-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 6,
+            "total": 10,
+            "startSecond": 81.29634146341463,
+            "endSecond": 94.84573170731707,
+            "name": "video.part-007-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 7,
+            "total": 10,
+            "startSecond": 94.84573170731707,
+            "endSecond": 108.39512195121951,
+            "name": "video.part-008-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 8,
+            "total": 10,
+            "startSecond": 108.39512195121951,
+            "endSecond": 121.94451219512194,
+            "name": "video.part-009-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 9,
+            "total": 10,
+            "startSecond": 121.94451219512194,
+            "endSecond": 123.45,
+            "name": "video.part-010-of-010.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          }
+        ],
+        "bitrates": [
+          2312,
+          2312,
+          2312,
+          2312,
+          2312,
+          2312,
+          2312,
+          2312,
+          2312,
+          2312
+        ]
+      }
+    },
+    {
+      "input": {
+        "name": "short.wav",
+        "size": 31457280,
+        "duration": 2,
+        "maxSize": 1,
+        "overlap": 60,
+        "enabled": true
+      },
+      "expected": {
+        "split": true,
+        "durationInSeconds": 2,
+        "chunks": [
+          {
+            "index": 0,
+            "total": 5,
+            "startSecond": 0,
+            "endSecond": 1,
+            "name": "short.part-001-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 1,
+            "total": 5,
+            "startSecond": 0.25,
+            "endSecond": 1.25,
+            "name": "short.part-002-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 2,
+            "total": 5,
+            "startSecond": 0.5,
+            "endSecond": 1.5,
+            "name": "short.part-003-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 3,
+            "total": 5,
+            "startSecond": 0.75,
+            "endSecond": 1.75,
+            "name": "short.part-004-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 4,
+            "total": 5,
+            "startSecond": 1,
+            "endSecond": 2,
+            "name": "short.part-005-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          }
+        ],
+        "bitrates": [
+          6963,
+          6963,
+          6963,
+          6963,
+          6963
+        ]
+      }
+    },
+    {
+      "input": {
+        "name": "long.flac",
+        "size": 83886080,
+        "duration": 3600,
+        "maxSize": 25,
+        "overlap": 12,
+        "enabled": true
+      },
+      "expected": {
+        "split": true,
+        "durationInSeconds": 3600,
+        "chunks": [
+          {
+            "index": 0,
+            "total": 5,
+            "startSecond": 0,
+            "endSecond": 810,
+            "name": "long.part-001-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 1,
+            "total": 5,
+            "startSecond": 798,
+            "endSecond": 1608,
+            "name": "long.part-002-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 2,
+            "total": 5,
+            "startSecond": 1596,
+            "endSecond": 2406,
+            "name": "long.part-003-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 3,
+            "total": 5,
+            "startSecond": 2394,
+            "endSecond": 3204,
+            "name": "long.part-004-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 4,
+            "total": 5,
+            "startSecond": 3192,
+            "endSecond": 3600,
+            "name": "long.part-005-of-005.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          }
+        ],
+        "bitrates": [
+          154,
+          154,
+          154,
+          154,
+          154
+        ]
+      }
+    },
+    {
+      "input": {
+        "name": "boundary.wav",
+        "size": 15728640,
+        "duration": 60,
+        "maxSize": 15,
+        "overlap": 5,
+        "enabled": true
+      },
+      "expected": {
+        "split": false,
+        "chunks": [
+          {
+            "index": 0,
+            "total": 1,
+            "startSecond": 0,
+            "endSecond": 0,
+            "name": "boundary.wav",
+            "size": 15728640,
+            "mediaType": "audio/wav"
+          }
+        ],
+        "bitrates": []
+      }
+    },
+    {
+      "input": {
+        "name": "disabled.wav",
+        "size": 104857600,
+        "duration": 600,
+        "maxSize": 15,
+        "overlap": 5,
+        "enabled": false
+      },
+      "expected": {
+        "split": false,
+        "chunks": [
+          {
+            "index": 0,
+            "total": 1,
+            "startSecond": 0,
+            "endSecond": 0,
+            "name": "disabled.wav",
+            "size": 104857600,
+            "mediaType": "audio/wav"
+          }
+        ],
+        "bitrates": []
+      }
+    },
+    {
+      "input": {
+        "name": "wide.wav",
+        "size": 146800640,
+        "duration": 1000,
+        "maxSize": 100,
+        "overlap": 5,
+        "enabled": true
+      },
+      "expected": {
+        "split": true,
+        "durationInSeconds": 1000,
+        "chunks": [
+          {
+            "index": 0,
+            "total": 2,
+            "startSecond": 0,
+            "endSecond": 530.3571428571429,
+            "name": "wide.part-001-of-002.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          },
+          {
+            "index": 1,
+            "total": 2,
+            "startSecond": 525.3571428571429,
+            "endSecond": 1000,
+            "name": "wide.part-002-of-002.m4a",
+            "size": 3,
+            "mediaType": "audio/mp4"
+          }
+        ],
+        "bitrates": [
+          974,
+          974
+        ]
+      }
+    }
+  ],
+  "merge": {
+    "original": {
+      "name": "original.wav",
+      "size": 104857600
+    },
+    "chunks": [
+      {
+        "chunk": {
+          "index": 1,
+          "total": 3,
+          "startSecond": 10,
+          "endSecond": 25,
+          "file": {
+            "name": "original.part-002-of-003.m4a",
+            "size": 3,
+            "type": "audio/mp4"
+          }
+        },
+        "result": {
+          "text": " repeated next\n",
+          "language": "en",
+          "durationInSeconds": 15,
+          "segments": [
+            {
+              "text": "segment 1",
+              "startSecond": 1.25,
+              "endSecond": 2.5,
+              "future": 1
+            }
+          ],
+          "warnings": [
+            {
+              "type": "other",
+              "message": "warning 1"
+            }
+          ],
+          "future": {
+            "last": 1
+          },
+          "request": {
+            "body": "replace",
+            "future": "request 1"
+          },
+          "response": {
+            "modelId": "provider/model-1",
+            "body": {
+              "index": 1
+            },
+            "headers": {
+              "secret": "not copied"
+            }
+          }
+        }
+      },
+      {
+        "chunk": {
+          "index": 0,
+          "total": 3,
+          "startSecond": 0,
+          "endSecond": 15,
+          "file": {
+            "name": "original.part-001-of-003.m4a",
+            "size": 3,
+            "type": "audio/mp4"
+          }
+        },
+        "result": {
+          "text": "  First repeated  ",
+          "language": "nl",
+          "durationInSeconds": 15,
+          "segments": [
+            {
+              "text": "segment 0",
+              "startSecond": 1.25,
+              "endSecond": 2.5,
+              "future": 0
+            }
+          ],
+          "warnings": [
+            {
+              "type": "other",
+              "message": "warning 0"
+            }
+          ],
+          "future": {
+            "last": 0
+          },
+          "request": {
+            "body": "replace",
+            "future": "request 0"
+          },
+          "response": {
+            "modelId": "provider/model-0",
+            "body": {
+              "index": 0
+            },
+            "headers": {
+              "secret": "not copied"
+            }
+          }
+        }
+      },
+      {
+        "chunk": {
+          "index": 2,
+          "total": 3,
+          "startSecond": 20,
+          "endSecond": 35,
+          "file": {
+            "name": "original.part-003-of-003.m4a",
+            "size": 3,
+            "type": "audio/mp4"
+          }
+        },
+        "result": {
+          "text": "   ",
+          "language": "en",
+          "durationInSeconds": 15,
+          "segments": [
+            {
+              "text": "segment 2",
+              "startSecond": 1.25,
+              "endSecond": 2.5,
+              "future": 2
+            }
+          ],
+          "warnings": [
+            {
+              "type": "other",
+              "message": "warning 2"
+            }
+          ],
+          "future": {
+            "last": 2
+          },
+          "request": {
+            "body": "replace",
+            "future": "request 2"
+          },
+          "response": {
+            "modelId": "provider/model-2",
+            "body": {
+              "index": 2
+            },
+            "headers": {
+              "secret": "not copied"
+            }
+          }
+        }
+      }
+    ],
+    "duration": 35,
+    "expected": {
+      "text": "First repeated\nrepeated next",
+      "language": "nl",
+      "durationInSeconds": 35,
+      "segments": [
+        {
+          "text": "segment 0",
+          "startSecond": 1.25,
+          "endSecond": 2.5,
+          "future": 0
+        },
+        {
+          "text": "segment 1",
+          "startSecond": 11.25,
+          "endSecond": 12.5,
+          "future": 1
+        },
+        {
+          "text": "segment 2",
+          "startSecond": 21.25,
+          "endSecond": 22.5,
+          "future": 2
+        }
+      ],
+      "warnings": [
+        {
+          "type": "other",
+          "message": "warning 0"
+        },
+        {
+          "type": "other",
+          "message": "warning 1"
+        },
+        {
+          "type": "other",
+          "message": "warning 2"
+        }
+      ],
+      "future": {
+        "last": 2
+      },
+      "request": {
+        "body": {
+          "split": true,
+          "fileName": "original.wav",
+          "fileSize": 104857600,
+          "chunks": [
+            {
+              "index": 0,
+              "total": 3,
+              "name": "original.part-001-of-003.m4a",
+              "size": 3,
+              "mediaType": "audio/mp4",
+              "startSecond": 0,
+              "endSecond": 15
+            },
+            {
+              "index": 1,
+              "total": 3,
+              "name": "original.part-002-of-003.m4a",
+              "size": 3,
+              "mediaType": "audio/mp4",
+              "startSecond": 10,
+              "endSecond": 25
+            },
+            {
+              "index": 2,
+              "total": 3,
+              "name": "original.part-003-of-003.m4a",
+              "size": 3,
+              "mediaType": "audio/mp4",
+              "startSecond": 20,
+              "endSecond": 35
+            }
+          ]
+        },
+        "future": "request 2"
+      },
+      "response": {
+        "modelId": "provider/model-2",
+        "body": {
+          "split": true,
+          "originalResponseBodies": [
+            {
+              "index": 0
+            },
+            {
+              "index": 1
+            },
+            {
+              "index": 2
+            }
+          ]
+        }
+      }
+    }
+  }
+}

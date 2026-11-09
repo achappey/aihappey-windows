@@ -2113,4 +2113,11 @@ Luidspreker: {1}</value></data>
   <data name="NativeChatStreamIncomplete" xml:space="preserve"><value>De stream is gestopt zonder een volledig antwoord. Het gedeeltelijke antwoord is bewaard; er is geen nieuw verzoek uitgevoerd.</value></data>
   <data name="NativeChatToolsUnsupported" xml:space="preserve"><value>Dit eindpunt heeft een tool aangevraagd die niet wordt ondersteund in basischat. Kies Gateway (/api/chat) voor gesprekken met tools.</value></data>
   <data name="NativeChatBasicOnly" xml:space="preserve"><value>Dit eindpunt ondersteunt basischat met streaming. Tooluitvoering is momenteel alleen beschikbaar via Gateway (/api/chat).</value></data>
+  <data name="TranscriptionFileSplitEnabled" xml:space="preserve"><value>Grote transcriptiebestanden splitsen</value></data>
+  <data name="TranscriptionFileSplitOverlapSeconds" xml:space="preserve"><value>Overlap bij transcriptiesplitsing</value></data>
+  <data name="TranscriptionFileSplitMaxSizeMb" xml:space="preserve"><value>Maximale chunkgrootte voor transcriptiesplitsing</value></data>
+  <data name="TranscriptionFileSplitFailedTooLarge" xml:space="preserve"><value>Kan {0} niet splitsen. Windows ondersteunt dit mediaformaat mogelijk niet, of een gecodeerd deel overschrijdt de veilige uploadgrootte. Het originele bestand is niet verzonden.</value></data>
+  <data name="TranscriptionCodecUnavailable" xml:space="preserve"><value>Windows kan dit mediaformaat niet decoderen of coderen. Converteer het naar een ondersteund audioformaat en probeer het opnieuw.</value></data>
+  <data name="TranscriptionChunkTooLarge" xml:space="preserve"><value>Een gecodeerd audiodeel overschrijdt de veilige limiet voor de aanvraag.</value></data>
+  <data name="TranscriptionSourceChanged" xml:space="preserve"><value>Het mediabestand is tijdens het lezen gewijzigd. Probeer het opnieuw met een ongewijzigde kopie.</value></data>
 </root>
