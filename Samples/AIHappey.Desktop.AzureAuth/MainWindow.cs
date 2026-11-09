@@ -10,7 +10,7 @@ public sealed class MainWindow : Window
     private bool allowClose;
     public MainWindow(DesktopSession session)
     {
-        Title = DesktopBranding.AppName + " — Enterprise";
+        Title = DesktopBranding.AppName;
         shell = new ChatShell(session);
         appearance = new SystemAppearance(shell);
         Content = shell;
