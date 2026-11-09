@@ -15,14 +15,28 @@ public partial class App
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1100, 900)); window.Activate(); await Task.Delay(100);
         var original = new DesktopSettings();
         SettingsDialog Dialog(DesktopSettings settings) => new(settings, true, "en", aiModels: []) { XamlRoot = root.XamlRoot, RequestedTheme = theme };
-        SettingsExpander Card(SettingsDialog dialog) => Descendants(dialog).OfType<SettingsExpander>().Single(e => e.Name == "ToolOutputContentCard");
+        SettingsExpander[] Cards(SettingsDialog dialog) => ((StackPanel)dialog.FindName("ChatPage")).Children.Cast<SettingsExpander>().ToArray();
+        SettingsExpander Card(SettingsDialog dialog) => Cards(dialog).Single(e => e.Name == "ToolOutputContentCard");
         ToggleSwitch[] Toggles(SettingsDialog dialog) => ((StackPanel)dialog.FindName("ToolOutputContentPanel")).Children.OfType<ToggleSwitch>().ToArray();
         async Task ShowChat(SettingsDialog dialog)
         {
             await Task.Delay(100);
             ((NavigationView)dialog.FindName("Tabs")).SelectedItem = dialog.FindName("ChatTab");
             await Task.Delay(60); dialog.UpdateLayout();
-            Check(!Card(dialog).IsExpanded, context + ": native settings expander starts collapsed");
+            var cards = Cards(dialog);
+            Check(cards.Select(card => card.Name).SequenceEqual(["ChatInputCard", "ChatOutputCard", "ToolOutputContentCard"])
+                && cards.All(card => !card.IsExpanded), context + ": all three native Chat sections start collapsed in input/output/tool-output order");
+            Check(cards.Select(AutomationProperties.GetName).SequenceEqual(["Input", "Output", "Tool output"])
+                && cards.Select(card => ((TextBlock)card.Header).Text).SequenceEqual(["Input", "Output", "Tool output"]),
+                context + ": native section headings and accessible names resolve localized resources");
+            Check(cards.Select(card => ((StackPanel)card.ItemsHeader).Children.OfType<StackPanel>().Single().Name)
+                .SequenceEqual(["ChatInputPanel", "ChatOutputPanel", "ToolOutputContentPanel"]), context + ": every settings panel belongs to its matching expander");
+            foreach (var card in cards)
+            {
+                card.IsExpanded = true; await Task.Delay(60); dialog.UpdateLayout();
+                Check(cards.Count(section => section.IsExpanded) == 1 && card.IsExpanded, context + ": expanding " + card.Name + " leaves other sections collapsed");
+                card.IsExpanded = false;
+            }
             Card(dialog).IsExpanded = true;
             await Task.Delay(60); dialog.UpdateLayout();
         }
@@ -32,7 +46,7 @@ public partial class App
         Check(toggles.Select(t => t.Name).SequenceEqual(["ToolOutputText", "ToolOutputLinks", "ToolOutputImages", "ToolOutputAudio", "ToolOutputVideo", "ToolOutputDocuments"])
             && toggles.Select(t => t.IsOn).SequenceEqual([true, true, false, false, false, false]), context + ": user Chat tab has all six toggles in browser order/defaults");
         Check(toggles.All(t => AutomationProperties.GetName(t).Length > 0)
-            && Descendants(cancelled).OfType<TextBlock>().Any(t => t.Text == "Tool output types"), context + ": native resources resolve title and accessible labels");
+            && Descendants(cancelled).OfType<TextBlock>().Any(t => t.Text == "Tool output"), context + ": native resources resolve the shortened title and accessible labels");
         foreach (var toggle in toggles) toggle.IsOn = !toggle.IsOn;
         Card(cancelled).IsExpanded = false; await Task.Delay(60);
         Card(cancelled).IsExpanded = true; await Task.Delay(60);
@@ -42,10 +56,12 @@ public partial class App
 
         var saved = Dialog(original); shown = saved.ShowAsync(); await ShowChat(saved);
         foreach (var toggle in Toggles(saved)) toggle.IsOn = !toggle.IsOn;
+        foreach (var card in Cards(saved)) card.IsExpanded = true;
         window.AppWindow.Resize(new Windows.Graphics.SizeInt32(500, 900)); await Task.Delay(100); saved.UpdateLayout();
         Check(((Grid)saved.FindName("Layout")).ActualWidth <= root.ActualWidth
             && ((NavigationView)saved.FindName("Tabs")).IsPaneToggleButtonVisible
-            && ((ScrollViewer)saved.FindName("PageScroll")).ScrollableWidth < 1, context + ": card fits narrow Chat settings with vertical scrolling");
+            && ((ScrollViewer)saved.FindName("PageScroll")).ScrollableWidth < 1
+            && Cards(saved).All(card => card.ActualWidth <= ((Grid)saved.FindName("Layout")).ActualWidth), context + ": all expanded cards fit narrow Chat settings with vertical scrolling");
         InvokeButton(Descendants(saved).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await shown;
         var result = saved.Result!;
         Check(!result.Chat.ToolOutputContentSettings.Text && !result.Chat.ToolOutputContentSettings.Links && result.Chat.ToolOutputContentSettings.Images && result.Chat.ToolOutputContentSettings.Audio

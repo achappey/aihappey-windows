@@ -42,6 +42,9 @@ internal static class ToolOutputContentRegressionTests
             using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Desktop.Resources." + language)!;
             var resources = XDocument.Load(stream).Root!.Elements("data").ToDictionary(e => e.Attribute("name")!.Value, e => e.Element("value")!.Value);
             check(resources["SettingsToolOutputContent"].Length > 0 && !resources.ContainsKey("ToolOutputImages") && !resources.ContainsKey("ToolOutputImagesHint"), language + ": tool output card replaces obsolete image resources");
+            check(new[] { resources["SettingsChatInput"], resources["SettingsChatOutput"], resources["SettingsToolOutputContent"] }
+                .SequenceEqual(language == "nl" ? ["Invoer", "Uitvoer", "Tooluitvoer"] : ["Input", "Output", "Tool output"]),
+                language + ": Chat groups have localized input/output/shortened tool-output headings");
             foreach (var category in new[] { "Text", "Links", "Images", "Audio", "Video", "Documents" })
                 foreach (var property in new[] { "Header", "OnContent", "OffContent", "[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" })
                     check(resources["SettingsToolOutput" + category + "." + property].Length > 0, language + ": tool output localized " + category + " " + property);

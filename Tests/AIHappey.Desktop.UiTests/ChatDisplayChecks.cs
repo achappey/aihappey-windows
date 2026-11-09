@@ -156,7 +156,10 @@ public partial class App
             dialog.Tag = task;
             var tabs = (NavigationView)dialog.FindName("Tabs");
             tabs.SelectedItem = tabs.MenuItems.OfType<NavigationViewItem>().Single(item => (string)item.Tag == "chat");
-            Descendants(dialog).OfType<CommunityToolkit.WinUI.Controls.SettingsExpander>().Single(e => e.Name == "ToolOutputContentCard").IsExpanded = true;
+            var sections = ((StackPanel)dialog.FindName("ChatPage")).Children.OfType<CommunityToolkit.WinUI.Controls.SettingsExpander>().ToArray();
+            Check(sections.Select(e => e.Name).SequenceEqual(["ChatInputCard", "ChatOutputCard", "ToolOutputContentCard"])
+                && sections.All(e => !e.IsExpanded), context + ": Chat sections appear in input/output/tool-output order and start collapsed");
+            foreach (var section in sections) section.IsExpanded = true;
             await Task.Delay(80); dialog.UpdateLayout();
             Check(((StackPanel)dialog.FindName("ChatPage")).Visibility == Visibility.Visible
                 && ((StackPanel)dialog.FindName("GeneralPage")).Visibility == Visibility.Collapsed,
@@ -164,10 +167,13 @@ public partial class App
             return dialog;
         }
         var cancelled = await OpenSettings();
-        var controls = ((StackPanel)cancelled.FindName("ChatPage")).Children.OfType<ToggleSwitch>().ToArray();
-        Check(controls.Select(t => t.Name).SequenceEqual(["ShowTokens", "ShowProviderLogo", "ShowContextSize", "ShowMetrics", "ApiDebugEnabled"])
-            && controls.Select(t => t.IsOn).SequenceEqual([false, true, true, false, false]) && controls.All(t => AutomationProperties.GetName(t).Length > 0),
-            context + ": Chat has five accessible toggles with context size on between provider logo and metrics");
+        var inputPanel = (StackPanel)cancelled.FindName("ChatInputPanel");
+        var outputPanel = (StackPanel)cancelled.FindName("ChatOutputPanel");
+        var controls = inputPanel.Children.OfType<ToggleSwitch>().Concat(outputPanel.Children.OfType<ToggleSwitch>()).ToArray();
+        Check(inputPanel.Children.OfType<FrameworkElement>().Select(e => e.Name).SequenceEqual(["DictateChoice", "ShowContextSize"])
+            && outputPanel.Children.OfType<ToggleSwitch>().Select(t => t.Name).SequenceEqual(["ShowTokens", "ShowProviderLogo", "ShowMetrics", "ApiDebugEnabled"])
+            && controls.Select(t => t.IsOn).SequenceEqual([true, false, true, false, false]) && controls.All(t => AutomationProperties.GetName(t).Length > 0),
+            context + ": Input groups Dictate and default-on context size; Output groups the four accessible display toggles");
         ToggleSwitch[] OutputToggles(SettingsDialog dialog) => ((StackPanel)dialog.FindName("ToolOutputContentPanel")).Children.OfType<ToggleSwitch>().ToArray();
         var outputControls = OutputToggles(cancelled);
         Check(outputControls.Select(t => t.Name).SequenceEqual(["ToolOutputText", "ToolOutputLinks", "ToolOutputImages", "ToolOutputAudio", "ToolOutputVideo", "ToolOutputDocuments"])
