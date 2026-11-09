@@ -21,6 +21,8 @@ public sealed partial class ChatShell
         return visible.FirstOrDefault(m => m.Id == session.Settings.AiModels.DefaultFor(type))?.Id
             ?? visible.FirstOrDefault(m => m.Id == fallback)?.Id ?? visible.FirstOrDefault()?.Id ?? "";
     }
+    private string[] InitialModels(IEnumerable<ChatTarget> models, string type, string? fallback = null) =>
+        AiModelCatalog.InitialModels(PickerModels(models), session.Settings.AiModels, type, PrimitiveRoutingAvailable, fallback);
     private void BuildProviderSettingsMenu()
     {
         providerSettings.Items.Clear();
@@ -87,10 +89,10 @@ public sealed partial class ChatShell
         if (aiModelTargets is not null) modelsOverview.SetItems(ProviderPreferences.Filter(aiModelTargets, session.Settings), modelFavorites);
         // Keep valid explicit selections and drafts. Only fill previously empty pickers from enabled providers.
         if (Service == ServiceKind.Ai && TargetId.Length == 0) SelectNewChatModel();
-        if (imageTarget.Text.Length == 0) imageTarget.Text = InitialModel(imageModels, "image");
-        if (videoTarget.Text.Length == 0) videoTarget.Text = InitialModel(videoModels, "video");
+        if (imageTarget.Text.Length == 0) imageTarget.SetSelection(InitialModels(imageModels, "image"));
+        if (videoTarget.Text.Length == 0) videoTarget.SetSelection(InitialModels(videoModels, "video"));
         if (transcriptionTarget.Text.Length == 0) transcriptionTarget.Text = InitialModel(transcriptionModels, "transcription");
-        if (speechTarget.Text.Length == 0) speechTarget.Text = InitialModel(speechModels, "speech");
+        if (speechTarget.Text.Length == 0) speechTarget.SetSelection(InitialModels(speechModels, "speech"));
         imagesPage.SetModelAvailable(SelectedImageModel is not null); videosPage.SetModelAvailable(SelectedVideoModel is not null);
         transcriptionsPage.SetModelAvailable(SelectedTranscriptionModel is not null); speechPage.SetModelAvailable(SelectedSpeechModel is not null);
     }

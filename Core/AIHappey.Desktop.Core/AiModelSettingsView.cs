@@ -9,6 +9,7 @@ public sealed class AiModelSettingsView : NavigationView
 {
     private readonly AiModelPreferences draft;
     private readonly Dictionary<string, AutoSuggestBox> pickers = [];
+    private readonly Dictionary<string, ChatTargetPicker> multiPickers = [];
     private readonly Dictionary<string, TextBlock> states = [];
     private readonly Dictionary<string, StackPanel> pages = [];
     private IReadOnlyList<ChatTarget>? catalog;
@@ -34,42 +35,65 @@ public sealed class AiModelSettingsView : NavigationView
             MenuItems.Add(new NavigationViewItem { Content = label, Tag = type });
             var page = new StackPanel { Spacing = 16, Visibility = Visibility.Collapsed };
             pages.Add(type, page); content.Children.Add(page);
-            var picker = new AutoSuggestBox
-            {
-                Name = "AiDefaultModel_" + type, Header = DesktopResources.Get("AiDefaultModel"),
-                PlaceholderText = DesktopResources.Get("SelectModel"), Text = DisplayDefault(type),
-                QueryIcon = DesktopIcons.Create(Icon.Search), HorizontalAlignment = HorizontalAlignment.Stretch
-            };
-            ToolbarControls.Label(picker, label + ": " + DesktopResources.Get("AiDefaultModel"));
-            pickers.Add(type, picker); page.Children.Add(picker);
             var state = new TextBlock { TextWrapping = TextWrapping.Wrap };
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(state, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
-            states.Add(type, state); page.Children.Add(state);
-            void Search(string query) => picker.ItemsSource = AiModelCatalog.OfType(ChoiceModels, type)
-                .Where(x => string.IsNullOrWhiteSpace(query) || x.Label.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)
-                    || x.Id.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
-            void Choose(ChatTarget selected)
+            states.Add(type, state);
+            if (AiModelPreferences.MultiModelTypes.Contains(type))
             {
-                draft.SetDefault(type, selected.Id); picker.Text = selected.Id; UpdateState(type);
+                var picker = new ChatTargetPicker { Name = "AiDefaultModel_" + type,
+                    AllowEmptySelection = true, PlaceholderText = DesktopResources.Get("SelectModel"),
+                    HorizontalAlignment = HorizontalAlignment.Stretch };
+                picker.Configure(false, true, new HashSet<string>(), false, "", draft.ShowVoiceModels);
+                picker.SetSelection(draft.DefaultsFor(type) ?? []);
+                ToolbarControls.Label(picker, label + ": " + DesktopResources.Get("AiDefaultModels"));
+                picker.SelectionChanged += () => { draft.SetDefaults(type, picker.Selection.Ids); UpdateState(type); };
+                multiPickers.Add(type, picker);
+                page.Children.Add(new TextBlock { Text = DesktopResources.Get("AiDefaultModels") });
+                page.Children.Add(picker);
             }
-            picker.TextChanged += (_, args) =>
+            else
             {
-                if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
-                Search(picker.Text);
-                // Search text is not a setting until the user commits an available model.
-                if (string.IsNullOrWhiteSpace(picker.Text)) { draft.SetDefault(type, null); UpdateState(type); }
-            };
-            picker.SuggestionChosen += (_, args) => Choose((ChatTarget)args.SelectedItem);
-            picker.QuerySubmitted += (_, args) =>
-            {
-                var selected = args.ChosenSuggestion as ChatTarget
-                    ?? AiModelCatalog.OfType(ChoiceModels, type).FirstOrDefault(x => x.Id == picker.Text.Trim());
-                if (selected is not null) Choose(selected);
-                else { Search(picker.Text); picker.IsSuggestionListOpen = true; }
-            };
-            picker.GotFocus += (_, _) => { Search(""); picker.IsSuggestionListOpen = true; };
+                var picker = new AutoSuggestBox
+                {
+                    Name = "AiDefaultModel_" + type, Header = DesktopResources.Get("AiDefaultModel"),
+                    PlaceholderText = DesktopResources.Get("SelectModel"), Text = DisplayDefault(type),
+                    QueryIcon = DesktopIcons.Create(Icon.Search), HorizontalAlignment = HorizontalAlignment.Stretch
+                };
+                ToolbarControls.Label(picker, label + ": " + DesktopResources.Get("AiDefaultModel"));
+                pickers.Add(type, picker); page.Children.Add(picker);
+                void Search(string query) => picker.ItemsSource = AiModelCatalog.OfType(ChoiceModels, type)
+                    .Where(x => string.IsNullOrWhiteSpace(query) || x.Label.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)
+                        || x.Id.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)).Take(100).ToArray();
+                void Choose(ChatTarget selected)
+                {
+                    draft.SetDefault(type, selected.Id); picker.Text = selected.Id; UpdateState(type);
+                }
+                picker.TextChanged += (_, args) =>
+                {
+                    if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
+                    Search(picker.Text);
+                    // Search text is not a setting until the user commits an available model.
+                    if (string.IsNullOrWhiteSpace(picker.Text)) { draft.SetDefault(type, null); UpdateState(type); }
+                };
+                picker.SuggestionChosen += (_, args) => Choose((ChatTarget)args.SelectedItem);
+                picker.QuerySubmitted += (_, args) =>
+                {
+                    var selected = args.ChosenSuggestion as ChatTarget
+                        ?? AiModelCatalog.OfType(ChoiceModels, type).FirstOrDefault(x => x.Id == picker.Text.Trim());
+                    if (selected is not null) Choose(selected);
+                    else { Search(picker.Text); picker.IsSuggestionListOpen = true; }
+                };
+                picker.GotFocus += (_, _) => { Search(""); picker.IsSuggestionListOpen = true; };
+            }
+            page.Children.Add(state);
             var clear = new Button { Name = "AiClearDefault_" + type, Content = DesktopResources.Get("AiClearDefault") };
-            clear.Click += (_, _) => { draft.SetDefault(type, null); picker.Text = DisplayDefault(type); UpdateState(type); };
+            clear.Click += (_, _) =>
+            {
+                draft.SetDefault(type, null);
+                if (multiPickers.TryGetValue(type, out var multi)) multi.SetSelection([]);
+                else pickers[type].Text = DisplayDefault(type);
+                UpdateState(type);
+            };
             page.Children.Add(clear);
             if (type is "image" or "video" or "speech" or "transcription")
             {
@@ -119,6 +143,16 @@ public sealed class AiModelSettingsView : NavigationView
         catalog = models;
         foreach (var type in AiModelCatalog.Types)
         {
+            if (multiPickers.TryGetValue(type, out var multi))
+            {
+                multi.IsEnabled = true;
+                multi.Configure(false, true, new HashSet<string>(), false, "", draft.ShowVoiceModels);
+                multi.ItemsSource = AiModelCatalog.OfType(VisibleModels, type);
+                multi.SetSelection(draft.DefaultsFor(type) ?? (type == "language"
+                    ? AiModelCatalog.InitialModels(VisibleModels, draft, type, false) : []));
+                UpdateState(type);
+                continue;
+            }
             pickers[type].IsEnabled = true;
             pickers[type].ItemsSource = AiModelCatalog.OfType(ChoiceModels, type).Take(100).ToArray();
             pickers[type].Text = DisplayDefault(type);
@@ -130,7 +164,9 @@ public sealed class AiModelSettingsView : NavigationView
     {
         foreach (var type in AiModelCatalog.Types)
         {
-            pickers[type].IsEnabled = false; states[type].Text = message; states[type].Visibility = Visibility.Visible;
+            if (multiPickers.TryGetValue(type, out var multi)) multi.IsEnabled = false;
+            else pickers[type].IsEnabled = false;
+            states[type].Text = message; states[type].Visibility = Visibility.Visible;
         }
     }
 
@@ -142,10 +178,10 @@ public sealed class AiModelSettingsView : NavigationView
     {
         if (catalog is null) return;
         var models = AiModelCatalog.OfType(catalog, type);
-        var id = draft.DefaultFor(type);
-        states[type].Text = !string.IsNullOrEmpty(id) && !models.Any(x => x.Id == id)
+        var ids = draft.DefaultsFor(type) ?? [];
+        states[type].Text = ids.Any(id => !models.Any(x => x.Id == id))
             ? DesktopResources.Get("AiDefaultUnavailable")
-            : !string.IsNullOrEmpty(id) && !VisibleModels.Any(m => m.Id == id && m.ModelType == type) ? DesktopResources.Get("AiDefaultProviderDisabled")
+            : ids.Any(id => !VisibleModels.Any(m => m.Id == id && m.ModelType == type)) ? DesktopResources.Get("AiDefaultProviderDisabled")
             : !VisibleModels.Any(m => m.ModelType == type) ? DesktopResources.Get("AiNoModels") : "";
         states[type].Visibility = string.IsNullOrEmpty(states[type].Text) ? Visibility.Collapsed : Visibility.Visible;
     }

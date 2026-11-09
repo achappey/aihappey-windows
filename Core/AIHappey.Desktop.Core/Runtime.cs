@@ -147,6 +147,8 @@ public sealed class DesktopSession(IDesktopHost host, IRuntimeResolver runtime, 
     public IReadOnlyList<DesktopAgent> DefaultAgents { get; set; } = [];
     /// <summary>Sample-owned seeds; saved preferences, including empty lists, always win.</summary>
     public IReadOnlyDictionary<string, string[]>? DefaultProvidersByType { get; set; }
+    /// <summary>Optional seeds for unset language/image/video/speech preferences; independent of routing.</summary>
+    public IReadOnlyDictionary<string, string[]>? DefaultModelsByType { get; set; }
     public string AgentPartition => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity);
     public string ModelCatalogScope => HistoryStore.Partition(Host.ProfileId, Host.HistoryIdentity,
         Settings.Ai.Location.ToString(), Settings.Ai.Location == RuntimeLocation.Remote ? Settings.Ai.RemoteUrl.TrimEnd('/') : "managed-ai",

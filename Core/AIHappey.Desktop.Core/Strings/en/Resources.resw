@@ -809,6 +809,7 @@
   <data name="SettingsArtificialIntelligenceTab.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Artificial intelligence</value></data>
   <data name="SettingsArtificialIntelligence.Text" xml:space="preserve"><value>Artificial intelligence</value></data>
   <data name="AiDefaultModel" xml:space="preserve"><value>Default model</value></data>
+  <data name="AiDefaultModels" xml:space="preserve"><value>Default models</value></data>
   <data name="AiClearDefault" xml:space="preserve"><value>Clear default</value></data>
   <data name="AiModelType_language" xml:space="preserve"><value>Language</value></data>
   <data name="AiModelType_embedding" xml:space="preserve"><value>Search</value></data>

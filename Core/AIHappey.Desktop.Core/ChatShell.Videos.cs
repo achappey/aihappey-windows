@@ -77,7 +77,7 @@ public sealed partial class ChatShell
         ct.ThrowIfCancellationRequested(); if (closing || partition != ImageLibraryStore.Partition(session)) return;
         aiModelTargets = available; videoModels = AiModelCatalog.OfType(available, "video");
         await LoadSelectionCatalogsAsync(ct);
-        if (SelectedVideoModel is null) videoTarget.Text = InitialModel(videoModels, "video");
+        if (SelectedVideoModel is null) videoTarget.SetSelection(InitialModels(videoModels, "video"));
         if (modelFavoritesPartition != session.HistoryPartition) { modelFavorites = await modelFavoritesStore.LoadAsync(session.HistoryPartition, ct); modelFavoritesPartition = session.HistoryPartition; }
         VideoModelSuggestions(); videosPage.SetModelAvailable(SelectedVideoModel is not null); UpdateVideoFavorite();
     }

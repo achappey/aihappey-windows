@@ -151,7 +151,7 @@ public sealed partial class ChatShell
         var favoriteIds = SelectionFavorites(agentMode);
         var visible = agentMode ? targets.Where(t => AgentVisible(t, favoriteIds)).ToArray()
             : AiModelCatalog.ChatSuggestions(PickerModels(targets), session.Settings.AiModels);
-        if (session.Settings.SideInferenceAgentNames.Get(agentMode ? AppAgentRole.SelectFavorite : AppAgentRole.SelectModel).Length == 0)
+        if ((!agentMode && decision is null) || (agentMode && session.Settings.SideInferenceAgentNames.Get(AppAgentRole.SelectFavorite).Length == 0))
         {
             target.Selection.UseManualSelection(visible, agentMode, current.Service == Service ? current.Target : null,
                 agentMode ? null : AiModelCatalog.NewChatModel(PickerModels(targets), session.Settings.AiModels));
@@ -165,7 +165,7 @@ public sealed partial class ChatShell
     private void SelectNewChatModel()
     {
         if (Service != ServiceKind.Ai) return;
-        TargetId = AiModelCatalog.NewChatModel(PickerModels(targets), session.Settings.AiModels);
+        target.SetSelection(InitialModels(targets, "language"));
         current.Target = TargetId;
         UpdateTargetSuggestions();
     }

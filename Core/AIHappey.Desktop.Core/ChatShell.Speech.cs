@@ -34,7 +34,7 @@ public sealed partial class ChatShell
         var available = await AiModelsAsync(ct); ct.ThrowIfCancellationRequested(); if (closing || partition != SpeechLibraryStore.Partition(session)) return;
         aiModelTargets = available; speechModels = AiModelCatalog.OfType(available, "speech");
         await LoadSelectionCatalogsAsync(ct);
-        if (SelectedSpeechModel is null) speechTarget.Text = InitialModel(speechModels, "speech", "openai/gpt-4o-mini-tts");
+        if (SelectedSpeechModel is null) speechTarget.SetSelection(InitialModels(speechModels, "speech", "openai/gpt-4o-mini-tts"));
         SpeechModelSuggestions(); speechPage.SetModelAvailable(SelectedSpeechModel is not null);
     }
     private async Task SendSpeechAsync()

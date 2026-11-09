@@ -1,48 +1,88 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AIHappey.Desktop.Core;
 
-/// <summary>UI defaults only; non-language defaults are reserved for future workflows.</summary>
+/// <summary>Durable UI defaults, independent of runtime routing availability.</summary>
 public sealed class AiModelPreferences
 {
-    public string? LanguageModel { get; set; }
+    public static IReadOnlyList<string> MultiModelTypes { get; } = Array.AsReadOnly(new[] { "language", "image", "video", "speech" });
+    [JsonConverter(typeof(ModelIdsJsonConverter))]
+    public string[]? LanguageModel { get; set; }
     public string? EmbeddingModel { get; set; }
-    public string? ImageModel { get; set; }
+    [JsonConverter(typeof(ModelIdsJsonConverter))]
+    public string[]? ImageModel { get; set; }
     public string? AudioModel { get; set; }
     public string? TranscriptionModel { get; set; }
-    public string? SpeechModel { get; set; }
+    [JsonConverter(typeof(ModelIdsJsonConverter))]
+    public string[]? SpeechModel { get; set; }
     public string? DecisionModel { get; set; }
     public string? RerankingModel { get; set; }
-    public string? VideoModel { get; set; }
+    [JsonConverter(typeof(ModelIdsJsonConverter))]
+    public string[]? VideoModel { get; set; }
     public bool ChatWithImageModels { get; set; }
     public bool ChatWithVideoModels { get; set; }
     public bool ChatWithSpeechModels { get; set; }
     public bool ShowVoiceModels { get; set; } = true;
     public bool ChatWithTranscriptionModels { get; set; }
-    public AiModelPreferences Clone() => (AiModelPreferences)MemberwiseClone();
+    public AiModelPreferences Clone()
+    {
+        var clone = (AiModelPreferences)MemberwiseClone();
+        clone.LanguageModel = LanguageModel?.ToArray(); clone.ImageModel = ImageModel?.ToArray();
+        clone.VideoModel = VideoModel?.ToArray(); clone.SpeechModel = SpeechModel?.ToArray();
+        return clone;
+    }
+
+    public string[]? DefaultsFor(string type) => type switch
+    {
+        "language" => LanguageModel, "image" => ImageModel, "video" => VideoModel, "speech" => SpeechModel,
+        _ => DefaultFor(type) is { } id ? [id] : null
+    };
+
+    public void SetDefaults(string type, IEnumerable<string> ids)
+    {
+        var values = Normalize(ids);
+        switch (type)
+        {
+            case "language": LanguageModel = values; break;
+            case "image": ImageModel = values; break;
+            case "video": VideoModel = values; break;
+            case "speech": SpeechModel = values; break;
+            default: throw new ArgumentOutOfRangeException(nameof(type));
+        }
+    }
+
+    public bool SeedDefaults(IReadOnlyDictionary<string, string[]>? defaults)
+    {
+        var changed = false;
+        foreach (var type in MultiModelTypes)
+            if (DefaultsFor(type) is null && defaults?.TryGetValue(type, out var ids) == true && ids is not null)
+            { SetDefaults(type, ids); changed = true; }
+        return changed;
+    }
+
+    internal static string[] Normalize(IEnumerable<string> ids) => ids.Where(id => !string.IsNullOrWhiteSpace(id))
+        .Select(id => id.Trim()).Distinct(StringComparer.Ordinal).ToArray();
 
     public string? DefaultFor(string type) => type switch
     {
-        "language" => LanguageModel, "embedding" => EmbeddingModel, "image" => ImageModel,
-        "audio" => AudioModel, "transcription" => TranscriptionModel, "speech" => SpeechModel,
-        "decision" => DecisionModel, "reranking" => RerankingModel, "video" => VideoModel, _ => null
+        "language" => LanguageModel?.FirstOrDefault(), "embedding" => EmbeddingModel, "image" => ImageModel?.FirstOrDefault(),
+        "audio" => AudioModel, "transcription" => TranscriptionModel, "speech" => SpeechModel?.FirstOrDefault(),
+        "decision" => DecisionModel, "reranking" => RerankingModel, "video" => VideoModel?.FirstOrDefault(), _ => null
     };
 
     public void SetDefault(string type, string? id)
     {
         id = string.IsNullOrWhiteSpace(id) ? null : id.Trim();
+        if (MultiModelTypes.Contains(type)) { SetDefaults(type, id is null ? [] : [id]); return; }
         switch (type)
         {
-            case "language": LanguageModel = id; break;
             case "embedding": EmbeddingModel = id; break;
-            case "image": ImageModel = id; break;
             case "audio": AudioModel = id; break;
             case "transcription": TranscriptionModel = id; break;
-            case "speech": SpeechModel = id; break;
             case "decision": DecisionModel = id; break;
             case "reranking": RerankingModel = id; break;
-            case "video": VideoModel = id; break;
             default: throw new ArgumentOutOfRangeException(nameof(type));
         }
     }
@@ -52,6 +92,18 @@ public sealed class AiModelPreferences
         "language" => true, "image" => ChatWithImageModels, "video" => ChatWithVideoModels,
         "speech" => ChatWithSpeechModels, "transcription" => ChatWithTranscriptionModels, _ => false
     };
+}
+
+/// <summary>Read legacy single IDs, but always write the four multi-model preferences as arrays.</summary>
+public sealed class ModelIdsJsonConverter : JsonConverter<string[]>
+{
+    public override string[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String) return AiModelPreferences.Normalize([reader.GetString()!]);
+        return AiModelPreferences.Normalize(JsonSerializer.Deserialize<List<string>>(ref reader, options) ?? []);
+    }
+    public override void Write(Utf8JsonWriter writer, string[] value, JsonSerializerOptions options) =>
+        JsonSerializer.Serialize(writer, AiModelPreferences.Normalize(value).ToList(), options);
 }
 
 public static class AiModelCatalog
@@ -129,7 +181,17 @@ public static class AiModelCatalog
                 || x.Id.Contains(query.Trim(), StringComparison.OrdinalIgnoreCase)));
     public static string NewChatModel(IEnumerable<ChatTarget> items, AiModelPreferences preferences)
     {
-        var language = OfType(items, "language");
-        return language.FirstOrDefault(x => x.Id == preferences.LanguageModel)?.Id ?? language.FirstOrDefault()?.Id ?? "";
+        return InitialModels(items, preferences, "language", false).FirstOrDefault() ?? "";
+    }
+
+    public static string[] InitialModels(IEnumerable<ChatTarget> items, AiModelPreferences preferences, string type,
+        bool multiple, string? fallback = null)
+    {
+        var models = OfType(items, type);
+        var defaults = preferences.DefaultsFor(type) ?? [];
+        var selected = (multiple ? defaults : defaults.Take(1)).Where(id => models.Any(model => model.Id == id)).ToArray();
+        if (selected.Length > 0) return selected;
+        var first = models.FirstOrDefault(model => model.Id == fallback) ?? models.FirstOrDefault();
+        return first is null ? [] : [first.Id];
     }
 }

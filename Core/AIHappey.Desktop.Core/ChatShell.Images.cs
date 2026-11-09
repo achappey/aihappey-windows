@@ -58,7 +58,7 @@ public sealed partial class ChatShell
         ct.ThrowIfCancellationRequested(); if (closing || partition != ImageLibraryStore.Partition(session)) return;
         aiModelTargets = available; imageModels = AiModelCatalog.OfType(available, "image");
         await LoadSelectionCatalogsAsync(ct);
-        if (SelectedImageModel is null) imageTarget.Text = InitialModel(imageModels, "image");
+        if (SelectedImageModel is null) imageTarget.SetSelection(InitialModels(imageModels, "image"));
         ImageModelSuggestions(); imagesPage.SetModelAvailable(SelectedImageModel is not null);
     }
     private async Task ReloadImageLibraryAsync(CancellationToken ct)

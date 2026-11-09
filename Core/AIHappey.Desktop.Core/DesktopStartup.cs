@@ -13,6 +13,7 @@ public static class DesktopStartup
         ApplyLanguage(DesktopLanguage.Resolve(null, windowsLanguage));
         var settings = await SettingsStore.LoadAsync(session.DataDirectory, session.Settings, session.Host.ApplySettingsPolicy);
         var seededProviders = ProviderPreferences.SeedDefaults(settings, session.DefaultProvidersByType);
+        var seededModels = settings.AiModels.SeedDefaults(session.DefaultModelsByType);
         var language = DesktopLanguage.Resolve(settings.Language, windowsLanguage);
         var rememberInitialChoice = settings.Language != language;
         settings.Language = language;
@@ -20,7 +21,7 @@ public static class DesktopStartup
         session.ActiveLanguage = language;
         ApplyLanguage(language);
         settings.Validate(session.Host.AllowLocal);
-        if (rememberInitialChoice || seededProviders) await SettingsStore.SaveAsync(session.DataDirectory, settings);
+        if (rememberInitialChoice || seededProviders || seededModels) await SettingsStore.SaveAsync(session.DataDirectory, settings);
     }
 
     private static void ApplyLanguage(string language)
