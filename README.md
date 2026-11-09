@@ -7,19 +7,31 @@ A native Windows AI client built with WinUI 3. Chat with AI models and agents, c
 | ![](https://achappey.github.io/aihappey-chat/images/screenshot_windows.png) | ![](https://achappey.github.io/aihappey-chat/images/windows-cerebras.png) |
 
 ## Features
-
 - Native WinUI 3 interface with Windows light, dark and high-contrast themes
 - Streaming chat with AI models and agents
-- Multi-provider model discovery, switching and default preferences
+- Gateway routing through API Chat, Responses, Messages and Chat Completions, plus direct provider APIs
+- Multi-provider model discovery, switching, favorites and configurable default preferences
+- Provider-specific model settings, filtering and voice model visibility
 - Offline provider catalog with native cards, favorites, filters, details and provider links
+- Realtime voice conversations and agents with streaming audio, interruption and tool execution
+- Multi-agent workflows with sequential, concurrent, handoff, group chat and magentic orchestration
 - MCP server discovery, installation and management
-- MCP Tools and Resources, including resource templates
+- MCP Tools, Prompts and Resources, including resource templates
 - Native MCP form elicitation and human-in-the-loop tool approval
+- Configurable MCP tool selection, namespaces and tool search
 - Skills discovery, native creation/editing, ZIP import/export, activation and resource access
+- Local plugin discovery, native creation/editing, ZIP and folder import, activation and management
+- Toggleable built-in tools for clipboard, screenshots, OCR, window inspection, system information and application launching
+- Local PowerShell execution through native tools and provider-independent plugins
 - File attachments, URL inputs and shared PDF/plain-text extraction
+- Speech generation, transcription and streaming speech playback
+- Audio transcription with configurable file splitting and merged results
+- Image generation and video generation jobs
 - Dictate into the chat composer or speech prompt using Windows' native voice typing (Windows+H)
 - Local conversation history and configurable chat preferences
-- Toggleable built-in tools
+- Native usage dashboard with charts, token consumption and cost tracking
+- Performance metrics including time to first token (TTFT) and tokens per second (TPS)
+- Tool call activity, execution details and approval management
 - Header-based/BYOK and Microsoft Entra authentication
 - Local or remote AI and Agents runtimes
 - English and Dutch localization
