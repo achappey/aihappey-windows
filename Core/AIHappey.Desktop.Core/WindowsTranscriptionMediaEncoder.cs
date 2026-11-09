@@ -35,15 +35,13 @@ public sealed class WindowsTranscriptionMediaEncoder : ITranscriptionMediaEncode
         using var inputStream = await input.OpenAsync(FileAccessMode.Read);
         using var outputStream = await output.OpenAsync(FileAccessMode.ReadWrite);
         var preparation = transcoder.PrepareStreamTranscodeAsync(inputStream, outputStream, profile);
-        using var prepareCancellation = ct.Register(preparation.Cancel);
-        Windows.Media.Transcoding.PrepareTranscodeResult prepared;
-        try { prepared = await preparation.AsTask(); }
+        PrepareTranscodeResult prepared;
+        try { using (ct.Register(preparation.Cancel)) prepared = await preparation.AsTask(); }
         finally { preparation.Close(); }
         ct.ThrowIfCancellationRequested();
         if (!prepared.CanTranscode) throw new InvalidOperationException(DesktopResources.Get("TranscriptionCodecUnavailable"));
         var action = prepared.TranscodeAsync();
-        using var transcodeCancellation = ct.Register(action.Cancel);
-        try { await action.AsTask(); }
+        try { using (ct.Register(action.Cancel)) await action.AsTask(); }
         finally { action.Close(); }
         ct.ThrowIfCancellationRequested();
     }
