@@ -55,7 +55,7 @@ public sealed partial class ChatShell
     }
     private IReadOnlyList<DesktopSkill> AvailableSkillDescriptors() =>
          (localSkillPartition == session.HistoryPartition ? localSkills : [])
-        .Concat(runtimeSkillPartition == session.HistoryPartition ? runtimeSkillCatalog.Select(i => new DesktopSkill(i.Id, i.Name, i.Description, "remote", i.LatestVersion ?? i.Version)) : [])
+        .Concat(runtimeSkillPartition == session.HistoryPartition ? runtimeSkillCatalog.Select(i => DesktopSkill.FromCatalog(i)) : [])
         .Concat(Mcp.CaptureSkills().Select(s => s.Descriptor)).DistinctBy(s => s.Id).ToArray();
     private async Task PrefetchSkillAsync(string id, CancellationToken ct)
     {
@@ -80,8 +80,7 @@ public sealed partial class ChatShell
         if (runtimeSkillPartition == partition)
             foreach (var item in runtimeSkillCatalog.Where(i => (discover || selected.Contains(i.Id))
                 && !(localSkillPartition == partition && localSkills.Any(s => s.Id == i.Id))))
-                readers.Add((new DesktopSkill(item.Id, item.Name, item.Description, "remote", item.LatestVersion ?? item.Version)
-                    { DefaultVersion = item.Version, LatestVersion = item.LatestVersion }, async ct =>
+                readers.Add((DesktopSkill.FromCatalog(item), async ct =>
                 {
                     if (closing || session.HistoryPartition != partition) throw new OperationCanceledException(ct);
                     var content = await skillStore.ReadAsync(partition, item, ct);

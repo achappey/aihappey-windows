@@ -27,7 +27,7 @@ public sealed record CatalogItem(CatalogKind Kind, string Id, string Name, strin
                     && (!server.Value.TryGetProperty("disabled", out var disabled) || disabled.ValueKind != JsonValueKind.True))));
 }
 
-public sealed record CatalogIcon(string Source, string? Theme);
+public sealed record CatalogIcon(string Source, string? Theme, string? MimeType = null);
 public sealed record CatalogVersion(string Id, string Version, long? Created, string? Name, string? Description);
 
 public static class CatalogProjection
@@ -54,7 +54,10 @@ public static class CatalogProjection
     {
         var id = Text(value, "id");
         return string.IsNullOrWhiteSpace(id) ? null : new(CatalogKind.Skill, id, Text(value, "name") ?? id, Text(value, "description") ?? "")
-        { Version = Text(value, "default_version"), LatestVersion = Text(value, "latest_version"), Created = Number(value, "created_at") };
+        {
+            Version = Text(value, "default_version"), LatestVersion = Text(value, "latest_version"), Created = Number(value, "created_at"),
+            Icons = McpIcons.Read(value).Select(icon => new CatalogIcon(icon.Source, icon.Theme, icon.MimeType)).ToArray()
+        };
     }
 
     public static CatalogVersion? Version(JsonElement value)

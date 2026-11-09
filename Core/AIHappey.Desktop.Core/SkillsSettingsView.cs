@@ -88,6 +88,13 @@ public sealed class SkillsSettingsView : StackPanel, IDisposable
         ControlAppearance.Stock(toggle); ToolbarControls.Label(toggle, skill.Label);
         var expander = NativeSettingsSurface.Expander(cards, "ChatSkillCard", skill.Label, toggle, out var body);
         expander.Tag = skill.Id;
+        var heading = new Grid { ColumnSpacing = 12 };
+        heading.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        heading.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        heading.Children.Add(new McpServerIcon(skill.Icons, 32));
+        var label = new TextBlock { Text = skill.Label, TextWrapping = TextWrapping.Wrap,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+        Grid.SetColumn(label, 1); heading.Children.Add(label); expander.Header = heading;
         toggle.Toggled += async (_, _) =>
         {
             draft.EnabledSkillIds.RemoveAll(id => id == skill.Id);

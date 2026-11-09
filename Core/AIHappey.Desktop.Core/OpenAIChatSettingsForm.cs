@@ -30,8 +30,9 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
     public void Commit(ChatPreferences preferences)
     {
         preferences.ProviderMetadata["openai"] = OpenAIChatConfig.Canonical(model.Root);
-        if (model.Headers.Count == 0) preferences.ProviderHeaders.Remove("openai");
-        else preferences.ProviderHeaders["openai"] = new(model.Headers, StringComparer.OrdinalIgnoreCase);
+        var headers = OpenAIChatConfig.HeadersFor(model.Root, model.Headers);
+        if (headers.Count == 0) preferences.ProviderHeaders.Remove("openai");
+        else preferences.ProviderHeaders["openai"] = headers;
     }
     public void FocusInvalid()
     {
@@ -47,7 +48,7 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
     private StackPanel Section(string name, string label, bool toggle = true, bool expandable = true)
     {
         var heading = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
-        if (toggle) fields.HeaderSwitch(heading, label, () => model.Enabled(name), on => model.Toggle(name, on));
+        if (toggle) fields.HeaderSwitch(heading, label, () => name == "multi_agent" ? model.Boolean("multi_agent/enabled") : model.Enabled(name), on => model.Toggle(name, on));
         if (!expandable)
         {
             NativeSettingsSurface.ToggleCard(cards, "OpenAI_" + name, L(label), heading);
@@ -406,7 +407,6 @@ internal sealed class OpenAIChatSettingsForm : IChatProviderForm
     private void Other()
     {
         var body = Section("other", "other", false);
-        fields.Select(body, "openai.imageInputDetail.title", () => model.String("inputImageDetail", "auto"), ["auto", "low", "high", "original"], value => model.Set("inputImageDetail", JsonValue.Create(value)));
         fields.Select(body, "openai.serviceTier.title", () => model.String("service_tier", "auto"), ["auto", "default", "flex", "scale", "fast", "ultrafast"], value => model.Set("service_tier", JsonValue.Create(value)));
         fields.Switch(body, "parallelToolCalls", () => model.Boolean("parallel_tool_calls"), value => model.Set("parallel_tool_calls", JsonValue.Create(value)));
     }

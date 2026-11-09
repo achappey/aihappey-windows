@@ -175,7 +175,10 @@ public sealed class ChatPreferences
 
     public void ApplyHeaders(HttpRequestMessage request, string? providerKey)
     {
-        if (providerKey is null || !ProviderHeaders.TryGetValue(providerKey, out var headers)) return;
+        if (providerKey is null) return;
+        ProviderHeaders.TryGetValue(providerKey, out var headers);
+        if (providerKey == "openai") headers = OpenAIChatConfig.HeadersFor(ProviderMetadata.GetValueOrDefault(providerKey), headers);
+        if (headers is null) return;
         foreach (var (name, value) in headers)
         {
             // Match the gateway's provider passthrough policy. Never permit transport, bearer,
@@ -189,6 +192,15 @@ public sealed class ChatPreferences
                     && !name.Equals(xPrefix + "key", StringComparison.OrdinalIgnoreCase);
             if (!allowed || name.Any(char.IsControl) || value.Any(char.IsControl) || string.IsNullOrWhiteSpace(value) || request.Headers.Contains(name)) continue;
             request.Headers.TryAddWithoutValidation(name, value.Trim());
+        }
+        if (providerKey == "openai")
+        {
+            // Host-supplied beta flags retain their precedence, but the standalone card owns this flag.
+            var actual = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (request.Headers.TryGetValues("OpenAI-Beta", out var values)) actual["OpenAI-Beta"] = string.Join(",", values);
+            var effective = OpenAIChatConfig.HeadersFor(ProviderMetadata.GetValueOrDefault(providerKey), actual);
+            request.Headers.Remove("OpenAI-Beta");
+            if (effective.TryGetValue("OpenAI-Beta", out var beta)) request.Headers.TryAddWithoutValidation("OpenAI-Beta", beta);
         }
     }
 }
@@ -218,6 +230,7 @@ public sealed class ChatToolPolicy
 /// <summary>Mutable draft view with browser-compatible tool aliases. Only Canonical is stored/sent.</summary>
 public sealed class OpenAIChatConfig
 {
+    public const string MultiAgentBeta = "responses_multi_agent=v1";
     public static readonly string[] ToolTypes = ["web_search", "image_generation", "code_interpreter", "file_search", "shell", "apply_patch", "programmatic_tool_calling", "tool_search"];
     public static readonly string[] Efforts = ["none", "minimal", "low", "medium", "high", "xhigh", "max"];
     public static readonly string[] ImageModels = ["gpt-image-2.6-sunburst", "gpt-image-2.6-flare", "gpt-image-2.5-sunburst", "gpt-image-2.5-flare", "gpt-image-2"];
@@ -226,7 +239,18 @@ public sealed class OpenAIChatConfig
     public OpenAIChatConfig(JsonObject config, Dictionary<string, string>? headers = null)
     {
         Root = Resolve(config);
-        Headers = new(headers ?? [], StringComparer.OrdinalIgnoreCase);
+        Headers = HeadersFor(Root, headers);
+    }
+
+    public static Dictionary<string, string> HeadersFor(JsonObject? config, Dictionary<string, string>? headers = null)
+    {
+        var next = new Dictionary<string, string>(headers ?? [], StringComparer.OrdinalIgnoreCase);
+        // Do not turn an unsafe persisted header into valid flags by splitting control characters.
+        if (next.TryGetValue("OpenAI-Beta", out var beta) && beta.Any(char.IsControl)) next.Remove("OpenAI-Beta");
+        var enabled = config?["multi_agent"] is JsonObject multi && multi["enabled"] is JsonValue value
+            && value.TryGetValue<bool>(out var on) && on;
+        SetBeta(next, MultiAgentBeta, enabled);
+        return next;
     }
 
     public static JsonObject Defaults() => JsonNode.Parse("""
@@ -300,6 +324,7 @@ public sealed class OpenAIChatConfig
         view.Remove("tools");
         if (tools.Count > 0) view["tools"] = tools;
         view.Remove("instructions"); // The browser chat form intentionally excludes top-level instructions.
+        view.Remove("inputImageDetail"); // Obsolete client-only option, not an OpenAI request field.
         return view;
     }
 
@@ -342,15 +367,16 @@ public sealed class OpenAIChatConfig
         if (section == "programmatic_tool_calling")
             foreach (var tool in new[] { "shell", "code_interpreter" })
                 if (Enabled(tool)) Set(tool + "/allowed_callers", enabled ? Strings(["direct", "programmatic"]) : null, !enabled);
-        if (section == "multi_agent") SetBeta("responses_multi_agent=v1", enabled);
+        if (section == "multi_agent") SetBeta(MultiAgentBeta, enabled);
     }
-    public void SetBeta(string flag, bool enabled)
+    public void SetBeta(string flag, bool enabled) => SetBeta(Headers, flag, enabled);
+    private static void SetBeta(Dictionary<string, string> headers, string flag, bool enabled)
     {
-        var flags = Headers.TryGetValue("OpenAI-Beta", out var value) ? Split(value, true).ToList() : [];
+        var flags = headers.TryGetValue("OpenAI-Beta", out var value) ? Split(value, true).ToList() : [];
         flags.RemoveAll(v => v == flag);
         if (enabled) flags.Add(flag);
-        Headers.Remove("OpenAI-Beta");
-        if (flags.Count > 0) Headers["OpenAI-Beta"] = string.Join(",", flags);
+        headers.Remove("OpenAI-Beta");
+        if (flags.Count > 0) headers["OpenAI-Beta"] = string.Join(",", flags);
     }
     public bool Includes(string flag) => Get("include") is JsonArray values && values.Any(v => Text(v) == flag);
     public void Include(string flag, bool enabled) => ToggleArray("include", flag, enabled);

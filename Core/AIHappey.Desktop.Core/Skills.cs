@@ -16,6 +16,14 @@ public sealed record DesktopSkill(string Id, string Name, string Description, st
     public string? LatestVersion { get; init; }
     public bool? IsDownloaded { get; init; }
     public string? SourceId { get; init; }
+    public IReadOnlyList<McpIcon> Icons { get; init; } = [];
+
+    public static DesktopSkill FromCatalog(CatalogItem item, string? version = null) =>
+        new(item.Id, item.Name, item.Description, "remote", version ?? item.LatestVersion ?? item.Version)
+        {
+            DefaultVersion = item.Version, LatestVersion = item.LatestVersion,
+            Icons = item.Icons.Select(icon => new McpIcon(icon.Source, icon.Theme, icon.MimeType)).Where(McpIcons.Supported).ToArray()
+        };
 }
 
 public sealed record DesktopSkillFile(string Path, byte[] Data, string? MediaType = null)
@@ -168,7 +176,7 @@ public sealed class DesktopSkillStore(string directory, Func<CatalogItem, string
     {
         var result = new List<DesktopSkillContent>();
         var candidates = (await DownloadIndexAsync(partition, ct)).Concat((await CatalogAsync(partition, ct))
-            .Select(i => new DesktopSkill(i.Id, i.Name, i.Description, "remote", i.LatestVersion ?? i.Version ?? "1")));
+            .Select(i => DesktopSkill.FromCatalog(i, i.LatestVersion ?? i.Version ?? "1")));
         foreach (var item in candidates.DistinctBy(s => (s.Id, s.Version)))
         {
             var version = item.Version!;
@@ -220,7 +228,7 @@ public sealed class DesktopSkillStore(string directory, Func<CatalogItem, string
         var gate = gates.GetOrAdd(path, _ => new(1, 1)); await gate.WaitAsync(ct);
         try
         {
-            var skill = new DesktopSkill(item.Id, item.Name, item.Description, "remote", version);
+            var skill = DesktopSkill.FromCatalog(item, version);
             if (File.Exists(path) && new FileInfo(path).Length <= DesktopCatalogClient.MaxDownloadBytes)
             {
                 try { var cached = await SkillFiles.ArchiveAsync(skill, await File.ReadAllBytesAsync(path, ct), ct); await RememberAsync(partition, cached.Skill, ct); return cached; }
