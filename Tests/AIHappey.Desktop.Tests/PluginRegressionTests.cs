@@ -22,6 +22,13 @@ internal static class PluginRegressionTests
                 check(resources.TryGetValue(key, out var label) && !string.IsNullOrWhiteSpace(label), language + " plugin menu label " + key);
             check(resources["PluginImportMenu"] == resources["SkillImportMenu"] && resources["PluginFolder"] == resources["SkillFolder"],
                 language + " plugin Import and Folder labels match Skills without using skill-specific resource keys");
+            foreach (var key in new[] { "PluginNamePlaceholder", "PluginVersionPlaceholder", "PluginDescriptionPlaceholder", "PluginHomepagePlaceholder", "PluginRepositoryPlaceholder", "PluginLicensePlaceholder", "PluginAuthorNamePlaceholder", "PluginAuthorEmailPlaceholder", "PluginAuthorUrlPlaceholder", "PluginAddLabel" })
+                check(resources.TryGetValue(key, out var placeholder) && !string.IsNullOrWhiteSpace(placeholder), language + " plugin editor placeholder " + key);
+            check(resources["PluginKeywords"] == "Labels" && resources["PluginAuthorName"] == resources["Name"]
+                && resources["PluginAuthorEmail"] == (language == "nl" ? "E-mail" : "Email") && resources["PluginAuthorUrl"] == "URL",
+                language + " plugin Labels tab and short Author captions match browser terminology");
+            check(resources["PluginLicensePlaceholder"].Contains("MIT") && resources["PluginLicensePlaceholder"].Contains("Apache-2.0"),
+                language + " License placeholder suggests SPDX examples without requiring them");
         }
         void Reject(Action action, string label) { try { action(); } catch (Exception e) when (e is InvalidDataException or JsonException or ArgumentException) { check(true, label); return; } throw new Exception("Expected rejection: " + label); }
         async Task RejectAsync(Func<Task> action, string label) { try { await action(); } catch (Exception e) when (e is InvalidDataException or JsonException or ArgumentException) { check(true, label); return; } throw new Exception("Expected rejection: " + label); }
@@ -35,6 +42,13 @@ internal static class PluginRegressionTests
         valid = AgentPluginPackages.Validate(package); check(valid.Manifest["extensions"]?["com.unknown.client"] is JsonArray, "unknown namespace values remain opaque");
         foreach (var field in new[] { "version", "description", "homepage", "repository", "license", "author", "keywords" })
         { var copy = Package(); copy.Manifest[field] = 1; Reject(() => AgentPluginPackages.Validate(copy), "fatal wrong type " + field); }
+        var metadata = Package();
+        foreach (var field in new[] { "version", "homepage", "repository", "license" }) metadata.Manifest[field] = "custom metadata, not a standard identifier";
+        metadata.Manifest["author"] = new JsonObject { ["name"] = "Team", ["email"] = "internal directory", ["url"] = "internal profile" };
+        metadata.Manifest["keywords"] = new JsonArray("one, whole label", "multiple words", "日本語");
+        var metadataCopy = (await AgentPluginPackages.ImportAsync(AgentPluginPackages.Export(AgentPluginPackages.Validate(metadata)))).Single();
+        check(JsonNode.DeepEquals(metadataCopy.Manifest, metadata.Manifest) && metadataCopy.Keywords.SequenceEqual(["one, whole label", "multiple words", "日本語"]),
+            "plugin metadata formats remain permissive and Labels roundtrip as complete string items");
         var invalidAuthor = Package(); invalidAuthor.Manifest["author"] = new JsonObject { ["extra"] = "not allowed" }; Reject(() => AgentPluginPackages.Validate(invalidAuthor), "closed author object");
         foreach (var path in new[] { "../escape", "C:/escape", "/escape", "a/../b", "a//b", "a/CON.txt", "a/ends.", "a/space ", "a:stream", "a/%2e%2e/b" }) Reject(() => AgentPluginPackages.PackagePath(path), "unsafe Windows package path " + path);
         var duplicated = Package(); duplicated.Files.Add(new("REFERENCES/info.txt", [1])); Reject(() => AgentPluginPackages.Validate(duplicated), "case insensitive duplicate file");

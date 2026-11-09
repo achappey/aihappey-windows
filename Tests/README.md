@@ -28,6 +28,18 @@ The `mcp-catalog` native UI suite covers installed-server expandable rows, heade
 
 Run `powershell -NoProfile -ExecutionPolicy Bypass -File Tests/run-ui-tests.ps1 -Suite mcp-catalog` or select `context-search` for composer coverage.
 
+### Plugin editor
+
+The `plugin-editor` native UI suite exercises General and Author placeholders, multiline Description, free-text License save/clear/reopen, individually removable Labels, skill expanders and snapshots, snapshot/save failure recovery, cancellation, read-only details, narrow layouts, and unchanged Model Context data in both themes. It uses isolated, credential-free package fixtures. The independent `plugin-editor-keyboard` suite checks native Enter and duplicate handling using the same guarded keyboard helper as the composer suite: run with the test window in the foreground and no modifier keys held, and avoid typing or switching windows during the check. A foreground-focus failure blocks keyboard coverage rather than preventing the non-keyboard editor checks.
+
+```powershell
+dotnet run --project Tests/AIHappey.Desktop.Tests -- --plugins-only
+powershell -NoProfile -ExecutionPolicy Bypass -File Tests/run-ui-tests.ps1 -Suite plugin-editor
+powershell -NoProfile -ExecutionPolicy Bypass -File Tests/run-ui-tests.ps1 -Suite plugin-editor-keyboard
+```
+
+The core plugin suite also verifies English/Dutch captions and placeholders, string-array Labels round-tripping, and Agent Plugins 1.0.0 metadata permissiveness: SPDX, URL, email, and Semantic Versioning syntax are recommendations rather than additional validation requirements.
+
 ### Model-chat endpoints
 
 The independent core and native UI suites are both named `chat-endpoints`:

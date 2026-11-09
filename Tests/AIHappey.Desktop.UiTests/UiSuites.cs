@@ -35,6 +35,8 @@ public partial class App
             ["elicitation"] = CheckElicitationAsync,
             ["ai-models"] = CheckAiModelsAsync,
             ["skills"] = CheckSkillsAsync,
+            ["plugin-editor"] = CheckPluginEditorAsync,
+            ["plugin-editor-keyboard"] = CheckPluginEditorKeyboardAsync,
             ["local-tools"] = CheckLocalToolsAsync,
             ["images"] = CheckImagesAsync,
             ["media-libraries"] = CheckMediaLibrariesAsync,
