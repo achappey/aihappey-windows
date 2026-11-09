@@ -1467,6 +1467,12 @@
   <data name="PluginImport" xml:space="preserve">
     <value>Plugin-ZIP importeren</value>
   </data>
+  <data name="PluginImportMenu" xml:space="preserve">
+    <value>Importeren</value>
+  </data>
+  <data name="PluginFolder" xml:space="preserve">
+    <value>Map</value>
+  </data>
   <data name="PluginLoadFolder" xml:space="preserve">
     <value>Pluginmap laden</value>
   </data>

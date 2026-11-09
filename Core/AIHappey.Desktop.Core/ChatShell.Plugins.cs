@@ -19,9 +19,16 @@ public sealed partial class ChatShell
     private readonly Button addPlugin = new() { Name = "AddPlugin", Content = DesktopIcons.Create(Icon.Add), Width = 40, Height = 40, Padding = new Thickness(0), Visibility = Visibility.Collapsed };
     private void PreparePlugins()
     {
-        var menu = new MenuFlyout(); addPlugin.Flyout = menu; ControlAppearance.Stock(addPlugin); ToolbarControls.Label(addPlugin, DesktopResources.Get("Add"));
-        foreach (var (key, action) in new (string, Func<Task>)[] { ("PluginCreate", () => EditPluginAsync(null, false)), ("PluginImport", () => PickPluginsAsync(false)), ("PluginLoadFolder", () => PickPluginsAsync(true)) })
-        { var item = new MenuFlyoutItem { Text = DesktopResources.Get(key) }; ControlAppearance.Native(item); item.Click += async (_, _) => await action(); menu.Items.Add(item); }
+        var menu = new MenuFlyout(); var create = new MenuFlyoutItem { Text = DesktopResources.Get("New"), Icon = DesktopIcons.Create(Icon.Add) };
+        var import = new MenuFlyoutSubItem { Name = "PluginImportMenu", Text = DesktopResources.Get("PluginImportMenu"), Icon = DesktopIcons.Create(Icon.Attach) };
+        var zip = new MenuFlyoutItem { Name = "PluginImportZip", Text = "ZIP", Icon = DesktopIcons.Create(Icon.Attach) };
+        var folder = new MenuFlyoutItem { Name = "PluginImportFolder", Text = DesktopResources.Get("PluginFolder"), Icon = DesktopIcons.Create(Icon.FolderOpen) };
+        import.Items.Add(zip); import.Items.Add(folder);
+        menu.Items.Add(create); menu.Items.Add(import); addPlugin.Flyout = menu;
+        ControlAppearance.Stock(addPlugin); ToolbarControls.Label(addPlugin, DesktopResources.Get("Add"));
+        create.Click += async (_, _) => await EditPluginAsync(null, false);
+        zip.Click += async (_, _) => await PickPluginsAsync(false);
+        folder.Click += async (_, _) => await PickPluginsAsync(true);
         pluginsOverview.DetailsRequested = plugin => EditPluginAsync(plugin, true);
         pluginsOverview.DownloadRequested = DownloadPluginAsync;
         pluginsOverview.DeleteRequested = DeletePluginAsync;
