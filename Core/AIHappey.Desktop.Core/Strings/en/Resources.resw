@@ -1281,7 +1281,9 @@
   <data name="LocalPluginFiles" xml:space="preserve"><value>Files</value></data>
   <data name="LocalPluginCanvas" xml:space="preserve"><value>Canvas</value></data>
   <data name="LocalPluginImages" xml:space="preserve"><value>Images</value></data>
-  <data name="SettingsToolOutputContent" xml:space="preserve"><value>Tool output types</value></data>
+  <data name="SettingsChatInput" xml:space="preserve"><value>Input</value></data>
+  <data name="SettingsChatOutput" xml:space="preserve"><value>Output</value></data>
+  <data name="SettingsToolOutputContent" xml:space="preserve"><value>Tool output</value></data>
   <data name="SettingsToolOutputText.Header" xml:space="preserve"><value>Text</value></data>
   <data name="SettingsToolOutputText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Text</value></data>
   <data name="SettingsToolOutputText.OnContent" xml:space="preserve"><value>On</value></data>

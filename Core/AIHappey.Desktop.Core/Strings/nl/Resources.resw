@@ -1276,7 +1276,9 @@
   <data name="LocalPluginFiles" xml:space="preserve"><value>Bestanden</value></data>
   <data name="LocalPluginCanvas" xml:space="preserve"><value>Canvas</value></data>
   <data name="LocalPluginImages" xml:space="preserve"><value>Afbeeldingen</value></data>
-  <data name="SettingsToolOutputContent" xml:space="preserve"><value>Types tooluitvoer</value></data>
+  <data name="SettingsChatInput" xml:space="preserve"><value>Invoer</value></data>
+  <data name="SettingsChatOutput" xml:space="preserve"><value>Uitvoer</value></data>
+  <data name="SettingsToolOutputContent" xml:space="preserve"><value>Tooluitvoer</value></data>
   <data name="SettingsToolOutputText.Header" xml:space="preserve"><value>Tekst</value></data>
   <data name="SettingsToolOutputText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Tekst</value></data>
   <data name="SettingsToolOutputText.OnContent" xml:space="preserve"><value>Aan</value></data>

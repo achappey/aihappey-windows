@@ -39,9 +39,17 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         CloudConversations.IsOn = settings.ConversationStorage.CloudEnabled;
         CloudConversations.IsEnabled = cloudAvailable || CloudConversations.IsOn;
         CloudUnavailable.Visibility = cloudAvailable ? Visibility.Collapsed : Visibility.Visible;
-        ChatPage.Children.Remove(ToolOutputContentPanel);
-        NativeSettingsSurface.Expander(ChatPage, "ToolOutputContentCard", DesktopResources.Get("SettingsToolOutputContent"), null, out var outputContent);
-        outputContent.Children.Add(ToolOutputContentPanel);
+        foreach (var (panel, name, title) in new[]
+        {
+            (ChatInputPanel, "ChatInputCard", "SettingsChatInput"),
+            (ChatOutputPanel, "ChatOutputCard", "SettingsChatOutput"),
+            (ToolOutputContentPanel, "ToolOutputContentCard", "SettingsToolOutputContent")
+        })
+        {
+            ChatPage.Children.Remove(panel);
+            NativeSettingsSurface.Expander(ChatPage, name, DesktopResources.Get(title), null, out var content);
+            content.Children.Add(panel);
+        }
         imageStorage = new(imagePreferences, catalogLifetime.Token);
         videoStorage = new(videoPreferences, catalogLifetime.Token);
         AiModelView = new(aiModelPreferences, aiModels, imageStorage, videoStorage, originalSettings, new TranscriptionSplitSettingsView(transcriptionPreferences));

@@ -57,16 +57,20 @@
                     <TextBlock x:Uid="SettingsRestartHint" TextWrapping="Wrap" />
                 </StackPanel>
                 <StackPanel x:Name="ChatPage" Spacing="16" Visibility="Collapsed">
-                    <ToggleSwitch x:Name="ShowTokens" x:Uid="SettingsShowTokens" />
-                    <ToggleSwitch x:Name="ShowProviderLogo" x:Uid="SettingsShowProviderLogo" />
-                    <ToggleSwitch x:Name="ShowContextSize" x:Uid="SettingsShowContextSize" />
-                    <ToggleSwitch x:Name="ShowMetrics" x:Uid="SettingsShowMetrics" />
-                    <ToggleSwitch x:Name="ApiDebugEnabled" x:Uid="SettingsApiDebug" />
-                    <ComboBox x:Name="DictateChoice" x:Uid="SettingsDictate" HorizontalAlignment="Left" MinWidth="160">
-                        <ComboBoxItem x:Uid="SettingsDictateNone" Tag="none" />
-                        <ComboBoxItem x:Uid="SettingsDictateWindows" Tag="windows" />
-                        <ComboBoxItem x:Uid="SettingsDictateTranscriptions" Tag="transcriptions" />
-                    </ComboBox>
+                    <StackPanel x:Name="ChatInputPanel" Spacing="12">
+                        <ComboBox x:Name="DictateChoice" x:Uid="SettingsDictate" HorizontalAlignment="Left" MinWidth="160">
+                            <ComboBoxItem x:Uid="SettingsDictateNone" Tag="none" />
+                            <ComboBoxItem x:Uid="SettingsDictateWindows" Tag="windows" />
+                            <ComboBoxItem x:Uid="SettingsDictateTranscriptions" Tag="transcriptions" />
+                        </ComboBox>
+                        <ToggleSwitch x:Name="ShowContextSize" x:Uid="SettingsShowContextSize" />
+                    </StackPanel>
+                    <StackPanel x:Name="ChatOutputPanel" Spacing="12">
+                        <ToggleSwitch x:Name="ShowTokens" x:Uid="SettingsShowTokens" />
+                        <ToggleSwitch x:Name="ShowProviderLogo" x:Uid="SettingsShowProviderLogo" />
+                        <ToggleSwitch x:Name="ShowMetrics" x:Uid="SettingsShowMetrics" />
+                        <ToggleSwitch x:Name="ApiDebugEnabled" x:Uid="SettingsApiDebug" />
+                    </StackPanel>
                     <StackPanel x:Name="ToolOutputContentPanel" Spacing="12">
                         <ToggleSwitch x:Name="ToolOutputText" x:Uid="SettingsToolOutputText" />
                         <ToggleSwitch x:Name="ToolOutputLinks" x:Uid="SettingsToolOutputLinks" />
