@@ -18,7 +18,7 @@ public sealed class AiModelSettingsView : NavigationView
     private IReadOnlyList<ChatTarget> ChoiceModels => AiModelCatalog.PickerChoices(VisibleModels, draft.ShowVoiceModels);
 
     public AiModelSettingsView(AiModelPreferences draft, IReadOnlyList<ChatTarget>? catalog = null, UIElement? imageSettings = null, UIElement? videoSettings = null,
-        DesktopSettings? providerSettings = null)
+        DesktopSettings? providerSettings = null, UIElement? transcriptionSettings = null)
     {
         this.draft = draft;
         this.catalog = catalog;
@@ -127,6 +127,7 @@ public sealed class AiModelSettingsView : NavigationView
                 page.Children.Add(voices);
             }
             if (type == "video" && videoSettings is not null) page.Children.Add(videoSettings);
+            if (type == "transcription" && transcriptionSettings is not null) page.Children.Add(transcriptionSettings);
         }
         SelectionChanged += (_, _) =>
         {

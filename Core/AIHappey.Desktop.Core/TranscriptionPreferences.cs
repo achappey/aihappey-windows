@@ -7,6 +7,10 @@ namespace AIHappey.Desktop.Core;
 public sealed class TranscriptionPreferences
 {
     public bool SkipDictateWarning { get; set; }
+    public bool FileSplitEnabled { get; set; } = true;
+    private int fileSplitOverlapSeconds = 5, fileSplitMaxSizeMb = 15;
+    public int FileSplitOverlapSeconds { get => fileSplitOverlapSeconds; set => fileSplitOverlapSeconds = Math.Clamp(value, 0, 60); }
+    public int FileSplitMaxSizeMb { get => fileSplitMaxSizeMb; set => fileSplitMaxSizeMb = Math.Clamp(value, 1, 100); }
     public RealtimeTranscriptionPreferences Realtime { get; set; } = new();
     private Dictionary<string, JsonObject> providerOptions = new(StringComparer.OrdinalIgnoreCase) { ["openai"] = new() { ["response_format"] = "json" } };
     public Dictionary<string, JsonObject> ProviderOptions
@@ -14,7 +18,11 @@ public sealed class TranscriptionPreferences
         get => providerOptions;
         set => providerOptions = value is null ? new(StringComparer.OrdinalIgnoreCase) : new(value.Where(p => p.Value is not null).ToDictionary(p => p.Key, p => p.Value), StringComparer.OrdinalIgnoreCase);
     }
-    public TranscriptionPreferences Clone() => new() { SkipDictateWarning = SkipDictateWarning, Realtime = Realtime.Clone(), ProviderOptions = ProviderOptions.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone(), StringComparer.OrdinalIgnoreCase) };
+    public TranscriptionPreferences Clone() => new() { SkipDictateWarning = SkipDictateWarning, FileSplitEnabled = FileSplitEnabled,
+        FileSplitOverlapSeconds = FileSplitOverlapSeconds, FileSplitMaxSizeMb = FileSplitMaxSizeMb,
+        Realtime = Realtime.Clone(), ProviderOptions = ProviderOptions.ToDictionary(p => p.Key, p => (JsonObject)p.Value.DeepClone(), StringComparer.OrdinalIgnoreCase) };
+    public JsonObject RequestOptions() => new(ProviderOptions.Select(p => new KeyValuePair<string, JsonNode?>(p.Key,
+        p.Key.Equals("openai", StringComparison.OrdinalIgnoreCase) ? CleanOpenAI(p.Value) : p.Value.DeepClone())));
     public static JsonObject CleanOpenAI(JsonObject source)
     {
         var result = (JsonObject)source.DeepClone();

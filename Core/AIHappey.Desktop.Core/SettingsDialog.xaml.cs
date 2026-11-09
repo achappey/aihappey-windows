@@ -44,7 +44,7 @@ public sealed partial class SettingsDialog : ContentDialog, IResponsiveDialog
         outputContent.Children.Add(ToolOutputContentPanel);
         imageStorage = new(imagePreferences, catalogLifetime.Token);
         videoStorage = new(videoPreferences, catalogLifetime.Token);
-        AiModelView = new(aiModelPreferences, aiModels, imageStorage, videoStorage, originalSettings);
+        AiModelView = new(aiModelPreferences, aiModels, imageStorage, videoStorage, originalSettings, new TranscriptionSplitSettingsView(transcriptionPreferences));
         ArtificialIntelligencePage.Children.Add(AiModelView);
         AppAgentsView = new(appAgentPreferences, appAgents);
         AppAgentsPage.Children.Add(AppAgentsView);

@@ -50,8 +50,11 @@ public sealed class TranscriptionLibraryStore(string root, string partition)
         return result.OrderByDescending(r => r.Item.CreatedAt).ToArray();
     }
     public async Task SaveAsync(TranscriptionResult result, ComposerAttachment source)
+        => await SaveAsync(result, TranscriptionSource.FromAttachment(source));
+
+    public async Task SaveAsync(TranscriptionResult result, TranscriptionSource source)
     {
-        TranscriptionFiles.Validate(source); Directory.CreateDirectory(Folder);
+        Directory.CreateDirectory(Folder);
         var id = Guid.NewGuid().ToString("N"); var stage = Path.Combine(Folder, "." + id + ".tmp"); Directory.CreateDirectory(stage);
         try
         {
@@ -60,7 +63,8 @@ public sealed class TranscriptionLibraryStore(string root, string partition)
             if (response["response"] is JsonObject info) info.Remove("headers");
             var item = new StoredTranscription { Id = id, CreatedAt = DateTimeOffset.UtcNow, Filename = source.Name, File = file, MediaType = source.MediaType,
                 Model = result.Model, Options = (JsonObject)result.Options.DeepClone(), Response = response };
-            await File.WriteAllBytesAsync(Path.Combine(stage, file), source.Content.ToArray());
+            await using (var output = new FileStream(Path.Combine(stage, file), FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous))
+                await source.CopyToAsync(output, CancellationToken.None);
             await File.WriteAllTextAsync(Path.Combine(stage, "transcription.json"), JsonSerializer.Serialize(item, Json));
             Directory.Move(stage, ItemFolder(id));
         }

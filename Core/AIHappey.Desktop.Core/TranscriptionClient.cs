@@ -9,10 +9,13 @@ public sealed record TranscriptionResult(string Filename, string MediaType, stri
 public sealed class DesktopTranscriptionClient(DesktopChatClient gateway, HttpClient http)
 {
     public async Task<TranscriptionResult> GenerateAsync(ChatTarget model, ComposerAttachment file, TranscriptionPreferences preferences, CancellationToken ct)
+        => await GenerateAsync(model, TranscriptionSource.FromAttachment(file), preferences, ct);
+
+    public async Task<TranscriptionResult> GenerateAsync(ChatTarget model, TranscriptionSource file, TranscriptionPreferences preferences, CancellationToken ct)
     {
-        var body = preferences.Clone().Request(model, file);
+        var options = preferences.RequestOptions();
         using var request = await gateway.RequestAsync(ServiceKind.Ai, HttpMethod.Post, "api/transcriptions", ct);
-        request.Content = JsonContent.Create(body, options: JsonSerializerOptions.Web);
+        request.Content = new TranscriptionUploadContent(model.Id, file, options, ct);
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         DesktopChatClient.CheckResponse(response);
         const int maximum = 16 * 1024 * 1024;
@@ -28,6 +31,6 @@ public sealed class DesktopTranscriptionClient(DesktopChatClient gateway, HttpCl
         var result = (await JsonNode.ParseAsync(buffer, cancellationToken: ct)) as JsonObject;
         if (result is null || result["text"] is not JsonValue text || !text.TryGetValue<string>(out _))
             throw new GatewayException(DesktopResources.Get("TranscriptionInvalidResponse"));
-        return new(file.Name, file.MediaType, model.Id, JsonSerializer.SerializeToNode(body.ProviderOptions, JsonSerializerOptions.Web)!.AsObject(), result);
+        return new(file.Name, file.MediaType, model.Id, options, result);
     }
 }

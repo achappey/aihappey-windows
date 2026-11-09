@@ -20,6 +20,7 @@ public sealed partial class ChatShell
     private TranscriptionDetailsDialog? transcriptionDetailsDialog;
     private ContentDialog? transcriptionDeleteDialog;
     private int pendingTranscriptions;
+    private ITranscriptionMediaEncoder transcriptionMediaEncoder = new WindowsTranscriptionMediaEncoder();
     private string TranscriptionRoot => Path.Combine(session.DataDirectory, "transcriptions");
     private bool CanUseTranscriptions => initialized && !busy && !closing && !downloading && !historyDialogOpen && catalogDialog is null && dictation is null && !dictationChanging && transcriptionRealtime is null && activePage == DesktopPage.Transcriptions;
     private ChatTarget? SelectedTranscriptionModel => transcriptionModels.FirstOrDefault(m => m.Id == transcriptionTarget.Text.Trim());
@@ -83,15 +84,23 @@ public sealed partial class ChatShell
     private async Task TranscribeStorageFilesAsync(IEnumerable<IStorageItem> items)
     {
         if (!CanUseTranscriptions || SelectedTranscriptionModel is not { } model) return;
-        var sources = items.Select(item => (item.Name, (Func<CancellationToken, Task<ComposerAttachment>>)(async ct =>
+        var sources = items.Select(item => (item.Name, (Func<CancellationToken, Task<TranscriptionSource>>)(async ct =>
         {
             if (item is not StorageFile file || TranscriptionFiles.MediaType(file.Name, file.ContentType) is not { } type) throw new InvalidOperationException(DesktopResources.Get("TranscriptionUnsupported"));
-            var properties = await file.GetBasicPropertiesAsync().AsTask(ct); ComposerAttachments.ValidateSize((long)properties.Size);
-            await using var input = await file.OpenStreamForReadAsync(); return await ComposerAttachments.ReadAsync(file.Name, type, input, ct);
+            var properties = await file.GetBasicPropertiesAsync().AsTask(ct);
+            return new TranscriptionSource(file.Name, type, checked((long)properties.Size), async token =>
+            {
+                token.ThrowIfCancellationRequested(); return await file.OpenStreamForReadAsync();
+            });
         }))).ToArray();
         await TranscribeSourcesAsync(sources, model, session.Settings.Transcriptions.Clone(), TranscriptionLibraryStore.Partition(session));
     }
     private async Task TranscribeSourcesAsync(IReadOnlyList<(string Name, Func<CancellationToken, Task<ComposerAttachment>> Read)> sources,
+        ChatTarget model, TranscriptionPreferences preferences, string partition)
+        => await TranscribeSourcesAsync(sources.Select(item => (item.Name, (Func<CancellationToken, Task<TranscriptionSource>>)(async ct =>
+            TranscriptionSource.FromAttachment(await item.Read(ct))))).ToArray(), model, preferences, partition);
+
+    private async Task TranscribeSourcesAsync(IReadOnlyList<(string Name, Func<CancellationToken, Task<TranscriptionSource>> Read)> sources,
         ChatTarget model, TranscriptionPreferences preferences, string partition)
     {
         if (!CanUseTranscriptions || sources.Count == 0 || partition != TranscriptionLibraryStore.Partition(session)) return;
@@ -107,10 +116,13 @@ public sealed partial class ChatShell
                     ct.ThrowIfCancellationRequested();
                     try
                     {
-                        var source = await item.Read(ct); TranscriptionFiles.Validate(source);
-                        var result = await new DesktopTranscriptionClient(client, http).GenerateAsync(model, source, preferences, ct);
-                        // Commit completed results even if Stop was pressed just after the response arrived.
-                        await store.SaveAsync(result, source); libraryTranscriptions = await store.ListAsync();
+                        var source = await item.Read(ct);
+                        var transcriptionClient = new DesktopTranscriptionClient(client, http);
+                        var processor = new TranscriptionFileProcessor(new TranscriptionFileSplitter(transcriptionMediaEncoder));
+                        var result = await processor.TranscribeAsync(source, preferences,
+                            (chunk, options, token) => transcriptionClient.GenerateAsync(model, chunk, options, token),
+                            (completed, original) => store.SaveAsync(completed, original), ct);
+                        libraryTranscriptions = await store.ListAsync();
                         if (!closing && partition == TranscriptionLibraryStore.Partition(session) && result.Response["warnings"] is System.Text.Json.Nodes.JsonArray warnings)
                             foreach (var warning in warnings) transcriptionsPage.Notice(warning?.ToJsonString() ?? "", InfoBarSeverity.Warning);
                     }
