@@ -27,7 +27,7 @@
     <PackageReference Include="FluentIcons.WinUI" Version="2.2.345" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.6-experimental" />
     <PackageReference Include="CommunityToolkit.Labs.WinUI.Controls.MarkdownTextBlock" Version="0.1.261027-build.2704" />
-    <PackageReference Include="PdfPig" Version="0.1.17-alpha-202611070026-8c703" />
+    <PackageReference Include="PdfPig" Version="0.1.17-alpha-202611100027-21de1" />
     <PackageReference Include="ModelContextProtocol" Version="2.4.0" />
     <PackageReference Include="SIPSorcery.OpenAI.Realtime" Version="10.0.18-pre" />
     <PackageReference Include="SIPSorceryMedia.Windows" Version="10.0.18-pre" />
