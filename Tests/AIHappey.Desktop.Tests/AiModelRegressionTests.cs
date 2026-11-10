@@ -7,6 +7,7 @@ internal static class AiModelRegressionTests
 {
     public static async Task RunAsync(Action<bool, string> check, string root, DesktopSession session)
     {
+        await DefaultModelUpdatesRegressionTests.RunAsync(check, Path.Combine(root, "default-updates"));
         var legacy = JsonSerializer.Deserialize<DesktopSettings>("{}", JsonSerializerOptions.Web)!;
         var explicitNull = JsonSerializer.Deserialize<DesktopSettings>("{\"aiModels\":null}", JsonSerializerOptions.Web)!;
         check(AiModelCatalog.Types.All(t => legacy.AiModels.DefaultFor(t) is null)

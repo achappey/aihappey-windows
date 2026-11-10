@@ -56,6 +56,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/DesktopBranding.cs" Link="Core/DesktopBranding.cs" />
     <AssemblyMetadata Include="DesktopAppName" Value="Image regression app" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AiModelPreferences.cs" Link="Core/AiModelPreferences.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/DefaultModelUpdates.cs" Link="Core/DefaultModelUpdates.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ProviderPreferences.cs" Link="Core/ProviderPreferences.cs" />
     <Compile Include="../../Samples/AIHappey.Desktop.HeaderAuth/HeaderConfiguration.cs" Link="Host/HeaderConfiguration.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/ModelOverviewCatalog.cs" Link="Core/ModelOverviewCatalog.cs" />
