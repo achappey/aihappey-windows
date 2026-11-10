@@ -250,6 +250,7 @@ public sealed partial class ChatShell : UserControl
         notice.Closed += (_, _) => { if (!notice.IsOpen) notice.Visibility = Visibility.Collapsed; };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetLiveSetting(noticeMessage, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Assertive);
         var notices = new StackPanel(); notices.Children.Add(notice); PrepareExplorerNotice(notices);
+        PrepareDefaultModelNotice(notices);
         root.Children.Add(notices);
         Grid.SetRow(split, 1); root.Children.Add(split);
 
@@ -417,6 +418,7 @@ public sealed partial class ChatShell : UserControl
             targets = []; TargetId = "";
             rememberedSelections.Clear(); target.IsSuggestionListOpen = false;
             aiModelTargets = null;
+            UpdateDefaultModelNotice();
             InvalidateCatalogs();
             RenderTranscript();
             await LoadLocalAgentsAsync(ct);
@@ -470,6 +472,7 @@ public sealed partial class ChatShell : UserControl
         if (session.Host.RequiresSignIn)
         {
             targets = []; TargetId = ""; aiModelTargets = null;
+            UpdateDefaultModelNotice();
             UpdateAccountMenu(); UpdateTargetSuggestions(); RefreshWelcome();
             return;
         }
@@ -481,6 +484,7 @@ public sealed partial class ChatShell : UserControl
             : await AiModelsAsync(ct);
         if (Service == ServiceKind.Agents) target.SetSelection(selection.Select(id => DesktopAgentTargets.Restore(id, targets)), routerSelected);
         if (Service == ServiceKind.Ai) aiModelTargets = targets;
+        UpdateDefaultModelNotice();
         UpdateAccountMenu();
         UpdateTargetSuggestions();
         if (string.IsNullOrWhiteSpace(selected) && !routerSelected)
@@ -826,6 +830,7 @@ public sealed partial class ChatShell : UserControl
                 await StopVideoJobsAsync();
             }
             await CommitConversationSettingsAsync(next, ct);
+            UpdateDefaultModelNotice();
             ReconcileRememberedSelections();
             RenderTranscript();
             RefreshWelcome();
@@ -901,6 +906,7 @@ public sealed partial class ChatShell : UserControl
         if (!value) ControlAppearance.RefreshItems(chats);
         UpdateRealtimeControls();
         UpdateTranscriptionRealtimeAvailability();
+        UpdateDefaultModelNotice();
     }
 
     private void Show(string message, InfoBarSeverity severity)

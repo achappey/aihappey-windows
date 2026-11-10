@@ -22,6 +22,7 @@ public sealed partial class ChatShell
     private void ApplyModelCatalog(IReadOnlyList<ChatTarget> available)
     {
         aiModelTargets = available;
+        UpdateDefaultModelNotice();
         if (Service == ServiceKind.Ai) targets = available;
         imageModels = AiModelCatalog.OfType(available, "image"); videoModels = AiModelCatalog.OfType(available, "video");
         transcriptionModels = AiModelCatalog.OfType(available, "transcription"); speechModels = AiModelCatalog.OfType(available, "speech");

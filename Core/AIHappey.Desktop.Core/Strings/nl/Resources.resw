@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="DefaultModelUpdatesMessage" xml:space="preserve"><value>Sommige standaardmodellen zijn meer dan 30 dagen oud. Er zijn nieuwere standaardmodellen beschikbaar voor: {0}.</value></data>
+  <data name="DefaultModelUpdatesApply" xml:space="preserve"><value>Nieuwere standaardmodellen toepassen</value></data>
   <data name="SettingsConnectorsTab.AutomationProperties.Name" xml:space="preserve"><value>Connectoren</value></data>
   <data name="SettingsConnectors.Text" xml:space="preserve"><value>Connectoren</value></data>
   <data name="SettingsCloudConversations.Header" xml:space="preserve"><value>Cloud</value></data>
