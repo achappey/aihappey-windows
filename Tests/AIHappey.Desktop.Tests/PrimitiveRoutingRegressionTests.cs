@@ -46,5 +46,6 @@ internal static class PrimitiveRoutingRegressionTests
         ChatTarget decision = language with { ModelType = "decision" };
         check(DecisionRouting.Model(agent, [language, decision]) == decision.Id, "routing finds decision capability when language shares the same ID");
         check(DecisionRouting.Model(agent, [language]) is null, "routing never assumes language-only models support Decisions");
+        await DecisionRoutingRecoveryTests.RunAsync(check);
     }
 }

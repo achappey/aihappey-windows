@@ -76,7 +76,10 @@ public sealed partial class ChatShell
             : DecisionRouting.ModelCandidate(t)).ToArray();
         var body = DecisionRouting.Request(model, DecisionRouting.Instructions(agent, agentMode), messages, descriptors);
         var signature = SelectionSignature();
-        bool Current() => !closing && signature == SelectionSignature();
+        var conversation = current;
+        var historyContext = DecisionRouting.Context(current.Messages.Select(row => row.Message)).ToJsonString();
+        bool Current() => !closing && ReferenceEquals(conversation, current) && signature == SelectionSignature()
+            && historyContext == DecisionRouting.Context(current.Messages.Select(row => row.Message)).ToJsonString();
         var decisions = new DesktopDecisionClient(client, http);
         var winner = agentMode ? await decisions.DecideAsync(body, Current, ct)
             : await decisions.DecideChatModelAsync(body, messages,

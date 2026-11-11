@@ -79,7 +79,7 @@ public static class DecisionRouting
     public static bool IsInputLimitError(Exception error) => error is GatewayException
         && Regex.IsMatch(error.Message, @"^HTTP (400|413|422):")
         && Regex.IsMatch(error.Message,
-            @"\b(?:context_length_exceeded|input_token_limit_exceeded|prompt_too_long|input_too_long)\b|\bdecision input exceeds the token limit\b|\bmaximum context length\b|\b(?:input|prompt) (?:is too long|exceeds (?:the )?(?:token limit|context window))\b",
+            @"\b(?:context_length_exceeded|input_token_limit_exceeded|prompt_too_long|input_too_long)\b|\bdecision input exceeds the token limit\b|\bmaximum context length (?:is \d+|of \d+|exceeded)\b|\b(?:input|prompt) (?:is too long|exceeds (?:the )?(?:token limit|context window))\b",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static double? TokenNumber(object? raw)
     {
@@ -133,12 +133,13 @@ public static class DecisionRouting
         if (contextWindow is > 0 && double.IsFinite(contextWindow.Value) && ConversationTokens(messages) is { } tokens)
         {
             var weights = conversation.Select(MessageWeight).ToArray();
+            // Reserve 20% for instructions, candidates and differences from chat tokenization/usage.
             var budget = Math.Floor(weights.Sum() * Math.Min(1, .8 * (contextWindow.Value / tokens)));
             var start = conversation.Count; double used = 0;
             while (start > 0 && used + weights[start - 1] <= budget) used += weights[--start];
             if (start > 0 && start <= lastUser && conversation.Count - start > 1) contexts.Add(State(conversation.Skip(start)));
         }
-        contexts.Add(State([conversation[lastUser]]));
+        contexts.Add(State(new[] { conversation[lastUser] }));
         return contexts;
 
         static DecisionInput State(IEnumerable<JsonNode?> messages) => new(JsonSerializer.SerializeToElement(new JsonObject
@@ -204,7 +205,7 @@ public sealed class DesktopDecisionClient(DesktopChatClient gateway, HttpClient 
     public async Task<string> DecideChatModelAsync(DecisionRequest body, IReadOnlyList<UIMessage> messages,
         double? contextWindow, Func<bool> isCurrent, CancellationToken ct)
     {
-        var states = new[] { body.State }.Concat(DecisionRouting.RecoveryContexts(messages, contextWindow)).ToArray();
+        List<DecisionInput> states = [body.State];
         for (var attempt = 0; ; attempt++)
         {
             // Preserve the request and original chat history; replace decision evidence only.
@@ -212,10 +213,12 @@ public sealed class DesktopDecisionClient(DesktopChatClient gateway, HttpClient 
                 StateFormat = body.StateFormat, MaxOutputTokens = body.MaxOutputTokens, Reasoning = body.Reasoning,
                 Headers = body.Headers, ProviderOptions = body.ProviderOptions };
             try { return await DecideAsync(request, isCurrent, ct); }
-            catch (GatewayException error) when (attempt + 1 < states.Length && DecisionRouting.IsInputLimitError(error))
+            catch (GatewayException error) when (DecisionRouting.IsInputLimitError(error))
             {
                 ct.ThrowIfCancellationRequested();
                 if (!isCurrent()) throw new OperationCanceledException(ct);
+                if (attempt == 0) states.AddRange(DecisionRouting.RecoveryContexts(messages, contextWindow));
+                if (attempt + 1 >= states.Count) throw;
             }
         }
     }
