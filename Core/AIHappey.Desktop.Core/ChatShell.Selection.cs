@@ -77,7 +77,10 @@ public sealed partial class ChatShell
         var body = DecisionRouting.Request(model, DecisionRouting.Instructions(agent, agentMode), messages, descriptors);
         var signature = SelectionSignature();
         bool Current() => !closing && signature == SelectionSignature();
-        var winner = await new DesktopDecisionClient(client, http).DecideAsync(body, Current, ct);
+        var decisions = new DesktopDecisionClient(client, http);
+        var winner = agentMode ? await decisions.DecideAsync(body, Current, ct)
+            : await decisions.DecideChatModelAsync(body, messages,
+                aiModelTargets?.FirstOrDefault(t => t.Id == model && DecisionRouting.IsDecisionModel(t))?.ContextWindow, Current, ct);
         ct.ThrowIfCancellationRequested();
         if (!Current()) throw new GatewayException(DesktopResources.Get("RoutingContextChanged"));
         return [winner];

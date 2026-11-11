@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using AIHappey.Vercel.Models;
 
 namespace AIHappey.Desktop.Core;
@@ -74,6 +75,75 @@ public static class DecisionRouting
             }).ToArray())
         }).ToArray())
     };
+    // Keep the explicit input/context failure allowlist in sync with the browser router.
+    public static bool IsInputLimitError(Exception error) => error is GatewayException
+        && Regex.IsMatch(error.Message, @"^HTTP (400|413|422):")
+        && Regex.IsMatch(error.Message,
+            @"\b(?:context_length_exceeded|input_token_limit_exceeded|prompt_too_long|input_too_long)\b|\bdecision input exceeds the token limit\b|\bmaximum context length\b|\b(?:input|prompt) (?:is too long|exceeds (?:the )?(?:token limit|context window))\b",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static double? TokenNumber(object? raw)
+    {
+        if (raw is null) return null;
+        try
+        {
+            var json = raw is JsonElement element ? element : JsonSerializer.SerializeToElement(raw);
+            return json.ValueKind == JsonValueKind.Number && json.TryGetDouble(out var value) && double.IsFinite(value) && value >= 0 ? value : null;
+        }
+        catch (Exception error) when (error is JsonException or ArgumentException or NotSupportedException) { return null; }
+    }
+    private static object? First(object? value, params string[] names)
+        => names.Select(name => MessageUsage.Property(value, name)).FirstOrDefault(item => item is not null);
+    public static double? ConversationTokens(IReadOnlyList<UIMessage> messages)
+    {
+        for (var index = messages.Count - 1; index >= 0; index--)
+        {
+            if (messages[index].Role != Role.assistant) continue;
+            var metadata = messages[index].Metadata; var usage = MessageUsage.Property(metadata, "usage");
+            var rawTotal = First(usage, "totalTokens", "total_tokens") ?? First(metadata, "totalTokens", "total_tokens");
+            if (rawTotal is not null) return TokenNumber(rawTotal) is > 0 and var total ? total : null;
+            var input = First(usage, "inputTokens", "promptTokens", "input_tokens", "prompt_tokens")
+                ?? First(metadata, "inputTokens", "promptTokens", "input_tokens", "prompt_tokens");
+            var output = First(usage, "outputTokens", "completionTokens", "output_tokens", "completion_tokens")
+                ?? First(metadata, "outputTokens", "completionTokens", "output_tokens", "completion_tokens");
+            if (input is not null || output is not null)
+            {
+                var sum = TokenNumber(input) + TokenNumber(output);
+                return sum is > 0 && double.IsFinite(sum.Value) ? sum : null;
+            }
+        }
+        return null;
+    }
+    private static double MessageWeight(JsonNode? message)
+    {
+        // UTF-16 lengths of sanitized string values, not JSON escaping or a model-specific tokenizer.
+        double weight = DesktopAgent.Text(message?["role"]).Length;
+        if (message?["parts"] is JsonArray parts)
+            foreach (var part in parts.OfType<JsonObject>())
+                foreach (var field in part)
+                    if (field.Value is JsonValue value && value.TryGetValue<string>(out var text)) weight += text.Length;
+        return Math.Max(1, weight);
+    }
+    public static IReadOnlyList<DecisionInput> RecoveryContexts(IReadOnlyList<UIMessage> messages, double? contextWindow)
+    {
+        var conversation = (JsonArray)Context(messages)["conversation"]!;
+        var lastUser = conversation.Count - 1;
+        while (lastUser >= 0 && DesktopAgent.Text(conversation[lastUser]?["role"]) != "user") lastUser--;
+        if (lastUser < 0 || conversation.Count == 1) return [];
+        List<DecisionInput> contexts = [];
+        if (contextWindow is > 0 && double.IsFinite(contextWindow.Value) && ConversationTokens(messages) is { } tokens)
+        {
+            var weights = conversation.Select(MessageWeight).ToArray();
+            var budget = Math.Floor(weights.Sum() * Math.Min(1, .8 * (contextWindow.Value / tokens)));
+            var start = conversation.Count; double used = 0;
+            while (start > 0 && used + weights[start - 1] <= budget) used += weights[--start];
+            if (start > 0 && start <= lastUser && conversation.Count - start > 1) contexts.Add(State(conversation.Skip(start)));
+        }
+        contexts.Add(State([conversation[lastUser]]));
+        return contexts;
+
+        static DecisionInput State(IEnumerable<JsonNode?> messages) => new(JsonSerializer.SerializeToElement(new JsonObject
+        { ["conversation"] = new JsonArray(messages.Select(message => message?.DeepClone()).ToArray()) }));
+    }
     public static DecisionRequest Request(string model, string instructions, IEnumerable<UIMessage> messages, IReadOnlyList<JsonObject> candidates)
     {
         if (candidates.Count < 2 || candidates.Select(c => DesktopAgent.Text(c["id"])).Distinct(StringComparer.Ordinal).Count() != candidates.Count)
@@ -130,6 +200,25 @@ public static class DecisionRouting
 
 public sealed class DesktopDecisionClient(DesktopChatClient gateway, HttpClient http)
 {
+    /// <summary>Only chat model selection opts into bounded context recovery; other decisions remain single-shot.</summary>
+    public async Task<string> DecideChatModelAsync(DecisionRequest body, IReadOnlyList<UIMessage> messages,
+        double? contextWindow, Func<bool> isCurrent, CancellationToken ct)
+    {
+        var states = new[] { body.State }.Concat(DecisionRouting.RecoveryContexts(messages, contextWindow)).ToArray();
+        for (var attempt = 0; ; attempt++)
+        {
+            // Preserve the request and original chat history; replace decision evidence only.
+            var request = new DecisionRequest { Model = body.Model, State = states[attempt], Questions = body.Questions,
+                StateFormat = body.StateFormat, MaxOutputTokens = body.MaxOutputTokens, Reasoning = body.Reasoning,
+                Headers = body.Headers, ProviderOptions = body.ProviderOptions };
+            try { return await DecideAsync(request, isCurrent, ct); }
+            catch (GatewayException error) when (attempt + 1 < states.Length && DecisionRouting.IsInputLimitError(error))
+            {
+                ct.ThrowIfCancellationRequested();
+                if (!isCurrent()) throw new OperationCanceledException(ct);
+            }
+        }
+    }
     public async Task<string> DecideAsync(DecisionRequest body, Func<bool> isCurrent, CancellationToken ct)
     {
         void Check() { ct.ThrowIfCancellationRequested(); if (!isCurrent()) throw new OperationCanceledException(ct); }
