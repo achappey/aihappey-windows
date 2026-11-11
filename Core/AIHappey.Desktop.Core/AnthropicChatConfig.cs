@@ -8,6 +8,11 @@ namespace AIHappey.Desktop.Core;
 /// <summary>Browser-compatible Anthropic editing and canonical native Messages API JSON.</summary>
 public sealed partial class AnthropicChatConfig : ProviderChatConfig
 {
+    public const string VersionHeader = "anthropic-version";
+    public const string LegacyApiVersion = "2023-06-01";
+    public const string LatestApiVersion = "2026-10-21";
+    public static readonly string[] ApiVersions = [LatestApiVersion, LegacyApiVersion];
+    public static Dictionary<string, string> DefaultHeaders() => new(StringComparer.OrdinalIgnoreCase) { [VersionHeader] = LatestApiVersion };
     public const string ContextBeta = "context-management-2025-06-27";
     public const string AdvisorBeta = "advisor-tool-2026-03-01";
     public const string CompactionBeta = "compact-2026-09-04";
@@ -24,6 +29,8 @@ public sealed partial class AnthropicChatConfig : ProviderChatConfig
         "mid-conversation-output-config-2026-07-01", "thinking-binding-controls-2026-08-01", CompactionBeta,
         "inline-tools-2026-09-15", "mcp-client-2026-09-15"];
     public Dictionary<string, string> Headers { get; }
+    public string ApiVersion => Headers.TryGetValue(VersionHeader, out var value) && !string.IsNullOrWhiteSpace(value) ? value.Trim() : LegacyApiVersion;
+    public void SetApiVersion(string value) => Headers[VersionHeader] = value;
     private bool autoContextBeta, autoAdvisorBeta;
     public AnthropicChatConfig(JsonObject config, Dictionary<string, string>? headers = null) : base(Resolve(config))
     {

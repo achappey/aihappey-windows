@@ -108,6 +108,7 @@ public sealed class ChatPreferences
     // Inference reset must not reset app-wide choices owned by user settings.
     internal ChatPreferences InferenceDefaults() => new()
     {
+        ProviderHeaders = new() { ["anthropic"] = AnthropicChatConfig.DefaultHeaders() },
         EndpointMode = EndpointMode, Endpoint = Endpoint,
         ShowTokens = ShowTokens, ShowMetrics = ShowMetrics, ShowProviderLogo = ShowProviderLogo, ShowContextSize = ShowContextSize, ApiDebugEnabled = ApiDebugEnabled,
         Dictate = Dictate,

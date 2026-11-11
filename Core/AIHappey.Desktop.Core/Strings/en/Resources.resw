@@ -1752,6 +1752,7 @@
   <data name="ChatForm_anthropic_toolSearchBm25" xml:space="preserve"><value>Tool search (BM25)</value></data>
   <data name="ChatForm_anthropic_toolSearchRegex" xml:space="preserve"><value>Tool search (Regex)</value></data>
   <data name="ChatForm_anthropic_version" xml:space="preserve"><value>Version</value></data>
+  <data name="ChatForm_anthropic_apiVersion" xml:space="preserve"><value>Anthropic version</value></data>
   <data name="ChatForm_anthropic_allowedCallers" xml:space="preserve"><value>Allowed callers</value></data>
   <data name="ChatForm_anthropic_none" xml:space="preserve"><value>None</value></data>
   <data name="ChatForm_anthropic_cacheControl" xml:space="preserve"><value>Prompt cache</value></data>

@@ -31,6 +31,15 @@ public static class SettingsStore
                 throw new InvalidOperationException(DesktopResources.Get("SettingsReadFailed"));
             }
         }
+        else
+        {
+            // Only a new installation opts in. Older files without this header retain
+            // the provider's compatibility fallback, even when chat settings are absent.
+            var headers = settings.Chat.ProviderHeaders.GetValueOrDefault("anthropic") ?? new(StringComparer.OrdinalIgnoreCase);
+            if (!headers.Keys.Any(name => name.Equals(AnthropicChatConfig.VersionHeader, StringComparison.OrdinalIgnoreCase)))
+                headers[AnthropicChatConfig.VersionHeader] = AnthropicChatConfig.LatestApiVersion;
+            settings.Chat.ProviderHeaders["anthropic"] = headers;
+        }
         applyHostPolicy?.Invoke(settings);
         return settings;
     }

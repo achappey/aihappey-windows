@@ -20,7 +20,7 @@ internal sealed partial class AnthropicChatSettingsForm : NativeProviderChatSett
         Tool("bash", "bash"); WebSearch(); WebFetch(); Tool("code_execution", "code_execution");
         Tool("text_editor", A("textEditor")); Tool("memory", A("memory")); Advisor();
         Tool("tool_search_tool_bm25", A("toolSearchBm25")); Tool("tool_search_tool_regex", A("toolSearchRegex"));
-        ContextManagement(); Session(); Speed(); Other(); Beta();
+        ContextManagement(); Session(); Speed(); Other(); ApiVersion(); Beta();
         fields.Refresh();
     }
     public override void Commit(ChatPreferences preferences)
@@ -110,6 +110,12 @@ internal sealed partial class AnthropicChatSettingsForm : NativeProviderChatSett
         var body = Section("other", "other");
         Select(body, A("other.serviceTier.title"), "service_tier", ["auto", "standard_only"], inherit: true, optionLabels: A("other.serviceTier.options"));
         Select(body, A("other.inferenceGeo.title"), "inference_geo", ["global", "us"], inherit: true, optionLabels: A("other.inferenceGeo.options"));
+    }
+    private void ApiVersion()
+    {
+        NativeSettingsSurface.Card(cards, "Anthropic_apiVersion", L(A("version")), out var body);
+        fields.Select(body, A("apiVersion"), () => model.ApiVersion,
+            AnthropicChatConfig.ApiVersions.Append(model.ApiVersion).Distinct().ToArray(), model.SetApiVersion);
     }
     private void Beta()
     {
