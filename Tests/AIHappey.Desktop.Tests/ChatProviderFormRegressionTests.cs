@@ -106,7 +106,44 @@ internal static class ChatProviderFormRegressionTests
         Same(JsonSerializer.SerializeToNode(reloaded.Chat.ProviderMetadata), JsonSerializer.SerializeToNode(preferences.ProviderMetadata), "all native configs survive persistence");
         Same(JsonSerializer.SerializeToNode(reloaded.Chat.ProviderHeaders), JsonSerializer.SerializeToNode(preferences.ProviderHeaders), "all provider headers survive persistence");
         Same(preferences.InferenceDefaults().ProviderMetadata["anthropic"], AnthropicChatConfig.Defaults(), "inference reset restores Anthropic chat defaults");
-        check(preferences.InferenceDefaults().ProviderHeaders.Count == 0 && !preferences.InferenceDefaults().ProviderMetadata.ContainsKey("deepseek"), "provider forms: reset clears custom headers and keeps DeepSeek implicit defaults");
+        check(preferences.InferenceDefaults().ProviderHeaders.Count == 1
+            && preferences.InferenceDefaults().ProviderHeaders["anthropic"][AnthropicChatConfig.VersionHeader] == AnthropicChatConfig.LatestApiVersion
+            && !preferences.InferenceDefaults().ProviderMetadata.ContainsKey("deepseek"), "provider forms: explicit reset adopts latest Anthropic version, clears custom headers, and keeps DeepSeek implicit defaults");
+        await AnthropicVersions(check, root);
         await OpenAIChatSettingsRegressionTests.RunAsync(check, root);
+    }
+
+    private static async Task AnthropicVersions(Action<bool, string> check, string root)
+    {
+        var directory = Path.Combine(root, "anthropic-versions");
+        var fresh = await SettingsStore.LoadAsync(directory, new());
+        check(fresh.Chat.ProviderHeaders["anthropic"][AnthropicChatConfig.VersionHeader] == "2026-10-21", "Anthropic version: first run opts into 2026");
+        Directory.CreateDirectory(directory);
+        foreach (var json in new[] { "{}", """{"chat":{}}""", """{"chat":{"providerHeaders":{"anthropic":{"anthropic-beta":"custom"}}}}""" })
+        {
+            await File.WriteAllTextAsync(Path.Combine(directory, "settings.json"), json);
+            var saved = await SettingsStore.LoadAsync(directory, new());
+            var legacy = new AnthropicChatConfig(new(), saved.Chat.ProviderHeaders.GetValueOrDefault("anthropic"));
+            check(legacy.ApiVersion == "2023-06-01" && !legacy.Headers.ContainsKey(AnthropicChatConfig.VersionHeader), "Anthropic version: existing files keep historical fallback without inserting defaults");
+        }
+        foreach (var version in new[] { "2023-06-01", "2026-10-21", "future-version" })
+        {
+            Dictionary<string, string> headers = new() { ["AnThRoPiC-VeRsIoN"] = version, ["anthropic-beta"] = "custom" };
+            var model = new AnthropicChatConfig(new() { ["max_tokens"] = 100 }, headers);
+            check(model.ApiVersion == version && model.Headers.Count == 2, "Anthropic version: saved selection is case-insensitive and opening does not mutate it");
+            model.SetApiVersion("2026-10-21");
+            check(model.Headers.Count == 2 && headers["AnThRoPiC-VeRsIoN"] == version && model.Headers["anthropic-beta"] == "custom", "Anthropic version: draft changes are isolated and preserve beta");
+            model.SetApiVersion(version);
+            var body = model.Commit();
+            check(body.Count == 1 && !body.ContainsKey(AnthropicChatConfig.VersionHeader), "Anthropic version: header never enters native JSON");
+            var preferences = new ChatPreferences { ProviderHeaders = new() { ["anthropic"] = model.Headers } };
+            using var request = new HttpRequestMessage(HttpMethod.Post, DesktopChatRoutes.DirectUrl("anthropic", "/v1/messages"));
+            preferences.ApplyHeaders(request, "anthropic");
+            DesktopDirectChatAuthentication.Apply(request, new Dictionary<string, string> { ["X-Anthropic-Key"] = "secret" }, "anthropic", "/v1/messages");
+            check(request.Headers.GetValues(AnthropicChatConfig.VersionHeader).Single() == version, "Anthropic version: direct auth respects selected header");
+            await SettingsStore.SaveAsync(directory, new() { Chat = preferences });
+            var reloaded = await SettingsStore.LoadAsync(directory, new());
+            check(new AnthropicChatConfig(new(), reloaded.Chat.ProviderHeaders["anthropic"]).ApiVersion == version, "Anthropic version: explicit choice survives persistence");
+        }
     }
 }

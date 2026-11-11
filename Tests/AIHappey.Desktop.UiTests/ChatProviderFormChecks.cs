@@ -89,7 +89,8 @@ public partial class App
             Check(ProviderValid(ProviderForm(reopen)), context + ": saved provider form reopens valid");
             InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "PrimaryButton")); await Task.Delay(80);
             InvokeButton(Descendants(reopen).OfType<Button>().Single(b => b.Name == "CloseButton")); await shown;
-            Check(reopen.Result!.ProviderHeaders.Count == 0 && (provider == "deepseek" ? JsonNode.DeepEquals(reopen.Result.ProviderMetadata["deepseek"], new JsonObject())
+            Check(reopen.Result!.ProviderHeaders.Count == 1 && reopen.Result.ProviderHeaders["anthropic"][AnthropicChatConfig.VersionHeader] == AnthropicChatConfig.LatestApiVersion
+                && (provider == "deepseek" ? JsonNode.DeepEquals(reopen.Result.ProviderMetadata["deepseek"], new JsonObject())
                 : JsonNode.DeepEquals(reopen.Result.ProviderMetadata["anthropic"], AnthropicChatConfig.Defaults())), context + ": restore defaults rebuilds and commits provider defaults");
         }
         await CheckOpenAIChatSettingsAsync(root, theme);
@@ -154,7 +155,7 @@ public partial class App
         shown = reset.ShowAsync(); await Task.Delay(100);
         InvokeButton(Descendants(reset).OfType<Button>().Single(button => button.Name == "PrimaryButton")); await Task.Delay(80);
         InvokeButton(Descendants(reset).OfType<Button>().Single(button => button.Name == "CloseButton")); await shown;
-        Check(reset.Result!.ProviderHeaders.Count == 0 && !reset.Result.ProviderMetadata["openai"].ContainsKey("multi_agent"),
+        Check(!reset.Result!.ProviderHeaders.ContainsKey("openai") && !reset.Result.ProviderMetadata["openai"].ContainsKey("multi_agent"),
             context + ": restore defaults clears standalone multi-agent and beta headers");
     }
     private async Task ExerciseAnthropicFormAsync(ChatSettingsDialog dialog, object form, FrameworkElement view, string context)
@@ -172,7 +173,21 @@ public partial class App
             // WinUI can defer TextChanged; observe validation after the native event.
             await Task.Delay(60);
         }
-        Check(All().OfType<SettingsExpander>().Count() == 18 && All().OfType<SettingsCard>().Count() == 2, context + ": all nineteen cards plus maximum tokens are native");
+        Check(All().OfType<SettingsExpander>().Count() == 18 && All().OfType<SettingsCard>().Count() == 3, context + ": all provider cards, API version, and maximum tokens are native");
+        var apiVersionCard = All().OfType<SettingsCard>().Single(card => card.Name == "Anthropic_apiVersion");
+        var apiVersion = ProviderControls(apiVersionCard).OfType<ComboBox>().Single();
+        Check((string)apiVersion.Header == ProviderLabel("anthropic.apiVersion") && model.ApiVersion == AnthropicChatConfig.LegacyApiVersion,
+            context + ": API version card has a localized label and preserves the legacy fallback");
+        var beforeVersionChange = model.Commit();
+        foreach (var version in AnthropicChatConfig.ApiVersions)
+        {
+            Choose(apiVersion, version);
+            Check(model.ApiVersion == version && JsonNode.DeepEquals(beforeVersionChange, model.Commit()), context + ": API version selection changes only the header: " + version);
+        }
+        Choose(apiVersion, AnthropicChatConfig.LatestApiVersion);
+        var cardNames = ((Panel)view).Children.OfType<FrameworkElement>().Select(element => element.Name).ToArray();
+        var versionIndex = Array.IndexOf(cardNames, "Anthropic_apiVersion");
+        Check(cardNames[versionIndex - 1] == "Anthropic_other" && cardNames[versionIndex + 1] == "Anthropic_beta", context + ": version card sits between Other and Beta");
         var maxTokens = All().OfType<TextBox>().Single(t => (string)t.Header == ProviderLabel("maxOutputTokens"));
         await EditTextAsync(maxTokens, "0"); Check(!ProviderValid(form), context + ": required token bound rejects zero");
         await EditTextAsync(maxTokens, "64000"); Check(ProviderValid(form), context + ": correcting tokens clears validation");

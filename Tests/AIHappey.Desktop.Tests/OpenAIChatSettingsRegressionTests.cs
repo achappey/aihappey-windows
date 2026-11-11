@@ -87,6 +87,6 @@ internal static class OpenAIChatSettingsRegressionTests
         }
         var reset = enabledPreferences.InferenceDefaults();
         using var resetRequest = new HttpRequestMessage(HttpMethod.Post, "https://fixture.invalid/chat"); reset.ApplyHeaders(resetRequest, "openai");
-        check(reset.ProviderHeaders.Count == 0 && !resetRequest.Headers.Contains("OpenAI-Beta"), "OpenAI settings: restore defaults clears standalone multi-agent and its beta");
+        check(!reset.ProviderHeaders.ContainsKey("openai") && !resetRequest.Headers.Contains("OpenAI-Beta"), "OpenAI settings: restore defaults clears standalone multi-agent and its beta");
     }
 }
