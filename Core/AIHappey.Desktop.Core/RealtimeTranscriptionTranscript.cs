@@ -25,7 +25,7 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     private sealed class Item(string id, int order)
     {
         public string Id = id, Text = "", Partial = "";
-        public int Order = order;
+        public int Order = order, Connection;
         public double? Start, End;
         public bool Final;
     }
@@ -35,12 +35,14 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     private double lastEnd;
     private string preview = "";
     private bool mistralDone;
+    private int connection;
+    private double connectionOffset;
     private Item Get(string id)
     {
         if (!items.TryGetValue(id, out var item))
         {
             if (items.Count >= 100_000) throw new InvalidDataException("Transcription segment limit exceeded.");
-            items[id] = item = new(id, sequence++);
+            items[id] = item = new(id, sequence++) { Connection = connection };
         }
         return item;
     }
@@ -52,13 +54,22 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
             if (exactText.Length > 2_000_000) throw new InvalidDataException("Transcription text limit exceeded.");
             return new(exactText, "", []); // Deltas are already final; no provider timestamps are supplied.
         }
-        var ordered = items.Values.OrderBy(i => i.Start ?? double.MaxValue).ThenBy(i => i.Order).ToList();
+        var ordered = items.Values.OrderBy(i => i.Connection).ThenBy(i => i.Start ?? double.MaxValue).ThenBy(i => i.Order).ToList();
         // OpenAI commit events explicitly identify predecessor order, even when completion events arrive out of order.
         if (provider == "openai" && previous.Count > 0)
         {
             var result = new List<Item>(); var visited = new HashSet<string>();
-            void Add(Item item) { if (!visited.Add(item.Id)) return; if (previous.GetValueOrDefault(item.Id) is { } id && items.TryGetValue(id, out var before)) Add(before); result.Add(item); }
-            foreach (var item in ordered) Add(item);
+            foreach (var item in ordered)
+            {
+                var chain = new List<Item>(); var current = item;
+                while (visited.Add(current.Id))
+                {
+                    chain.Add(current);
+                    if (previous.GetValueOrDefault(current.Id) is not { } id || !items.TryGetValue(id, out var before)) break;
+                    current = before;
+                }
+                chain.Reverse(); result.AddRange(chain);
+            }
             ordered = result;
         }
         var segments = ordered.Where(i => i.Final && !string.IsNullOrWhiteSpace(i.Text)).Select(i => new RealtimeTranscriptionSegment(i.Id, i.Text.Trim(),
@@ -70,6 +81,13 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     }
     public bool Apply(JsonObject message, double elapsed)
     {
+        if (provider == "openai" && message["type"]?.ToString() == "aihappey.transcription.connection")
+        {
+            connection = message["connection"]!.GetValue<int>();
+            connectionOffset = (Number(message["offset_ms"]) ?? 0) / 1000;
+            foreach (var item in items.Values.Where(item => !item.Final)) item.Partial = "";
+            return true;
+        }
         if (provider == "mistral")
         {
             var eventType = message["type"]?.ToString();
@@ -121,12 +139,13 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
         }
         var type = message["type"]?.ToString(); var id = message["item_id"]?.ToString();
         if (id is null) return false;
+        if (provider == "openai") id = connection + ":" + id;
         var next = Get(id);
         switch (type)
         {
-            case "input_audio_buffer.committed": previous[id] = message["previous_item_id"]?.ToString(); break;
-            case "input_audio_buffer.speech_started": next.Start = Number(message["audio_start_ms"]) / 1000; break;
-            case "input_audio_buffer.speech_stopped": next.End = Number(message["audio_end_ms"]) / 1000; break;
+            case "input_audio_buffer.committed": previous[id] = message["previous_item_id"] is { } before ? connection + ":" + before.ToString() : null; break;
+            case "input_audio_buffer.speech_started": next.Start = Number(message["audio_start_ms"]) / 1000 + connectionOffset; break;
+            case "input_audio_buffer.speech_stopped": next.End = Number(message["audio_end_ms"]) / 1000 + connectionOffset; break;
             case "conversation.item.input_audio_transcription.delta": if (!next.Final) next.Partial += message["delta"]?.ToString(); break;
             case "conversation.item.input_audio_transcription.completed": next.Text = message["transcript"]?.ToString() ?? ""; next.Partial = ""; next.Final = true; break;
             default: return false;

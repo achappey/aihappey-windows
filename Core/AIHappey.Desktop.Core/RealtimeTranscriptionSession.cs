@@ -38,6 +38,11 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
     public RealtimeTranscriptionSession(string model, RealtimeTranscriptionPreferences preferences,
         Func<JsonObject, CancellationToken, Task<string>> getToken, ITranscriptionAudioInput? audioInput = null,
         Action<JsonObject>? onEvent = null, Action<bool>? onAudioActivity = null)
+        : this((token, source) => new RenewingOpenAiTranscriptionSession(token, source), model, preferences, getToken, audioInput, onEvent, onAudioActivity) { }
+
+    internal RealtimeTranscriptionSession(Func<Func<CancellationToken, Task<string>>, ITranscriptionAudioInput, RenewingOpenAiTranscriptionSession> openAiFactory,
+        string model, RealtimeTranscriptionPreferences preferences, Func<JsonObject, CancellationToken, Task<string>> getToken,
+        ITranscriptionAudioInput? audioInput = null, Action<JsonObject>? onEvent = null, Action<bool>? onAudioActivity = null)
     {
         preferences = preferences.Clone(); preferences.Validate();
         provider = RealtimeConfiguration.Provider(model); transcript = new(provider);
@@ -48,7 +53,7 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
         Task<string> Token(CancellationToken ct) => getToken(RealtimeTranscriptionConfiguration.TokenRequest(model, preferences, DateTimeOffset.UtcNow), ct);
         if (provider == "openai")
         {
-            var openai = new OpenAiRealtimeSession(Token, transcriptionInput: gatedInput); transport = openai; finish = openai.FinishTranscriptionAsync;
+            var openai = openAiFactory(Token, gatedInput); transport = openai; finish = openai.FinishTranscriptionAsync;
         }
         else if (provider is "google" or "gladia" or "smallestai" or "mistral")
         {

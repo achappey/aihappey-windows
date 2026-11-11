@@ -10,7 +10,7 @@ namespace AIHappey.Desktop.Core;
 /// <summary>Native WebRTC. Authentication and JSON protocol remain owned by the application.</summary>
 public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> tokenFactory,
     Func<string, CancellationToken, Task<string>>? sessionFactory = null, bool live = false,
-    ITranscriptionAudioInput? transcriptionInput = null) : RealtimeSession
+    ITranscriptionAudioInput? transcriptionInput = null) : RealtimeSession, IOpenAiTranscriptionConnection
 {
     private readonly RTCPeerConnection peer = new();
     private readonly AudioEncoder encoder = new(includeOpus: true);
@@ -20,7 +20,7 @@ public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> 
     private RTCDataChannel? data;
     private RealtimeAudio? audio;
     private IDisposable? transcriptionCapture;
-    private bool speechActive;
+    private readonly OpenAiTranscriptionTurns? transcriptionTurns = transcriptionInput is null ? null : new();
     private AudioFormat format;
     private int disposed;
     private bool receiving = true;
@@ -69,8 +69,7 @@ public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> 
             {
                 var message = Parse(bytes);
                 var type = message["type"]?.ToString();
-                if (type == "input_audio_buffer.speech_started") speechActive = true;
-                if (type == "input_audio_buffer.committed") speechActive = false;
+                if (transcriptionTurns?.Observe(message) == false) return;
                 if (type == "session.closed") finalized.TrySetResult();
                 if (type == "input_audio_buffer.speech_started") { lock (mediaGate) { receiving = false; audio?.Interrupt(); } }
                 if (type == "response.created") { lock (mediaGate) receiving = true; }
@@ -117,9 +116,7 @@ public sealed class OpenAiRealtimeSession(Func<CancellationToken, Task<string>> 
     {
         Interlocked.Exchange(ref transcriptionCapture, null)?.Dispose();
         if (Lifetime.IsCancellationRequested || data?.readyState != RTCDataChannelState.open) return;
-        // VAD may not have seen the final silence when the user presses Stop mid-utterance.
-        if (speechActive) await SendAsync(new() { ["type"] = "input_audio_buffer.commit" }, Lifetime.Token).ConfigureAwait(false);
-        await Task.Delay(1500, Lifetime.Token).ConfigureAwait(false);
+        if (transcriptionTurns is not null) await transcriptionTurns.FinishAsync(SendAsync, Lifetime.Token).ConfigureAwait(false);
     }
     private async Task<string> ExchangeLegacyAsync(string sdp, CancellationToken token)
     {
