@@ -17,6 +17,7 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
     private bool muted, speaking, mistralDone;
     private string mistralText = "";
     private string deepLPartial = "";
+    private double deepLDiscardThrough = -1, deepLDraftThrough = -1;
     private int mistralThrough, mistralTimerVersion;
     public void Activity(bool value)
     {
@@ -36,20 +37,25 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
         lock (gate)
         {
             if (disposed) return;
-            if (muted && provider != "mistral") return;
+            if (muted && provider is not ("mistral" or "deepl")) return;
             if (message["event_id"] is { } eventId && !events.Add(eventId.ToString())) return;
             var type = message["type"]?.ToString();
             if (provider == "mistral") ApplyMistral(message, type);
             else if (provider == "deepl" && type == "deepl.transcript")
             {
+                double End(JsonNode? segment) => double.Parse(segment!["end_time"]!.ToString(), System.Globalization.CultureInfo.InvariantCulture);
+                var all = message["concluded"]!.AsArray().Concat(message["tentative"]!.AsArray()).ToArray();
+                if (all.Length > 0) deepLDraftThrough = Math.Max(deepLDraftThrough, all.Max(End));
+                if (muted) { deepLDiscardThrough = deepLDraftThrough; return; }
                 foreach (var segment in message["concluded"]!.AsArray())
                 {
+                    if (End(segment) <= deepLDiscardThrough) continue;
                     var key = new JsonArray(segment!["start_time"]!.DeepClone(), segment["end_time"]!.DeepClone(), segment["text"]!.DeepClone()).ToJsonString();
                     if (!completed.Add(key)) continue;
                     var text = segment["text"]!.GetValue<string>(); fragments.Add(text);
                     if (!string.IsNullOrWhiteSpace(text)) Start();
                 }
-                deepLPartial = string.Concat(message["tentative"]!.AsArray().Select(segment => segment!["text"]!.GetValue<string>()));
+                deepLPartial = string.Concat(message["tentative"]!.AsArray().Where(segment => End(segment) > deepLDiscardThrough).Select(segment => segment!["text"]!.GetValue<string>()));
                 if (!string.IsNullOrWhiteSpace(deepLPartial)) Start();
                 preview(string.Concat(fragments) + deepLPartial); ScheduleDeepL();
             }
@@ -171,6 +177,7 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
             timer?.Dispose(); timer = null; foreach (var id in partials.Keys) completed.Add(id);
             partials.Clear(); fragments.Clear(); active = false;
             deepLPartial = "";
+            deepLDiscardThrough = Math.Max(deepLDiscardThrough, deepLDraftThrough);
             ++mistralTimerVersion; speaking = false; mistralThrough = mistralText.Length;
         }
     }

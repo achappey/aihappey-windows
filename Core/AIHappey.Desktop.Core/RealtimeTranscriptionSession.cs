@@ -88,7 +88,7 @@ public sealed class RealtimeTranscriptionSession : IRealtimeTranscriptionSession
                     throw new RealtimeFailureException("transcription-provider", "The provider reported a transcription error.");
                 // Mistral's handler must advance its cumulative cursor through
                 // muted/discarded deltas, without presenting them as new turns.
-                if (!muted || provider == "mistral") onEvent?.Invoke((JsonObject)message.DeepClone());
+                if (!muted || provider is "mistral" or "deepl") onEvent?.Invoke((JsonObject)message.DeepClone());
                 if (!transcript.Apply(message, clock.Elapsed.TotalSeconds)) continue;
                 Snapshot = transcript.Snapshot(); updates.Writer.TryWrite(Snapshot);
             }

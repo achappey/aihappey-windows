@@ -10,6 +10,7 @@ using SIPSorceryMedia.Abstractions;
 var count = 0;
 void Check(bool success, string name) { if (!success) throw new Exception("FAILED: " + name); Console.WriteLine("PASS: " + name); count++; }
 await MistralTranscriptionTests.Run(Check);
+await DeepLTranscriptionTests.Run(Check);
 await OpenAiTranscriptionTests.Run(Check);
 var settings = new RealtimePreferences();
 var now = DateTimeOffset.Parse("2026-10-24T08:00:00Z");
