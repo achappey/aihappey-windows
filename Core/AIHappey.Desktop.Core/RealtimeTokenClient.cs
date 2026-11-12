@@ -26,7 +26,15 @@ public sealed class DesktopRealtimeTokenClient(DesktopChatClient client, HttpCli
         return result["sdp"]!.GetValue<string>();
     }
     public async Task<string> GetAsync(JsonObject payload, ChatPreferences preferences, string provider, CancellationToken ct)
-        => (await GetResponseAsync(payload, preferences, provider, ct))["value"]!.GetValue<string>();
+    {
+        var response = await GetResponseAsync(payload, preferences, provider, ct);
+        var value = response["value"]!.GetValue<string>();
+        // Transcription transports accept a short-lived credential or connection
+        // URL. DeepL needs BOTH returned fields, not a hardcoded WebSocket host.
+        if (provider == "deepl")
+            return DeepLRealtimeProtocol.Connection(response["providerMetadata"]?["deepl"]?["streaming_url"]?.ToString() ?? "", value).AbsoluteUri;
+        return value;
+    }
 
     public async Task<JsonObject> GetFishSessionAsync(JsonObject payload, ChatPreferences preferences, CancellationToken ct)
     {

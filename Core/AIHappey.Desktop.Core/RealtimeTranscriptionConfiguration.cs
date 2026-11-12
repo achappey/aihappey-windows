@@ -40,6 +40,7 @@ public static class RealtimeTranscriptionConfiguration
 
     public static bool Supports(ChatTarget? model) => model is not null && model.Tags.Contains("real-time")
         && (RealtimeConfiguration.Provider(model.Id) is "openai" or "google" or "gladia"
+            || model.Id == "deepl/voice-realtime" || model.Id.StartsWith("deepl/voice-realtime/translate-to/", StringComparison.Ordinal)
             || model.Id is "smallestai/pulse" or "smallestai/pulse-2"
             || RealtimeConfiguration.Provider(model.Id) == "mistral" && IsMistralModel(model.Id));
 
@@ -123,6 +124,7 @@ public static class RealtimeTranscriptionConfiguration
                 ["bidiGenerateContentSetup"] = GoogleSetup(model, preferences) };
             if (options["lockAdditionalFields"] is { } mask) metadata["fieldMask"] = mask.DeepClone();
         }
+        else if (provider == "deepl") metadata = DeepLRealtimeProtocol.Options(model, options);
         else if (provider == "gladia")
         {
             // The provisioned session and the bytes uploaded to it must agree. Native capture is mono PCM16.
