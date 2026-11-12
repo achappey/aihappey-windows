@@ -52,6 +52,14 @@ internal static class DeepLTranscriptionTests
         await using var transport = new TranscriptionWebSocketSession("deepl", new() { ["model"] = model },
             _ => Task.FromResult(address.AbsoluteUri), input, (uri, _, _) => { check(uri == address, "DeepL native connector receives dynamic credential-bearing URL"); return Task.FromResult<WebSocket>(socket); });
         await transport.StartAsync(default); check(input.Subscribed, "DeepL capture starts only after connection");
+        socket.Push(new() { ["source_transcript_update"] = message["source_transcript_update"]!.DeepClone() });
+        socket.Push(message);
+        using (var readTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(2)))
+        {
+            var selected = await transport.Events.ReadAsync(readTimeout.Token);
+            check(selected["type"]!.ToString() == "deepl.transcript" && selected["concluded"]![0]!["text"]!.ToString() == "Hallo"
+                && !selected.ToJsonString().Contains("Source"), "DeepL native transport emits only the selected translation, never the source or credentials");
+        }
         for (var i = 0; i < 6; i++) input.Push(Enumerable.Repeat((byte)42, 640).ToArray());
         await socket.Audio.Task.WaitAsync(TimeSpan.FromSeconds(2));
         var finishing = transport.FinishInputAsync(); await socket.Ended.Task.WaitAsync(TimeSpan.FromSeconds(2));
@@ -70,6 +78,15 @@ internal static class DeepLTranscriptionTests
         failedSocket.Push(new() { ["error"] = new JsonObject { ["error_message"] = "ephemeral+/token" } });
         try { await foreach (var _ in failed.Events.ReadAllAsync()) { } check(false, "DeepL error must fail event stream"); }
         catch (RealtimeFailureException error) { check(!error.ToString().Contains("ephemeral"), "DeepL provider errors never expose credentials"); }
+
+        using var cancelledInput = new Input(); using var cancellation = new CancellationTokenSource();
+        await using var cancelled = new TranscriptionWebSocketSession("deepl", new() { ["model"] = model }, async ct =>
+        {
+            await Task.Delay(Timeout.Infinite, ct); return address.AbsoluteUri;
+        }, cancelledInput, (_, _, _) => throw new Exception("Cancelled setup must not connect."));
+        var cancelledStart = cancelled.StartAsync(cancellation.Token); cancellation.Cancel();
+        try { await cancelledStart; check(false, "DeepL cancellation rejects startup"); }
+        catch (OperationCanceledException) { check(!cancelledInput.Subscribed, "DeepL cancelled token provisioning never opens microphone capture"); }
     }
 
     private static JsonObject Update(string text, int start, int end) => new()
