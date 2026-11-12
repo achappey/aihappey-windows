@@ -15,11 +15,22 @@ public sealed class RealtimeTranscriptionSettingsForm : ITranscriptionProviderFo
     public RealtimeTranscriptionSettingsForm(string provider, RealtimeTranscriptionPreferences preferences)
     {
         this.provider = provider; options = (JsonObject)(preferences.ProviderOptions[provider] as JsonObject ?? new()).DeepClone();
-        Title = (provider == "openai" ? "OpenAI" : provider == "google" ? "Google" : provider == "smallestai" ? "Smallest AI" : provider == "mistral" ? "Mistral" : "Gladia") + " · " + DesktopResources.Get("TranscriptionRealtime");
+        Title = (provider == "deepl" ? "DeepL" : provider == "openai" ? "OpenAI" : provider == "google" ? "Google" : provider == "smallestai" ? "Smallest AI" : provider == "mistral" ? "Mistral" : "Gladia") + " · " + DesktopResources.Get("TranscriptionRealtime");
         var panel = new StackPanel { Name = "RealtimeTranscription" + provider + "Form", Spacing = 16 }; View = panel;
         NativeSettingsSurface.Card(panel, "RealtimeTranscriptionSettingsCard", Title, out var fields);
         fields.Children.Add(new TextBlock { Text = DesktopResources.Get("TranscriptionRealtimeHint"), TextWrapping = TextWrapping.Wrap });
-        if (provider == "openai")
+        if (provider == "deepl")
+        {
+            fields.Children.Add(new TextBlock { Text = DesktopResources.Get("TranscriptionDeepLHint"), TextWrapping = TextWrapping.Wrap });
+            Text(fields, "TranscriptionDeepLSource", options, "source_language");
+            Choice(fields, "TranscriptionDeepLSourceMode", options, "source_language_mode", "auto", ["auto", "fixed"]);
+            Choice(fields, "TranscriptionDeepLFormality", options, "formality", "default", ["default", "formal", "informal"]);
+            Text(fields, "TranscriptionDeepLSpokenTerms", options, "spoken_terms_id");
+            if (options["glossary_ids"] is null && options["glossary_id"] is { } legacy) options["glossary_ids"] = new JsonArray(legacy.DeepClone());
+            Text(fields, "TranscriptionDeepLGlossaries", options, "glossary_ids", list: true);
+            commits.Add(() => options.Remove("glossary_id"));
+        }
+        else if (provider == "openai")
         {
             var input = Object(Object(Object(options, "session"), "audio"), "input");
             var transcription = Object(input, "transcription");

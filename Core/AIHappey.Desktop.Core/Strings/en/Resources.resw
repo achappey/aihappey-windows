@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
+  <data name="TranscriptionDeepLHint" xml:space="preserve"><value>The default Voice model saves source transcription. A language-specific model saves that translation. DeepL Voice access is required. No speech is generated.</value></data>
+  <data name="TranscriptionDeepLSource" xml:space="preserve"><value>Source language (optional BCP 47 code; blank for detection)</value></data>
+  <data name="TranscriptionDeepLSourceMode" xml:space="preserve"><value>Source language mode (auto: hint; fixed: required)</value></data>
+  <data name="TranscriptionDeepLFormality" xml:space="preserve"><value>Translation formality</value></data>
+  <data name="TranscriptionDeepLSpokenTerms" xml:space="preserve"><value>Spoken Terms collection ID (optional)</value></data>
+  <data name="TranscriptionDeepLGlossaries" xml:space="preserve"><value>Glossary IDs, highest priority first (comma-separated)</value></data>
   <data name="DefaultModelUpdatesMessage" xml:space="preserve"><value>Some of your default models are over 30 days old. Newer defaults are available for: {0}.</value></data>
   <data name="DefaultModelUpdatesApply" xml:space="preserve"><value>Apply newer defaults</value></data>
   <data name="SettingsConnectorsTab.AutomationProperties.Name" xml:space="preserve"><value>Connectors</value></data>

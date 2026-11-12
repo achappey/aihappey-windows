@@ -29,6 +29,7 @@
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimePreferences.cs" Link="Core/RealtimePreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeSession.cs" Link="Core/RealtimeSession.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTokenClient.cs" Link="Core/RealtimeTokenClient.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/DeepLRealtimeProtocol.cs" Link="Core/DeepLRealtimeProtocol.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTranscript.cs" Link="Core/RealtimeTranscript.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/Agents.cs" Link="Core/Agents.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/AgentSpeechConfiguration.cs" Link="Core/AgentSpeechConfiguration.cs" />

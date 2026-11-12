@@ -98,8 +98,8 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
             if (message["type"]?.ToString() != "deepl.transcript") return false;
             foreach (var segment in message["concluded"]!.AsArray())
             {
-                var id = new JsonArray(segment!["start_time"]!.DeepClone(), segment["end_time"]!.DeepClone(), segment["text"]!.DeepClone()).ToJsonString();
-                var item = Get(id); item.Text = segment["text"]!.GetValue<string>(); item.Final = true;
+                var segmentId = new JsonArray(segment!["start_time"]!.DeepClone(), segment["end_time"]!.DeepClone(), segment["text"]!.DeepClone()).ToJsonString();
+                var item = Get(segmentId); item.Text = segment["text"]!.GetValue<string>(); item.Final = true;
                 item.Start = Number(segment["start_time"]) / 1000; item.End = Number(segment["end_time"]) / 1000;
             }
             language = message["language"]?.ToString() ?? language;

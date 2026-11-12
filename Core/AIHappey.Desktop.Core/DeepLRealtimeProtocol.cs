@@ -29,9 +29,9 @@ public static class DeepLRealtimeProtocol
         if (!Uri.TryCreate(address, UriKind.Absolute, out var uri) || uri.Scheme != "wss" || uri.Port != 443
             || uri.UserInfo.Length != 0 || uri.Fragment.Length != 0
             || !(uri.Host == "api.deepl.com" || uri.Host.EndsWith(".deepl.com", StringComparison.OrdinalIgnoreCase)))
-            throw new RealtimeFailureException("transcription-url", "The gateway returned an invalid DeepL streaming address.");
+            throw new GatewayException("The gateway returned an invalid DeepL streaming address.");
         if (token is null) return uri;
-        if (string.IsNullOrWhiteSpace(token)) throw new RealtimeFailureException("transcription-token", "The gateway returned an invalid DeepL credential.");
+        if (string.IsNullOrWhiteSpace(token)) throw new GatewayException("The gateway returned an invalid DeepL credential.");
         // Preserve the provider's current address and non-token query parameters.
         var query = uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries)
             .Where(part => !string.Equals(Uri.UnescapeDataString(part.Split('=')[0]), "token", StringComparison.Ordinal)).ToList();
