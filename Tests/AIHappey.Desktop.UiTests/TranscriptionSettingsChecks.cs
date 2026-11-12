@@ -14,7 +14,7 @@ public partial class App
     private async Task CheckTranscriptionSettingsAsync(Grid root, ElementTheme theme)
     {
         var context = "Transcription settings / " + theme;
-        string[] providers = ["openai", "google", "gladia", "smallestai", "mistral"];
+        string[] providers = ["openai", "google", "gladia", "smallestai", "mistral", "speechmatics"];
         var original = new TranscriptionPreferences { SkipDictateWarning = true, Realtime = new() { ProviderOptions = new()
         {
             ["openai"] = new JsonObject
@@ -27,6 +27,7 @@ public partial class App
             ["gladia"] = new JsonObject { ["endpointing"] = .15m, ["maximum_duration_without_endpointing"] = 8 },
             ["smallestai"] = new JsonObject { ["language"] = "en", ["ttl_seconds"] = 600, ["diarize"] = true },
             ["mistral"] = new JsonObject { ["language"] = "nl", ["target_streaming_delay_ms"] = 960 },
+            ["speechmatics"] = JsonNode.Parse("""{"region":"eu","ttl":120,"transcription_config":{"language":"nl","additional_vocab":[{"content":"AIHappey","sounds_like":["AI happy"]}]},"realtime_config":{"max_delay":1.5},"agent_config":{"emit_sentences":true}}"""),
             ["future-provider"] = new JsonObject { ["keep"] = true }
         } } };
         foreach (var provider in providers) original.Realtime.ProviderOptions[provider]!["future"] = new JsonObject { ["keep"] = true };
@@ -37,7 +38,8 @@ public partial class App
             ("Realtimeopenaithreshold", .65, .7, .5), ("Realtimeopenaisilence_duration_ms", 750, 850, 500),
             ("Realtimeopenaiprefix_padding_ms", 250, 350, 300), ("Realtimeopenaiseconds", 900, 1200, 600),
             ("Realtimegladiaendpointing", .15, .25, .05), ("Realtimegladiamaximum_duration_without_endpointing", 8, 9, 5),
-            ("Realtimesmallestaittl_seconds", 600, 630, 300), ("Realtimemistraltarget_streaming_delay_ms", 960, 1000, 480)
+            ("Realtimesmallestaittl_seconds", 600, 630, 300), ("Realtimemistraltarget_streaming_delay_ms", 960, 1000, 480),
+            ("Realtimespeechmaticsttl", 120, 180, 60), ("Realtimespeechmaticsmax_delay", 1.5, 2, 4)
         ];
 
         // Cover parsed numbers too, but never serialize the native fixture before opening or reopening it.
@@ -54,10 +56,10 @@ public partial class App
         {
             await Task.Delay(120);
             var forms = Field<List<ITranscriptionProviderForm>>(dialog, "forms");
-            Check(forms.Count == 6 && forms.OfType<RealtimeTranscriptionSettingsForm>().Count() == 5,
-                context + ": modal constructs batch settings and all five realtime providers");
+            Check(forms.Count == 7 && forms.OfType<RealtimeTranscriptionSettingsForm>().Count() == 6,
+                context + ": modal constructs batch settings and all six realtime providers");
             await CheckMediaSettingsTabsAsync(dialog, ["TranscriptionProviderTab_openai", "TranscriptionRealtimeTab_openai",
-                "TranscriptionRealtimeTab_google", "TranscriptionRealtimeTab_gladia", "TranscriptionRealtimeTab_smallestai", "TranscriptionRealtimeTab_mistral"], context);
+                "TranscriptionRealtimeTab_google", "TranscriptionRealtimeTab_gladia", "TranscriptionRealtimeTab_smallestai", "TranscriptionRealtimeTab_mistral", "TranscriptionRealtimeTab_speechmatics"], context);
             var navigation = Field<NavigationView>(dialog, "tabs");
             var tabs = navigation.MenuItems.OfType<NavigationViewItem>().ToArray();
             for (var i = 0; i < forms.Count; i++)
@@ -76,6 +78,10 @@ public partial class App
         finally { dialog.DiscardOnShutdown = true; dialog.Hide(); await shown; }
 
         var options = saved!.Realtime.ProviderOptions;
+        Check(options["speechmatics"]!["region"]!.ToString() == "eu"
+            && options["speechmatics"]!["transcription_config"]!["additional_vocab"]![0]!["sounds_like"]![0]!.ToString() == "AI happy"
+            && options["speechmatics"]!["agent_config"]!["emit_sentences"]!.GetValue<bool>(),
+            context + ": Speechmatics saves regional/protocol settings without losing rich vocabulary pronunciations");
         Check(options["openai"]!["session"]!["audio"]!["input"]!["turn_detection"]!["silence_duration_ms"]!.AsValue().TryGetValue<int>(out var silence) && silence == 850
             && options["mistral"]!["target_streaming_delay_ms"]!.AsValue().TryGetValue<int>(out var delay) && delay == 1000
             && options["smallestai"]!["ttl_seconds"]!.AsValue().TryGetValue<int>(out var ttl) && ttl == 630,

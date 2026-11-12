@@ -171,6 +171,7 @@
     <EmbeddedResource Include="../Fixtures/transcription-parity.json" LogicalName="Desktop.TranscriptionFixture" />
     <PackageReference Include="NAudio.Wasapi" Version="3.0.0" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTranscriptionConfiguration.cs" Link="Core/RealtimeTranscriptionConfiguration.cs" />
+    <Compile Include="../../Core/AIHappey.Desktop.Core/SpeechmaticsRealtimeProtocol.cs" Link="Core/SpeechmaticsRealtimeProtocol.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/RealtimeTranscriptionTranscript.cs" Link="Core/RealtimeTranscriptionTranscript.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SpeechPreferences.cs" Link="Core/SpeechPreferences.cs" />
     <Compile Include="../../Core/AIHappey.Desktop.Core/SpeechClient.cs" Link="Core/SpeechClient.cs" />
