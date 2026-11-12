@@ -18,6 +18,9 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
     private IDisposable? subscription;
     private int disposed;
     private volatile bool stopping;
+    private int speechmaticsSent, speechmaticsAcknowledged;
+    private readonly object finishGate = new();
+    private Task? finishTask;
     public static Uri ConnectionUri(string provider, string credential)
     {
         if (provider == "deepl") return DeepLRealtimeProtocol.Connection(credential);
@@ -50,6 +53,7 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
                 endpoint = RealtimeTranscriptionConfiguration.MistralConnection(setup?["model"]?.ToString() ?? "");
                 clientSocket.Options.AddSubProtocol("realtime"); clientSocket.Options.AddSubProtocol(credential);
             }
+            else if (provider == "speechmatics") endpoint = SpeechmaticsRealtimeProtocol.Connection(setup?["model"]?.ToString() ?? "", setup?["options"] as JsonObject ?? new(), credential);
             else endpoint = ConnectionUri(provider, credential);
             if (connect is null) await clientSocket.ConnectAsync(endpoint, timeout.Token).ConfigureAwait(false);
             else
@@ -71,6 +75,17 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
                     || updated["session"]?["audio_format"]?["sample_rate"]?.GetValue<int>() != input.SampleRate
                     || updated["session"]?["target_streaming_delay_ms"]?.ToString() != setup?["session"]?["target_streaming_delay_ms"]?.ToString())
                     throw new RealtimeFailureException("transcription-setup", "Mistral did not apply the requested transcription settings.");
+            }
+            if (provider == "speechmatics")
+            {
+                await SendAsync((JsonObject)setup!["recognition"]!.DeepClone(), timeout.Token).ConfigureAwait(false);
+                while (true)
+                {
+                    var message = await GoogleRealtimeSession.ReceiveAsync(socket, timeout.Token).ConfigureAwait(false);
+                    if (message is null) throw new RealtimeFailureException("transcription-setup", "Speechmatics closed before recognition was ready.");
+                    CheckError(message);
+                    if (message["message"]?.ToString() == "RecognitionStarted") { Emit(message); break; }
+                }
             }
             if (provider == "google")
             {
@@ -97,7 +112,7 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
     }
     private static void CheckError(JsonObject message)
     {
-        if (message["error"] is not null || message["type"]?.ToString() == "error"
+        if (message["error"] is not null || message["type"]?.ToString() == "error" || message["message"]?.ToString() == "Error"
             || message["type"]?.ToString() == "conversation.item.input_audio_transcription.failed")
             throw new RealtimeFailureException("transcription-provider", "The provider reported a transcription error.");
     }
@@ -110,11 +125,26 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
                 var message = await GoogleRealtimeSession.ReceiveAsync(socket, Lifetime.Token).ConfigureAwait(false);
                 if (message is null)
                 {
-                    if (stopping && provider is not ("smallestai" or "mistral" or "deepl")) { finalized.TrySetResult(); return; }
+                    if (stopping && provider is not ("smallestai" or "mistral" or "deepl" or "speechmatics")) { finalized.TrySetResult(); return; }
                     if (stopping && finalized.Task.IsCompletedSuccessfully) return;
                     throw new RealtimeFailureException("transcription-disconnected", "The transcription provider disconnected unexpectedly.");
                 }
                 CheckError(message);
+                if (provider == "speechmatics")
+                {
+                    if (message["message"]?.ToString() == "AudioAdded")
+                    {
+                        if (message["seq_no"] is not JsonValue value || !value.TryGetValue<int>(out var sequence)
+                            || sequence < speechmaticsAcknowledged || sequence > Volatile.Read(ref speechmaticsSent))
+                            throw new RealtimeFailureException("transcription-sequence", "Speechmatics returned an invalid audio acknowledgement.");
+                        Volatile.Write(ref speechmaticsAcknowledged, sequence);
+                    }
+                    if (message["message"]?.ToString() == "EndOfTranscript")
+                    {
+                        if (!stopping) throw new RealtimeFailureException("transcription-disconnected", "Speechmatics ended the transcription unexpectedly.");
+                        Emit(message); finalized.TrySetResult(); return;
+                    }
+                }
                 if (provider == "deepl")
                 {
                     var update = DeepLRealtimeProtocol.TranscriptEvent(message, DeepLRealtimeProtocol.TargetLanguage(setup?["model"]?.ToString() ?? ""));
@@ -158,7 +188,16 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
                 using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Lifetime.Token); timeout.CancelAfter(TimeSpan.FromSeconds(5));
                 if (provider == "google") await SendAsync(new() { ["realtimeInput"] = new JsonObject { ["audio"] = new JsonObject { ["data"] = Convert.ToBase64String(bytes), ["mimeType"] = "audio/pcm;rate=16000" } } }, timeout.Token).ConfigureAwait(false);
                 else if (provider == "mistral") await SendAsync(new() { ["type"] = "input_audio.append", ["audio"] = Convert.ToBase64String(bytes) }, timeout.Token).ConfigureAwait(false);
-                else await SendBytesAsync(bytes, WebSocketMessageType.Binary, timeout.Token).ConfigureAwait(false);
+                else
+                {
+                    if (provider == "speechmatics")
+                    {
+                        if (speechmaticsSent - Volatile.Read(ref speechmaticsAcknowledged) >= 1000)
+                            throw new RealtimeFailureException("transcription-backlog", "Speechmatics cannot keep up with microphone audio.");
+                        Interlocked.Increment(ref speechmaticsSent);
+                    }
+                    await SendBytesAsync(bytes, WebSocketMessageType.Binary, timeout.Token).ConfigureAwait(false);
+                }
             }
         }
         catch (OperationCanceledException) when (Lifetime.IsCancellationRequested) { }
@@ -194,17 +233,19 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
     }
     public override Task SendAsync(JsonObject message, CancellationToken ct) => SendBytesAsync(Encoding.UTF8.GetBytes(message.ToJsonString()), WebSocketMessageType.Text, ct);
     public override Task SetMutedAsync(bool muted) => throw new NotSupportedException();
-    public async Task FinishInputAsync()
+    public Task FinishInputAsync() { lock (finishGate) return finishTask ??= FinishInputCoreAsync(); }
+    private async Task FinishInputCoreAsync()
     {
         stopping = true; Interlocked.Exchange(ref subscription, null)?.Dispose(); audio.Writer.TryComplete();
         if (Lifetime.IsCancellationRequested || socket.State != WebSocketState.Open) return;
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Lifetime.Token); timeout.CancelAfter(TimeSpan.FromSeconds(provider is "mistral" or "deepl" ? 20 : 3));
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Lifetime.Token); timeout.CancelAfter(TimeSpan.FromSeconds(provider is "mistral" or "deepl" or "speechmatics" ? 20 : 3));
         if (sendTask is not null) await sendTask.WaitAsync(timeout.Token).ConfigureAwait(false);
         await SendAsync(provider == "google" ? new() { ["realtimeInput"] = new JsonObject { ["audioStreamEnd"] = true } }
             : provider == "deepl" ? new() { ["end_of_source_media"] = new JsonObject() }
             : provider == "mistral" ? new() { ["type"] = "input_audio.end" }
+            : provider == "speechmatics" ? new() { ["message"] = "EndOfStream", ["last_seq_no"] = speechmaticsSent }
             : new() { ["type"] = provider == "smallestai" ? "close_stream" : "stop_recording" }, timeout.Token).ConfigureAwait(false);
-        try { await finalized.Task.WaitAsync(TimeSpan.FromMilliseconds(provider == "deepl" ? 15000 : provider == "mistral" ? 10000 : 1500), timeout.Token).ConfigureAwait(false); } catch (TimeoutException) when (provider is not ("smallestai" or "mistral" or "deepl")) { }
+        try { await finalized.Task.WaitAsync(TimeSpan.FromMilliseconds(provider is "deepl" or "speechmatics" ? 15000 : provider == "mistral" ? 10000 : 1500), timeout.Token).ConfigureAwait(false); } catch (TimeoutException) when (provider is not ("smallestai" or "mistral" or "deepl" or "speechmatics")) { }
     }
     public override async ValueTask DisposeAsync()
     {

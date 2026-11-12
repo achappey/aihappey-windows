@@ -37,6 +37,7 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     private int sequence;
     private double lastEnd;
     private string preview = "";
+    private string speechmaticsDelimiter = " ";
     private string? language;
     private bool mistralDone;
     private int connection;
@@ -52,7 +53,7 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     }
     public RealtimeTranscriptionSnapshot Snapshot()
     {
-        if (provider == "deepl")
+        if (provider is "deepl" or "speechmatics")
         {
             var orderedSegments = items.Values.OrderBy(item => item.Order).ToArray();
             var exact = string.Concat(orderedSegments.Select(item => item.Text));
@@ -93,6 +94,32 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     }
     public bool Apply(JsonObject message, double elapsed)
     {
+        if (provider == "speechmatics")
+        {
+            var kind = message["message"]?.ToString();
+            if (kind == "RecognitionStarted") { speechmaticsDelimiter = message["language_pack_info"]?["word_delimiter"]?.GetValue<string>() ?? " "; return false; }
+            if (kind == "EndOfTranscript") { preview = ""; return true; }
+            var agent = kind is "AddSegment" or "AddPartialSegment";
+            var final = kind is "AddTranscript" or "AddSegment";
+            if (!agent && !final && kind != "AddPartialTranscript") return false;
+            var content = (agent ? message["segment"] : message["metadata"])?["transcript"];
+            if (content is not JsonValue value || !value.TryGetValue<string>(out var text) || text.Length > 2_000_000
+                || Number(message["metadata"]?["start_time"]) is not { } start || Number(message["metadata"]?["end_time"]) is not { } end || end < start)
+                throw new InvalidDataException("Invalid Speechmatics transcript segment.");
+            var previousText = items.Values.OrderBy(item => item.Order).LastOrDefault()?.Text ?? "";
+            var prefix = agent && previousText.Length > 0 && text.Length > 0 && !char.IsWhiteSpace(previousText[^1]) && !char.IsWhiteSpace(text[0]) && !".,!?;:".Contains(text[0]) ? speechmaticsDelimiter : "";
+            if (final)
+            {
+                var speechmaticsId = new JsonArray(kind, start, end, text).ToJsonString();
+                if (!items.ContainsKey(speechmaticsId))
+                {
+                    var item = Get(speechmaticsId); item.Text = prefix + text; item.Start = start; item.End = end; item.Final = true;
+                }
+                preview = "";
+            }
+            else preview = prefix + text;
+            return true;
+        }
         if (provider == "deepl")
         {
             if (message["type"]?.ToString() != "deepl.transcript") return false;

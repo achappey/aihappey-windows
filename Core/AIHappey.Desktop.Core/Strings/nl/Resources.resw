@@ -2166,4 +2166,10 @@ Luidspreker: {1}</value></data>
   <data name="TranscriptionCodecUnavailable" xml:space="preserve"><value>Windows kan dit mediaformaat niet decoderen of coderen. Converteer het naar een ondersteund audioformaat en probeer het opnieuw.</value></data>
   <data name="TranscriptionChunkTooLarge" xml:space="preserve"><value>Een gecodeerd audiodeel overschrijdt de veilige limiet voor de aanvraag.</value></data>
   <data name="TranscriptionSourceChanged" xml:space="preserve"><value>Het mediabestand is tijdens het lezen gewijzigd. Probeer het opnieuw met een ongewijzigde kopie.</value></data>
+  <data name="TranscriptionSpeechmaticsHint" xml:space="preserve"><value>Globaal kiest de dichtstbijzijnde regio; kies EU, US of AU voor gegevensresidentie. De standaardtaal is Engels; Melia 1/Oak 1 zijn altijd meertalig. Taalhints gelden alleen voor Melia 1/Oak 1, maximale vertraging alleen voor reguliere transcriptie en zinsplitsing alleen voor Agent STT. Agent-beurten verzenden niet automatisch chatberichten. Bestandsinstellingen staan apart.</value></data>
+  <data name="TranscriptionSpeechmaticsRegion" xml:space="preserve"><value>Speechmatics-regio</value></data>
+  <data name="TranscriptionSpeechmaticsHints" xml:space="preserve"><value>Melia 1 / Oak 1 taalhints (ISO-codes, kommagescheiden)</value></data>
+  <data name="TranscriptionSpeechmaticsLocale" xml:space="preserve"><value>Uitvoerlandinstelling (optioneel)</value></data>
+  <data name="TranscriptionSpeechmaticsDelay" xml:space="preserve"><value>Maximale vertraging reguliere transcriptie (seconden)</value></data>
+  <data name="TranscriptionSpeechmaticsSentences" xml:space="preserve"><value>Agent STT: segmenten splitsen in zinnen</value></data>
 </root>

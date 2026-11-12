@@ -2171,4 +2171,10 @@ Speaker: {1}</value></data>
   <data name="TranscriptionCodecUnavailable" xml:space="preserve"><value>Windows could not decode or encode this media format. Convert it to a supported audio format and try again.</value></data>
   <data name="TranscriptionChunkTooLarge" xml:space="preserve"><value>An encoded audio chunk exceeds the safe request payload limit.</value></data>
   <data name="TranscriptionSourceChanged" xml:space="preserve"><value>The media file changed while it was being read. Try again with a stable copy.</value></data>
+  <data name="TranscriptionSpeechmaticsHint" xml:space="preserve"><value>Global routes to the nearest region; pin EU, US, or AU for residency. Language defaults to English; Melia 1/Oak 1 always use multilingual mode. Hints apply only to Melia 1/Oak 1, maximum delay only to regular transcription, and sentence splitting only to Agent STT. Agent turns do not send chat messages automatically. File settings are separate.</value></data>
+  <data name="TranscriptionSpeechmaticsRegion" xml:space="preserve"><value>Speechmatics region</value></data>
+  <data name="TranscriptionSpeechmaticsHints" xml:space="preserve"><value>Melia 1 / Oak 1 language hints (comma-separated ISO codes)</value></data>
+  <data name="TranscriptionSpeechmaticsLocale" xml:space="preserve"><value>Output locale (optional)</value></data>
+  <data name="TranscriptionSpeechmaticsDelay" xml:space="preserve"><value>Regular transcription maximum delay (seconds)</value></data>
+  <data name="TranscriptionSpeechmaticsSentences" xml:space="preserve"><value>Agent STT: split segments into sentences</value></data>
 </root>

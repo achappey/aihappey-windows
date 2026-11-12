@@ -116,7 +116,7 @@ public sealed class TranscriptionSettingsDialog : ContentDialog, IResponsiveDial
         foreach (var provider in providers)
         {
             if (TranscriptionProviderForms.Create(provider, draft) is { } form) Add("TranscriptionProviderTab_" + provider, form);
-            if (provider is "openai" or "google" or "gladia" or "smallestai" or "mistral" or "deepl") Add("TranscriptionRealtimeTab_" + provider, new RealtimeTranscriptionSettingsForm(provider, draft.Realtime));
+            if (provider is "openai" or "google" or "gladia" or "smallestai" or "mistral" or "deepl" or "speechmatics") Add("TranscriptionRealtimeTab_" + provider, new RealtimeTranscriptionSettingsForm(provider, draft.Realtime));
         }
         if (tabs.MenuItems.Count > 0) tabs.SelectedItem = tabs.MenuItems[0];
         else page.Content = new TextBlock { Text = DesktopResources.Get("TranscriptionNoProviderSettings"), TextWrapping = TextWrapping.Wrap };

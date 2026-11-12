@@ -13,6 +13,11 @@ public sealed class RealtimeTranscriptionPreferences
         _ = RealtimeTranscriptionConfiguration.TokenRequest("openai/validation", this, DateTimeOffset.UtcNow);
         _ = RealtimeTranscriptionConfiguration.TokenRequest("google/validation", this, DateTimeOffset.UtcNow);
         _ = RealtimeTranscriptionConfiguration.MistralSession(ProviderOptions["mistral"] as JsonObject ?? new());
+        if (ProviderOptions["speechmatics"] is JsonObject speechmatics)
+        {
+            _ = SpeechmaticsRealtimeProtocol.Connection("speechmatics/standard", speechmatics, "validation");
+            _ = SpeechmaticsRealtimeProtocol.Ttl(speechmatics);
+        }
     }
 }
 
@@ -42,7 +47,8 @@ public static class RealtimeTranscriptionConfiguration
         && (RealtimeConfiguration.Provider(model.Id) is "openai" or "google" or "gladia"
             || model.Id == "deepl/voice-realtime" || model.Id.StartsWith("deepl/voice-realtime/translate-to/", StringComparison.Ordinal)
             || model.Id is "smallestai/pulse" or "smallestai/pulse-2"
-            || RealtimeConfiguration.Provider(model.Id) == "mistral" && IsMistralModel(model.Id));
+            || RealtimeConfiguration.Provider(model.Id) == "mistral" && IsMistralModel(model.Id)
+            || RealtimeConfiguration.Provider(model.Id) == "speechmatics" && SpeechmaticsRealtimeProtocol.IsModel(model.Id));
 
     public static bool IsMistralModel(string model) => RealtimeConfiguration.ModelName(model) is
         "voxtral-mini-transcribe-realtime-2602" or "voxtral-mini-transcribe-realtime-3" or "voxtral-mini-transcribe-realtime-3-0";
@@ -123,6 +129,11 @@ public static class RealtimeTranscriptionConfiguration
                 ["newSessionExpireTime"] = RealtimeConfiguration.Expiry(options["newSessionExpireTime"]?.ToString(), now, TimeSpan.FromMinutes(1)),
                 ["bidiGenerateContentSetup"] = GoogleSetup(model, preferences) };
             if (options["lockAdditionalFields"] is { } mask) metadata["fieldMask"] = mask.DeepClone();
+        }
+        else if (provider == "speechmatics")
+        {
+            _ = SpeechmaticsRealtimeProtocol.Start(model, options);
+            metadata = new() { ["ttl"] = SpeechmaticsRealtimeProtocol.Ttl(options) };
         }
         else if (provider == "deepl") metadata = DeepLRealtimeProtocol.Options(model, options);
         else if (provider == "gladia")

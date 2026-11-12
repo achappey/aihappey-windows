@@ -15,7 +15,7 @@ public sealed class RealtimeTranscriptionSettingsForm : ITranscriptionProviderFo
     public RealtimeTranscriptionSettingsForm(string provider, RealtimeTranscriptionPreferences preferences)
     {
         this.provider = provider; options = (JsonObject)(preferences.ProviderOptions[provider] as JsonObject ?? new()).DeepClone();
-        Title = (provider == "deepl" ? "DeepL" : provider == "openai" ? "OpenAI" : provider == "google" ? "Google" : provider == "smallestai" ? "Smallest AI" : provider == "mistral" ? "Mistral" : "Gladia") + " · " + DesktopResources.Get("TranscriptionRealtime");
+        Title = (provider == "speechmatics" ? "Speechmatics" : provider == "deepl" ? "DeepL" : provider == "openai" ? "OpenAI" : provider == "google" ? "Google" : provider == "smallestai" ? "Smallest AI" : provider == "mistral" ? "Mistral" : "Gladia") + " · " + DesktopResources.Get("TranscriptionRealtime");
         var panel = new StackPanel { Name = "RealtimeTranscription" + provider + "Form", Spacing = 16 }; View = panel;
         NativeSettingsSurface.Card(panel, "RealtimeTranscriptionSettingsCard", Title, out var fields);
         fields.Children.Add(new TextBlock { Text = DesktopResources.Get("TranscriptionRealtimeHint"), TextWrapping = TextWrapping.Wrap });
@@ -52,6 +52,20 @@ public sealed class RealtimeTranscriptionSettingsForm : ITranscriptionProviderFo
             Text(fields, "RealtimeExpiry", options, "expireTime", fallback: "30m");
             Text(fields, "TranscriptionRealtimeNewSessionExpiry", options, "newSessionExpireTime", fallback: "1m");
         }
+        else if (provider == "speechmatics")
+        {
+            fields.Children.Add(new TextBlock { Text = DesktopResources.Get("TranscriptionSpeechmaticsHint"), TextWrapping = TextWrapping.Wrap });
+            Choice(fields, "TranscriptionSpeechmaticsRegion", options, "region", "global", ["global", "eu", "us", "au"]);
+            var common = Object(options, "transcription_config"); var realtime = Object(options, "realtime_config");
+            Text(fields, "TranscriptionLanguage", common, "language", fallback: "en");
+            Text(fields, "TranscriptionSpeechmaticsHints", realtime, "language_hints", list: true);
+            Text(fields, "TranscriptionKeywords", common, "additional_vocab", true, true);
+            Choice(fields, "TranscriptionDiarization", common, "diarization", "none", ["none", "speaker"]);
+            Text(fields, "TranscriptionSpeechmaticsLocale", common, "output_locale");
+            Number(fields, "TranscriptionSpeechmaticsDelay", realtime, "max_delay", 4, .7, 4, .1);
+            Toggle(fields, "TranscriptionSpeechmaticsSentences", Object(options, "agent_config"), "emit_sentences");
+            Number(fields, "TranscriptionRealtimeTokenSeconds", options, "ttl", 60, 60, 86400, 1);
+        }
         else if (provider == "mistral")
         {
             Text(fields, "TranscriptionLanguage", options, "language");
@@ -82,12 +96,15 @@ public sealed class RealtimeTranscriptionSettingsForm : ITranscriptionProviderFo
     }
     private void Text(StackPanel panel, string label, JsonObject target, string key, bool multiline = false, bool list = false, string fallback = "")
     {
-        var value = list && target[key] is JsonArray array ? string.Join(multiline ? "\n" : ", ", array.Select(n => n?.ToString())) : target[key]?.ToString() ?? fallback;
+        var value = list && target[key] is JsonArray array ? string.Join(multiline ? "\n" : ", ", array.Select(n => key == "additional_vocab" && n is JsonObject word ? word["content"]?.ToString() : n?.ToString())) : target[key]?.ToString() ?? fallback;
         var field = new TextBox { Name = "Realtime" + provider + key, Header = DesktopResources.Get(label), Text = value, AcceptsReturn = multiline,
             TextWrapping = TextWrapping.Wrap, MinHeight = multiline ? 88 : 0, MaxHeight = multiline ? 200 : double.PositiveInfinity };
         ControlAppearance.Stock(field); ToolbarControls.Label(field, DesktopResources.Get(label)); panel.Children.Add(field);
         commits.Add(() =>
         {
+            // Opening/saving a form must preserve rich vocabulary objects and
+            // their pronunciations unless the user actually edits the terms.
+            if (field.Text == value && target[key] is not null) return;
             if (list) target[key] = new JsonArray(field.Text.Split(multiline ? '\n' : ',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Select(s => (JsonNode?)JsonValue.Create(s)).ToArray());
             else if (string.IsNullOrWhiteSpace(field.Text)) target.Remove(key); else target[key] = field.Text.Trim();
         });
