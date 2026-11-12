@@ -171,7 +171,8 @@ public sealed class TranscriptionWebSocketSession(string provider, JsonObject? s
         var pending = new List<byte>(); long nextSend = 0;
         async Task SendChunk(int count)
         {
-            if (nextSend > Environment.TickCount64) await Task.Delay((int)(nextSend - Environment.TickCount64), Lifetime.Token).ConfigureAwait(false);
+            var wait = Math.Max(0, nextSend - Environment.TickCount64);
+            if (wait > 0) await Task.Delay((int)wait, Lifetime.Token).ConfigureAwait(false);
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Lifetime.Token); timeout.CancelAfter(TimeSpan.FromSeconds(5));
             var chunk = pending.GetRange(0, count).ToArray(); pending.RemoveRange(0, count);
             await SendAsync(new() { ["source_media_chunk"] = new JsonObject { ["data"] = Convert.ToBase64String(chunk) } }, timeout.Token).ConfigureAwait(false);

@@ -5,11 +5,14 @@ namespace AIHappey.Desktop.Core;
 public sealed record RealtimeTranscriptionSegment(string Id, string Text, double StartSecond, double EndSecond, bool EstimatedTiming);
 public sealed record RealtimeTranscriptionSnapshot(string Text, string Preview, IReadOnlyList<RealtimeTranscriptionSegment> Segments)
 {
+    public string? Language { get; init; }
+    public bool ExactSpacing { get; init; }
     public bool HasConfirmedText => !string.IsNullOrWhiteSpace(Text);
-    public string DisplayText => string.Join(" ", new[] { Text, Preview }.Where(s => !string.IsNullOrWhiteSpace(s)));
+    public string DisplayText => ExactSpacing ? Text + Preview : string.Join(" ", new[] { Text, Preview }.Where(s => !string.IsNullOrWhiteSpace(s)));
     public JsonObject Response(string model, string status) => new()
     {
         ["text"] = Text,
+        ["language"] = Language,
         ["segments"] = new JsonArray(Segments.Select(s => (JsonNode)new JsonObject { ["text"] = s.Text, ["startSecond"] = s.StartSecond,
             ["endSecond"] = s.EndSecond, ["estimatedTiming"] = s.EstimatedTiming }).ToArray()),
         ["durationInSeconds"] = Segments.Count == 0 ? null : JsonValue.Create(Segments.Max(s => s.EndSecond)),
@@ -34,6 +37,7 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     private int sequence;
     private double lastEnd;
     private string preview = "";
+    private string? language;
     private bool mistralDone;
     private int connection;
     private double connectionOffset;
@@ -48,6 +52,14 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     }
     public RealtimeTranscriptionSnapshot Snapshot()
     {
+        if (provider == "deepl")
+        {
+            var orderedSegments = items.Values.OrderBy(item => item.Order).ToArray();
+            var exact = string.Concat(orderedSegments.Select(item => item.Text));
+            if (exact.Length + preview.Length > 2_000_000) throw new InvalidDataException("Transcription text limit exceeded.");
+            return new(exact, preview, orderedSegments.Select(item => new RealtimeTranscriptionSegment(item.Id, item.Text, item.Start ?? 0, item.End ?? 0, false)).ToArray())
+                { Language = language, ExactSpacing = true };
+        }
         if (provider == "mistral")
         {
             var exactText = items.GetValueOrDefault("mistral-session")?.Text ?? "";
@@ -81,6 +93,19 @@ public sealed class RealtimeTranscriptionTranscript(string provider)
     }
     public bool Apply(JsonObject message, double elapsed)
     {
+        if (provider == "deepl")
+        {
+            if (message["type"]?.ToString() != "deepl.transcript") return false;
+            foreach (var segment in message["concluded"]!.AsArray())
+            {
+                var id = new JsonArray(segment!["start_time"]!.DeepClone(), segment["end_time"]!.DeepClone(), segment["text"]!.DeepClone()).ToJsonString();
+                var item = Get(id); item.Text = segment["text"]!.GetValue<string>(); item.Final = true;
+                item.Start = Number(segment["start_time"]) / 1000; item.End = Number(segment["end_time"]) / 1000;
+            }
+            language = message["language"]?.ToString() ?? language;
+            preview = string.Concat(message["tentative"]!.AsArray().Select(segment => segment!["text"]!.GetValue<string>()));
+            return true;
+        }
         if (provider == "openai" && message["type"]?.ToString() == "aihappey.transcription.connection")
         {
             connection = message["connection"]!.GetValue<int>();

@@ -140,7 +140,7 @@ public sealed partial class ChatShell
                         (payload, token) => new DesktopRealtimeTokenClient(client, http).GetAsync(payload, AgentAudioHeaders(transcription),
                             DesktopAgent.Provider(DesktopAgent.Text(transcription["id"])), token),
                         onEvent: value => voice.Turns.Apply(value),
-                        onAudioActivity: DesktopAgent.Provider(DesktopAgent.Text(transcription["id"])) == "mistral"
+                        onAudioActivity: DesktopAgent.Provider(DesktopAgent.Text(transcription["id"])) is "mistral" or "deepl"
                             ? value => voice.Turns.Activity(value) : null);
                     using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, state.Lifetime.Token);
                     try

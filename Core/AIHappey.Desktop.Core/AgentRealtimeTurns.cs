@@ -16,14 +16,15 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
     private string? unkeyedFinal;
     private bool muted, speaking, mistralDone;
     private string mistralText = "";
+    private string deepLPartial = "";
     private int mistralThrough, mistralTimerVersion;
     public void Activity(bool value)
     {
         lock (gate)
         {
-            if (disposed || muted || provider != "mistral") return;
+            if (disposed || muted || provider is not ("mistral" or "deepl")) return;
             speaking = value;
-            ScheduleMistral();
+            if (provider == "mistral") ScheduleMistral(); else ScheduleDeepL();
         }
     }
     public void SetMuted(bool value)
@@ -39,6 +40,19 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
             if (message["event_id"] is { } eventId && !events.Add(eventId.ToString())) return;
             var type = message["type"]?.ToString();
             if (provider == "mistral") ApplyMistral(message, type);
+            else if (provider == "deepl" && type == "deepl.transcript")
+            {
+                foreach (var segment in message["concluded"]!.AsArray())
+                {
+                    var key = new JsonArray(segment!["start_time"]!.DeepClone(), segment["end_time"]!.DeepClone(), segment["text"]!.DeepClone()).ToJsonString();
+                    if (!completed.Add(key)) continue;
+                    var text = segment["text"]!.GetValue<string>(); fragments.Add(text);
+                    if (!string.IsNullOrWhiteSpace(text)) Start();
+                }
+                deepLPartial = string.Concat(message["tentative"]!.AsArray().Select(segment => segment!["text"]!.GetValue<string>()));
+                if (!string.IsNullOrWhiteSpace(deepLPartial)) Start();
+                preview(string.Concat(fragments) + deepLPartial); ScheduleDeepL();
+            }
             else if (provider == "openai")
             {
                 var id = message["item_id"]?.ToString();
@@ -76,6 +90,17 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
                 if (content["turnComplete"]?.GetValue<bool>() == true) Finish();
             }
         }
+    }
+    private void ScheduleDeepL()
+    {
+        timer?.Dispose(); timer = null;
+        var version = ++mistralTimerVersion;
+        if (disposed || muted || speaking || deepLPartial.Length > 0 || fragments.Count == 0) return;
+        timer = new Timer(_ =>
+        {
+            lock (gate)
+                if (version == mistralTimerVersion && !speaking && !muted && !disposed) Finish();
+        }, null, 900, Timeout.Infinite);
     }
     private void ApplyMistral(JsonObject message, string? type)
     {
@@ -136,7 +161,7 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
     {
         timer?.Dispose(); timer = null;
         if (disposed || fragments.Count == 0) return;
-        var text = string.Join(" ", fragments).Trim(); fragments.Clear(); active = false;
+        var text = (provider == "deepl" ? string.Concat(fragments) : string.Join(" ", fragments)).Trim(); fragments.Clear(); active = false;
         if (text.Length > 0) turn(text);
     }
     public void Reset()
@@ -145,6 +170,7 @@ public sealed class AgentRealtimeTurns(string provider, Action started, Action<s
         {
             timer?.Dispose(); timer = null; foreach (var id in partials.Keys) completed.Add(id);
             partials.Clear(); fragments.Clear(); active = false;
+            deepLPartial = "";
             ++mistralTimerVersion; speaking = false; mistralThrough = mistralText.Length;
         }
     }
